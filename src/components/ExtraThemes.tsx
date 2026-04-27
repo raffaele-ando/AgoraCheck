@@ -363,7 +363,7 @@ export function ThemeCorkboard() {
             <h3 className="text-base sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
               SPOTTED al POLIMI
             </h3>
-            <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà by Project</p>
+            <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà aby Project</p>
           </div>
         </div>
 
