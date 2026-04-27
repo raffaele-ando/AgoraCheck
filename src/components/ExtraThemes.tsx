@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useSubmitSpotted } from "../pages/Home";
 import { motion } from "motion/react";
+import { Logo } from "./Logo";
+import { Link } from "react-router-dom";
 
 export function ThemeRetro() {
   const { submit, isSubmitting, isSuccess } = useSubmitSpotted();
@@ -346,27 +348,31 @@ export function ThemeCorkboard() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px]">
-      <motion.div initial={{ rotate: -2, scale: 0.9 }} animate={{ rotate: 1, scale: 1 }} className="relative w-full max-w-sm bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-8 pb-10 shadow-[5px_10px_30px_rgba(0,0,0,0.8)] border border-[#000000]/10">
+    <div className="relative min-h-screen flex items-center justify-center p-6 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
+      <motion.div initial={{ rotate: -2, scale: 0.9 }} animate={{ rotate: 1, scale: 0.95 }} className="relative w-[90vw] sm:w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-6 sm:p-8 pb-10 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mx-auto">
         {/* Tape piece */}
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-white/40 backdrop-blur-sm rotate-[-2deg] shadow-sm border border-[#000000]/10"></div>
+        <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-28 h-9 bg-white/50 backdrop-blur-md rotate-[-3deg] shadow-[0_2px_4px_rgba(0,0,0,0.2)] border border-white/40 mix-blend-overlay"></div>
         
-        <div className="mb-6 text-center">
-          <h2 className="text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
-            WANTED!
-          </h2>
-          <h3 className="text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
-            SPOTTED AL POLIMI
-          </h3>
-          <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà aby Project</p>
+        <div className="mb-4 sm:mb-6 text-center space-y-4">
+          <Logo className="scale-75 origin-top" />
+          
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
+              WANTED!
+            </h2>
+            <h3 className="text-base sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
+              SPOTTED AL POLIMI
+            </h3>
+            <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà by Project</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 font-mono text-[#000000]">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 font-mono text-[#000000]">
           <div className="p-2">
             <label className="block text-xs font-bold text-[#000000] mb-1 uppercase">1. Quando? (Opz.)</label>
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-md placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Es. Ieri alle 14:00"
             />
           </div>
@@ -375,7 +381,7 @@ export function ThemeCorkboard() {
             <label className="block text-xs font-bold text-[#000000] mb-1 uppercase">2. Dove? (Opz.)</label>
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-md placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Es. Edificio 13"
             />
           </div>
@@ -384,13 +390,13 @@ export function ThemeCorkboard() {
             <label className="block text-xs font-bold text-[#000000] mb-1 uppercase">3. Chi cerchi? *</label>
             <textarea
               required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-20 text-md placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-20 text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Il tipo con lo zaino giallo..."
             />
           </div>
 
           <div className="flex justify-center mt-6">
-            <button disabled={!form.lookingFor || isSubmitting || isSuccess} className="w-full max-w-[200px] mt-4 py-3 border-4 border-[#000000] text-[#000000] font-black uppercase text-lg hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50">
+            <button disabled={!form.lookingFor || isSubmitting || isSuccess} className="w-full max-w-[200px] mt-4 py-3 border-4 border-[#000000] text-[#000000] font-black uppercase text-lg sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50">
               {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : "Invia"}
             </button>
           </div>

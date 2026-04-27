@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { collection, query, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc } from "firebase/firestore";
 import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { db, auth, googleProvider } from "../firebase";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Logo } from "../components/Logo";
-import { LogOut, Monitor, Smartphone, Globe, Clock, Inbox, MapPin, Calendar, Search, Activity } from "lucide-react";
+import { LogOut, Monitor, Smartphone, Globe, Clock, Inbox, MapPin, Calendar, Search, Activity, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Message {
@@ -32,7 +32,6 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -43,89 +42,6 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (isDemoMode) {
-      setMessages([
-        {
-          id: "demo_1",
-          lookingFor: "La ragazza con gli occhiali rotondi e il cappotto nero che leggeva un libro di design. Abbiamo incrociato gli sguardi due volte e mi hai sorriso.",
-          when: "Questa mattina verso le 10",
-          where: "Piazza Leonardo da Vinci, sulle panchine",
-          createdAt: Timestamp.now(),
-          deviceInfo: {
-            userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X)",
-            language: "it-IT",
-            platform: "iPhone",
-            screenResolution: "393x852",
-            timezone: "Europe/Rome"
-          },
-          advancedInfo: JSON.stringify({
-            network: { ip: "93.34.221.14", city: "Milano", region: "Lombardia", country: "Italy", isp: "Vodafone Italia", referer: "https://instagram.com/" },
-            hardware: { gpu: "Apple GPU", cores: 6, ram: "Unknown", battery: { level: "43%", charging: false }, mediaDevicesCount: 3 },
-            behavior: { sessionTimeSeconds: 45, maxScrollDepth: 100, clicks: 3, keyStrokes: 120, blurCount: 1, orientation: "portrait", windowActive: true },
-            software: { canvasFingerprint: "1a2b3c4d", audioFingerprint: "444100.9928374", fontsIdentified: ["Arial", "Helvetica", "Times New Roman"] }
-          })
-        },
-        {
-          id: "demo_2",
-          lookingFor: "Ragazzo alto, zaino giallo North Face e felpa grigia. Stavi prendendo un caffè alle macchinette e mi hai rubato l'ultimo pacchetto di taralli.",
-          when: "Ieri pausa pranzo (13:30 circa)",
-          where: "Edificio 13, piano terra",
-          createdAt: Timestamp.fromDate(new Date(Date.now() - 3600000)),
-          deviceInfo: {
-            userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-            language: "it-IT",
-            platform: "MacIntel",
-            screenResolution: "1440x900",
-            timezone: "Europe/Rome"
-          }
-        },
-        {
-          id: "demo_3",
-          lookingFor: "Cercasi disperatamente ragazzo biondo scuro che mi ha prestato il caricabatterie del Mac. Sono dovuta scappare per il treno e ce l'ho ancora io! Aiutatemi a trovarlo.",
-          when: "Mercoledì pomeriggio",
-          where: "Aula De Donato",
-          createdAt: Timestamp.fromDate(new Date(Date.now() - 86400000)),
-          deviceInfo: {
-            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            language: "it-IT",
-            platform: "Win32",
-            screenResolution: "1920x1080",
-            timezone: "Europe/Rome"
-          }
-        },
-        {
-          id: "demo_4",
-          lookingFor: "Al tipo che stava studiando Analisi 2 mentre mangiava focaccia con la cipolla. Il profumo della tua focaccia mi ha distratto per due ore. Sposami.",
-          when: "Oggi, verso le 16",
-          where: "Biblioteca Bovisa",
-          createdAt: Timestamp.fromDate(new Date(Date.now() - 172800000)),
-          deviceInfo: {
-            userAgent: "Mozilla/5.0 (iPad; CPU OS 16_5 like Mac OS X)",
-            language: "it-IT",
-            platform: "iPad",
-            screenResolution: "810x1080",
-            timezone: "Europe/Rome"
-          }
-        },
-        {
-          id: "demo_5",
-          lookingFor: "La ragazza mora con lo skateboard verde fluo. Hai fatto un trick fighissimo scendendo dal marciapiede, mi hai quasi messo sotto ma ti perdono.",
-          when: "Venerdì scolso, tardo pomeriggio",
-          where: "Piazzale di Architettura",
-          createdAt: Timestamp.fromDate(new Date(Date.now() - 400000000)),
-          deviceInfo: {
-            userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G991B)",
-            language: "it-IT",
-            platform: "Android",
-            screenResolution: "360x800",
-            timezone: "Europe/Rome"
-          }
-        }
-      ]);
-      setLoading(false);
-      return;
-    }
-
     if (!user || user.email !== ADMIN_EMAIL) {
       setMessages([]);
       setLoading(false);
@@ -151,18 +67,25 @@ export default function Dashboard() {
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      alert("Autenticazione popup bloccata. Se sei in una scheda incorporata, devi aprire il sito nel browser! Errore: " + error.message);
     }
   };
 
   const handleLogout = () => {
     signOut(auth);
-    setIsDemoMode(false);
   };
 
-  const handleDemoAccess = () => {
-    setIsDemoMode(true);
+  const handleDeleteMessage = async (messageId: string) => {
+    if (window.confirm("Sei sicuro di voler eliminare questo spotted? Questa azione è irreversibile.")) {
+      try {
+        await deleteDoc(doc(db, "messages", messageId));
+      } catch (error) {
+        console.error("Errore durante l'eliminazione:", error);
+        alert("Errore durante l'eliminazione del messaggio.");
+      }
+    }
   };
 
   if (authLoading) {
@@ -173,10 +96,10 @@ export default function Dashboard() {
     );
   }
 
-  if (!user && !isDemoMode) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-4 relative">
-        <Link to="/" className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500">
+        <Link to="/polimi" className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500">
           &larr; Torna alla Home
         </Link>
         <motion.div 
@@ -201,31 +124,17 @@ export default function Dashboard() {
               </svg>
               Accedi con Google
             </button>
-            
-            <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-gray-200"></div>
-              <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase tracking-wider">oppure ambiente simulato</span>
-              <div className="flex-grow border-t border-gray-200"></div>
-            </div>
-
-            <button
-              onClick={handleDemoAccess}
-              className="w-full py-3 px-4 bg-gray-100 text-black rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-            >
-              <Monitor className="w-5 h-5" />
-              Accesso Demo (Dati Finti)
-            </button>
           </div>
           
-          <p className="mt-6 text-xs text-gray-400">
-            * Nota: L'accesso Google potrebbe essere bloccato nell'anteprima. Apri l'app in una nuova scheda per accedere al database reale.
+          <p className="mt-6 text-xs text-red-500 font-medium">
+            * Se l'accesso fallisce, aprilo in una nuova finestra/browser!
           </p>
         </motion.div>
       </div>
     );
   }
 
-  if (!isDemoMode && user && user.email !== ADMIN_EMAIL) {
+  if (user && user.email !== ADMIN_EMAIL) {
     return (
       <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-4 text-center">
         <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full">
@@ -250,20 +159,20 @@ export default function Dashboard() {
       <div className="max-w-5xl mx-auto">
         <header className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-12 bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-white/20 shadow-sm">
           <div className="flex items-center gap-4">
-            <Link to="/">
-              <Logo className="scale-50 origin-left -ml-4 hover:opacity-80 transition-opacity" />
+            <Link to="/polimi">
+              <Logo className="scale-75 sm:scale-50 origin-left hover:opacity-80 transition-opacity" />
             </Link>
             <div className="h-8 w-px bg-gray-300 hidden sm:block"></div>
-            <h1 className="text-xl font-semibold hidden sm:block">Dashboard</h1>
+            <h1 className="text-xl font-semibold">Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-500 hidden md:block">
-              {isDemoMode ? "Modalità Demo" : user?.email}
+              {user?.email}
             </div>
             <button
               onClick={handleLogout}
               className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-full transition-colors"
-              title={isDemoMode ? "Esci dalla Demo" : "Disconnetti"}
+              title="Disconnetti"
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -295,8 +204,17 @@ export default function Dashboard() {
                     <Clock className="w-4 h-4" />
                     {msg.createdAt ? format(msg.createdAt.toDate(), "d MMM yyyy, HH:mm", { locale: it }) : "Data sconosciuta"}
                   </div>
-                  <div className="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
-                    ID: {msg.id.slice(0, 8)}
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                      ID: {msg.id.slice(0, 8)}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                      title="Elimina Messaggio"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
                 

@@ -21,7 +21,7 @@ service cloud.firestore {
              data.lookingFor is string && data.lookingFor.size() <= 1000 &&
              (!('when' in data) || (data.when is string && data.when.size() <= 200)) &&
              (!('where' in data) || (data.where is string && data.where.size() <= 200)) &&
-             (!('advancedInfo' in data) || (data.advancedInfo is string && data.advancedInfo.size() <= 2000)) &&
+             (!('advancedInfo' in data) || (data.advancedInfo is string && data.advancedInfo.size() <= 8000)) &&
              data.createdAt is timestamp &&
              data.deviceInfo is map &&
              data.deviceInfo.keys().hasAll(['userAgent', 'language', 'platform', 'screenResolution', 'timezone']) &&
