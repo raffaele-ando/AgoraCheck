@@ -357,11 +357,11 @@ export function ThemeCorkboard() {
           <Logo className="scale-75 origin-top" />
           
           <div>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
+            <h1 className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
               WANTED!
-            </h2>
+            </h1>
             <h3 className="text-base sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
-              SPOTTED AL POLIMI
+              SPOTTED al POLIMI
             </h3>
             <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà by Project</p>
           </div>
@@ -373,7 +373,7 @@ export function ThemeCorkboard() {
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
-              placeholder="Es. Ieri alle 14:00"
+              placeholder="Es. Il 28 aprile alle 14:00"
             />
           </div>
 
@@ -382,7 +382,7 @@ export function ThemeCorkboard() {
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
-              placeholder="Es. Edificio 13"
+              placeholder="Es. Davanti all'Edificio 6"
             />
           </div>
 
