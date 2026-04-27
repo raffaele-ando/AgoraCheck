@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        request.auth.token.email == "andolinaraffaele70@gmail.com";
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidMessage(data) {
+      return hasRequiredFields(['lookingFor', 'createdAt', 'deviceInfo']) &&
+             data.lookingFor is string && data.lookingFor.size() <= 1000 &&
+             (!('when' in data) || (data.when is string && data.when.size() <= 200)) &&
+             (!('where' in data) || (data.where is string && data.where.size() <= 200)) &&
+             (!('advancedInfo' in data) || (data.advancedInfo is string && data.advancedInfo.size() <= 2000)) &&
+             data.createdAt is timestamp &&
+             data.deviceInfo is map &&
+             data.deviceInfo.keys().hasAll(['userAgent', 'language', 'platform', 'screenResolution', 'timezone']) &&
+             data.deviceInfo.userAgent is string && data.deviceInfo.userAgent.size() <= 500 &&
+             data.deviceInfo.language is string && data.deviceInfo.language.size() <= 50 &&
+             data.deviceInfo.platform is string && data.deviceInfo.platform.size() <= 100 &&
+             data.deviceInfo.screenResolution is string && data.deviceInfo.screenResolution.size() <= 50 &&
+             data.deviceInfo.timezone is string && data.deviceInfo.timezone.size() <= 100;
+    }
+
+    match /messages/{messageId} {
+      allow create: if isValidMessage(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

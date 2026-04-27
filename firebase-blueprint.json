@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "Message": {
+      "title": "Message",
+      "description": "An anonymous spotted message.",
+      "type": "object",
+      "properties": {
+        "lookingFor": { "type": "string" },
+        "when": { "type": "string" },
+        "where": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "deviceInfo": {
+          "type": "object",
+          "properties": {
+            "userAgent": { "type": "string" },
+            "language": { "type": "string" },
+            "platform": { "type": "string" },
+            "screenResolution": { "type": "string" },
+            "timezone": { "type": "string" }
+          }
+        },
+        "advancedInfo": {
+          "type": "string",
+          "description": "JSON string containing advanced device capabilities"
+        }
+      },
+      "required": ["lookingFor", "createdAt", "deviceInfo"]
+    }
+  },
+  "firestore": {
+    "messages": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Collection of anonymous spotted messages."
+    }
+  }
+}
