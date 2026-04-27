@@ -62,7 +62,7 @@ export default function Dashboard() {
             network: { ip: "93.34.221.14", city: "Milano", region: "Lombardia", country: "Italy", isp: "Vodafone Italia", referer: "https://instagram.com/" },
             hardware: { gpu: "Apple GPU", cores: 6, ram: "Unknown", battery: { level: "43%", charging: false }, mediaDevicesCount: 3 },
             behavior: { sessionTimeSeconds: 45, maxScrollDepth: 100, clicks: 3, keyStrokes: 120, blurCount: 1, orientation: "portrait", windowActive: true },
-            software: { canvasFingerprint: "1a2b3c4d", fontsIdentified: ["Arial", "Helvetica"] }
+            software: { canvasFingerprint: "1a2b3c4d", audioFingerprint: "444100.9928374", fontsIdentified: ["Arial", "Helvetica", "Times New Roman"] }
           })
         },
         {
@@ -409,6 +409,7 @@ export default function Dashboard() {
                                   <div className="space-y-1">
                                      <strong className="text-gray-800 border-b border-gray-200 pb-1 mb-1 block">Software Fingerprint</strong>
                                      <div>Canvas Hash ID: {adv.software?.canvasFingerprint}</div>
+                                     <div>Audio Hash ID: {adv.software?.audioFingerprint || "N/A"}</div>
                                      <div className="truncate" title={adv.software?.fontsIdentified?.join(', ')}>Font Rilevati ({adv.software?.fontsIdentified?.length}): {adv.software?.fontsIdentified?.join(', ')}</div>
                                   </div>
                                </div>

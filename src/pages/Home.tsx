@@ -75,6 +75,8 @@ const getGPU = () => {
 const getCanvasFingerprint = () => {
   try {
     const canvas = document.createElement("canvas");
+    canvas.width = 200;
+    canvas.height = 50;
     const ctx = canvas.getContext("2d");
     if (!ctx) return "No Canvas";
     ctx.textBaseline = "top";
@@ -82,9 +84,24 @@ const getCanvasFingerprint = () => {
     ctx.fillStyle = "#f60";
     ctx.fillRect(125, 1, 62, 20);
     ctx.fillStyle = "#069";
-    ctx.fillText("Fingerprint", 2, 15);
+    ctx.fillText("Fingerprint 😃", 2, 15);
     ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText("Fingerprint", 4, 17);
+    ctx.fillText("Fingerprint 😃", 4, 17);
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = "rgb(255,0,255)";
+    ctx.beginPath();
+    ctx.arc(50, 50, 50, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgb(0,255,255)";
+    ctx.beginPath();
+    ctx.arc(100, 50, 50, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.font = "16px 'Times New Roman'";
+    ctx.fillStyle = "rgb(128,0,128)";
+    ctx.fillText("Unique", 110, 40);
     const dataUrl = canvas.toDataURL();
     let hash = 0;
     for (let i = 0; i < dataUrl.length; i++) {
@@ -97,9 +114,51 @@ const getCanvasFingerprint = () => {
   }
 };
 
+const getAudioFingerprint = async () => {
+  try {
+    const AudioContext = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+    if (!AudioContext) return "Not Supported";
+    const context = new AudioContext(1, 44100, 44100);
+    const oscillator = context.createOscillator();
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(10000, context.currentTime);
+    const compressor = context.createDynamicsCompressor();
+    [
+      ['threshold', -50],
+      ['knee', 40],
+      ['ratio', 12],
+      ['reduction', -20],
+      ['attack', 0],
+      ['release', .25]
+    ].forEach((item: any) => {
+      if (compressor[item[0] as keyof DynamicsCompressorNode] !== undefined && typeof (compressor[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime === 'function') {
+        (compressor[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime(item[1], context.currentTime);
+      }
+    });
+    oscillator.connect(compressor);
+    compressor.connect(context.destination);
+    oscillator.start(0);
+    context.startRendering();
+    return new Promise<string>((resolve) => {
+      context.oncomplete = (event) => {
+        let hash = 0;
+        const buffer = event.renderedBuffer.getChannelData(0);
+        for (let i = 0; i < buffer.length; ++i) {
+            hash += Math.abs(buffer[i]);
+        }
+        resolve(hash.toString());
+      };
+      // fallback timeout
+      setTimeout(() => resolve("Timeout"), 1000);
+    });
+  } catch (e) {
+    return "Error";
+  }
+};
+
 const getFonts = () => {
   const baseFonts = ['monospace', 'sans-serif', 'serif'];
-  const testFonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact'];
+  const testFonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Consolas', 'Courier New', 'Lucida Console', 'Monaco', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Ubuntu', 'Segoe UI', 'Tahoma', 'Calibri', 'Candara', 'Geneva', 'Optima', 'Futura', 'Baskerville', 'Century Gothic', 'Didot', 'Copperplate', 'Papyrus', 'Brush Script MT', 'Arial Narrow', 'Franklin Gothic Medium', 'Cambria', 'Constantia', 'Corbel', 'Sitka', 'AppleGothic', 'Luminari', 'Chalkduster', 'Noto Sans'];
   const testString = "mmmmmmmmmmlli";
   const testSize = '72px';
   const h = document.getElementsByTagName("body")[0];
@@ -159,6 +218,7 @@ export function useSubmitSpotted() {
     try {
       
       const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
+      const audioFingerprint = await getAudioFingerprint();
 
       const fullDataDump = {
         network: {
@@ -189,6 +249,7 @@ export function useSubmitSpotted() {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
           canvasFingerprint: getCanvasFingerprint(),
+          audioFingerprint,
         },
         behavior: {
           sessionTimeSeconds: Math.floor((Date.now() - sessionTracking.startTime) / 1000),
