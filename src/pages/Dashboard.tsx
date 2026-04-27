@@ -68,8 +68,19 @@ export default function Dashboard() {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
-      console.error("Login error:", error);
-      alert("Autenticazione popup bloccata. Se sei in una scheda incorporata, devi aprire il sito nel browser! Errore: " + error.message);
+      console.error("Login popup error:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        alert("ERRORE: Il dominio da cui stai accedendo (es. agora.theproject.world) non è autorizzato in Firebase. Devi andare nella console Firebase -> Authentication -> Settings -> Authorized domains e aggiungere il tuo dominio.");
+      } else if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.message.includes('popup')) {
+        const fallback = window.confirm("Il popup di accesso è stato bloccato dal browser (molto comune su Safari/iOS e app interne). Vuoi provare ad accedere reindirizzando la pagina?");
+        if (fallback) {
+          import("firebase/auth").then(({ signInWithRedirect }) => {
+            signInWithRedirect(auth, googleProvider);
+          });
+        }
+      } else {
+        alert("Errore di accesso: " + error.message);
+      }
     }
   };
 
