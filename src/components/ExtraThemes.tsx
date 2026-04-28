@@ -264,17 +264,20 @@ export function ThemeArcade() {
 }
 
 export function ThemeStories() {
-  const { submit, isSubmitting, isSuccess } = useSubmitSpotted();
+  const { submit, isSubmitting, isSuccess, error } = useSubmitSpotted();
   const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
   const [step, setStep] = useState(0);
+  const [localError, setLocalError] = useState("");
 
   const handleNext = () => { if (step < 2) setStep(step + 1); else submitForm(); };
   const handlePrev = () => { if (step > 0) setStep(step - 1); };
 
   const submitForm = async () => {
     if (!form.lookingFor) return;
+    setLocalError("");
     const ok = await submit(form);
     if (ok) { setStep(3); setTimeout(() => { setStep(0); setForm({ lookingFor: "", when: "", where: "" }); }, 3000); }
+    else { setLocalError(error || "Si è verificato un errore."); }
   };
 
   const slides = [
@@ -330,6 +333,12 @@ export function ThemeStories() {
            <div className="mt-8 text-sm font-bold animate-pulse uppercase tracking-widest border border-current px-4 py-2 rounded-full">
              Tocca a destra {step === 2 ? "PER INVIARE" : "=>"}
            </div>
+           
+           {localError && (
+             <div className="mt-4 text-sm font-bold text-red-500 bg-white px-4 py-2 rounded-full shadow pointer-events-auto">
+               {localError}
+             </div>
+           )}
          </div>
       </div>
     </div>
@@ -357,11 +366,11 @@ export function ThemeCorkboard() {
           <Logo className="scale-75 origin-top" />
           
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
               WANTED!
-            </h1>
+            </h2>
             <h3 className="text-base sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
-              SPOTTED al POLIMI
+              SPOTTED AL POLIMI
             </h3>
             <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà aby Project</p>
           </div>
@@ -373,7 +382,7 @@ export function ThemeCorkboard() {
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
-              placeholder="Es. Il 28 aprile alle 14:00"
+              placeholder="Es. Ieri alle 14:00"
             />
           </div>
 
@@ -382,7 +391,7 @@ export function ThemeCorkboard() {
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
-              placeholder="Es. Davanti all'Edificio 6"
+              placeholder="Es. Edificio 13"
             />
           </div>
 

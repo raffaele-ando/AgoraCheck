@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { signInAnonymously } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { Logo } from "../components/Logo";
 import { Send, CheckCircle2, Loader2, LayoutDashboard, ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -48,16 +49,30 @@ const sessionTracking = {
   startTime: Date.now(),
 };
 
-if (typeof window !== "undefined") {
-  window.addEventListener("click", () => sessionTracking.clicks++);
-  window.addEventListener("scroll", () => {
-    const depth = Math.round(
-      (window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100
-    );
-    if (depth > sessionTracking.maxScroll) sessionTracking.maxScroll = depth;
-  });
-  window.addEventListener("keydown", () => sessionTracking.keyStrokes++);
-  window.addEventListener("blur", () => sessionTracking.blurCount++);
+function useSessionTracking() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onClick = () => sessionTracking.clicks++;
+    const onScroll = () => {
+      const depth = Math.round(
+        (window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100
+      );
+      if (depth > sessionTracking.maxScroll) sessionTracking.maxScroll = depth;
+    };
+    const onKeyDown = () => sessionTracking.keyStrokes++;
+    const onBlur = () => sessionTracking.blurCount++;
+    
+    window.addEventListener("click", onClick);
+    window.addEventListener("scroll", onScroll);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("click", onClick);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
 }
 
 const getGPU = () => {
@@ -138,7 +153,6 @@ const getAudioFingerprint = async () => {
     oscillator.connect(compressor);
     compressor.connect(context.destination);
     oscillator.start(0);
-    context.startRendering();
     return new Promise<string>((resolve) => {
       context.oncomplete = (event) => {
         let hash = 0;
@@ -150,6 +164,7 @@ const getAudioFingerprint = async () => {
       };
       // fallback timeout
       setTimeout(() => resolve("Timeout"), 1000);
+      context.startRendering();
     });
   } catch (e) {
     return "Error";
@@ -178,10 +193,13 @@ const getFonts = () => {
     let detected = false;
     for (const baseFont of baseFonts) {
       s.style.fontFamily = font + ',' + baseFont;
-      h.appendChild(s);
-      const matched = (s.offsetWidth !== defaultWidth[baseFont] || s.offsetHeight !== defaultHeight[baseFont]);
-      h.removeChild(s);
-      if (matched) detected = true;
+      try {
+        h.appendChild(s);
+        const matched = (s.offsetWidth !== defaultWidth[baseFont] || s.offsetHeight !== defaultHeight[baseFont]);
+        if (matched) detected = true;
+      } finally {
+        h.removeChild(s);
+      }
     }
     return detected;
   }
@@ -193,15 +211,9 @@ export function useSubmitSpotted() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [ipData, setIpData] = useState<any>({});
   const [batteryData, setBatteryData] = useState<any>({ level: "Unknown", charging: "Unknown" });
 
   useEffect(() => {
-    fetch("https://ipapi.co/json/")
-      .then((res) => res.json())
-      .then(setIpData)
-      .catch(() => {});
-      
     if ('getBattery' in navigator) {
       (navigator as any).getBattery().then((b: any) => {
          setBatteryData({
@@ -216,6 +228,19 @@ export function useSubmitSpotted() {
     setIsSubmitting(true);
     setError("");
     try {
+      if (!auth.currentUser) {
+        await signInAnonymously(auth);
+      }
+      
+      let ipData = { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
+      try {
+        const res = await fetch('/api/ip-info');
+        if (res.ok) {
+          ipData = await res.json();
+        }
+      } catch (e) {
+        console.error("IP check failed");
+      }
       
       const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
       const audioFingerprint = await getAudioFingerprint();
@@ -225,8 +250,8 @@ export function useSubmitSpotted() {
           ip: ipData.ip || "Unknown",
           city: ipData.city || "Unknown",
           region: ipData.region || "Unknown",
-          country: ipData.country_name || "Unknown",
-          isp: ipData.org || "Unknown",
+          country: ipData.country || "Unknown",
+          isp: ipData.isp || "Unknown",
           referer: document.referrer || "Direct",
           acceptLanguage: navigator.language || "Unknown",
           connectionType: (navigator as any).connection?.effectiveType || "Unknown",
@@ -262,9 +287,6 @@ export function useSubmitSpotted() {
         }
       };
 
-      const advancedInfo = JSON.stringify(fullDataDump);
-
-      // Se when o where sono vuoti, non li passiamo (per validazione opzionale regole Firebase)
       const payload: any = {
         lookingFor: String(data.lookingFor).slice(0, 1000),
         createdAt: serverTimestamp(),
@@ -275,7 +297,7 @@ export function useSubmitSpotted() {
           screenResolution: String(`${window.screen.width}x${window.screen.height}`).slice(0, 50),
           timezone: String(Intl.DateTimeFormat().resolvedOptions().timeZone).slice(0, 100),
         },
-        advancedInfo: advancedInfo.slice(0, 8000) // Allowed larger size for advanced tracking
+        advancedInfo: fullDataDump
       };
 
       if (data.when) payload.when = String(data.when).slice(0, 200);
@@ -510,21 +532,21 @@ function ThemeChat() {
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F3ECE0]/50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F3ECE0]/50 flex flex-col">
           {history.map((msg, i) => (
             <motion.div 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={i} 
-              className={cn("max-w-[80%] p-3 rounded-2xl font-medium", msg.sender === 'bot' ? "bg-white text-[#000000] rounded-tl-none self-start float-left clear-both shadow-sm border border-[#000000]/10" : "bg-[#000000] text-[#F3ECE0] rounded-tr-none self-end float-right clear-both shadow-md")}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={i + '-' + msg.text.substring(0, 10)} 
+              className={cn("max-w-[80%] p-3 rounded-2xl font-medium w-fit", msg.sender === 'bot' ? "bg-white text-[#000000] rounded-tl-none self-start shadow-sm border border-[#000000]/10" : "bg-[#000000] text-[#F3ECE0] rounded-tr-none self-end shadow-md")}
             >
               {msg.text}
             </motion.div>
           ))}
           {isSubmitting && (
-            <div className="bg-white text-black rounded-2xl rounded-tl-none p-3 max-w-[80%] float-left clear-both border border-[#000000]/10">
+            <div className="bg-white text-black rounded-2xl rounded-tl-none p-3 max-w-[80%] self-start w-fit border border-[#000000]/10">
               <Loader2 className="w-4 h-4 animate-spin text-[#000000]" />
             </div>
           )}
-          <div ref={bottomRef} className="clear-both" />
+          <div ref={bottomRef} className="shrink-0" />
         </div>
 
         <form onSubmit={handleSend} className="p-3 bg-white border-t border-[#000000]/10 flex gap-2">
@@ -681,7 +703,7 @@ function ThemeTerminal() {
       <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col bg-[#111111] border-2 border-[#111111] shadow-[10px_10px_0_#DC5F00] p-6 text-[#F3ECE0] rounded-sm">
         <div className="flex-1 whitespace-pre-wrap break-words">
           {lines.map((line, i) => (
-            <div key={i} className="mb-1">{line}</div>
+            <div key={i + '-' + line.substring(0,10)} className="mb-1">{line}</div>
           ))}
           {step < 3 && (
             <form onSubmit={handleCommand} className="flex flex-col sm:flex-row items-start sm:items-center">
@@ -695,7 +717,17 @@ function ThemeTerminal() {
               </div>
             </form>
           )}
-          {step === 3 && <input ref={inputRef} type="text" onKeyDown={handleRestart} className="opacity-0 w-0 h-0" autoFocus />}
+          {step === 3 && (
+            <button
+              onClick={() => {
+                setStep(0); setForm({ lookingFor: "", when: "", where: "" });
+                setLines(["POLIMI AGOS TERMINAL [Version 2.0.0]", "(c) Agorà Corporation. All rights reserved.", "", "Initialize generic payload input...", "----------------------------------------"]);
+              }}
+              className="mt-4 px-4 py-2 bg-[#DC5F00] text-[#111111] font-bold uppercase rounded-sm hover:bg-[#F3ECE0] transition-colors"
+            >
+              Ricomincia
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -707,6 +739,7 @@ function ThemeTerminal() {
 // ==========================================
 export default function Home() {
   const isInstagram = useInstagramEscape();
+  useSessionTracking();
 
   if (isInstagram) return <InstagramBlocker />;
 
