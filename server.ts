@@ -9,7 +9,7 @@ async function startServer() {
   app.set('trust proxy', true);
 
   // API Route for IP info
-  app.get('/polimi/api/ip-info', async (req, res) => {
+  app.get('/api/ip-info', async (req, res) => {
     try {
       let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
       if (Array.isArray(ip)) ip = ip[0];
@@ -40,10 +40,6 @@ async function startServer() {
     }
   });
 
-  // Root and old paths redirects
-  app.get('/', (req, res) => res.redirect('/polimi'));
-  app.get('/dashboard', (req, res) => res.redirect('/polimi/dashboard'));
-
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -52,9 +48,9 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use('/polimi', express.static(distPath));
+    app.use(express.static(distPath));
     // For Express 4
-    app.get('/polimi*', (req, res) => {
+    app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

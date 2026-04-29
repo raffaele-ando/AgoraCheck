@@ -13,12 +13,9 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/polimi/" replace />} />
-          <Route path="/polimi" element={<Home />} />
-          <Route path="/polimi/" element={<Home />} />
-          <Route path="/polimi/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Navigate to="/polimi/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/polimi/" replace />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
