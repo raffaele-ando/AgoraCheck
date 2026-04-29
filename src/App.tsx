@@ -11,7 +11,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter basename="/polimi">
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
