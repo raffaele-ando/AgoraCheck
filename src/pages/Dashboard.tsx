@@ -428,7 +428,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto">
         <header className={`sticky top-2 sm:top-4 z-40 flex flex-col xl:flex-row items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 rounded-3xl border shadow-sm transition-all duration-500 ${isSelectMode ? 'bg-indigo-900/95 backdrop-blur-xl border-indigo-800 shadow-indigo-900/20 text-white shadow-lg scale-[1.01]' : 'bg-white/90 backdrop-blur-xl border-gray-200/60 shadow-sm'}`}>
           <div className="flex items-center gap-2 sm:gap-4 w-full xl:w-auto justify-between xl:justify-start min-w-0 shrink-0">
-            <Link to="/" className="shrink-0 flex items-center">
+            <Link to="/polimi" className="shrink-0 flex items-center">
               <Logo className={`scale-[0.6] sm:scale-50 origin-left hover:opacity-80 transition-all duration-300 ${isSelectMode ? 'invert brightness-0' : ''}`} />
             </Link>
             <div className={`h-8 w-px hidden sm:block transition-colors duration-300 ${isSelectMode ? 'bg-indigo-700' : 'bg-gray-300'}`}></div>
