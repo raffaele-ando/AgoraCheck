@@ -9,7 +9,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        request.auth.token.email == "andolinaraffaele70@gmail.com";
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     function hasRequiredFields(fields) {
@@ -21,7 +21,9 @@ service cloud.firestore {
              data.lookingFor is string && data.lookingFor.size() <= 1000 &&
              (!('when' in data) || (data.when is string && data.when.size() <= 200)) &&
              (!('where' in data) || (data.where is string && data.where.size() <= 200)) &&
+             (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 200)) &&
              (!('advancedInfo' in data) || (data.advancedInfo is map)) &&
+             (!('profileGroupId' in data) || (data.profileGroupId is string && data.profileGroupId.size() <= 200)) &&
              data.createdAt is timestamp &&
              data.deviceInfo is map &&
              data.deviceInfo.keys().hasAll(['userAgent', 'language', 'platform', 'screenResolution', 'timezone']) &&
@@ -35,6 +37,9 @@ service cloud.firestore {
     match /messages/{messageId} {
       allow create: if isAuthenticated() && isValidMessage(request.resource.data);
       allow read, update, delete: if isAdmin();
+    }
+    match /profiles/{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }

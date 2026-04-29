@@ -4,7 +4,7 @@ import { signInAnonymously } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Logo } from "../components/Logo";
-import { Send, CheckCircle2, Loader2, LayoutDashboard, ArrowRight, ExternalLink } from "lucide-react";
+import { Send, CheckCircle2, Loader2, LayoutDashboard, ArrowRight, ExternalLink, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { ThemeRetro, ThemeReceipt, ThemeDossier, ThemeArcade, ThemeStories, ThemeCorkboard } from "../components/ExtraThemes";
@@ -224,7 +224,7 @@ export function useSubmitSpotted() {
     }
   }, []);
 
-  const submit = async (data: { lookingFor: string; when: string; where: string }) => {
+  const submit = async (data: { lookingFor: string; when: string; where: string; instagram?: string }) => {
     setIsSubmitting(true);
     setError("");
     try {
@@ -234,7 +234,7 @@ export function useSubmitSpotted() {
       
       let ipData = { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
       try {
-        const res = await fetch('/api/ip-info');
+        const res = await fetch('/polimi/api/ip-info');
         if (res.ok) {
           ipData = await res.json();
         }
@@ -255,21 +255,30 @@ export function useSubmitSpotted() {
           referer: document.referrer || "Direct",
           acceptLanguage: navigator.language || "Unknown",
           connectionType: (navigator as any).connection?.effectiveType || "Unknown",
+          downlink: (navigator as any).connection?.downlink || "Unknown"
         },
         hardware: {
           gpu: getGPU(),
           cores: navigator.hardwareConcurrency || "Unknown",
           ram: (navigator as any).deviceMemory || "Unknown",
           screen: `${window.screen.width}x${window.screen.height}`,
+          availScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
+          innerWindow: `${window.innerWidth}x${window.innerHeight}`,
           colorDepth: window.screen.colorDepth,
           pixelRatio: window.devicePixelRatio,
           maxTouchPoints: navigator.maxTouchPoints,
+          touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
           battery: batteryData,
           mediaDevicesCount,
         },
         software: {
           userAgent: navigator.userAgent,
           platform: navigator.platform || (navigator as any).userAgentData?.platform || "Unknown",
+          vendor: navigator.vendor || "Unknown",
+          languages: navigator.languages?.join(', ') || navigator.language || "Unknown",
+          cookieEnabled: navigator.cookieEnabled,
+          doNotTrack: navigator.doNotTrack || (window as any).doNotTrack || navigator.msDoNotTrack || "Unspecified",
+          pdfViewerEnabled: navigator.pdfViewerEnabled ?? "Unknown",
           fontsIdentified: getFonts(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
@@ -302,6 +311,7 @@ export function useSubmitSpotted() {
 
       if (data.when) payload.when = String(data.when).slice(0, 200);
       if (data.where) payload.where = String(data.where).slice(0, 200);
+      if (data.instagram) payload.instagram = String(data.instagram).replace(/[@\s]/g, '').toLowerCase().slice(0, 200);
 
       await addDoc(collection(db, "messages"), payload);
       
@@ -325,11 +335,11 @@ export function useSubmitSpotted() {
 // ==========================================
 function ThemeClassic() {
   const { submit, isSubmitting, isSuccess, error } = useSubmitSpotted();
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
+  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "" }));
+    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "", instagram: "" }));
   };
 
   return (
@@ -355,9 +365,26 @@ function ThemeClassic() {
               />
             </div>
 
+            <div className="space-y-3 bg-[#DC5F00]/5 p-4 rounded-2xl border border-[#DC5F00]/10">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#DC5F00] uppercase tracking-wider flex items-center gap-2">
+                  <Instagram className="w-4 h-4" /> 3. Il tuo Instagram
+                </label>
+                <span className="bg-white/60 text-[#000000]/50 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest backdrop-blur-sm">Non Obbligatorio</span>
+              </div>
+              <div className="text-xs text-[#000000]/60 leading-tight">Lasciaci il tuo tag se vuoi essere contattato in privato qualora qualcuno dovesse rispondere. Nessun altro lo vedrà.</div>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 font-bold text-[#000000]/40 pointer-events-none">@</span>
+                <input
+                  type="text" placeholder="tuo.tag" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value.toLowerCase().replace(/[@\s]/g, '')})}
+                  className="w-full p-4 pl-9 bg-white/80 border-2 border-transparent focus:border-[#DC5F00]/50 focus:ring-4 focus:ring-[#DC5F00]/10 rounded-xl outline-none text-[#000000] transition-all shadow-sm font-medium"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#000000] uppercase tracking-wider">
-                3. Chi o cosa stai cercando? <span className="text-[#DC5F00] text-lg leading-none">*</span>
+                4. Chi o cosa stai cercando? <span className="text-[#DC5F00] text-lg leading-none">*</span>
               </label>
               <textarea
                 placeholder="Descrivi in dettaglio (Es. Ragazzo alto con felpa blu e occhiali...)" required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
@@ -384,19 +411,19 @@ function ThemeClassic() {
 function ThemeFocus() {
   const { submit, isSubmitting, isSuccess } = useSubmitSpotted();
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
+  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, [step]);
 
   const handleNext = () => {
-    if (step === 2 && !form.lookingFor) return;
-    if (step < 2) setStep(step + 1);
+    if (step === 3 && !form.lookingFor) return;
+    if (step < 3) setStep(step + 1);
     else {
       submit(form).then(ok => {
         if (ok) {
-          setStep(3);
-          setTimeout(() => { setStep(0); setForm({ lookingFor: "", when: "", where: "" }); }, 3000);
+          setStep(4);
+          setTimeout(() => { setStep(0); setForm({ lookingFor: "", when: "", where: "", instagram: "" }); }, 3000);
         }
       });
     }
@@ -409,10 +436,16 @@ function ThemeFocus() {
   const questions = [
     { title: "1. Quando l'hai visto?", desc: "Es. Il 17 aprile alle 24:30 (Opzionale)", key: "when" },
     { title: "2. Dove ti trovavi?", desc: "Es. Usciva dall'aula 4.0.1 (Opzionale)", key: "where" },
-    { title: "3. Chi o cosa stai cercando?", desc: "Descrivi il target nei dettagli (Obbligatorio)", key: "lookingFor" }
+    { 
+      title: "3. Il tuo Instagram", 
+      desc: "Ricevi una notifica in privato se ti rispondono. (Non Obbligatorio)", 
+      key: "instagram",
+      isOptional: true
+    },
+    { title: "4. Chi o cosa stai cercando?", desc: "Descrivi il target nei dettagli (Obbligatorio)", key: "lookingFor" }
   ];
 
-  if (step === 3) {
+  if (step === 4) {
     return (
       <div className="min-h-screen bg-[#F3ECE0] text-[#000000] flex items-center justify-center">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
@@ -428,13 +461,16 @@ function ThemeFocus() {
   return (
     <div className="min-h-screen bg-[#F3ECE0] text-[#000000] flex flex-col justify-center p-8 md:p-20">
       <div className="max-w-3xl w-full mx-auto">
-        <div className="text-[#DC5F00] font-black uppercase tracking-widest mb-8 text-sm">Passo {step + 1} di 3</div>
+        <div className="text-[#DC5F00] font-black uppercase tracking-widest mb-8 text-sm">Passo {step + 1} di 4</div>
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} transition={{ duration: 0.3 }}>
-            <h2 className="text-3xl md:text-5xl font-black mb-4 uppercase">{currentQ.title}</h2>
+            <h2 className="text-3xl md:text-5xl font-black mb-4 uppercase flex flex-col md:flex-row md:items-center gap-4">
+              {currentQ.title} 
+              {currentQ.isOptional && <span className="bg-[#DC5F00] text-white text-xs px-3 py-1 rounded-full w-fit tracking-widest font-bold">NON OBBLIGATORIO</span>}
+            </h2>
             <p className="text-[#000000]/60 text-lg md:text-xl mb-8 font-medium">{currentQ.desc}</p>
             
-            {step === 2 ? (
+            {step === 3 ? (
               <textarea
                 ref={inputRef as any} value={form[currentQ.key as keyof typeof form]} onChange={e => setForm({...form, [currentQ.key]: e.target.value})} onKeyDown={handleKeyDown}
                 className="w-full bg-transparent border-b-4 border-[#000000]/10 focus:border-[#000000] text-3xl md:text-5xl font-bold outline-none py-4 resize-none h-32"
@@ -450,10 +486,10 @@ function ThemeFocus() {
 
             <div className="mt-8 flex items-center gap-4">
               <button
-                onClick={handleNext} disabled={step === 2 && !form.lookingFor || isSubmitting}
+                onClick={handleNext} disabled={step === 3 && !form.lookingFor || isSubmitting}
                 className="px-8 py-4 bg-[#000000] text-[#F3ECE0] font-black uppercase rounded-full text-lg flex items-center gap-2 disabled:opacity-50 hover:bg-[#DC5F00] transition-colors shadow-xl"
               >
-                {step === 2 ? (isSubmitting ? "Invio..." : "Invia Spotted") : "Avanti"} <ArrowRight className="w-5 h-5" />
+                {step === 3 ? (isSubmitting ? "Invio..." : "Invia Spotted") : "Avanti"} <ArrowRight className="w-5 h-5" />
               </button>
               <span className="text-[#000000]/40 font-bold uppercase text-xs hidden md:inline">premi Invio ↵</span>
             </div>
@@ -474,7 +510,7 @@ function ThemeChat() {
   ]);
   const [input, setInput] = useState("");
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
+  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [history]);
@@ -483,8 +519,8 @@ function ThemeChat() {
     e.preventDefault();
     if (isSubmitting) return;
     
-    // We allow skipping step 0 and 1 (optional) if input is empty, but not step 2
-    if (!input.trim() && step === 2) return;
+    // We allow skipping step 0, 1 and 2 (optional) if input is empty, but not step 3
+    if (!input.trim() && step === 3) return;
 
     const newHistory = [...history, { sender: 'user' as const, text: input.trim() ? input : "[Saltato]" }];
     setHistory(newHistory);
@@ -496,12 +532,16 @@ function ThemeChat() {
       setStep(1);
     } else if (step === 1) {
       setForm({ ...form, where: input });
-      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Perfetto. Infine, 3. CHI o cosa stai cercando? (Obbligatorio)" }]), 500);
+      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Ok. 3. Qual è il tuo tag INSTAGRAM? Ti avviseremo lì in privato se ti rispondono. (Opzionale. Es @agora)" }]), 500);
       setStep(2);
     } else if (step === 2) {
+      setForm({ ...form, instagram: input });
+      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Perfetto. Infine, 4. CHI o cosa stai cercando? (Obbligatorio)" }]), 500);
+      setStep(3);
+    } else if (step === 3) {
       const finalForm = { ...form, lookingFor: input };
       setForm(finalForm);
-      setStep(3);
+      setStep(4);
       
       setTimeout(async () => {
         const ok = await submit(finalForm);
@@ -510,11 +550,11 @@ function ThemeChat() {
           setTimeout(() => {
             setHistory([{ sender: 'bot', text: "Inviarne un altro? 1. QUANDO l'hai visto? (Opzionale)" }]);
             setStep(0);
-            setForm({ lookingFor: "", when: "", where: "" });
+            setForm({ lookingFor: "", when: "", where: "", instagram: "" });
           }, 3000);
         } else {
           setHistory(h => [...h, { sender: 'bot', text: "Ops, errore di rete." }]);
-          setStep(2);
+          setStep(3);
         }
       }, 500);
     }
@@ -551,11 +591,11 @@ function ThemeChat() {
 
         <form onSubmit={handleSend} className="p-3 bg-white border-t border-[#000000]/10 flex gap-2">
           <input
-            type="text" value={input} onChange={e => setInput(e.target.value)} disabled={step === 3 || isSubmitting}
-            placeholder={step < 2 ? "Scrivi (o premi Invia per saltare)..." : "Scrivi il target..."}
+            type="text" value={input} onChange={e => setInput(e.target.value)} disabled={step === 4 || isSubmitting}
+            placeholder={step < 3 ? "Scrivi (o premi Invia per saltare)..." : "Scrivi il target..."}
             className="flex-1 rounded-full px-4 py-3 outline-none border border-[#000000]/20 focus:border-[#000000] bg-[#F3ECE0]"
           />
-          <button disabled={(!input.trim() && step === 2) || step === 3 || isSubmitting} className="w-12 h-12 bg-[#DC5F00] hover:bg-[#000000] transition-colors rounded-full flex items-center justify-center text-[#F3ECE0] disabled:opacity-50 shrink-0 shadow-lg">
+          <button disabled={(!input.trim() && step === 3) || step === 4 || isSubmitting} className="w-12 h-12 bg-[#DC5F00] hover:bg-[#000000] transition-colors rounded-full flex items-center justify-center text-[#F3ECE0] disabled:opacity-50 shrink-0 shadow-lg">
             <Send className="w-5 h-5 ml-1" />
           </button>
         </form>
@@ -569,11 +609,11 @@ function ThemeChat() {
 // ==========================================
 function ThemeBoard() {
   const { submit, isSubmitting, isSuccess } = useSubmitSpotted();
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
+  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "" }));
+    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "", instagram: "" }));
   };
 
   return (
@@ -619,8 +659,18 @@ function ThemeBoard() {
           </div>
 
           <div className="space-y-1">
+            <label className="block text-sm font-black uppercase">3. Il tuo Instagram (Opz.)</label>
+            <div className="text-[10px] leading-tight mb-1 opacity-70">Verrai avvisato qui in privato se qualcuno risponde. Es. @tuotag</div>
+            <input
+              type="text" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value})}
+              className="w-full bg-[#F3ECE0]/50 border-4 border-[#000000] focus:bg-[#DC5F00]/10 focus:border-[#DC5F00] outline-none text-lg placeholder:text-[#000000]/30 font-bold p-2 transition-colors duration-200"
+              placeholder="@tuotag"
+            />
+          </div>
+
+          <div className="space-y-1">
             <label className="block text-sm font-black uppercase">
-               3. Chi cerchi? <span className="text-[#DC5F00]">*</span>
+               4. Chi cerchi? <span className="text-[#DC5F00]">*</span>
             </label>
             <textarea
               required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
@@ -651,24 +701,25 @@ function ThemeTerminal() {
     "----------------------------------------"
   ]);
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
+  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const prompts = [
     "C:\\PAYLOAD> set time_of_sighting: ",
     "C:\\PAYLOAD> set location_coords: ",
+    "C:\\PAYLOAD> set instagram_handle_for_comms: ",
     "C:\\PAYLOAD> set target_description (*REQUIRED): "
   ];
 
   const handleCommand = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting || step > 2) return;
+    if (isSubmitting || step > 3) return;
 
     const currentInput = input;
     setInput("");
     
-    if (step === 2 && !currentInput.trim()) return;
+    if (step === 3 && !currentInput.trim()) return;
 
     setLines(prev => [...prev, prompts[step] + currentInput]);
 
@@ -677,9 +728,11 @@ function ThemeTerminal() {
     } else if (step === 1) {
       setForm({ ...form, where: currentInput }); setStep(2);
     } else if (step === 2) {
+      setForm({ ...form, instagram: currentInput }); setStep(3);
+    } else if (step === 3) {
       const finalForm = { ...form, lookingFor: currentInput };
       setForm(finalForm);
-      setStep(3);
+      setStep(4);
       setLines(prev => [...prev, "Encrypting payload...", "Transmitting to Agorà servers..."]);
       
       const ok = await submit(finalForm);
@@ -692,8 +745,8 @@ function ThemeTerminal() {
   };
 
   const handleRestart = (e: React.KeyboardEvent) => {
-    if (step === 3 && e.key === 'Enter') {
-      setStep(0); setForm({ lookingFor: "", when: "", where: "" });
+    if (step === 4 && e.key === 'Enter') {
+      setStep(0); setForm({ lookingFor: "", when: "", where: "", instagram: "" });
       setLines(["POLIMI AGOS TERMINAL [Version 2.0.0]", "(c) Agorà Corporation. All rights reserved.", "", "Initialize generic payload input...", "----------------------------------------"]);
     }
   };
@@ -705,7 +758,7 @@ function ThemeTerminal() {
           {lines.map((line, i) => (
             <div key={i + '-' + line.substring(0,10)} className="mb-1">{line}</div>
           ))}
-          {step < 3 && (
+          {step < 4 && (
             <form onSubmit={handleCommand} className="flex flex-col sm:flex-row items-start sm:items-center">
               <span className="mr-2 mt-1 sm:mt-0 text-[#F3ECE0]/70">{prompts[step]}</span>
               <div className="flex-1 flex items-center w-full">
@@ -717,10 +770,10 @@ function ThemeTerminal() {
               </div>
             </form>
           )}
-          {step === 3 && (
+          {step === 4 && (
             <button
               onClick={() => {
-                setStep(0); setForm({ lookingFor: "", when: "", where: "" });
+                setStep(0); setForm({ lookingFor: "", when: "", where: "", instagram: "" });
                 setLines(["POLIMI AGOS TERMINAL [Version 2.0.0]", "(c) Agorà Corporation. All rights reserved.", "", "Initialize generic payload input...", "----------------------------------------"]);
               }}
               className="mt-4 px-4 py-2 bg-[#DC5F00] text-[#111111] font-bold uppercase rounded-sm hover:bg-[#F3ECE0] transition-colors"
@@ -744,7 +797,7 @@ export default function Home() {
   if (isInstagram) return <InstagramBlocker />;
 
   return (
-    <div className="relative min-h-screen bg-[#F3ECE0]">
+    <div className="relative min-h-[100dvh] bg-[#F3ECE0]">
       <ThemeCorkboard />
     </div>
   );

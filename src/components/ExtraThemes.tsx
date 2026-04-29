@@ -349,63 +349,81 @@ export function ThemeStories() {
 // ==========================================
 export function ThemeCorkboard() {
   const { submit, isSubmitting, isSuccess } = useSubmitSpotted();
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "" });
+  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "" }));
+    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "", instagram: "" }));
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
-      <motion.div initial={{ rotate: -2, scale: 0.9 }} animate={{ rotate: 1, scale: 0.95 }} className="relative w-[90vw] sm:w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-6 sm:p-8 pb-10 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mx-auto">
-        {/* Tape piece */}
-        <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-28 h-9 bg-white/50 backdrop-blur-md rotate-[-3deg] shadow-[0_2px_4px_rgba(0,0,0,0.2)] border border-white/40 mix-blend-overlay"></div>
+    <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
+      <motion.div initial={{ rotate: -2, scale: 0.9 }} animate={{ rotate: 1, scale: 0.95 }} className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mx-auto mt-2">
+        {/* Fix per il pezzo di scotch in alto: metto un bello z-index e levo il mix blend che bugga con il backdrop-blur su mobile e safari */}
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#F4F1EA]/80 shadow-md rotate-[-3deg] border border-[#000000]/10 z-50 overflow-visible" style={{ clipPath: "polygon(5% 0%, 95% 4%, 100% 100%, 0% 96%)" }}></div>
         
-        <div className="mb-4 sm:mb-6 text-center space-y-4">
-          <Logo className="scale-75 origin-top" />
+        <div className="mb-2 sm:mb-6 text-center space-y-2 pt-2">
+          <Logo className="scale-50 origin-top mx-auto -mb-2" />
           
           <div>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
               WANTED!
             </h2>
-            <h3 className="text-base sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
+            <h3 className="text-sm sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
               SPOTTED AL POLIMI
             </h3>
-            <p className="text-[10px] uppercase font-bold text-[#DC5F00] mt-2 tracking-widest font-mono">Agorà aby Project</p>
+            <p className="text-[9px] uppercase font-bold text-[#DC5F00] mt-1 tracking-widest font-mono">Agorà Aby Project</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 font-mono text-[#000000]">
-          <div className="p-2">
-            <label className="block text-xs font-bold text-[#000000] mb-1 uppercase">1. Quando? (Opz.)</label>
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5 font-mono text-[#000000]">
+          <div className="px-2">
+            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">1. Quando? (Opz.)</label>
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Es. Ieri alle 14:00"
             />
           </div>
 
-          <div className="p-2">
-            <label className="block text-xs font-bold text-[#000000] mb-1 uppercase">2. Dove? (Opz.)</label>
+          <div className="px-2">
+            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">2. Dove? (Opz.)</label>
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Es. Edificio 13"
             />
           </div>
+          
+          <div className="p-2 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1">
+            <div className="flex items-center justify-between mb-0.5">
+              <label className="text-[10px] sm:text-xs font-bold text-[#000000] uppercase">3. Il tuo Instagram</label>
+              <span className="text-[8px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1 py-0.5 rounded">OPZ.</span>
+            </div>
+            <p className="text-[9px] leading-tight text-[#000000]/60 mb-1 font-medium">
+              Non sarà pubblico. Verrai avvisato in privato se qualcuno risponde, utilissimo per non perderti gli aggiornamenti!
+            </p>
+            <div className="relative flex items-center border-b-2 border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-0.5">
+              <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5">@</span>
+              <input
+                type="text" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value.toLowerCase().replace(/[@\s]/g, '')})}
+                className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40"
+                placeholder="tuo.tag"
+              />
+            </div>
+          </div>
 
-          <div className="p-2 pt-4 relative">
-            <label className="block text-xs font-bold text-[#000000] mb-1 uppercase">3. Chi cerchi? *</label>
+          <div className="px-2 relative">
+            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">4. Chi cerchi? *</label>
             <textarea
               required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-20 text-base placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Il tipo con lo zaino giallo..."
             />
           </div>
 
-          <div className="flex justify-center mt-6">
-            <button disabled={!form.lookingFor || isSubmitting || isSuccess} className="w-full max-w-[200px] mt-4 py-3 border-4 border-[#000000] text-[#000000] font-black uppercase text-lg sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50">
+          <div className="flex justify-center mt-2 sm:mt-6">
+            <button disabled={!form.lookingFor || isSubmitting || isSuccess} className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent">
               {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : "Invia"}
             </button>
           </div>
