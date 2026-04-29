@@ -26,7 +26,7 @@ export function ThemeRetro() {
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4 text-[#000000]">
           <div className="space-y-1 p-2 border-t-2 border-l-2 border-[#000000] border-r-2 border-b-2 border-r-white border-b-white bg-[#F3ECE0]">
-            <label className="text-xs font-bold">1. QUANDO l'hai visto? (Opzionale)</label>
+            <label className="text-xs font-bold">🗓️ 1. QUANDO l'hai visto? (Opzionale)</label>
             <input
               type="text"
               placeholder="Es. Il 17 aprile alle 24:30"
@@ -37,7 +37,7 @@ export function ThemeRetro() {
           </div>
           
           <div className="space-y-1 p-2 border-t-2 border-l-2 border-[#000000] border-r-2 border-b-2 border-r-white border-b-white bg-[#F3ECE0]">
-            <label className="text-xs font-bold">2. DOVE ti trovavi? (Opzionale)</label>
+            <label className="text-xs font-bold">📍 2. DOVE ti trovavi? (Opzionale)</label>
             <input
               type="text"
               placeholder="Es. Usciva dall'aula 4.0.1"
@@ -48,7 +48,7 @@ export function ThemeRetro() {
           </div>
           
           <div className="space-y-1 p-2 border-t-2 border-l-2 border-[#000000] border-r-2 border-b-2 border-r-white border-b-white bg-[#F3ECE0]">
-            <label className="text-xs font-bold text-[#DC5F00]">3. CHI O COSA cerchi? (Obbligatorio) *</label>
+            <label className="text-xs font-bold text-[#DC5F00]">🔎 3. CHI O COSA cerchi? (Obbligatorio) *</label>
             <textarea
               required
               value={form.lookingFor}
@@ -100,7 +100,7 @@ export function ThemeReceipt() {
             <form onSubmit={handleSubmit} className="space-y-6">
               
               <div>
-                <label className="block text-[10px] font-bold uppercase mb-1 text-[#666666]">1. QUANDO [OPZIONALE]:</label>
+                <label className="block text-[10px] font-bold uppercase mb-1 text-[#666666]">🗓️ 1. QUANDO [OPZIONALE]:</label>
                 <input
                   type="text" placeholder="Es. Il 17 aprile alle 24:30" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
                   className="w-full bg-transparent border-b border-[#d1d1d1] focus:border-[#DC5F00] outline-none text-sm text-[#1A1A1A] placeholder:text-[#999999]"
@@ -108,7 +108,7 @@ export function ThemeReceipt() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase mb-1 text-[#666666]">2. DOVE [OPZIONALE]:</label>
+                <label className="block text-[10px] font-bold uppercase mb-1 text-[#666666]">📍 2. DOVE [OPZIONALE]:</label>
                 <input
                   type="text" placeholder="Es. Usciva dall'aula 4.0.1" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
                   className="w-full bg-transparent border-b border-[#d1d1d1] focus:border-[#DC5F00] outline-none text-sm text-[#1A1A1A] placeholder:text-[#999999]"
@@ -116,7 +116,7 @@ export function ThemeReceipt() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase mb-1 text-[#666666]">3. *CHI/COSA [OBBLIGATORIO]:</label>
+                <label className="block text-[10px] font-bold uppercase mb-1 text-[#666666]">🔎 3. *CHI/COSA [OBBLIGATORIO]:</label>
                 <textarea
                   required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
                   className="w-full bg-transparent border-b border-[#d1d1d1] focus:border-[#DC5F00] outline-none resize-none text-sm font-bold text-[#1A1A1A]"
@@ -281,9 +281,9 @@ export function ThemeStories() {
   };
 
   const slides = [
-    { bg: "bg-[#000000]", color: "text-[#F3ECE0]", title: "1. QUANDO l'hai visto?", sub: "Opzionale", key: "when", placeholder: "Es. Il 17 aprile alle 24:30" },
-    { bg: "bg-[#000000]", color: "text-[#F3ECE0]", title: "2. DOVE eri?", sub: "Opzionale", key: "where", placeholder: "Es. Usciva dall'aula 4.0.1" },
-    { bg: "bg-[#F3ECE0]", color: "text-[#000000]", title: "3. CHI stai cercando?", sub: "Obbligatorio", key: "lookingFor", placeholder: "Scrivi qui..." }
+    { bg: "bg-[#000000]", color: "text-[#F3ECE0]", title: "🗓️ 1. QUANDO l'hai visto?", sub: "Opzionale", key: "when", placeholder: "Es. Il 17 aprile alle 24:30" },
+    { bg: "bg-[#000000]", color: "text-[#F3ECE0]", title: "📍 2. DOVE eri?", sub: "Opzionale", key: "where", placeholder: "Es. Usciva dall'aula 4.0.1" },
+    { bg: "bg-[#F3ECE0]", color: "text-[#000000]", title: "🔎 3. CHI stai cercando?", sub: "Obbligatorio", key: "lookingFor", placeholder: "Scrivi qui..." }
   ];
 
   if (step === 3) {
@@ -378,7 +378,7 @@ export function ThemeCorkboard() {
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5 font-mono text-[#000000]">
           <div className="px-2">
-            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">1. Quando? (Opz.)</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">🗓️ 1. Quando? (Opz.)</label>
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
@@ -387,7 +387,7 @@ export function ThemeCorkboard() {
           </div>
 
           <div className="px-2">
-            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">2. Dove? (Opz.)</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">📍 2. Dove? (Opz.)</label>
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
@@ -414,7 +414,7 @@ export function ThemeCorkboard() {
           </div>
 
           <div className="px-2 relative">
-            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">4. Chi cerchi? *</label>
+            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">🔎 4. Chi cerchi? *</label>
             <textarea
               required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"

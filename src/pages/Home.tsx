@@ -350,7 +350,7 @@ function ThemeClassic() {
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#000000] uppercase tracking-wider">1. Quando l'hai visto? <span className="opacity-50">(Opzionale)</span></label>
+              <label className="text-xs font-bold text-[#000000] uppercase tracking-wider">🗓️ 1. Quando l'hai visto? <span className="opacity-50">(Opzionale)</span></label>
               <input
                 type="text" placeholder="Es. Il 17 aprile alle 24:30" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
                 className="w-full p-4 bg-white/80 border-2 border-transparent focus:border-[#DC5F00]/50 focus:ring-4 focus:ring-[#DC5F00]/10 rounded-xl outline-none text-[#000000] transition-all shadow-sm"
@@ -358,7 +358,7 @@ function ThemeClassic() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#000000] uppercase tracking-wider">2. Dove ti trovavi? <span className="opacity-50">(Opzionale)</span></label>
+              <label className="text-xs font-bold text-[#000000] uppercase tracking-wider">📍 2. Dove ti trovavi? <span className="opacity-50">(Opzionale)</span></label>
               <input
                 type="text" placeholder="Es. Usciva dall'aula 4.0.1" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
                 className="w-full p-4 bg-white/80 border-2 border-transparent focus:border-[#DC5F00]/50 focus:ring-4 focus:ring-[#DC5F00]/10 rounded-xl outline-none text-[#000000] transition-all shadow-sm"
@@ -384,7 +384,7 @@ function ThemeClassic() {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#000000] uppercase tracking-wider">
-                4. Chi o cosa stai cercando? <span className="text-[#DC5F00] text-lg leading-none">*</span>
+                🔎 4. Chi o cosa stai cercando? <span className="text-[#DC5F00] text-lg leading-none">*</span>
               </label>
               <textarea
                 placeholder="Descrivi in dettaglio (Es. Ragazzo alto con felpa blu e occhiali...)" required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
@@ -434,15 +434,15 @@ function ThemeFocus() {
   };
 
   const questions = [
-    { title: "1. Quando l'hai visto?", desc: "Es. Il 17 aprile alle 24:30 (Opzionale)", key: "when" },
-    { title: "2. Dove ti trovavi?", desc: "Es. Usciva dall'aula 4.0.1 (Opzionale)", key: "where" },
+    { title: "🗓️ 1. Quando l'hai visto?", desc: "Es. Il 17 aprile alle 24:30 (Opzionale)", key: "when" },
+    { title: "📍 2. Dove ti trovavi?", desc: "Es. Usciva dall'aula 4.0.1 (Opzionale)", key: "where" },
     { 
-      title: "3. Il tuo Instagram", 
+      title: "📸 3. Il tuo Instagram", 
       desc: "Ricevi una notifica in privato se ti rispondono. (Non Obbligatorio)", 
       key: "instagram",
       isOptional: true
     },
-    { title: "4. Chi o cosa stai cercando?", desc: "Descrivi il target nei dettagli (Obbligatorio)", key: "lookingFor" }
+    { title: "🔎 4. Chi o cosa stai cercando?", desc: "Descrivi il target nei dettagli (Obbligatorio)", key: "lookingFor" }
   ];
 
   if (step === 4) {
@@ -506,7 +506,7 @@ function ThemeFocus() {
 function ThemeChat() {
   const { submit, isSubmitting } = useSubmitSpotted();
   const [history, setHistory] = useState<{sender: 'bot'|'user', text: string}[]>([
-    { sender: 'bot', text: "Ciao! 👋 1. Ti ricordi QUANDO l'hai visto? (Opzionale)" }
+    { sender: 'bot', text: "Ciao! 👋 🗓️ 1. Ti ricordi QUANDO l'hai visto? (Opzionale)" }
   ]);
   const [input, setInput] = useState("");
   const [step, setStep] = useState(0);
@@ -528,15 +528,15 @@ function ThemeChat() {
 
     if (step === 0) {
       setForm({ ...form, when: input });
-      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Ottimo. 2. DOVE ti trovavi esattamente? (Opzionale)" }]), 500);
+      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Ottimo. 📍 2. DOVE ti trovavi esattamente? (Opzionale)" }]), 500);
       setStep(1);
     } else if (step === 1) {
       setForm({ ...form, where: input });
-      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Ok. 3. Qual è il tuo tag INSTAGRAM? Ti avviseremo lì in privato se ti rispondono. (Opzionale. Es @agora)" }]), 500);
+      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Ok. 📸 3. Qual è il tuo tag INSTAGRAM? Ti avviseremo lì in privato se ti rispondono. (Opzionale. Es @agora)" }]), 500);
       setStep(2);
     } else if (step === 2) {
       setForm({ ...form, instagram: input });
-      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Perfetto. Infine, 4. CHI o cosa stai cercando? (Obbligatorio)" }]), 500);
+      setTimeout(() => setHistory(h => [...h, { sender: 'bot', text: "Perfetto. Infine, 🔎 4. CHI o cosa stai cercando? (Obbligatorio)" }]), 500);
       setStep(3);
     } else if (step === 3) {
       const finalForm = { ...form, lookingFor: input };
@@ -548,7 +548,7 @@ function ThemeChat() {
         if (ok) {
           setHistory(h => [...h, { sender: 'bot', text: "Spotted inviato con successo! 🕵️‍♂️" }]);
           setTimeout(() => {
-            setHistory([{ sender: 'bot', text: "Inviarne un altro? 1. QUANDO l'hai visto? (Opzionale)" }]);
+            setHistory([{ sender: 'bot', text: "Inviarne un altro? 🗓️ 1. QUANDO l'hai visto? (Opzionale)" }]);
             setStep(0);
             setForm({ lookingFor: "", when: "", where: "", instagram: "" });
           }, 3000);
@@ -641,7 +641,7 @@ function ThemeBoard() {
 
         <form onSubmit={handleSubmit} className="space-y-6 font-mono text-[#000000]">
           <div className="space-y-1">
-            <label className="block text-sm font-black uppercase">1. Quando? (Opz.)</label>
+            <label className="block text-sm font-black uppercase">🗓️ 1. Quando? (Opz.)</label>
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
               className="w-full bg-[#F3ECE0]/50 border-4 border-[#000000] focus:bg-[#DC5F00]/10 focus:border-[#DC5F00] outline-none text-lg placeholder:text-[#000000]/30 font-bold p-2 transition-colors duration-200"
@@ -650,7 +650,7 @@ function ThemeBoard() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-black uppercase">2. Dove? (Opz.)</label>
+            <label className="block text-sm font-black uppercase">📍 2. Dove? (Opz.)</label>
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
               className="w-full bg-[#F3ECE0]/50 border-4 border-[#000000] focus:bg-[#DC5F00]/10 focus:border-[#DC5F00] outline-none text-lg placeholder:text-[#000000]/30 font-bold p-2 transition-colors duration-200"
@@ -659,7 +659,7 @@ function ThemeBoard() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-black uppercase">3. Il tuo Instagram (Opz.)</label>
+            <label className="block text-sm font-black uppercase">📸 3. Il tuo Instagram (Opz.)</label>
             <div className="text-[10px] leading-tight mb-1 opacity-70">Verrai avvisato qui in privato se qualcuno risponde. Es. @tuotag</div>
             <input
               type="text" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value})}
@@ -670,7 +670,7 @@ function ThemeBoard() {
 
           <div className="space-y-1">
             <label className="block text-sm font-black uppercase">
-               4. Chi cerchi? <span className="text-[#DC5F00]">*</span>
+               🔎 4. Chi cerchi? <span className="text-[#DC5F00]">*</span>
             </label>
             <textarea
               required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
