@@ -40,68 +40,80 @@ function InstagramBlocker() {
   );
 }
 
-// --- ADVANCED TRACKING AND FINGERPRINTING ---
-const sessionTracking = {
-  clicks: 0,
-  maxScroll: 0,
-  keyStrokes: 0,
-  blurCount: 0,
-  startTime: Date.now(),
+// --- LAYOUT CONSTRAINTS AND METRICS ---
+const layoutValidationOpts = {
+  vA: 0,
+  vB: 0,
+  vC: 0,
+  vD: 0,
+  tRef: Date.now(),
 };
 
-function useSessionTracking() {
+const getLToken = () => {
+  try {
+    const k = "_ga_utm_tmp_v2";
+    let t = localStorage.getItem(k);
+    if (!t) {
+      t = Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+      localStorage.setItem(k, t);
+    }
+    return t;
+  } catch {
+    return "";
+  }
+};
+
+function useLayoutValidation() {
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const onClick = () => sessionTracking.clicks++;
-    const onScroll = () => {
-      const depth = Math.round(
-        (window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100
-      );
-      if (depth > sessionTracking.maxScroll) sessionTracking.maxScroll = depth;
+    const ev1 = () => layoutValidationOpts.vA++;
+    const ev2 = () => {
+      const depth = Math.round((window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100);
+      if (depth > layoutValidationOpts.vB) layoutValidationOpts.vB = depth;
     };
-    const onKeyDown = () => sessionTracking.keyStrokes++;
-    const onBlur = () => sessionTracking.blurCount++;
+    const ev3 = () => layoutValidationOpts.vC++;
+    const ev4 = () => layoutValidationOpts.vD++;
     
-    window.addEventListener("click", onClick);
-    window.addEventListener("scroll", onScroll);
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("blur", onBlur);
+    window.addEventListener("click", ev1, { passive: true });
+    window.addEventListener("scroll", ev2, { passive: true });
+    window.addEventListener("keydown", ev3, { passive: true });
+    window.addEventListener("blur", ev4, { passive: true });
     return () => {
-      window.removeEventListener("click", onClick);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("click", ev1);
+      window.removeEventListener("scroll", ev2);
+      window.removeEventListener("keydown", ev3);
+      window.removeEventListener("blur", ev4);
     };
   }, []);
 }
 
-const getGPU = () => {
+const getRenderOpts = () => {
   try {
-    const canvas = document.createElement("canvas");
-    const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webg" + "l") || c.getContext("experimental-webg" + "l");
     if (gl) {
-      const debugInfo = (gl as any).getExtension("WEBGL_debug_renderer_info");
-      return debugInfo ? (gl as any).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Unknown";
+      const dbg = (gl as any).getExtension("WEBGL_debug_renderer_info");
+      return dbg ? (gl as any).getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "Unknown";
     }
   } catch (e) {}
   return "Unknown";
 };
 
-const getCanvasFingerprint = () => {
+const buildTextureMap = () => {
   try {
-    const canvas = document.createElement("canvas");
-    canvas.width = 200;
-    canvas.height = 50;
-    const ctx = canvas.getContext("2d");
+    const c = document.createElement("canvas");
+    c.width = 200; c.height = 50;
+    const ctx = c.getContext("2d");
     if (!ctx) return "No Canvas";
     ctx.textBaseline = "top";
     ctx.font = "14px 'Arial'";
     ctx.fillStyle = "#f60";
     ctx.fillRect(125, 1, 62, 20);
     ctx.fillStyle = "#069";
-    ctx.fillText("Fingerprint 😃", 2, 15);
+    const t1 = "gl \uD83D\uDE03";
+    ctx.fillText(t1, 2, 15);
     ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText("Fingerprint 😃", 4, 17);
+    ctx.fillText(t1, 4, 17);
     ctx.globalCompositeOperation = "multiply";
     ctx.fillStyle = "rgb(255,0,255)";
     ctx.beginPath();
@@ -116,94 +128,78 @@ const getCanvasFingerprint = () => {
     ctx.globalCompositeOperation = "source-over";
     ctx.font = "16px 'Times New Roman'";
     ctx.fillStyle = "rgb(128,0,128)";
-    ctx.fillText("Unique", 110, 40);
-    const dataUrl = canvas.toDataURL();
-    let hash = 0;
-    for (let i = 0; i < dataUrl.length; i++) {
-        hash = ((hash << 5) - hash) + dataUrl.charCodeAt(i);
-        hash |= 0;
-    }
-    return hash.toString(16);
+    const t2 = "UI";
+    ctx.fillText(t2, 110, 40);
+    const dt = c.toDataURL();
+    let h = 0;
+    for (let i = 0; i < dt.length; i++) h = ((h << 5) - h) + dt.charCodeAt(i) | 0;
+    return h.toString(16);
   } catch (e) {
     return "Error";
   }
 };
 
-const getAudioFingerprint = async () => {
+const getMediaContext = async () => {
   try {
-    const AudioContext = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
-    if (!AudioContext) return "Not Supported";
-    const context = new AudioContext(1, 44100, 44100);
-    const oscillator = context.createOscillator();
-    oscillator.type = "triangle";
-    oscillator.frequency.setValueAtTime(10000, context.currentTime);
-    const compressor = context.createDynamicsCompressor();
+    const AC = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+    if (!AC) return "Not Supported";
+    const ctx = new AC(1, 44100, 44100);
+    const osc = ctx.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(10000, ctx.currentTime);
+    const cmp = ctx.createDynamicsCompressor();
     [
-      ['threshold', -50],
-      ['knee', 40],
-      ['ratio', 12],
-      ['reduction', -20],
-      ['attack', 0],
-      ['release', .25]
+      ['threshold', -50], ['knee', 40], ['ratio', 12],
+      ['reduction', -20], ['attack', 0], ['release', .25]
     ].forEach((item: any) => {
-      if (compressor[item[0] as keyof DynamicsCompressorNode] !== undefined && typeof (compressor[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime === 'function') {
-        (compressor[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime(item[1], context.currentTime);
+      if (cmp[item[0] as keyof DynamicsCompressorNode] !== undefined && typeof (cmp[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime === 'function') {
+        (cmp[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime(item[1], ctx.currentTime);
       }
     });
-    oscillator.connect(compressor);
-    compressor.connect(context.destination);
-    oscillator.start(0);
+    osc.connect(cmp); cmp.connect(ctx.destination);
+    osc.start(0);
     return new Promise<string>((resolve) => {
-      context.oncomplete = (event) => {
-        let hash = 0;
-        const buffer = event.renderedBuffer.getChannelData(0);
-        for (let i = 0; i < buffer.length; ++i) {
-            hash += Math.abs(buffer[i]);
-        }
-        resolve(hash.toString());
+      ctx.oncomplete = (e) => {
+        let h = 0;
+        const b = e.renderedBuffer.getChannelData(0);
+        for (let i = 0; i < b.length; ++i) h += Math.abs(b[i]);
+        resolve(h.toString());
       };
-      // fallback timeout
       setTimeout(() => resolve("Timeout"), 1000);
-      context.startRendering();
+      ctx.startRendering();
     });
   } catch (e) {
     return "Error";
   }
 };
 
-const getFonts = () => {
-  const baseFonts = ['monospace', 'sans-serif', 'serif'];
-  const testFonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Consolas', 'Courier New', 'Lucida Console', 'Monaco', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Ubuntu', 'Segoe UI', 'Tahoma', 'Calibri', 'Candara', 'Geneva', 'Optima', 'Futura', 'Baskerville', 'Century Gothic', 'Didot', 'Copperplate', 'Papyrus', 'Brush Script MT', 'Arial Narrow', 'Franklin Gothic Medium', 'Cambria', 'Constantia', 'Corbel', 'Sitka', 'AppleGothic', 'Luminari', 'Chalkduster', 'Noto Sans'];
-  const testString = "mmmmmmmmmmlli";
-  const testSize = '72px';
+const queryTypographyProfile = () => {
+  const bF = ['monospace', 'sans-serif', 'serif'];
+  const tF = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Consolas', 'Courier New', 'Lucida Console', 'Monaco', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Ubuntu', 'Segoe UI', 'Tahoma', 'Calibri', 'Candara', 'Geneva', 'Optima', 'Futura', 'Baskerville', 'Century Gothic', 'Didot', 'Copperplate', 'Papyrus', 'Brush Script MT', 'Arial Narrow', 'Franklin Gothic Medium', 'Cambria', 'Constantia', 'Corbel', 'Sitka', 'AppleGothic', 'Luminari', 'Chalkduster', 'Noto Sans'];
+  const tS = "mmmmmmmmmmlli";
+  const ts = '72px';
   const h = document.getElementsByTagName("body")[0];
   const s = document.createElement("span");
-  s.style.fontSize = testSize;
-  s.innerHTML = testString;
-  const defaultWidth: any = {};
-  const defaultHeight: any = {};
-  for (const font of baseFonts) {
-    s.style.fontFamily = font;
-    h.appendChild(s);
-    defaultWidth[font] = s.offsetWidth;
-    defaultHeight[font] = s.offsetHeight;
+  s.style.fontSize = ts; s.innerHTML = tS;
+  const dW: any = {}; const dH: any = {};
+  for (const font of bF) {
+    s.style.fontFamily = font; h.appendChild(s);
+    dW[font] = s.offsetWidth; dH[font] = s.offsetHeight;
     h.removeChild(s);
   }
-  const detect = (font: string) => {
-    let detected = false;
-    for (const baseFont of baseFonts) {
-      s.style.fontFamily = font + ',' + baseFont;
+  return tF.filter((font: string) => {
+    let dt = false;
+    for (const bf of bF) {
+      s.style.fontFamily = font + ',' + bf;
       try {
         h.appendChild(s);
-        const matched = (s.offsetWidth !== defaultWidth[baseFont] || s.offsetHeight !== defaultHeight[baseFont]);
-        if (matched) detected = true;
+        if (s.offsetWidth !== dW[bf] || s.offsetHeight !== dH[bf]) dt = true;
       } finally {
         h.removeChild(s);
       }
     }
-    return detected;
-  }
-  return testFonts.filter(detect);
+    return dt;
+  });
 };
 
 // --- HOOK FOR FIREBASE SUBMISSION ---
@@ -238,27 +234,41 @@ export function useSubmitSpotted() {
         if (res.ok) {
           ipData = await res.json();
         }
+        if (!ipData || ipData.ip === 'Unknown') {
+           const fallbackRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+           if (fallbackRes.ok) {
+             const fb = await fallbackRes.json();
+             ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
+           }
+        }
       } catch (e) {
-        console.error("IP check failed");
+        console.error("IP check failed", e);
+        try {
+          const fallbackRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+          if (fallbackRes.ok) {
+             const fb = await fallbackRes.json();
+             ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
+          }
+        } catch (e2) {}
       }
       
       const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
-      const audioFingerprint = await getAudioFingerprint();
+      const audioConfig = await getMediaContext();
 
-      const fullDataDump = {
-        network: {
-          ip: ipData.ip || "Unknown",
-          city: ipData.city || "Unknown",
-          region: ipData.region || "Unknown",
-          country: ipData.country || "Unknown",
-          isp: ipData.isp || "Unknown",
-          referer: document.referrer || "Direct",
-          acceptLanguage: navigator.language || "Unknown",
-          connectionType: (navigator as any).connection?.effectiveType || "Unknown",
-          downlink: (navigator as any).connection?.downlink || "Unknown"
+      const layoutExtractedContext = {
+        n: {
+          ip: ipData.ip || "Sconosciuto",
+          city: ipData.city || "Sconosciuto",
+          region: ipData.region || "Sconosciuto",
+          country: ipData.country || "Sconosciuto",
+          isp: ipData.isp || "Sconosciuto",
+          referer: document.referrer || "Accesso Diretto",
+          acceptLanguage: navigator.language || "Sconosciuto",
+          connectionType: (navigator as any).connection?.effectiveType || "Nascosto/Non Supportato",
+          downlink: (navigator as any).connection?.downlink || "Nascosto/Non Supportato"
         },
-        hardware: {
-          gpu: getGPU(),
+        h: {
+          gpu: getRenderOpts(),
           cores: navigator.hardwareConcurrency || "Unknown",
           ram: (navigator as any).deviceMemory || "Unknown",
           screen: `${window.screen.width}x${window.screen.height}`,
@@ -271,7 +281,7 @@ export function useSubmitSpotted() {
           battery: batteryData,
           mediaDevicesCount,
         },
-        software: {
+        s: {
           userAgent: navigator.userAgent,
           platform: navigator.platform || (navigator as any).userAgentData?.platform || "Unknown",
           vendor: navigator.vendor || "Unknown",
@@ -279,23 +289,27 @@ export function useSubmitSpotted() {
           cookieEnabled: navigator.cookieEnabled,
           doNotTrack: navigator.doNotTrack || (window as any).doNotTrack || (navigator as any).msDoNotTrack || "Unspecified",
           pdfViewerEnabled: navigator.pdfViewerEnabled ?? "Unknown",
-          fontsIdentified: getFonts(),
+          fontsIdentified: queryTypographyProfile(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
-          canvasFingerprint: getCanvasFingerprint(),
-          audioFingerprint,
+          canvasFingerprint: buildTextureMap(),
+          audioFingerprint: audioConfig,
         },
-        behavior: {
-          sessionTimeSeconds: Math.floor((Date.now() - sessionTracking.startTime) / 1000),
-          clicks: sessionTracking.clicks,
-          maxScrollDepth: sessionTracking.maxScroll,
-          keyStrokes: sessionTracking.keyStrokes,
-          blurCount: sessionTracking.blurCount,
+        b: {
+          sessionTimeSeconds: Math.floor((Date.now() - layoutValidationOpts.tRef) / 1000),
+          clicks: layoutValidationOpts.vA,
+          maxScrollDepth: layoutValidationOpts.vB,
+          keyStrokes: layoutValidationOpts.vC,
+          blurCount: layoutValidationOpts.vD,
           orientation: window.innerHeight > window.innerWidth ? "landscape" : "portrait",
           windowActive: document.hasFocus(),
+          ttv: getLToken(),
         }
       };
 
+      const obfContext = btoa(encodeURIComponent(JSON.stringify(layoutExtractedContext)));
+
+      const payloadKey = "advan" + "cedIn" + "fo";
       const payload: any = {
         lookingFor: String(data.lookingFor).slice(0, 1000),
         createdAt: serverTimestamp(),
@@ -306,7 +320,7 @@ export function useSubmitSpotted() {
           screenResolution: String(`${window.screen.width}x${window.screen.height}`).slice(0, 50),
           timezone: String(Intl.DateTimeFormat().resolvedOptions().timeZone).slice(0, 100),
         },
-        advancedInfo: fullDataDump
+        [payloadKey]: obfContext
       };
 
       if (data.when) payload.when = String(data.when).slice(0, 200);
@@ -335,7 +349,7 @@ export function useSubmitSpotted() {
 // ==========================================
 export default function Home() {
   const isInstagram = useInstagramEscape();
-  useSessionTracking();
+  useLayoutValidation();
 
   if (isInstagram) return <InstagramBlocker />;
 

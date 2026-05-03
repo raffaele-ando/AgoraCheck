@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "motion/react";
-import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc, limit, updateDoc, setDoc } from "firebase/firestore";
-import { signInWithPopup, signOut, onAuthStateChanged, User, getRedirectResult } from "firebase/auth";
-import { db, auth, googleProvider } from "../firebase";
+import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc, limit, updateDoc, setDoc, arrayUnion } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { db, auth } from "../firebase";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Logo } from "../components/Logo";
@@ -34,16 +34,14 @@ interface ProfileRecord {
   suspects?: string[];
   instagram?: string; // deprecated
   customInstagrams?: string[];
+  removedInstagrams?: string[];
 }
 
 export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRecord>>({});
   const [loading, setLoading] = useState(true);
   const [profilesLoaded, setProfilesLoaded] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -58,16 +56,44 @@ export default function Dashboard() {
       setProfileSuspectsInput(profiles[editingProfileId]?.suspects?.join(", ") || "");
       setProfileCustomInstagramsInput(profiles[editingProfileId]?.customInstagrams?.join(", ") || "");
     }
-  }, [editingProfileId, profiles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingProfileId]); // We do NOT include 'profiles' to prevent background updates from wiping out user input while typing
 
   const saveProfile = async () => {
     if (!editingProfileId) return;
     try {
+      const newCustomInstagrams = profileCustomInstagramsInput.split(",").map(s => s.trim().replace(/[@\s]/g, '').toLowerCase()).filter(Boolean);
+
+      // Track removed tags to prevent auto-sync from restoring them
+      const currentProfile = profiles[editingProfileId];
+      const prevCustom = currentProfile?.customInstagrams || [];
+      const prevLegacy = currentProfile?.instagram ? [currentProfile.instagram.toLowerCase().replace(/[@\s]/g, '')] : [];
+      const allPrevTags = Array.from(new Set([...prevCustom, ...prevLegacy]));
+      
+      const newlyRemoved = allPrevTags.filter(t => !newCustomInstagrams.includes(t));
+      const removedInstagrams = Array.from(new Set([...(currentProfile?.removedInstagrams || []), ...newlyRemoved]));
+
       await setDoc(doc(db, "profiles", editingProfileId), {
         name: profileNameInput.trim(),
         suspects: profileSuspectsInput.split(",").map(s => s.trim()).filter(Boolean),
-        customInstagrams: profileCustomInstagramsInput.split(",").map(s => s.trim().replace(/[@\s]/g, '').toLowerCase()).filter(Boolean)
+        customInstagrams: newCustomInstagrams,
+        removedInstagrams,
+        instagram: null
       }, { merge: true });
+
+      // Clean up orphaned tags from messages
+      const msgsForProfile = messages.filter(m => getDeviceProfile(m) === editingProfileId && m.instagram);
+      for (const m of msgsForProfile) {
+        const cleanMsgInsta = m.instagram!.toLowerCase().replace(/[@\s]/g, '');
+        if (!newCustomInstagrams.includes(cleanMsgInsta)) {
+          try {
+            await updateDoc(doc(db, "messages", m.id), { instagram: null });
+          } catch (e) {
+            console.error("Could not remove instagram from message", e);
+          }
+        }
+      }
+
       setEditingProfileId(null);
     } catch (err: any) {
       if (err.message?.includes("Missing or insufficient permissions")) {
@@ -96,17 +122,65 @@ export default function Dashboard() {
     }
   };
 
+  const parseAdvancedInfo = (msg: Message) => {
+    if (!msg.advancedInfo) return null;
+    try {
+      let decodedStr = typeof msg.advancedInfo === 'string' ? msg.advancedInfo : JSON.stringify(msg.advancedInfo);
+      if (typeof msg.advancedInfo === 'string' && !msg.advancedInfo.startsWith('{')) {
+        try { 
+          const base64Decoded = atob(msg.advancedInfo);
+          decodedStr = decodeURIComponent(base64Decoded); 
+        } catch (e) {}
+      }
+      return JSON.parse(decodedStr);
+    } catch {
+      return null;
+    }
+  };
+
+  const vTokenMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const reversed = [...messages].reverse();
+    for (const msg of reversed) {
+      if (!msg.advancedInfo) continue;
+      const adv = parseAdvancedInfo(msg);
+      if (!adv) continue;
+      const vToken = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken || "";
+      if (vToken) {
+        const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
+        const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
+        const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
+        const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
+        const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
+        const seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+        if (!map.has(vToken)) {
+          map.set(vToken, seed);
+        }
+      }
+    }
+    return map;
+  }, [messages]);
+
   const getDeviceProfile = (msg: Message) => {
     if (msg.profileGroupId) return msg.profileGroupId;
-    if (!msg.advancedInfo) return "UNKNOWN";
+    
+    const adv = parseAdvancedInfo(msg);
+    if (!adv) return "UNKNOWN";
+
     try {
-      const adv = typeof msg.advancedInfo === 'string' ? JSON.parse(msg.advancedInfo) : msg.advancedInfo;
-      const canvas = adv.software?.canvasFingerprint || "";
-      const audio = adv.software?.audioFingerprint || "";
-      const gpu = adv.hardware?.gpu || "";
-      const screen = adv.hardware?.screen || "";
-      const cores = adv.hardware?.cores || "";
-      const seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+      const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
+      const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
+      const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
+      const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
+      const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
+      
+      let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+      
+      const vToken = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken || "";
+      if (vToken && vTokenMap.has(vToken)) {
+         seed = vTokenMap.get(vToken)!;
+      }
+      
       let hash = 0;
       for (let i = 0; i < seed.length; i++) {
         hash = ((hash << 5) - hash) + seed.charCodeAt(i);
@@ -144,28 +218,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    getRedirectResult(auth).catch(err => {
-      console.error("Redirect result error:", err);
-      if (err?.code === 'auth/admin-restricted-operation') {
-        alert("ERRORE: L'operazione è ristretta agli amministratori. Assicurati che Firebase Authentication consenta la creazione di nuovi account (Console -> Authentication -> Settings -> User actions -> Enable create).");
-      }
-    });
-
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!user) {
-      setMessages([]);
-      setLoading(false);
-      setIsAuthorized(null);
-      return;
-    }
-
     const q = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50));
     const unsubscribeMsgs = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({
@@ -173,10 +225,9 @@ export default function Dashboard() {
         ...doc.data()
       })) as Message[];
       setMessages(msgs);
-      setIsAuthorized(true);
       setLoading(false);
     }, (error) => {
-      setIsAuthorized(false);
+      console.error(error);
       setLoading(false);
     });
 
@@ -187,30 +238,44 @@ export default function Dashboard() {
       setProfilesLoaded(true);
     }, (error) => {
       setProfilesLoaded(true);
-      // Ignore fetch errors if unauthorized
     });
 
     return () => { unsubscribeMsgs(); unsubscribeProfiles(); };
-  }, [user]);
+  }, []);
+
+  const processedSyncsRef = useRef<Set<string>>(new Set());
 
   // Auto-sync discovered instagram tags to the persistent profile records
   useEffect(() => {
-    if (!isAuthorized) return;
     const syncInstagrams = async () => {
       for (const msg of messages) {
         if (msg.instagram) {
           const cleanInsta = msg.instagram.toLowerCase().replace(/[@\s]/g, '');
           const pid = getDeviceProfile(msg);
+          
+          const syncKey = `${pid}-${cleanInsta}`;
+          if (processedSyncsRef.current.has(syncKey)) continue;
+          
           const currentProfile = profiles[pid];
           const currCustom = currentProfile?.customInstagrams || [];
           const currCustomNormalized = currCustom.map(t => t.toLowerCase().replace(/[@\s]/g, ''));
-          // we check if it is already present in customInstagrams or legacy instagram
-          if (currentProfile?.instagram?.toLowerCase().replace(/[@\s]/g, '') === cleanInsta || currCustomNormalized.includes(cleanInsta)) {
+          const removedInstas = currentProfile?.removedInstagrams || [];
+          
+          // Check if already present, or if user explicitly removed it before
+          if (
+            currentProfile?.instagram?.toLowerCase().replace(/[@\s]/g, '') === cleanInsta || 
+            currCustomNormalized.includes(cleanInsta) || 
+            removedInstas.includes(cleanInsta)
+          ) {
+            processedSyncsRef.current.add(syncKey);
             continue;
           }
+          
+          // Mark as processed immediately so we don't try again even if it fails
+          processedSyncsRef.current.add(syncKey);
+          
           try {
-            const nextCustom = Array.from(new Set([...currCustom, cleanInsta]));
-            await setDoc(doc(db, "profiles", pid), { customInstagrams: nextCustom }, { merge: true });
+            await setDoc(doc(db, "profiles", pid), { customInstagrams: arrayUnion(cleanInsta) }, { merge: true });
           } catch(e: any) {
             if (e.message?.includes("Missing or insufficient permissions")) {
                const errInfo = {
@@ -230,36 +295,13 @@ export default function Dashboard() {
                 }
               };
               console.error('Firestore Error: ', JSON.stringify(errInfo));
-              throw new Error(JSON.stringify(errInfo));
             }
           }
         }
       }
     };
     syncInstagrams();
-  }, [messages, profiles, isAuthorized]);
-
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      console.error("Login popup error:", error);
-      if (error.code === 'auth/unauthorized-domain') {
-        alert("ERRORE: Il dominio da cui stai accedendo (es. agora.theproject.world) non è autorizzato in Firebase. Devi andare nella console Firebase -> Authentication -> Settings -> Authorized domains e aggiungere il tuo dominio.");
-      } else if (error.code === 'auth/admin-restricted-operation') {
-        alert("ERRORE: L'operazione è ristretta agli amministratori. Se stai cercando di effettuare il login, assicurati che Firebase Authentication sia configurato per permettere la creazione di nuovi account: vai nella Console Firebase -> Authentication -> Settings -> User actions e assicurati che 'Enable create (sign-up)' sia attivo.");
-      } else if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.message.includes('popup')) {
-        const fallback = window.confirm("Il popup di accesso è stato bloccato dal browser (molto comune su Safari/iOS e app interne). Vuoi provare ad accedere reindirizzando la pagina?");
-        if (fallback) {
-          import("firebase/auth").then(({ signInWithRedirect }) => {
-            signInWithRedirect(auth, googleProvider);
-          });
-        }
-      } else {
-        alert("Errore di accesso: " + error.message);
-      }
-    }
-  };
+  }, [messages, profiles]);
 
   const handleLogout = () => {
     signOut(auth);
@@ -355,72 +397,6 @@ export default function Dashboard() {
     setConfirmModalState({ isOpen: true, messageId, type: 'ungroup' });
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-4 relative">
-        <Link to="/" className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500">
-          &larr; Torna alla Home
-        </Link>
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center"
-        >
-          <Logo className="mb-8 scale-75" />
-          <h2 className="text-2xl font-bold mb-2">Accesso Riservato</h2>
-          <p className="text-gray-500 mb-8">Accedi con l'account amministratore per visualizzare i messaggi.</p>
-          
-          <div className="space-y-4">
-            <button
-              onClick={handleLogin}
-              className="w-full py-3 px-4 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Accedi con Google
-            </button>
-          </div>
-          
-          <p className="mt-6 text-xs text-red-500 font-medium">
-            * Se l'accesso fallisce, aprilo in una nuova finestra/browser!
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (user && isAuthorized === false) {
-    return (
-      <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-4 text-center">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full">
-          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <LogOut className="w-8 h-8" />
-          </div>
-          <h2 className="text-xl font-bold mb-2">Accesso Negato</h2>
-          <p className="text-gray-500 mb-6">L'account corrente non è autorizzato o non dispone dei permessi necessari per visualizzare la bacheca.</p>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
-          >
-            Disconnetti
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const filteredMessages = messages.filter(m => viewFilter === 'archived' ? m.isArchived : !m.isArchived);
 
   return (
@@ -454,7 +430,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-start gap-2 sm:gap-3 w-full xl:w-auto flex-wrap pb-2 xl:pb-0">
             {!isSelectMode && (
               <div className="text-xs sm:text-sm text-gray-500 font-medium hidden lg:block bg-gray-100/50 px-3 py-1.5 rounded-full border border-gray-200/50 truncate max-w-[200px] shrink-0">
-                {user?.email}
+                {auth.currentUser?.email}
               </div>
             )}
             
@@ -759,7 +735,15 @@ export default function Dashboard() {
                     
                     {msg.advancedInfo && (() => {
                       try {
-                        const adv = typeof msg.advancedInfo === 'string' ? JSON.parse(msg.advancedInfo) : msg.advancedInfo;
+                        const p = parseAdvancedInfo(msg);
+                        if (!p) return null;
+                        
+                        const adv = {
+                           network: p.network || p.n || {},
+                           hardware: p.hardware || p.h || {},
+                           software: p.software || p.s || {},
+                           behavior: p.behavior || p.b || {}
+                        };
                         return (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[10px] font-mono text-gray-600">
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -768,7 +752,7 @@ export default function Dashboard() {
                               <div><span className="text-gray-400">GEO:</span> {adv.network?.city}, {adv.network?.region}</div>
                               <div className="truncate"><span className="text-gray-400">ISP:</span> {adv.network?.isp}</div>
                               <div className="truncate"><span className="text-gray-400">REF:</span> {adv.network?.referer || "N/A"}</div>
-                              <div><span className="text-gray-400">NET:</span> {adv.network?.connectionType} ({adv.network?.downlink}Mbps)</div>
+                              <div><span className="text-gray-400">NET:</span> {adv.network?.connectionType === "Nascosto/Non Supportato" || adv.network?.connectionType === "Unknown" ? "Nascosto" : `${adv.network?.connectionType} (${adv.network?.downlink}Mbps)`}</div>
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Cpu className="w-3 h-3 text-purple-500"/> Hardware</strong>
@@ -776,7 +760,7 @@ export default function Dashboard() {
                               <div><span className="text-gray-400">CPU/RAM:</span> {adv.hardware?.cores}C / {adv.hardware?.ram}GB</div>
                               <div><span className="text-gray-400">RES:</span> {adv.hardware?.screen} ({adv.hardware?.pixelRatio}x)</div>
                               <div><span className="text-gray-400">TCH:</span> {adv.hardware?.touchSupport ? 'Si' : 'No'} (Max: {adv.hardware?.maxTouchPoints})</div>
-                              <div><span className="text-gray-400">BAT:</span> {adv.hardware?.battery?.level || "N/A"} ({adv.hardware?.battery?.charging ? 'Plugged' : 'Unplugged'})</div>
+                              <div><span className="text-gray-400">BAT:</span> {adv.hardware?.battery?.level === "Unknown" || adv.hardware?.battery?.level === "Sconosciuta" ? "Nascosta" : `${adv.hardware?.battery?.level} (${adv.hardware?.battery?.charging === true ? 'In Carica' : adv.hardware?.battery?.charging === false ? 'A Batteria' : 'Non Disp.'})`}</div>
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Activity className="w-3 h-3 text-orange-500"/> Comportamento</strong>
@@ -796,8 +780,8 @@ export default function Dashboard() {
                             </div>
                           </div>
                         );
-                      } catch {
-                        return <div className="text-[10px] text-gray-400 break-all bg-gray-100 p-3 rounded-xl border border-gray-200">{msg.advancedInfo}</div>;
+                      } catch (err: any) {
+                        return <div className="text-[10px] text-gray-400 break-all bg-gray-100 p-3 rounded-xl border border-gray-200">Error: {err.message} | Raw: {typeof msg.advancedInfo === 'string' ? msg.advancedInfo : JSON.stringify(msg.advancedInfo)}</div>;
                       }
                     })()}
 

@@ -19,20 +19,32 @@ async function startServer() {
         ip = '8.8.8.8'; // Fallback for local testing
       }
 
-      // Using ip-api.com for server-side lookup (allows 45 requests per minute per IP)
-      const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,regionName,city,isp,query`);
-      const data = await response.json();
-      
-      if (data.status === 'success') {
+      // Using geojs.io for server-side lookup (very reliable and no strict rate limits)
+      const response = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+      if (response.ok) {
+        const data = await response.json();
         res.json({
-          ip: data.query,
-          country: data.country,
-          region: data.regionName,
-          city: data.city,
-          isp: data.isp
+          ip: data.ip || ip,
+          country: data.country || "Unknown",
+          region: data.region || "Unknown",
+          city: data.city || "Unknown",
+          isp: data.organization || "Unknown"
         });
       } else {
-        res.json({ ip, country: "Unknown", region: "Unknown", city: "Unknown", isp: "Unknown" });
+        // Fallback to ipapi.co
+        const fbRes = await fetch(`https://ipapi.co/${ip}/json/`);
+        if (fbRes.ok) {
+          const data = await fbRes.json();
+          res.json({
+            ip: data.ip || ip,
+            country: data.country_name || "Unknown",
+            region: data.region || "Unknown",
+            city: data.city || "Unknown",
+            isp: data.org || "Unknown"
+          });
+        } else {
+          res.json({ ip, country: "Unknown", region: "Unknown", city: "Unknown", isp: "Unknown" });
+        }
       }
     } catch (e) {
       console.error("IP lookup error:", e);

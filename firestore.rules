@@ -22,7 +22,7 @@ service cloud.firestore {
              (!('when' in data) || (data.when is string && data.when.size() <= 200)) &&
              (!('where' in data) || (data.where is string && data.where.size() <= 200)) &&
              (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 200)) &&
-             (!('advancedInfo' in data) || (data.advancedInfo is map)) &&
+             (!('advancedInfo' in data) || (data.advancedInfo is map || data.advancedInfo is string)) &&
              (!('profileGroupId' in data) || (data.profileGroupId is string && data.profileGroupId.size() <= 200)) &&
              data.createdAt is timestamp &&
              data.deviceInfo is map &&
