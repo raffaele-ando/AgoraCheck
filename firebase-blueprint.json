@@ -25,9 +25,22 @@
         }
       },
       "required": ["lookingFor", "createdAt", "deviceInfo"]
+    },
+    "RateLimit": {
+      "title": "Rate Limit",
+      "description": "User rate limiting document.",
+      "type": "object",
+      "properties": {
+        "lastMessageAt": { "type": "timestamp" }
+      },
+      "required": ["lastMessageAt"]
     }
   },
   "firestore": {
+    "rate_limits": {
+      "schema": { "$ref": "#/entities/RateLimit" },
+      "description": "Collection for rate limiting users."
+    },
     "messages": {
       "schema": { "$ref": "#/entities/Message" },
       "description": "Collection of anonymous spotted messages."

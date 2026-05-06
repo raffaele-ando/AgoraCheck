@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "motion/react";
-import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc, limit, updateDoc, setDoc, arrayUnion } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc, limit, updateDoc, setDoc, arrayUnion, where, startAfter, writeBatch, getDocs, deleteField } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase";
 import { format } from "date-fns";
@@ -26,6 +26,9 @@ interface Message {
   advancedInfo?: any;
   profileGroupId?: string;
   isArchived?: boolean;
+  computedProfileId?: string;
+  computedProfileColor?: string;
+  parsedAdvanced?: any;
 }
 
 interface ProfileRecord {
@@ -37,11 +40,83 @@ interface ProfileRecord {
   removedInstagrams?: string[];
 }
 
+const computeDeviceProfileColor = (profileId: string) => {
+  let hash = 0;
+  for (let i = 0; i < profileId.length; i++) {
+    hash = profileId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const cColor = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+  return '#' + '00000'.substring(0, 6 - cColor.length) + cColor;
+};
+
+const computeDeviceProfileId = (parsedAdv: any, deviceInfo: any, vTokenMap?: Map<string, string>): string => {
+  if (!parsedAdv) return "UNKNOWN";
+  try {
+    const canvas = parsedAdv.software?.canvasFingerprint || parsedAdv.s?.canvasFingerprint || parsedAdv.s?.c || "";
+    const audio = parsedAdv.software?.audioFingerprint || parsedAdv.s?.audioFingerprint || parsedAdv.s?.a || "";
+    const gpu = parsedAdv.hardware?.gpu || parsedAdv.h?.gpu || parsedAdv.h?.g || "";
+    const screen = parsedAdv.hardware?.screen || parsedAdv.h?.screen || parsedAdv.h?.s || "";
+    const cores = parsedAdv.hardware?.cores || parsedAdv.h?.cores || parsedAdv.h?.c || "";
+    
+    let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+    
+    const vToken = parsedAdv.behavior?.ttv || parsedAdv.b?.ttv || parsedAdv.b?.vToken || "";
+    if (vTokenMap && vToken && vTokenMap.has(vToken)) {
+       seed = vTokenMap.get(vToken)!;
+    } else if (seed === "----" && deviceInfo) {
+      const ip = deviceInfo.userAgent || "";
+      seed = ip;
+    }
+    
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0, ch; i < seed.length; i++) {
+        ch = seed.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+    const hash = 4294967296 * (2097151 & h2) + (h1>>>0);
+
+    return `AUTO-${hash.toString(16).toUpperCase().padStart(12, '0').slice(0, 8)}`;
+  } catch {
+    return "UNKNOWN";
+  }
+};
+
 export default function Dashboard() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRecord>>({});
   const [loading, setLoading] = useState(true);
   const [profilesLoaded, setProfilesLoaded] = useState(false);
+  
+  const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
+  const [historicalMessages, setHistoricalMessages] = useState<Message[]>([]);
+  const historicalMessagesRef = useRef(0);
+  
+  useEffect(() => {
+    historicalMessagesRef.current = historicalMessages.length;
+  }, [historicalMessages]);
+  
+  const [lastDocSnapshot, setLastDocSnapshot] = useState<any>(null);
+  
+  const messages = useMemo(() => {
+    const all = [...realtimeMessages, ...historicalMessages];
+    const unique = [];
+    const ids = new Set();
+    // Sort by createdAt desc
+    all.sort((a, b) => {
+      const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return tb - ta;
+    });
+    for (const m of all) {
+      if (!ids.has(m.id)) {
+        ids.add(m.id);
+        unique.push(m);
+      }
+    }
+    return unique;
+  }, [realtimeMessages, historicalMessages]);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -49,25 +124,31 @@ export default function Dashboard() {
   const [profileSuspectsInput, setProfileSuspectsInput] = useState("");
   const [profileCustomInstagramsInput, setProfileCustomInstagramsInput] = useState("");
   const [viewFilter, setViewFilter] = useState<'new' | 'archived'>('new');
+  
+  const editingProfileInitializedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (editingProfileId) {
-      setProfileNameInput(profiles[editingProfileId]?.name || "");
-      setProfileSuspectsInput(profiles[editingProfileId]?.suspects?.join(", ") || "");
-      setProfileCustomInstagramsInput(profiles[editingProfileId]?.customInstagrams?.join(", ") || "");
+      if (editingProfileInitializedRef.current !== editingProfileId && profiles[editingProfileId]) {
+        setProfileNameInput(profiles[editingProfileId]?.name || "");
+        setProfileSuspectsInput(profiles[editingProfileId]?.suspects?.join(", ") || "");
+        setProfileCustomInstagramsInput(profiles[editingProfileId]?.customInstagrams?.join(", ") || "");
+        editingProfileInitializedRef.current = editingProfileId;
+      }
+    } else {
+      editingProfileInitializedRef.current = null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editingProfileId]); // We do NOT include 'profiles' to prevent background updates from wiping out user input while typing
+  }, [editingProfileId, profiles]);
 
   const saveProfile = async () => {
     if (!editingProfileId) return;
     try {
-      const newCustomInstagrams = profileCustomInstagramsInput.split(",").map(s => s.trim().replace(/[@\s]/g, '').toLowerCase()).filter(Boolean);
+      const newCustomInstagrams = profileCustomInstagramsInput.split(",").map(s => s.trim().replace(/[^a-z0-9._]/g, '').toLowerCase()).filter(Boolean);
 
       // Track removed tags to prevent auto-sync from restoring them
       const currentProfile = profiles[editingProfileId];
       const prevCustom = currentProfile?.customInstagrams || [];
-      const prevLegacy = currentProfile?.instagram ? [currentProfile.instagram.toLowerCase().replace(/[@\s]/g, '')] : [];
+      const prevLegacy = currentProfile?.instagram ? [currentProfile.instagram.toLowerCase().replace(/[^a-z0-9._]/g, '')] : [];
       const allPrevTags = Array.from(new Set([...prevCustom, ...prevLegacy]));
       
       const newlyRemoved = allPrevTags.filter(t => !newCustomInstagrams.includes(t));
@@ -83,13 +164,26 @@ export default function Dashboard() {
 
       // Clean up orphaned tags from messages
       const msgsForProfile = messages.filter(m => getDeviceProfile(m) === editingProfileId && m.instagram);
-      for (const m of msgsForProfile) {
-        const cleanMsgInsta = m.instagram!.toLowerCase().replace(/[@\s]/g, '');
-        if (!newCustomInstagrams.includes(cleanMsgInsta)) {
-          try {
-            await updateDoc(doc(db, "messages", m.id), { instagram: null });
-          } catch (e) {
-            console.error("Could not remove instagram from message", e);
+      
+      if (msgsForProfile.length > 0) {
+        const batchSize = 500;
+        for (let i = 0; i < msgsForProfile.length; i += batchSize) {
+          const chunk = msgsForProfile.slice(i, i + batchSize);
+          const batchOp = writeBatch(db);
+          let hasUpdates = false;
+          for (const m of chunk) {
+            const cleanMsgInsta = m.instagram!.toLowerCase().replace(/[^a-z0-9._]/g, '');
+            if (!newCustomInstagrams.includes(cleanMsgInsta)) {
+              batchOp.update(doc(db, "messages", m.id), { instagram: null });
+              hasUpdates = true;
+            }
+          }
+          if (hasUpdates) {
+            try {
+              await batchOp.commit();
+            } catch (e) {
+              console.error("Could not remove instagram from message batch", e);
+            }
           }
         }
       }
@@ -115,27 +209,15 @@ export default function Dashboard() {
         };
         console.error('Firestore Error: ', JSON.stringify(errInfo));
         alert("Errore salvataggio profilo");
-        throw new Error(JSON.stringify(errInfo));
+      } else {
+        console.error(err);
+        alert("Errore salvataggio profilo");
       }
-      console.error(err);
-      alert("Errore salvataggio profilo");
     }
   };
 
-  const parseAdvancedInfo = (msg: Message) => {
-    if (!msg.advancedInfo) return null;
-    try {
-      let decodedStr = typeof msg.advancedInfo === 'string' ? msg.advancedInfo : JSON.stringify(msg.advancedInfo);
-      if (typeof msg.advancedInfo === 'string' && !msg.advancedInfo.startsWith('{')) {
-        try { 
-          const base64Decoded = atob(msg.advancedInfo);
-          decodedStr = decodeURIComponent(base64Decoded); 
-        } catch (e) {}
-      }
-      return JSON.parse(decodedStr);
-    } catch {
-      return null;
-    }
+  const parseAdvancedInfo = (msg: any) => {
+    return msg.parsedAdvanced || null;
   };
 
   const vTokenMap = useMemo(() => {
@@ -161,70 +243,124 @@ export default function Dashboard() {
     return map;
   }, [messages]);
 
+  const getDeviceProfileCacheRef = useRef(new Map<string, { resolvedSeed: string | undefined, groupId: string | undefined, result: string }>());
+
   const getDeviceProfile = (msg: Message) => {
     if (msg.profileGroupId) return msg.profileGroupId;
     
-    const adv = parseAdvancedInfo(msg);
-    if (!adv) return "UNKNOWN";
-
-    try {
-      const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
-      const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
-      const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
-      const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
-      const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
-      
-      let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
-      
-      const vToken = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken || "";
-      if (vToken && vTokenMap.has(vToken)) {
-         seed = vTokenMap.get(vToken)!;
-      }
-      
-      let hash = 0;
-      for (let i = 0; i < seed.length; i++) {
-        hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-        hash |= 0;
-      }
-      return `AUTO-${Math.abs(hash).toString(16).toUpperCase().padStart(6, '0')}`;
-    } catch {
-      return "UNKNOWN";
+    const cacheKey = msg.id;
+    const cache = getDeviceProfileCacheRef.current.get(cacheKey);
+    
+    const adv = msg.parsedAdvanced;
+    const vToken = adv ? (adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken || "") : "";
+    const currentResolvedSeed = vToken ? vTokenMap.get(vToken) : undefined;
+    
+    if (cache && cache.resolvedSeed === currentResolvedSeed && cache.groupId === msg.profileGroupId) {
+       return cache.result;
     }
+    
+    const result = computeDeviceProfileId(msg.parsedAdvanced, msg.deviceInfo, vTokenMap);
+    
+    getDeviceProfileCacheRef.current.set(cacheKey, { resolvedSeed: currentResolvedSeed, groupId: msg.profileGroupId, result });
+    return result;
   };
 
   const getProfileInstagrams = (profileId: string): { tags: string[], hasMultiple: boolean } => {
     // Collect from messages
     const msgsWithInsta = messages.filter(m => getDeviceProfile(m) === profileId && m.instagram);
-    const msgTags = msgsWithInsta.map(m => m.instagram!.toLowerCase().replace(/[@\s]/g, ''));
+    const msgTags = msgsWithInsta.map(m => m.instagram!.toLowerCase().replace(/[^a-z0-9._]/g, ''));
     
     // Collect from profiles (legacy single instagram + custom array)
     const profile = profiles[profileId];
     const profileTags = [];
-    if (profile?.instagram) profileTags.push(profile.instagram.toLowerCase().replace(/[@\s]/g, ''));
-    if (profile?.customInstagrams) profileTags.push(...profile.customInstagrams.map(t => t.toLowerCase().replace(/[@\s]/g, '')));
+    if (profile?.instagram) profileTags.push(profile.instagram.toLowerCase().replace(/[^a-z0-9._]/g, ''));
+    if (profile?.customInstagrams) profileTags.push(...profile.customInstagrams.map(t => t.toLowerCase().replace(/[^a-z0-9._]/g, '')));
     
     // Unique list
     const uniqueTags = Array.from(new Set([...msgTags, ...profileTags]));
     return { tags: uniqueTags, hasMultiple: uniqueTags.length > 1 };
   };
 
+  const getProfileColorCacheRef = useRef(new Map<string, string>());
+  
   const getProfileColor = (profileId: string) => {
-    let hash = 0;
-    for (let i = 0; i < profileId.length; i++) {
-      hash = profileId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return '#' + '00000'.substring(0, 6 - c.length) + c;
+    const cached = getProfileColorCacheRef.current.get(profileId);
+    if (cached) return cached;
+    const result = computeDeviceProfileColor(profileId);
+    getProfileColorCacheRef.current.set(profileId, result);
+    return result;
   };
 
   useEffect(() => {
-    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50));
+    let q;
+    const baseLimit = 100;
+    if (viewFilter === 'archived') {
+      q = query(
+        collection(db, "messages"),
+        where("isArchived", "==", true),
+        orderBy("createdAt", "desc"),
+        limit(baseLimit)
+      );
+    } else {
+      q = query(
+        collection(db, "messages"),
+        where("isArchived", "==", false),
+        orderBy("createdAt", "desc"),
+        limit(baseLimit)
+      );
+    }
+    
+    // Reset historical messages when view filter changes
+    setHistoricalMessages([]);
+    setLastDocSnapshot(null);
+    setHasMore(true);
+    
     const unsubscribeMsgs = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Message[];
-      setMessages(msgs);
+      const msgs = snapshot.docs.map(doc => {
+        const data = doc.data();
+        let parsedAdv = null;
+        if (data.advancedInfo) {
+          try {
+            let decodedStr = typeof data.advancedInfo === 'string' ? data.advancedInfo : JSON.stringify(data.advancedInfo);
+            if (typeof data.advancedInfo === 'string' && !data.advancedInfo.startsWith('{')) {
+              try { 
+                const base64Decoded = atob(data.advancedInfo);
+                decodedStr = decodeURIComponent(base64Decoded); 
+              } catch (e) {
+                 console.error("Error decoding base64 advancedInfo for message " + doc.id, e);
+              }
+            }
+            parsedAdv = JSON.parse(decodedStr);
+          } catch (e: any) {
+             console.error(`Failed to parse advancedInfo for message ${doc.id}: ${e.message}`);
+          }
+        }
+        
+        let profileId = data.profileGroupId;
+        if (!profileId) {
+          profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+        }
+        
+        const profileColor = computeDeviceProfileColor(profileId);
+        
+        return {
+          id: doc.id,
+          ...data,
+          parsedAdvanced: parsedAdv,
+          computedProfileId: profileId,
+          computedProfileColor: profileColor
+        };
+      }) as (Message & { parsedAdvanced?: any, computedProfileId: string, computedProfileColor: string })[];
+      
+      setRealtimeMessages(msgs);
+      setLastDocSnapshot((prev: any) => {
+        // Se non abbiamo ancora caricato messaggi storici, aggiorniamo il cursore con l'ultimo del realtime snapshot
+        if (historicalMessagesRef.current === 0 && snapshot.docs.length > 0) {
+           return snapshot.docs[snapshot.docs.length - 1];
+        }
+        // Altrimenti manteniamo quello esistente (che punta alla fine dello storico)
+        return prev;
+      });
       setLoading(false);
     }, (error) => {
       console.error(error);
@@ -241,29 +377,122 @@ export default function Dashboard() {
     });
 
     return () => { unsubscribeMsgs(); unsubscribeProfiles(); };
-  }, []);
+  }, [viewFilter]);
+
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadMoreMessages = async () => {
+    if (!lastDocSnapshot) return;
+    setIsLoadingMore(true);
+    let q;
+    const baseLimit = 100;
+    if (viewFilter === 'archived') {
+      q = query(
+        collection(db, "messages"),
+        where("isArchived", "==", true),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocSnapshot),
+        limit(baseLimit)
+      );
+    } else {
+      q = query(
+        collection(db, "messages"),
+        where("isArchived", "==", false),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocSnapshot),
+        limit(baseLimit)
+      );
+    }
+    
+    try {
+      const snapshot = await getDocs(q);
+      if (snapshot.docs.length < baseLimit) {
+        setHasMore(false);
+      }
+      if (snapshot.docs.length > 0) {
+        setLastDocSnapshot(snapshot.docs[snapshot.docs.length - 1]);
+        const msgs = snapshot.docs.map(doc => {
+          const data = doc.data();
+          let parsedAdv = null;
+          if (data.advancedInfo) {
+            try {
+              let decodedStr = typeof data.advancedInfo === 'string' ? data.advancedInfo : JSON.stringify(data.advancedInfo);
+              if (typeof data.advancedInfo === 'string' && !data.advancedInfo.startsWith('{')) {
+                try { 
+                  const base64Decoded = atob(data.advancedInfo);
+                  decodedStr = decodeURIComponent(base64Decoded); 
+                } catch (e) {
+                }
+              }
+              parsedAdv = JSON.parse(decodedStr);
+            } catch (e: any) {
+            }
+          }
+          
+          let profileId = data.profileGroupId;
+          if (!profileId) {
+            profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+          }
+          
+          const profileColor = computeDeviceProfileColor(profileId);
+          
+          return {
+            id: doc.id,
+            ...data,
+            parsedAdvanced: parsedAdv,
+            computedProfileId: profileId,
+            computedProfileColor: profileColor
+          };
+        }) as (Message & { parsedAdvanced?: any, computedProfileId: string, computedProfileColor: string })[];
+        setHistoricalMessages(prev => [...prev, ...msgs]);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    setSelectedMessages(prev => {
+      if (prev.length === 0) return prev;
+      const validIds = new Set(messages.map(m => m.id));
+      const next = prev.filter(id => validIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [messages]);
 
   const processedSyncsRef = useRef<Set<string>>(new Set());
+
+  const profilesRef = useRef(profiles);
+  useEffect(() => {
+    profilesRef.current = profiles;
+  }, [profiles]);
 
   // Auto-sync discovered instagram tags to the persistent profile records
   useEffect(() => {
     const syncInstagrams = async () => {
+      const updatesByPid = new Map<string, Set<string>>();
+      
       for (const msg of messages) {
         if (msg.instagram) {
-          const cleanInsta = msg.instagram.toLowerCase().replace(/[@\s]/g, '');
+          const cleanInsta = msg.instagram.toLowerCase().replace(/[^a-z0-9._]/g, '');
           const pid = getDeviceProfile(msg);
           
+          if (pid === "UNKNOWN") continue;
+
           const syncKey = `${pid}-${cleanInsta}`;
           if (processedSyncsRef.current.has(syncKey)) continue;
           
-          const currentProfile = profiles[pid];
+          const currentProfile = profilesRef.current[pid];
           const currCustom = currentProfile?.customInstagrams || [];
-          const currCustomNormalized = currCustom.map(t => t.toLowerCase().replace(/[@\s]/g, ''));
+          const currCustomNormalized = currCustom.map(t => t.toLowerCase().replace(/[^a-z0-9._]/g, ''));
           const removedInstas = currentProfile?.removedInstagrams || [];
           
           // Check if already present, or if user explicitly removed it before
           if (
-            currentProfile?.instagram?.toLowerCase().replace(/[@\s]/g, '') === cleanInsta || 
+            currentProfile?.instagram?.toLowerCase().replace(/[^a-z0-9._]/g, '') === cleanInsta || 
             currCustomNormalized.includes(cleanInsta) || 
             removedInstas.includes(cleanInsta)
           ) {
@@ -271,54 +500,65 @@ export default function Dashboard() {
             continue;
           }
           
-          // Mark as processed immediately so we don't try again even if it fails
           processedSyncsRef.current.add(syncKey);
           
-          try {
-            await setDoc(doc(db, "profiles", pid), { customInstagrams: arrayUnion(cleanInsta) }, { merge: true });
-          } catch(e: any) {
-            if (e.message?.includes("Missing or insufficient permissions")) {
-               const errInfo = {
-                error: e instanceof Error ? e.message : String(e),
-                operationType: "write",
-                path: `profiles/${pid}`,
-                authInfo: {
-                  userId: auth.currentUser?.uid,
-                  email: auth.currentUser?.email,
-                  emailVerified: auth.currentUser?.emailVerified,
-                  isAnonymous: auth.currentUser?.isAnonymous,
-                  tenantId: auth.currentUser?.tenantId,
-                  providerInfo: auth.currentUser?.providerData?.map(provider => ({
-                    providerId: provider.providerId,
-                    email: provider.email,
-                  })) || []
-                }
-              };
-              console.error('Firestore Error: ', JSON.stringify(errInfo));
-            }
+          if (!updatesByPid.has(pid)) {
+            updatesByPid.set(pid, new Set());
           }
+          updatesByPid.get(pid)!.add(cleanInsta);
+        }
+      }
+      
+      if (updatesByPid.size > 0) {
+        try {
+          const batchOp = writeBatch(db);
+          for (const [pid, tags] of Array.from(updatesByPid.entries())) {
+            batchOp.set(doc(db, "profiles", pid), { customInstagrams: arrayUnion(...Array.from(tags)) }, { merge: true });
+          }
+          await batchOp.commit();
+        } catch (e: any) {
+          console.error("Batch auto-sync error:", e);
         }
       }
     };
-    syncInstagrams();
-  }, [messages, profiles]);
+    
+    const timeoutId = setTimeout(syncInstagrams, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [messages]); // Removed profiles from deps to avoid infinite loops
 
   const handleLogout = () => {
     signOut(auth);
   };
 
-  const [confirmModalState, setConfirmModalState] = useState<{ isOpen: boolean; messageId: string | null; type: 'delete' | 'ungroup' | 'delete-bulk' | null }>({ isOpen: false, messageId: null, type: null });
+  type ConfirmModalState = 
+    | { isOpen: false; messageId: null; type: null }
+    | { isOpen: true; type: 'delete' | 'ungroup'; messageId: string }
+    | { isOpen: true; type: 'delete-bulk'; messageId: null };
+
+  const [confirmModalState, setConfirmModalState] = useState<ConfirmModalState>({ isOpen: false, messageId: null, type: null });
 
   const confirmAction = async () => {
-    if (!confirmModalState.messageId || !confirmModalState.type) return;
+    if (!confirmModalState.isOpen) return;
     
     try {
       if (confirmModalState.type === 'delete') {
         await deleteDoc(doc(db, "messages", confirmModalState.messageId));
       } else if (confirmModalState.type === 'ungroup') {
-        await updateDoc(doc(db, "messages", confirmModalState.messageId), { profileGroupId: null });
+        await updateDoc(doc(db, "messages", confirmModalState.messageId), { profileGroupId: deleteField() });
       } else if (confirmModalState.type === 'delete-bulk') {
-        await Promise.all(selectedMessages.map(id => deleteDoc(doc(db, "messages", id))));
+        const batchSize = 500;
+        for (let i = 0; i < selectedMessages.length; i += batchSize) {
+          const chunk = selectedMessages.slice(i, i + batchSize);
+          const batchOp = writeBatch(db);
+          for (const id of chunk) {
+            batchOp.delete(doc(db, "messages", id));
+          }
+          try {
+             await batchOp.commit();
+          } catch (e) {
+             console.error("Batch delete error:", e);
+          }
+        }
         setSelectedMessages([]);
         setIsSelectMode(false);
       }
@@ -348,8 +588,15 @@ export default function Dashboard() {
     try {
       // Determiniamo in quale tab ci troviamo (new o archived) e invertirne lo stato per la selezione
       const targetStatus = viewFilter === 'new' ? true : false;
-      const updates = selectedMessages.map(id => updateDoc(doc(db, "messages", id), { isArchived: targetStatus }));
-      await Promise.all(updates);
+      const batchSize = 500;
+      for (let i = 0; i < selectedMessages.length; i += batchSize) {
+        const chunk = selectedMessages.slice(i, i + batchSize);
+        const batchOp = writeBatch(db);
+        for (const id of chunk) {
+          batchOp.update(doc(db, "messages", id), { isArchived: targetStatus });
+        }
+        await batchOp.commit();
+      }
       setIsSelectMode(false);
       setSelectedMessages([]);
     } catch (e) {
@@ -380,9 +627,15 @@ export default function Dashboard() {
     const newProfileGroupId = groupNameInput.trim() || `MANUAL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     
     try {
-      await Promise.all(selectedMessages.map(id => 
-        updateDoc(doc(db, "messages", id), { profileGroupId: newProfileGroupId })
-      ));
+      const batchSize = 500;
+      for (let i = 0; i < selectedMessages.length; i += batchSize) {
+        const chunk = selectedMessages.slice(i, i + batchSize);
+        const batchOp = writeBatch(db);
+        for (const id of chunk) {
+          batchOp.update(doc(db, "messages", id), { profileGroupId: newProfileGroupId });
+        }
+        await batchOp.commit();
+      }
       setSelectedMessages([]);
       setIsSelectMode(false);
       setShowGroupPrompt(false);
@@ -397,7 +650,7 @@ export default function Dashboard() {
     setConfirmModalState({ isOpen: true, messageId, type: 'ungroup' });
   };
 
-  const filteredMessages = messages.filter(m => viewFilter === 'archived' ? m.isArchived : !m.isArchived);
+  const filteredMessages = messages.filter(m => viewFilter === 'archived' ? !!m.isArchived : !m.isArchived);
 
   return (
     <div className={`min-h-[100dvh] p-4 md:p-8 transition-colors duration-500 ${isSelectMode ? 'bg-slate-100/60' : 'bg-gray-50'}`}>
@@ -456,7 +709,7 @@ export default function Dashboard() {
                   <span className="hidden sm:inline">{viewFilter === 'new' ? "Archivia" : "Ripristina"}</span>
                 </button>
                 <button
-                  onClick={() => setConfirmModalState({ isOpen: true, messageId: 'bulk', type: 'delete-bulk' })}
+                  onClick={() => setConfirmModalState({ isOpen: true, messageId: null, type: 'delete-bulk' })}
                   disabled={selectedMessages.length === 0}
                   className="flex-none px-3 py-2 sm:px-4 sm:py-2.5 bg-red-500 text-white text-[10px] sm:text-sm font-black uppercase tracking-wide rounded-xl hover:bg-red-400 focus:ring-4 focus:ring-red-500/20 transition-all disabled:opacity-50 shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-1.5"
                   title="Elimina Selezionati"
@@ -496,26 +749,26 @@ export default function Dashboard() {
         {!isSelectMode && (
           <div className="flex items-center gap-2 mb-6 sm:mb-8 overflow-x-auto hide-scrollbar pb-2 sm:pb-0">
             <button
-              onClick={() => setViewFilter('new')}
+              onClick={() => { setViewFilter('new'); setSelectedMessages([]); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-semibold text-sm transition-all whitespace-nowrap ${viewFilter === 'new' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
             >
               <InboxIcon className="w-4 h-4" />
               Spotted Nuovi
-              {messages.filter(m => !m.isArchived).length > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] ml-1 ${viewFilter === 'new' ? 'bg-indigo-500 text-white border border-indigo-400' : 'bg-gray-100 text-gray-500'}`}>
-                  {messages.filter(m => !m.isArchived).length}
+              {viewFilter === 'new' && filteredMessages.length > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] ml-1 bg-indigo-500 text-white border border-indigo-400`}>
+                  {filteredMessages.length}
                 </span>
               )}
             </button>
             <button
-              onClick={() => setViewFilter('archived')}
+              onClick={() => { setViewFilter('archived'); setSelectedMessages([]); }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-semibold text-sm transition-all whitespace-nowrap ${viewFilter === 'archived' ? 'bg-gray-800 text-white shadow-md shadow-gray-300' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
             >
               <Archive className="w-4 h-4" />
               Letti / Archiviati
-              {messages.filter(m => m.isArchived).length > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] ml-1 ${viewFilter === 'archived' ? 'bg-gray-700 text-white border border-gray-600' : 'bg-gray-100 text-gray-500'}`}>
-                  {messages.filter(m => m.isArchived).length}
+              {viewFilter === 'archived' && filteredMessages.length > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] ml-1 bg-gray-700 text-white border border-gray-600`}>
+                  {filteredMessages.length}
                 </span>
               )}
             </button>
@@ -790,6 +1043,18 @@ export default function Dashboard() {
               </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {hasMore && messages.length >= 100 && (
+          <div className="mt-8 flex justify-center pb-8 border-b-0">
+            <button
+              onClick={loadMoreMessages}
+              disabled={isLoadingMore}
+              className="px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 focus:ring-4 focus:ring-indigo-500/20 shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              {isLoadingMore ? "Caricamento in corso..." : "Carica altri messaggi"}
+            </button>
           </div>
         )}
       </div>

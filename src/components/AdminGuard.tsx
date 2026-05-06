@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { getDocs, query, collection, limit } from 'firebase/firestore';
-import { signInWithPopup, signOut, onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
+import { getDocs, query, collection, limit, getDoc, doc } from 'firebase/firestore';
+import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth, googleProvider } from '../firebase';
 import { Logo } from './Logo';
 import { ShieldAlert } from 'lucide-react';
@@ -14,17 +14,10 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
-    getRedirectResult(auth).catch(err => {
-      console.error("Redirect result error:", err);
-      if (err?.code === 'auth/admin-restricted-operation') {
-        alert("ERRORE: L'operazione è ristretta agli amministratori. Assicurati che Firebase Authentication consenta la creazione di nuovi account.");
-      }
-    });
-
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        verifyAdminAccess();
+        verifyAdminAccess(currentUser);
       } else {
         setIsAdmin(null);
         setAuthLoading(false);
@@ -33,12 +26,17 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const verifyAdminAccess = async () => {
+  const verifyAdminAccess = async (user: User) => {
     setVerifying(true);
     try {
-      const q = query(collection(db, "messages"), limit(1));
-      await getDocs(q);
-      setIsAdmin(true);
+      const promises = [getDoc(doc(db, "admins", user.uid))];
+      if (user.email) {
+        promises.push(getDoc(doc(db, "admins", user.email)).catch(() => ({ exists: () => false } as any)));
+      }
+      
+      const results = await Promise.all(promises);
+      const isUserAdmin = results.some(res => res.exists());
+      setIsAdmin(isUserAdmin);
     } catch (error: any) {
       if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
         setIsAdmin(false);

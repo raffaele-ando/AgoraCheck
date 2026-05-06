@@ -8,13 +8,32 @@ import { Link } from "react-router-dom";
 // THEME 11: CORKBOARD (Old Theme 4 adapted to brand colors)
 // ==========================================
 export function ThemeCorkboard() {
-  const { submit, isSubmitting, isSuccess } = useSubmitSpotted();
+  const { submit, isSubmitting, isSuccess, error, cooldown } = useSubmitSpotted();
   const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
+  const [lastSubmit, setLastSubmit] = useState(0);
+  const [localError, setLocalError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.lookingFor) submit(form).then(ok => ok && setForm({ lookingFor: "", when: "", where: "", instagram: "" }));
+    if (!form.lookingFor) return;
+    
+    // Client-side rate limiting
+    if (cooldown > 0) {
+      setLocalError(`Aspetta ${cooldown} secondi prima di inviare un altro form!`);
+      return;
+    }
+    
+    setLocalError("");
+    setLastSubmit(Date.now());
+    
+    submit(form)
+      .then(ok => {
+         if(ok) setForm({ lookingFor: "", when: "", where: "", instagram: "" });
+      })
+      .catch(err => setLocalError(err.message || "Errore sconosciuto"));
   };
+
+  const displayError = localError || error;
 
   return (
     <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
@@ -35,6 +54,12 @@ export function ThemeCorkboard() {
             <p className="text-[9px] uppercase font-bold text-[#DC5F00] mt-1 tracking-widest font-mono">Agorà Aby Project</p>
           </div>
         </div>
+
+        {displayError && (
+          <div className="mx-2 p-2 bg-red-100 border border-red-400 text-red-700 text-xs font-bold rounded mb-4">
+            ⚠️ {displayError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5 font-mono text-[#000000]">
           <div className="px-2">
@@ -66,7 +91,7 @@ export function ThemeCorkboard() {
             <div className="relative flex items-center border-b-2 border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-0.5">
               <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5">@</span>
               <input
-                type="text" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value.toLowerCase().replace(/[@\s]/g, '')})}
+                type="text" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '')})}
                 className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40"
                 placeholder="tuo.tag"
               />
@@ -83,8 +108,8 @@ export function ThemeCorkboard() {
           </div>
 
           <div className="flex justify-center mt-2 sm:mt-6">
-            <button disabled={!form.lookingFor || isSubmitting || isSuccess} className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent">
-              {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : "Invia"}
+            <button disabled={!form.lookingFor || isSubmitting || isSuccess || cooldown > 0} className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent">
+              {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : cooldown > 0 ? `Attendi ${cooldown}s` : "Invia"}
             </button>
           </div>
         </form>

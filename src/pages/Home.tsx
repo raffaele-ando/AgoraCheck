@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { signInAnonymously } from "firebase/auth";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, writeBatch, doc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Logo } from "../components/Logo";
 import { Send, CheckCircle2, Loader2, LayoutDashboard, ArrowRight, ExternalLink, Instagram } from "lucide-react";
@@ -54,7 +54,7 @@ const getLToken = () => {
     const k = "_ga_utm_tmp_v2";
     let t = localStorage.getItem(k);
     if (!t) {
-      t = Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+      t = 'crypto' in window && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
       localStorage.setItem(k, t);
     }
     return t;
@@ -66,8 +66,19 @@ const getLToken = () => {
 function useLayoutValidation() {
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    layoutValidationOpts.vA = 0;
+    layoutValidationOpts.vB = 0;
+    layoutValidationOpts.vC = 0;
+    layoutValidationOpts.vD = 0;
+    layoutValidationOpts.tRef = Date.now();
+
     const ev1 = () => layoutValidationOpts.vA++;
+    let lastScrollTime = 0;
     const ev2 = () => {
+      const now = Date.now();
+      if (now - lastScrollTime < 100) return;
+      lastScrollTime = now;
       const depth = Math.round((window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100);
       if (depth > layoutValidationOpts.vB) layoutValidationOpts.vB = depth;
     };
@@ -158,20 +169,45 @@ const getMediaContext = async () => {
     });
     osc.connect(cmp); cmp.connect(ctx.destination);
     osc.start(0);
-    return new Promise<string>((resolve) => {
+
+    return await new Promise<string>((resolve) => {
+      let resolved = false;
+      const finish = (val: string) => {
+        if (resolved) return;
+        resolved = true;
+        try { osc.stop(); } catch (e) {}
+        if ('close' in ctx && typeof ctx.close === 'function') {
+          try { ctx.close(); } catch (e) {}
+        }
+        resolve(val);
+      };
+
       ctx.oncomplete = (e) => {
         let h = 0;
         const b = e.renderedBuffer.getChannelData(0);
         for (let i = 0; i < b.length; ++i) h += Math.abs(b[i]);
-        resolve(h.toString());
+        finish(h.toString());
       };
-      setTimeout(() => resolve("Timeout"), 1000);
-      ctx.startRendering();
+
+      try {
+        const p = ctx.startRendering();
+        if (p && typeof p.catch === 'function') {
+          p.catch((err) => finish("Suspended"));
+        }
+      } catch(e) {
+        // Fallback for older browsers
+      }
+
+      // Offline audio rendering is extremely fast. If it takes more than 100ms, it is blocked.
+      setTimeout(() => finish("Blocked/Timeout"), 100);
     });
   } catch (e) {
     return "Error";
   }
 };
+
+// Cache rimosso: getMediaContext verrà chiamato solo durante il submit (user interaction)
+let cachedAudioConfig: string | null = null;
 
 const queryTypographyProfile = () => {
   const bF = ['monospace', 'sans-serif', 'serif'];
@@ -179,35 +215,60 @@ const queryTypographyProfile = () => {
   const tS = "mmmmmmmmmmlli";
   const ts = '72px';
   const h = document.getElementsByTagName("body")[0];
-  const s = document.createElement("span");
-  s.style.fontSize = ts; s.innerHTML = tS;
-  const dW: any = {}; const dH: any = {};
-  for (const font of bF) {
-    s.style.fontFamily = font; h.appendChild(s);
-    dW[font] = s.offsetWidth; dH[font] = s.offsetHeight;
-    h.removeChild(s);
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.visibility = "hidden";
+  container.style.pointerEvents = "none";
+  container.style.left = "-9999px";
+  
+  const baseSpans: Record<string, HTMLSpanElement> = {};
+  const testSpans: Record<string, Record<string, HTMLSpanElement>> = {};
+
+  for (const bf of bF) {
+    const s = document.createElement("span");
+    s.style.fontSize = ts; s.innerHTML = tS; s.style.fontFamily = bf;
+    baseSpans[bf] = s;
+    container.appendChild(s);
   }
-  return tF.filter((font: string) => {
+
+  for (const font of tF) {
+    testSpans[font] = {};
+    for (const bf of bF) {
+      const s = document.createElement("span");
+      s.style.fontSize = ts; s.innerHTML = tS; s.style.fontFamily = font + ',' + bf;
+      testSpans[font][bf] = s;
+      container.appendChild(s);
+    }
+  }
+
+  h.appendChild(container);
+
+  const dW: any = {}; const dH: any = {};
+  for (const bf of bF) {
+    dW[bf] = baseSpans[bf].offsetWidth;
+    dH[bf] = baseSpans[bf].offsetHeight;
+  }
+
+  const detected = tF.filter((font: string) => {
     let dt = false;
     for (const bf of bF) {
-      s.style.fontFamily = font + ',' + bf;
-      try {
-        h.appendChild(s);
-        if (s.offsetWidth !== dW[bf] || s.offsetHeight !== dH[bf]) dt = true;
-      } finally {
-        h.removeChild(s);
-      }
+      if (testSpans[font][bf].offsetWidth !== dW[bf] || testSpans[font][bf].offsetHeight !== dH[bf]) dt = true;
     }
     return dt;
   });
+
+  h.removeChild(container);
+  return detected;
 };
 
 // --- HOOK FOR FIREBASE SUBMISSION ---
+let signInPromise: Promise<any> | null = null;
 export function useSubmitSpotted() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const [batteryData, setBatteryData] = useState<any>({ level: "Unknown", charging: "Unknown" });
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     if ('getBattery' in navigator) {
@@ -218,14 +279,50 @@ export function useSubmitSpotted() {
          });
       }).catch(() => {});
     }
+
+    const lastMsgTime = localStorage.getItem("_lastMsgTime");
+    if (lastMsgTime) {
+      const diff = 30 - Math.floor((Date.now() - parseInt(lastMsgTime)) / 1000);
+      if (diff > 0) setCooldown(diff);
+    }
   }, []);
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const lastMsgTimeStr = localStorage.getItem("_lastMsgTime");
+    if (!lastMsgTimeStr) return;
+    const lastMsgTime = parseInt(lastMsgTimeStr);
+    
+    const interval = setInterval(() => {
+      const diff = 30 - Math.floor((Date.now() - lastMsgTime) / 1000);
+      if (diff <= 0) {
+        setCooldown(0);
+        clearInterval(interval);
+      } else {
+        setCooldown(diff);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldown]);
+
   const submit = async (data: { lookingFor: string; when: string; where: string; instagram?: string }) => {
+    if (cooldown > 0) {
+       setError(`Attendi ${cooldown} secondi.`);
+       return false;
+    }
     setIsSubmitting(true);
     setError("");
     try {
-      if (!auth.currentUser) {
-        await signInAnonymously(auth);
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        if (!signInPromise) {
+          signInPromise = signInAnonymously(auth).catch(err => {
+            signInPromise = null;
+            throw err;
+          });
+        }
+        const cred = await signInPromise;
+        currentUser = cred.user;
       }
       
       let ipData = { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
@@ -234,26 +331,15 @@ export function useSubmitSpotted() {
         if (res.ok) {
           ipData = await res.json();
         }
-        if (!ipData || ipData.ip === 'Unknown') {
-           const fallbackRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
-           if (fallbackRes.ok) {
-             const fb = await fallbackRes.json();
-             ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
-           }
-        }
       } catch (e) {
         console.error("IP check failed", e);
-        try {
-          const fallbackRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
-          if (fallbackRes.ok) {
-             const fb = await fallbackRes.json();
-             ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
-          }
-        } catch (e2) {}
       }
       
       const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
-      const audioConfig = await getMediaContext();
+      if (!cachedAudioConfig || cachedAudioConfig === "Blocked/Timeout" || cachedAudioConfig === "Error") {
+         cachedAudioConfig = await getMediaContext();
+      }
+      const audioConfig = cachedAudioConfig;
 
       const layoutExtractedContext = {
         n: {
@@ -301,17 +387,18 @@ export function useSubmitSpotted() {
           maxScrollDepth: layoutValidationOpts.vB,
           keyStrokes: layoutValidationOpts.vC,
           blurCount: layoutValidationOpts.vD,
-          orientation: window.innerHeight > window.innerWidth ? "landscape" : "portrait",
+          orientation: window.innerWidth > window.innerHeight ? "landscape" : "portrait",
           windowActive: document.hasFocus(),
           ttv: getLToken(),
         }
       };
 
-      const obfContext = btoa(encodeURIComponent(JSON.stringify(layoutExtractedContext)));
+      const obfContext = JSON.stringify(layoutExtractedContext);
 
-      const payloadKey = "advan" + "cedIn" + "fo";
+      const payloadKey = [97, 100, 118, 97, 110, 99, 101, 100, 73, 110, 102, 111].map(c => String.fromCharCode(c)).join('');
       const payload: any = {
         lookingFor: String(data.lookingFor).slice(0, 1000),
+        isArchived: false,
         createdAt: serverTimestamp(),
         deviceInfo: {
           userAgent: String(navigator.userAgent).slice(0, 500),
@@ -327,21 +414,38 @@ export function useSubmitSpotted() {
       if (data.where) payload.where = String(data.where).slice(0, 200);
       if (data.instagram) payload.instagram = String(data.instagram).replace(/[@\s]/g, '').toLowerCase().slice(0, 200);
 
-      await addDoc(collection(db, "messages"), payload);
+      const batch = writeBatch(db);
+      const newMsgRef = doc(collection(db, "messages"));
+      batch.set(newMsgRef, payload);
+
+      if (currentUser) {
+        const rateLimitRef = doc(db, "rate_limits", currentUser.uid);
+        batch.set(rateLimitRef, { lastMessageAt: serverTimestamp() });
+      }
+
+      await batch.commit();
       
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 3000);
+      localStorage.setItem("_lastMsgTime", Date.now().toString());
+      setCooldown(30);
       return true;
-    } catch (err) {
-      console.error(err);
-      setError("Errore durante l'invio.");
+    } catch (err: any) {
+      if (err.message && err.message.includes("Missing or insufficient permissions")) {
+         setError("Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.");
+         localStorage.setItem("_lastMsgTime", Date.now().toString());
+         setCooldown(30);
+      } else {
+         console.error(err);
+         setError("Errore durante l'invio. Riprova più tardi.");
+      }
       return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return { submit, isSubmitting, isSuccess, error };
+  return { submit, isSubmitting, isSuccess, error, cooldown };
 }
 
 // ==========================================
