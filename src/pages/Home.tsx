@@ -327,9 +327,10 @@ export function useSubmitSpotted() {
       
       let ipData = { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
       try {
-        const res = await fetch('/api/ip-info');
+        const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
         if (res.ok) {
-          ipData = await res.json();
+           const fb = await res.json();
+           ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
         }
       } catch (e) {
         console.error("IP check failed", e);
