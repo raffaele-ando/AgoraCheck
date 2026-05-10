@@ -492,6 +492,10 @@ export default function Dashboard() {
      const vTokens = new Set<string>();
      let totalSessionTime = 0;
      const ipAddresses = new Set<string>();
+     const botStatuses = new Set<string>();
+     const localIps = new Set<string>();
+     const permissionsList = new Set<string>();
+     const storageInfo = new Set<string>();
 
      msgs.forEach(m => {
         const adv = m.parsedAdvanced || null;
@@ -499,20 +503,40 @@ export default function Dashboard() {
            const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
            const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
            const cpu = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
-           const mem = adv.hardware?.memory || adv.h?.memory || adv.h?.m || "";
+           const mem = adv.hardware?.memory || adv.h?.memory || adv.h?.m || adv.hardware?.ram || "";
            const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
+           const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
+           const mathFp = adv.software?.mathFingerprint?.pi ? "Supportato" : "";
+           const advancedSensors = adv.hardware?.advancedSensors || adv.h?.advancedSensors || "";
 
            if (gpu) hardwareFingerprints.add(`GPU: ${gpu}`);
            if (screen) hardwareFingerprints.add(`Schermo: ${screen}`);
            if (cpu) hardwareFingerprints.add(`CPU: ${cpu} core`);
            if (mem) hardwareFingerprints.add(`RAM: ${mem}GB`);
            if (canvas) hardwareFingerprints.add(`Canvas ID: ${canvas}`);
+           if (audio) hardwareFingerprints.add(`Audio ID: ${audio}`);
+           if (mathFp) hardwareFingerprints.add(`Math Fp: ${mathFp}`);
+           if (advancedSensors) hardwareFingerprints.add(`Sensori: ${advancedSensors}`);
 
            const sessionTime = adv.behavior?.sessionTimeSeconds;
            if (typeof sessionTime === 'number') totalSessionTime += sessionTime;
 
            const ip = adv.network?.ip || adv.n?.ip;
            if (ip) ipAddresses.add(ip);
+           const localIp = adv.network?.localIp || adv.n?.localIp;
+           if (localIp) localIps.add(localIp);
+           
+           const botStatus = adv.software?.botStatus || adv.s?.botStatus;
+           if (botStatus) botStatuses.add(botStatus);
+           
+           const incognito = adv.software?.incognito || adv.s?.incognito;
+           if (incognito) botStatuses.add(`Incognito: ${incognito}`);
+           
+           const perms = adv.software?.permissions || adv.s?.permissions;
+           if (perms) permissionsList.add(`Geo: ${perms.geolocation}, Camera: ${perms.camera}, Mic: ${perms.microphone}`);
+           
+           const storage = adv.software?.storage || adv.s?.storage;
+           if (storage) storageInfo.add(`Storage: ${storage}`);
 
            const tt = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken;
            if (tt) vTokens.add(tt);
@@ -530,6 +554,10 @@ export default function Dashboard() {
         vTokens: Array.from(vTokens),
         totalSessionTime,
         ipAddresses: Array.from(ipAddresses),
+        localIps: Array.from(localIps),
+        botStatuses: Array.from(botStatuses),
+        permissionsList: Array.from(permissionsList),
+        storageInfo: Array.from(storageInfo),
      };
   }, [viewingMacro, messages, getDeviceProfile]);
 
@@ -1213,6 +1241,33 @@ export default function Dashboard() {
                   )}
 
                   {(() => {
+                    const adv = msg.parsedAdvanced;
+                    if (!adv) return null;
+                    const botStatus = adv.software?.botStatus || adv.s?.botStatus;
+                    const incognito = adv.software?.incognito || adv.s?.incognito;
+                    const p = adv.software?.permissions || adv.s?.permissions;
+                    const pCount = p ? Object.keys(p).filter(k => p[k] !== 'prompt').length : 0;
+                    
+                    const tags = [];
+                    if (botStatus) tags.push({ label: botStatus, c: 'bg-indigo-50 text-indigo-700 border-indigo-100' });
+                    if (incognito) tags.push({ label: incognito, c: 'bg-indigo-50 text-indigo-700 border-indigo-100' });
+                    if (pCount > 0) tags.push({ label: `${pCount} Permessi`, c: 'bg-teal-50 text-teal-700 border-teal-100' });
+                    if (adv.hardware?.advancedSensors && adv.hardware.advancedSensors !== "N/A" && adv.hardware.advancedSensors !== "Non Supportato") tags.push({ label: 'Sensori Attivi', c: 'bg-orange-50 text-orange-700 border-orange-100' });
+                    if (adv.software?.mathFingerprint?.pi || adv.s?.mathFingerprint?.pi) tags.push({ label: 'Math FP', c: 'bg-emerald-50 text-emerald-700 border-emerald-100' });
+
+                    if (tags.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                         {tags.map((t, i) => (
+                           <span key={i} className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${t.c}`}>
+                             {t.label}
+                           </span>
+                         ))}
+                      </div>
+                    );
+                  })()}
+
+                  {(() => {
                     const { tags, hasMultiple } = getProfileInstagrams(profileId);
                     if (tags.length === 0) return null;
                     return (
@@ -1493,6 +1548,33 @@ export default function Dashboard() {
                        </div>
                      </div>
                      
+                     {(() => {
+                       const adv = macro.mostRecentMsg?.parsedAdvanced;
+                       if (!adv) return null;
+                       const botStatus = adv.software?.botStatus || adv.s?.botStatus;
+                       const incognito = adv.software?.incognito || adv.s?.incognito;
+                       const p = adv.software?.permissions || adv.s?.permissions;
+                       const pCount = p ? Object.keys(p).filter(k => p[k] !== 'prompt').length : 0;
+                       
+                       const tags = [];
+                       if (botStatus) tags.push({ label: botStatus, c: 'bg-indigo-50 text-indigo-700 border-indigo-100' });
+                       if (incognito) tags.push({ label: incognito, c: 'bg-indigo-50 text-indigo-700 border-indigo-100' });
+                       if (pCount > 0) tags.push({ label: `${pCount} Permessi`, c: 'bg-teal-50 text-teal-700 border-teal-100' });
+                       if (adv.hardware?.advancedSensors && adv.hardware.advancedSensors !== "N/A" && adv.hardware.advancedSensors !== "Non Supportato") tags.push({ label: 'Sensori', c: 'bg-orange-50 text-orange-700 border-orange-100' });
+                       if (adv.software?.mathFingerprint?.pi || adv.s?.mathFingerprint?.pi) tags.push({ label: 'Math FP', c: 'bg-emerald-50 text-emerald-700 border-emerald-100' });
+
+                       if (tags.length === 0) return null;
+                       return (
+                         <div className="flex flex-wrap gap-1.5 mb-4 relative z-20">
+                            {tags.map((t, i) => (
+                              <span key={i} className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${t.c}`}>
+                                {t.label}
+                              </span>
+                            ))}
+                         </div>
+                       );
+                     })()}
+
                      <div className="grid grid-cols-2 gap-2 mb-4">
                        <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100/50">
                          <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1"><Clock className="w-3 h-3"/> Ultima Attività</div>
@@ -2116,18 +2198,54 @@ export default function Dashboard() {
                       </div>
 
                       <div className="bg-white p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 shadow-sm">
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-orange-600 mb-4 flex items-center gap-2"><Globe className="w-5 h-5"/> Indirizzi IP Rilevati ({viewingMacroStats.ipAddresses.length})</h4>
-                        {viewingMacroStats.ipAddresses.length > 0 ? (
-                          <div className="flex flex-wrap gap-2.5">
-                             {viewingMacroStats.ipAddresses.map((ip) => (
-                               <span key={ip} className="bg-orange-50 text-orange-700 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-orange-100 shadow-sm">
-                                 {ip}
-                               </span>
-                             ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm font-medium text-gray-400 italic bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">Nessun IP rilevato.</div>
-                        )}
+                        <h4 className="text-[11px] font-black uppercase tracking-widest text-orange-600 mb-4 flex items-center gap-2"><Globe className="w-5 h-5"/> Rete & IP ({viewingMacroStats.ipAddresses.length + viewingMacroStats.localIps.length})</h4>
+                        <div className="space-y-4">
+                          {viewingMacroStats.ipAddresses.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold text-gray-400 mb-2">IP PUBBLICI</div>
+                              <div className="flex flex-wrap gap-2.5">
+                                 {viewingMacroStats.ipAddresses.map((ip) => (
+                                   <span key={ip} className="bg-orange-50 text-orange-700 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-orange-100 shadow-sm">
+                                     {ip}
+                                   </span>
+                                 ))}
+                              </div>
+                            </div>
+                          )}
+                          {viewingMacroStats.localIps.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold text-gray-400 mb-2">IP LOCALI (WEBRTC)</div>
+                              <div className="flex flex-wrap gap-2.5">
+                                 {viewingMacroStats.localIps.map((ip) => (
+                                   <span key={ip} className="bg-orange-50 text-orange-700 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-orange-100 shadow-sm">
+                                     {ip}
+                                   </span>
+                                 ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 shadow-sm">
+                        <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-4 flex items-center gap-2"><Cpu className="w-5 h-5"/> Sicurezza & Configurazione</h4>
+                        <div className="flex flex-wrap gap-2.5">
+                           {viewingMacroStats.botStatuses.map((bot) => (
+                             <span key={bot} className="bg-indigo-50 text-indigo-700 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-indigo-100 shadow-sm">
+                               {bot}
+                             </span>
+                           ))}
+                           {viewingMacroStats.permissionsList.map((p) => (
+                             <span key={p} className="bg-teal-50 text-teal-700 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-teal-100 shadow-sm">
+                               {p}
+                             </span>
+                           ))}
+                           {viewingMacroStats.storageInfo.map((s) => (
+                             <span key={s} className="bg-gray-100 text-gray-700 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm">
+                               {s}
+                             </span>
+                           ))}
+                        </div>
                       </div>
                     </div>
                   </div>
