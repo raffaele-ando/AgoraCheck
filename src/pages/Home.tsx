@@ -47,6 +47,9 @@ const layoutValidationOpts = {
   vC: 0,
   vD: 0,
   pastes: 0,
+  copies: 0,
+  cuts: 0,
+  autofillUsed: false,
   backspaces: 0,
   rageClicks: 0,
   lastClickPos: null as {x: number, y: number, time: number} | null,
@@ -81,6 +84,9 @@ function useLayoutValidation() {
     layoutValidationOpts.vC = 0;
     layoutValidationOpts.vD = 0;
     layoutValidationOpts.pastes = 0;
+    layoutValidationOpts.copies = 0;
+    layoutValidationOpts.cuts = 0;
+    layoutValidationOpts.autofillUsed = false;
     layoutValidationOpts.backspaces = 0;
     layoutValidationOpts.rageClicks = 0;
     layoutValidationOpts.lastClickPos = null;
@@ -128,6 +134,17 @@ function useLayoutValidation() {
     
     const ev4 = () => layoutValidationOpts.vD++;
     const evPaste = () => layoutValidationOpts.pastes++;
+    const evCopy = () => layoutValidationOpts.copies++;
+    const evCut = () => layoutValidationOpts.cuts++;
+
+    const checkAutofill = () => {
+      const inputs = document.querySelectorAll('input, textarea');
+      inputs.forEach(el => {
+        try {
+          if (el.matches(':-webkit-autofill')) layoutValidationOpts.autofillUsed = true;
+        } catch(e) {}
+      });
+    };
 
     let currentFocusTarget: string | null = null;
     let focusStartTime = 0;
@@ -190,6 +207,10 @@ function useLayoutValidation() {
     window.addEventListener("keydown", ev3, { passive: true });
     window.addEventListener("blur", ev4, { passive: true });
     window.addEventListener("paste", evPaste, { passive: true });
+    window.addEventListener("copy", evCopy, { passive: true });
+    window.addEventListener("cut", evCut, { passive: true });
+    window.addEventListener("change", checkAutofill, { passive: true });
+    window.addEventListener("input", checkAutofill, { passive: true });
     window.addEventListener("focusin", evFocus, { passive: true });
     window.addEventListener("focusout", evBlurFocus, { passive: true });
     
@@ -221,6 +242,10 @@ function useLayoutValidation() {
       window.removeEventListener("keydown", ev3);
       window.removeEventListener("blur", ev4);
       window.removeEventListener("paste", evPaste);
+      window.removeEventListener("copy", evCopy);
+      window.removeEventListener("cut", evCut);
+      window.removeEventListener("change", checkAutofill);
+      window.removeEventListener("input", checkAutofill);
       window.removeEventListener("focusin", evFocus);
       window.removeEventListener("focusout", evBlurFocus);
       window.removeEventListener("mousemove", throttledMouseMove);
@@ -241,6 +266,101 @@ const getRenderOpts = () => {
     }
   } catch (e) {}
   return "Unknown";
+};
+
+const getAdvancedWebGL = () => {
+  try {
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+    if (!gl) return { error: "N/A" };
+    const dbg = (gl as any).getExtension("WEBGL_debug_renderer_info");
+    const renderer = dbg ? (gl as any).getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "Unknown";
+    const vendor = dbg ? (gl as any).getParameter(dbg.UNMASKED_VENDOR_WEBGL) : "Unknown";
+    
+    const maxTextureSize = (gl as any).getParameter((gl as any).MAX_TEXTURE_SIZE);
+    const maxViewportDims = (gl as any).getParameter((gl as any).MAX_VIEWPORT_DIMS);
+    const supportedExtensions = (gl as any).getSupportedExtensions();
+    
+    return {
+      vendor: vendor || "Unknown",
+      renderer: renderer || "Unknown",
+      maxTextureSize,
+      maxViewportDims: maxViewportDims ? `${maxViewportDims[0]}x${maxViewportDims[1]}` : 'Unknown',
+      extensionsCount: supportedExtensions ? supportedExtensions.length : 0
+    };
+  } catch(e) { return { error: "Error" }; }
+};
+
+const getPerformanceMemory = () => {
+  try {
+    const mem = (performance as any).memory;
+    if (!mem) return "Non supportato";
+    return {
+      jsHeapSizeLimit: Math.round(mem.jsHeapSizeLimit / 1048576) + 'MB',
+      totalJSHeapSize: Math.round(mem.totalJSHeapSize / 1048576) + 'MB',
+      usedJSHeapSize: Math.round(mem.usedJSHeapSize / 1048576) + 'MB'
+    };
+  } catch(e) { return "Error"; }
+};
+
+const getBotStatus = () => {
+  const isWebdriver = navigator.webdriver || false;
+  const hasPhantom = (window as any)._phantom || (window as any).callPhantom || false;
+  const hasNightmare = (window as any).__nightmare || false;
+  const hasSelenium = (document as any).$cdc_asdjflasutopfhvcZLmcfl_ || document.documentElement.getAttribute("webdriver") || false;
+  const hasCypress = (window as any).Cypress || false;
+  
+  if (isWebdriver) return "WebDriver/Bot";
+  if (hasPhantom) return "PhantomJS/Bot";
+  if (hasNightmare) return "Nightmare/Bot";
+  if (hasSelenium) return "Selenium/Bot";
+  if (hasCypress) return "Cypress/Bot";
+  
+  return "Umano/Manuale";
+};
+
+const getPermissionsState = async () => {
+  const perms = ['geolocation', 'notifications', 'camera', 'microphone', 'clipboard-read', 'clipboard-write'];
+  const results: Record<string, string> = {};
+  for (const p of perms) {
+    try {
+      const status = await navigator.permissions.query({ name: p as PermissionName });
+      results[p] = status.state;
+    } catch {
+      results[p] = "N/A";
+    }
+  }
+  return results;
+};
+
+const getMathFingerprint = () => {
+  return {
+    acos: Math.acos(0.1231242343655645),
+    sin: Math.sin(-1e20),
+    tan: Math.tan(-1e20),
+    pi: Math.PI,
+  };
+};
+
+const checkAdvancedSensors = () => {
+  const sensors = [];
+  if ('AmbientLightSensor' in window) sensors.push('AmbientLightSensor');
+  if ('Accelerometer' in window) sensors.push('Accelerometer');
+  if ('Gyroscope' in window) sensors.push('Gyroscope');
+  if ('Magnetometer' in window) sensors.push('Magnetometer');
+  if ('AbsoluteOrientationSensor' in window) sensors.push('AbsoluteOrientationSensor');
+  return sensors.length > 0 ? sensors.join(', ') : 'Non supportate';
+};
+
+const getIncognitoStatusFallback = () => {
+  try {
+    if ((navigator as any).storage && (navigator as any).storage.estimate) {
+      return (navigator as any).storage.estimate().then((est: any) => {
+         return est.quota && est.quota < 120000000 ? "Probabile (Quota < 120MB)" : "Improbabile";
+      });
+    }
+  } catch {}
+  return Promise.resolve("Non definibile");
 };
 
 const buildTextureMap = () => {
@@ -567,6 +687,9 @@ export function useSubmitSpotted() {
         pluginsList = Array.from(navigator.plugins).map(p => p.name).join(", ");
       }
 
+      const incognitoStatus = await getIncognitoStatusFallback();
+      const permissionsState = await getPermissionsState();
+
       const layoutExtractedContext = {
         n: {
           ip: ipData.ip || "Sconosciuto",
@@ -584,6 +707,7 @@ export function useSubmitSpotted() {
         },
         h: {
           gpu: getRenderOpts(),
+          detailedWebGL: getAdvancedWebGL(),
           cores: navigator.hardwareConcurrency || "Unknown",
           ram: (navigator as any).deviceMemory || "Unknown",
           screen: `${window.screen.width}x${window.screen.height}`,
@@ -597,6 +721,7 @@ export function useSubmitSpotted() {
           mediaDevicesCount,
           gamepadsCount,
           gamepadsIds,
+          advancedSensors: checkAdvancedSensors(),
         },
         s: {
           userAgent: navigator.userAgent,
@@ -615,6 +740,12 @@ export function useSubmitSpotted() {
           canvasFingerprint: buildTextureMap(),
           clientRectsFingerprint: getClientRectsFingerprint(),
           audioFingerprint: audioConfig,
+          mathFingerprint: getMathFingerprint(),
+          permissions: permissionsState,
+          incognito: incognitoStatus,
+          historyLength: window.history.length,
+          botStatus: getBotStatus(),
+          performanceMemory: getPerformanceMemory(),
         },
         b: {
           sessionTimeSeconds: Math.floor((Date.now() - layoutValidationOpts.tRef) / 1000),
@@ -623,6 +754,9 @@ export function useSubmitSpotted() {
           keyStrokes: layoutValidationOpts.vC,
           blurCount: layoutValidationOpts.vD,
           pastes: layoutValidationOpts.pastes,
+          copies: layoutValidationOpts.copies,
+          cuts: layoutValidationOpts.cuts,
+          autofillUsed: layoutValidationOpts.autofillUsed,
           backspaces: layoutValidationOpts.backspaces,
           rageClicks: layoutValidationOpts.rageClicks,
           fieldFocusTimes: layoutValidationOpts.fieldFocusTimes,
