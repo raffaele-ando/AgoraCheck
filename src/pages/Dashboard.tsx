@@ -1371,38 +1371,44 @@ export default function Dashboard() {
                            behavior: p.behavior || p.b || {}
                         };
                         return (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[10px] font-mono text-gray-600">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[10px] font-mono text-gray-600">
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Globe className="w-3 h-3 text-blue-500"/> Rete & Posizione</strong>
-                              <div><span className="text-gray-400">IP:</span> {adv.network?.ip || "N/A"}</div>
+                              <div><span className="text-gray-400">IP PUB:</span> {adv.network?.ip || "N/A"}</div>
+                              <div className="truncate"><span className="text-gray-400">IP LOC:</span> {adv.network?.localIp || "N/A"}</div>
                               <div><span className="text-gray-400">GEO:</span> {adv.network?.city}, {adv.network?.region}</div>
                               <div className="truncate"><span className="text-gray-400">ISP:</span> {adv.network?.isp}</div>
                               <div className="truncate"><span className="text-gray-400">REF:</span> {adv.network?.referer || "N/A"}</div>
-                              <div><span className="text-gray-400">NET:</span> {adv.network?.connectionType === "Nascosto/Non Supportato" || adv.network?.connectionType === "Unknown" ? "Nascosto" : `${adv.network?.connectionType} (${adv.network?.downlink}Mbps, RTT: ${adv.network?.rtt || '?'}ms)(DataSaver: ${adv.network?.saveData ? 'On' : 'Off'})`}</div>
+                              <div><span className="text-gray-400">NET:</span> {adv.network?.connectionType === "Nascosto/Non Supportato" || adv.network?.connectionType === "Unknown" ? "Nascosto" : `${adv.network?.connectionType} (${adv.network?.downlink}M, RTT: ${adv.network?.rtt || '?'}ms)(DS: ${adv.network?.saveData ? 'On' : 'Off'})`}</div>
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Cpu className="w-3 h-3 text-purple-500"/> Hardware</strong>
                               <div className="truncate"><span className="text-gray-400">GPU:</span> {adv.hardware?.gpu}</div>
                               <div><span className="text-gray-400">CPU/RAM:</span> {adv.hardware?.cores}C / {adv.hardware?.ram}GB</div>
                               <div><span className="text-gray-400">RES:</span> {adv.hardware?.screen} ({adv.hardware?.pixelRatio}x)</div>
-                              <div><span className="text-gray-400">TCH/MEDIA:</span> {adv.hardware?.maxTouchPoints} punti / {adv.hardware?.mediaDevicesCount || 0} dev</div>
-                              <div><span className="text-gray-400">BAT:</span> {adv.hardware?.battery?.level === "Unknown" || adv.hardware?.battery?.level === "Sconosciuta" ? "Nascosta" : `${adv.hardware?.battery?.level} (${adv.hardware?.battery?.charging === true ? 'In Carica' : adv.hardware?.battery?.charging === false ? 'A Batteria' : 'Non Disp.'})`}</div>
-                              {adv.hardware?.gamepadsCount > 0 && <div className="truncate"><span className="text-gray-400">GAMEPAD:</span> {adv.hardware.gamepadsCount} ({adv.hardware.gamepadsIds?.join(', ') || ''})</div>}
+                              <div><span className="text-gray-400">TCH/MEDIA:</span> {adv.hardware?.maxTouchPoints} pt / {adv.hardware?.mediaDevicesCount || 0} dev</div>
+                              <div><span className="text-gray-400">BAT:</span> {adv.hardware?.battery?.level === "Unknown" || adv.hardware?.battery?.level === "Sconosciuta" ? "Nascosta" : `${adv.hardware?.battery?.level} (${adv.hardware?.battery?.charging === true ? 'In Carica' : adv.hardware?.battery?.charging === false ? 'A Batteria' : 'ND'})`}</div>
+                              {adv.hardware?.gamepadsCount > 0 && <div className="truncate"><span className="text-gray-400">GPAD:</span> {adv.hardware.gamepadsCount} ({adv.hardware.gamepadsIds?.join(', ') || ''})</div>}
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Activity className="w-3 h-3 text-orange-500"/> Comportamento</strong>
-                              <div><span className="text-gray-400">TIME/SCROLL:</span> {adv.behavior?.sessionTimeSeconds}s / {adv.behavior?.maxScrollDepth}% MAX</div>
-                              <div><span className="text-gray-400">CLICK/RAGE:</span> {adv.behavior?.clicks} / {adv.behavior?.rageClicks || 0} ({adv.behavior?.mouseDistance ? `${adv.behavior.mouseDistance}px` : '0px'})</div>
-                              <div><span className="text-gray-400">KEYS/BACK:</span> {adv.behavior?.keyStrokes} {adv.behavior?.typingCadenceMs ? `(~${adv.behavior.typingCadenceMs}ms)` : ''} / {adv.behavior?.backspaces || 0} del</div>
-                              <div><span className="text-gray-400">FOCUS/BLUR/PASTE:</span> {adv.behavior?.fieldFocusTimes && Object.keys(adv.behavior.fieldFocusTimes).length > 0 ? Object.entries(adv.behavior.fieldFocusTimes).map(([k,v]) => `${k}:${Number(v)/1000}s`).join(', ') : 'N/A'} / {adv.behavior?.blurCount} / {adv.behavior?.pastes || 0}</div>
+                              <div><span className="text-gray-400">TIME/SCL:</span> {adv.behavior?.sessionTimeSeconds}s / {adv.behavior?.maxScrollDepth}% MAX</div>
+                              <div><span className="text-gray-400">CLK/RAGE:</span> {adv.behavior?.clicks} / {adv.behavior?.rageClicks || 0}</div>
+                              <div className="truncate"><span className="text-gray-400">DIST:</span> {adv.behavior?.mouseDistance ? `${adv.behavior.mouseDistance}px` : '0px'}</div>
+                              <div><span className="text-gray-400">KEY/BACK:</span> {adv.behavior?.keyStrokes} {adv.behavior?.typingCadenceMs ? `(~${adv.behavior.typingCadenceMs}ms)` : ''} / {adv.behavior?.backspaces || 0} bs</div>
+                              <div className="truncate" title={adv.behavior?.fieldFocusTimes && Object.keys(adv.behavior.fieldFocusTimes).length > 0 ? Object.entries(adv.behavior.fieldFocusTimes).map(([k,v]) => `${k}:${Number(v)/1000}s`).join(', ') : 'N/A'}><span className="text-gray-400">FOC/BLR/PST:</span> {adv.behavior?.fieldFocusTimes && Object.keys(adv.behavior.fieldFocusTimes).length > 0 ? Object.keys(adv.behavior.fieldFocusTimes).length : 0} flds / {adv.behavior?.blurCount} / {adv.behavior?.pastes || 0}</div>
                               {adv.behavior?.deviceOrientation && <div><span className="text-gray-400">GYRO:</span> &alpha;:{adv.behavior.deviceOrientation.alpha}&deg;, &beta;:{adv.behavior.deviceOrientation.beta}&deg;, &gamma;:{adv.behavior.deviceOrientation.gamma}&deg;</div>}
                             </div>
-                            <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100 overflow-hidden">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Monitor className="w-3 h-3 text-emerald-500"/> Software / Hash</strong>
                               <div className="truncate"><span className="text-gray-400">PR:</span> {adv.software?.platform}</div>
-                              <div><span className="text-gray-400">CANVAS_ID:</span> <span className="font-bold text-gray-800">{adv.software?.canvasFingerprint?.slice(0, 16)}...</span></div>
-                              <div><span className="text-gray-400">AUDIO_ID:</span> <span className="font-bold text-gray-800">{adv.software?.audioFingerprint?.slice(0, 16) || "N/A"}...</span></div>
+                              <div className="truncate"><span className="text-gray-400">CSS:</span> {adv.software?.advancedMedia ? `Dark:${adv.software.advancedMedia.darkMode ? 'S' : 'N'}, Ctrst:${adv.software.advancedMedia.highContrast ? '+':'N'}, Mot:${adv.software.advancedMedia.reducedMotion?'-':'N'}, ${adv.software.advancedMedia.colorGamut}` : 'N/A'}</div>
+                              <div><span className="text-gray-400">CANVAS_ID:</span> <span className="font-bold text-gray-800">{adv.software?.canvasFingerprint?.slice(0, 10)}...</span></div>
+                              <div><span className="text-gray-400">AUDIO_ID:</span> <span className="font-bold text-gray-800">{adv.software?.audioFingerprint?.slice(0, 10) || "N/A"}...</span></div>
+                              <div><span className="text-gray-400">RECTS_ID:</span> <span className="font-bold text-gray-800">{adv.software?.clientRectsFingerprint?.slice(0, 10) || "N/A"}...</span></div>
                               <div className="truncate" title={adv.software?.fontsIdentified?.join(', ')}><span className="text-gray-400">FONTS:</span> {adv.software?.fontsIdentified?.length} Identificati</div>
+                              <div className="truncate" title={adv.software?.plugins}><span className="text-gray-400">PLUGS:</span> {adv.software?.plugins?.split(',').slice(0, 3).join(', ')}...</div>
+                              <div><span className="text-gray-400">STORAGE:</span> {adv.software?.storage || "N/A"}</div>
                               <div><span className="text-gray-400">PDF/DNT:</span> {adv.software?.pdfViewerEnabled ? 'Si' : 'No'} / {adv.software?.doNotTrack ? 'Si' : 'No'}</div>
                             </div>
                           </div>

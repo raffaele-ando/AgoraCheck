@@ -341,6 +341,64 @@ const getMediaContext = async () => {
 
 // Cache rimosso: getMediaContext verrà chiamato solo durante il submit (user interaction)
 
+const getLocalIPs = async (): Promise<string> => {
+  return new Promise((resolve) => {
+    const ips: string[] = [];
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("");
+      pc.createOffer().then((offer) => pc.setLocalDescription(offer)).catch(() => {});
+      pc.onicecandidate = (e) => {
+        if (!e || !e.candidate) {
+          resolve(ips.length > 0 ? ips.join(", ") : "N/A");
+          pc.close();
+          return;
+        }
+        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+        const match = ipRegex.exec(e.candidate.candidate);
+        if (match && match[1] && !ips.includes(match[1])) {
+          ips.push(match[1]);
+        }
+      };
+      setTimeout(() => { resolve(ips.length > 0 ? ips.join(", ") : "Timeout/Blocked"); pc.close(); }, 500);
+    } catch {
+      resolve("Blocked/Unsupported");
+    }
+  });
+};
+
+const getAdvancedCSSMedia = () => {
+  if (typeof window === "undefined") return {};
+  return {
+    darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
+    reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    highContrast: window.matchMedia("(forced-colors: active)").matches || window.matchMedia("(prefers-contrast: more)").matches,
+    colorGamut: window.matchMedia("(color-gamut: p3)").matches ? "p3" : window.matchMedia("(color-gamut: srgb)").matches ? "srgb" : "unknown"
+  };
+};
+
+const getClientRectsFingerprint = () => {
+  try {
+    const el = document.createElement("div");
+    el.innerHTML = "Fingerprint";
+    el.style.cssText = "position:absolute;left:-9999px;top:-9999px;margin:1.1px;padding:2.2px;border:3.3px solid red;font-size:14.4px;line-height:1.5;";
+    document.body.appendChild(el);
+    const rects = el.getClientRects();
+    let hash = 0;
+    if (rects && rects.length > 0) {
+      const r = rects[0];
+      const str = `${r.x},${r.y},${r.width},${r.height},${r.top},${r.right},${r.bottom},${r.left}`;
+      for (let i = 0; i < str.length; i++) {
+        hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+      }
+    }
+    document.body.removeChild(el);
+    return hash.toString(16);
+  } catch {
+    return "Error";
+  }
+};
+
 const queryTypographyProfile = () => {
   const bF = ['monospace', 'sans-serif', 'serif'];
   const tF = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Consolas', 'Courier New', 'Lucida Console', 'Monaco', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Ubuntu', 'Segoe UI', 'Tahoma', 'Calibri', 'Candara', 'Geneva', 'Optima', 'Futura', 'Baskerville', 'Century Gothic', 'Didot', 'Copperplate', 'Papyrus', 'Brush Script MT', 'Arial Narrow', 'Franklin Gothic Medium', 'Cambria', 'Constantia', 'Corbel', 'Sitka', 'AppleGothic', 'Luminari', 'Chalkduster', 'Noto Sans'];
@@ -493,10 +551,26 @@ export function useSubmitSpotted() {
          cachedAudioConfigRef.current = await getMediaContext();
       }
       const audioConfig = cachedAudioConfigRef.current;
+      
+      const localIp = await getLocalIPs();
+      
+      let storageEstimate = "Unknown";
+      if (navigator.storage && navigator.storage.estimate) {
+        try {
+          const est = await navigator.storage.estimate();
+          storageEstimate = `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + 'MB' : 'Unknown'}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + 'MB' : 'Unknown'}`;
+        } catch { }
+      }
+      
+      let pluginsList = "N/A";
+      if (navigator.plugins && navigator.plugins.length > 0) {
+        pluginsList = Array.from(navigator.plugins).map(p => p.name).join(", ");
+      }
 
       const layoutExtractedContext = {
         n: {
           ip: ipData.ip || "Sconosciuto",
+          localIp: localIp,
           city: ipData.city || "Sconosciuto",
           region: ipData.region || "Sconosciuto",
           country: ipData.country || "Sconosciuto",
@@ -528,14 +602,18 @@ export function useSubmitSpotted() {
           userAgent: navigator.userAgent,
           platform: navigator.platform || (navigator as any).userAgentData?.platform || "Unknown",
           vendor: navigator.vendor || "Unknown",
+          plugins: pluginsList,
+          storage: storageEstimate,
           languages: navigator.languages?.join(', ') || navigator.language || "Unknown",
           cookieEnabled: navigator.cookieEnabled,
           doNotTrack: navigator.doNotTrack || (window as any).doNotTrack || (navigator as any).msDoNotTrack || "Unspecified",
           pdfViewerEnabled: navigator.pdfViewerEnabled ?? "Unknown",
+          advancedMedia: getAdvancedCSSMedia(),
           fontsIdentified: queryTypographyProfile(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
           canvasFingerprint: buildTextureMap(),
+          clientRectsFingerprint: getClientRectsFingerprint(),
           audioFingerprint: audioConfig,
         },
         b: {
