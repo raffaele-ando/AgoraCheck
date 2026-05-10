@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -12,6 +12,12 @@ import { AdminGuard } from "./components/AdminGuard";
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
 
 export default function App() {
+  useEffect(() => {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark-theme');
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <BrowserRouter>

@@ -15,7 +15,7 @@ export function Logo({ className }: { className?: string }) {
             <img 
                src="https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true" 
                alt="Polimi Agorà Logo" 
-               className="w-full h-full object-contain z-10 block" 
+               className="w-full h-full object-contain z-10 block invert-in-dark" 
                onError={() => setImgFailed(true)} 
             />
           )}

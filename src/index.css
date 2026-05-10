@@ -9,3 +9,19 @@
     scrollbar-width: none;
   }
 }
+
+html.dark-theme {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111;
+}
+
+html.dark-theme img, 
+html.dark-theme video, 
+html.dark-theme canvas,
+html.dark-theme .ignore-dark {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.dark-theme img.invert-in-dark {
+  filter: none;
+}

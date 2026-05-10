@@ -6,7 +6,7 @@ import { db, auth } from "../firebase";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Logo } from "../components/Logo";
-import { LogOut, Monitor, Smartphone, Globe, Clock, Inbox, MapPin, Calendar, Search, Activity, Trash2, Fingerprint, ChevronDown, User as UserIcon, ShieldAlert, Cpu, CheckCircle2, Inbox as InboxIcon, Archive, ArchiveRestore, Instagram, X, Layers } from "lucide-react";
+import { LogOut, Monitor, Smartphone, Globe, Clock, Inbox, MapPin, Calendar, Search, Activity, Trash2, Fingerprint, ChevronDown, User as UserIcon, ShieldAlert, Cpu, CheckCircle2, Inbox as InboxIcon, Archive, ArchiveRestore, Instagram, X, Layers, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
 
@@ -112,6 +112,17 @@ export default function Dashboard() {
   const [profileCustomInstagramsInput, setProfileCustomInstagramsInput] = useState("");
   const [viewFilter, setViewFilter] = useState<'new' | 'archived'>('new');
   const [activeTab, setActiveTab] = useState<'messages' | 'profiles' | 'analytics'>('messages');
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
   
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [resolutionInput, setResolutionInput] = useState("");
@@ -895,10 +906,15 @@ export default function Dashboard() {
                   <h1 className="text-lg font-black tracking-tight text-gray-900 uppercase hidden xl:block shrink-0">Dashboard</h1>
                 </div>
                 
-                {/* Mobile LogOut */}
-                <button onClick={handleLogout} className="md:hidden p-2 bg-gray-100 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Disconnetti">
-                  <LogOut className="w-5 h-5" />
-                </button>
+                {/* Mobile Icons */}
+                <div className="flex items-center gap-1 md:hidden">
+                  <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-gray-100 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Toggle Theme">
+                    {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </button>
+                  <button onClick={handleLogout} className="p-2 bg-gray-100 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Disconnetti">
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Bottom Row on Mobile, Right Side on Desktop */}
@@ -940,8 +956,11 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                {/* Desktop LogOut */}
+                {/* Desktop Icons */}
                 <div className="hidden md:flex items-center gap-2 border-l pl-2 ml-1">
+                  <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Toggle Theme">
+                    {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </button>
                   <div className="text-xs font-semibold text-gray-400 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100 truncate max-w-[150px] xl:max-w-[200px] shrink-0 hidden lg:block">
                     {auth.currentUser?.email}
                   </div>
