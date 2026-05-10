@@ -1378,23 +1378,24 @@ export default function Dashboard() {
                               <div><span className="text-gray-400">GEO:</span> {adv.network?.city}, {adv.network?.region}</div>
                               <div className="truncate"><span className="text-gray-400">ISP:</span> {adv.network?.isp}</div>
                               <div className="truncate"><span className="text-gray-400">REF:</span> {adv.network?.referer || "N/A"}</div>
-                              <div><span className="text-gray-400">NET:</span> {adv.network?.connectionType === "Nascosto/Non Supportato" || adv.network?.connectionType === "Unknown" ? "Nascosto" : `${adv.network?.connectionType} (${adv.network?.downlink}Mbps)`}</div>
+                              <div><span className="text-gray-400">NET:</span> {adv.network?.connectionType === "Nascosto/Non Supportato" || adv.network?.connectionType === "Unknown" ? "Nascosto" : `${adv.network?.connectionType} (${adv.network?.downlink}Mbps, RTT: ${adv.network?.rtt || '?'}ms)(DataSaver: ${adv.network?.saveData ? 'On' : 'Off'})`}</div>
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Cpu className="w-3 h-3 text-purple-500"/> Hardware</strong>
                               <div className="truncate"><span className="text-gray-400">GPU:</span> {adv.hardware?.gpu}</div>
                               <div><span className="text-gray-400">CPU/RAM:</span> {adv.hardware?.cores}C / {adv.hardware?.ram}GB</div>
                               <div><span className="text-gray-400">RES:</span> {adv.hardware?.screen} ({adv.hardware?.pixelRatio}x)</div>
-                              <div><span className="text-gray-400">TCH:</span> {adv.hardware?.touchSupport ? 'Si' : 'No'} (Max: {adv.hardware?.maxTouchPoints})</div>
+                              <div><span className="text-gray-400">TCH/MEDIA:</span> {adv.hardware?.maxTouchPoints} punti / {adv.hardware?.mediaDevicesCount || 0} dev</div>
                               <div><span className="text-gray-400">BAT:</span> {adv.hardware?.battery?.level === "Unknown" || adv.hardware?.battery?.level === "Sconosciuta" ? "Nascosta" : `${adv.hardware?.battery?.level} (${adv.hardware?.battery?.charging === true ? 'In Carica' : adv.hardware?.battery?.charging === false ? 'A Batteria' : 'Non Disp.'})`}</div>
+                              {adv.hardware?.gamepadsCount > 0 && <div className="truncate"><span className="text-gray-400">GAMEPAD:</span> {adv.hardware.gamepadsCount} ({adv.hardware.gamepadsIds?.join(', ') || ''})</div>}
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Activity className="w-3 h-3 text-orange-500"/> Comportamento</strong>
-                              <div><span className="text-gray-400">SESSION:</span> {adv.behavior?.sessionTimeSeconds}s</div>
-                              <div><span className="text-gray-400">SCROLL MAX:</span> {adv.behavior?.maxScrollDepth}%</div>
-                              <div><span className="text-gray-400">CLICKS:</span> {adv.behavior?.clicks}</div>
-                              <div><span className="text-gray-400">KEYS:</span> {adv.behavior?.keyStrokes}</div>
-                              <div><span className="text-gray-400">BLUR:</span> {adv.behavior?.blurCount}</div>
+                              <div><span className="text-gray-400">TIME/SCROLL:</span> {adv.behavior?.sessionTimeSeconds}s / {adv.behavior?.maxScrollDepth}% MAX</div>
+                              <div><span className="text-gray-400">CLICK/RAGE:</span> {adv.behavior?.clicks} / {adv.behavior?.rageClicks || 0} ({adv.behavior?.mouseDistance ? `${adv.behavior.mouseDistance}px` : '0px'})</div>
+                              <div><span className="text-gray-400">KEYS/BACK:</span> {adv.behavior?.keyStrokes} {adv.behavior?.typingCadenceMs ? `(~${adv.behavior.typingCadenceMs}ms)` : ''} / {adv.behavior?.backspaces || 0} del</div>
+                              <div><span className="text-gray-400">FOCUS/BLUR/PASTE:</span> {adv.behavior?.fieldFocusTimes && Object.keys(adv.behavior.fieldFocusTimes).length > 0 ? Object.entries(adv.behavior.fieldFocusTimes).map(([k,v]) => `${k}:${Number(v)/1000}s`).join(', ') : 'N/A'} / {adv.behavior?.blurCount} / {adv.behavior?.pastes || 0}</div>
+                              {adv.behavior?.deviceOrientation && <div><span className="text-gray-400">GYRO:</span> &alpha;:{adv.behavior.deviceOrientation.alpha}&deg;, &beta;:{adv.behavior.deviceOrientation.beta}&deg;, &gamma;:{adv.behavior.deviceOrientation.gamma}&deg;</div>}
                             </div>
                             <div className="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
                               <strong className="text-gray-800 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider"><Monitor className="w-3 h-3 text-emerald-500"/> Software / Hash</strong>

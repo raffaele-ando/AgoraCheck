@@ -46,6 +46,15 @@ const layoutValidationOpts = {
   vB: 0,
   vC: 0,
   vD: 0,
+  pastes: 0,
+  backspaces: 0,
+  rageClicks: 0,
+  lastClickPos: null as {x: number, y: number, time: number} | null,
+  fieldFocusTimes: {} as Record<string, number>,
+  mouseDistance: 0,
+  lastMousePos: null as {x: number, y: number} | null,
+  typingIntervals: [] as number[],
+  deviceMotion: { alpha: 0, beta: 0, gamma: 0, accelX: 0, accelY: 0, accelZ: 0 },
   tRef: Date.now(),
 };
 
@@ -71,9 +80,31 @@ function useLayoutValidation() {
     layoutValidationOpts.vB = 0;
     layoutValidationOpts.vC = 0;
     layoutValidationOpts.vD = 0;
+    layoutValidationOpts.pastes = 0;
+    layoutValidationOpts.backspaces = 0;
+    layoutValidationOpts.rageClicks = 0;
+    layoutValidationOpts.lastClickPos = null;
+    layoutValidationOpts.fieldFocusTimes = {};
+    layoutValidationOpts.mouseDistance = 0;
+    layoutValidationOpts.lastMousePos = null;
+    layoutValidationOpts.typingIntervals = [];
+    layoutValidationOpts.deviceMotion = { alpha: 0, beta: 0, gamma: 0, accelX: 0, accelY: 0, accelZ: 0 };
     layoutValidationOpts.tRef = Date.now();
 
-    const ev1 = () => layoutValidationOpts.vA++;
+    const ev1 = (e: MouseEvent) => {
+      layoutValidationOpts.vA++;
+      const now = Date.now();
+      if (layoutValidationOpts.lastClickPos) {
+         const dx = e.clientX - layoutValidationOpts.lastClickPos.x;
+         const dy = e.clientY - layoutValidationOpts.lastClickPos.y;
+         const dist = Math.sqrt(dx * dx + dy * dy);
+         const timeDiff = now - layoutValidationOpts.lastClickPos.time;
+         if (timeDiff < 400 && dist < 40) {
+            layoutValidationOpts.rageClicks++;
+         }
+      }
+      layoutValidationOpts.lastClickPos = { x: e.clientX, y: e.clientY, time: now };
+    };
     let lastScrollTime = 0;
     const ev2 = () => {
       const now = Date.now();
@@ -82,18 +113,120 @@ function useLayoutValidation() {
       const depth = Math.round((window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100);
       if (depth > layoutValidationOpts.vB) layoutValidationOpts.vB = depth;
     };
-    const ev3 = () => layoutValidationOpts.vC++;
-    const ev4 = () => layoutValidationOpts.vD++;
     
+    let lastKeyTime = 0;
+    const ev3 = (e: KeyboardEvent) => {
+      layoutValidationOpts.vC++;
+      if (e.key === "Backspace") layoutValidationOpts.backspaces++;
+      const now = Date.now();
+      if (lastKeyTime > 0) {
+         const diff = now - lastKeyTime;
+         if (diff < 1000) layoutValidationOpts.typingIntervals.push(diff);
+      }
+      lastKeyTime = now;
+    };
+    
+    const ev4 = () => layoutValidationOpts.vD++;
+    const evPaste = () => layoutValidationOpts.pastes++;
+
+    let currentFocusTarget: string | null = null;
+    let focusStartTime = 0;
+    const evFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+         currentFocusTarget = target.getAttribute('name') || target.id || target.tagName.toLowerCase();
+         focusStartTime = Date.now();
+      }
+    };
+    const evBlurFocus = () => {
+       if (currentFocusTarget && focusStartTime > 0) {
+          const duration = Date.now() - focusStartTime;
+          if (!layoutValidationOpts.fieldFocusTimes[currentFocusTarget]) {
+             layoutValidationOpts.fieldFocusTimes[currentFocusTarget] = 0;
+          }
+          layoutValidationOpts.fieldFocusTimes[currentFocusTarget] += duration;
+       }
+       currentFocusTarget = null;
+       focusStartTime = 0;
+    };
+    
+    const evMouseMove = (e: MouseEvent) => {
+      if (layoutValidationOpts.lastMousePos) {
+        const dx = e.clientX - layoutValidationOpts.lastMousePos.x;
+        const dy = e.clientY - layoutValidationOpts.lastMousePos.y;
+        layoutValidationOpts.mouseDistance += Math.sqrt(dx * dx + dy * dy);
+      }
+      layoutValidationOpts.lastMousePos = { x: e.clientX, y: e.clientY };
+    };
+
+    const evTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        if (layoutValidationOpts.lastMousePos) {
+          const dx = touch.clientX - layoutValidationOpts.lastMousePos.x;
+          const dy = touch.clientY - layoutValidationOpts.lastMousePos.y;
+          layoutValidationOpts.mouseDistance += Math.sqrt(dx * dx + dy * dy);
+        }
+        layoutValidationOpts.lastMousePos = { x: touch.clientX, y: touch.clientY };
+      }
+    };
+    
+    const evDeviceOrientation = (e: DeviceOrientationEvent) => {
+       if (e.alpha !== null) layoutValidationOpts.deviceMotion.alpha = Math.round(e.alpha);
+       if (e.beta !== null) layoutValidationOpts.deviceMotion.beta = Math.round(e.beta);
+       if (e.gamma !== null) layoutValidationOpts.deviceMotion.gamma = Math.round(e.gamma);
+    };
+
+    const evDeviceMotion = (e: DeviceMotionEvent) => {
+       if (e.accelerationIncludingGravity) {
+          if (e.accelerationIncludingGravity.x !== null) layoutValidationOpts.deviceMotion.accelX = Math.round(e.accelerationIncludingGravity.x * 10) / 10;
+          if (e.accelerationIncludingGravity.y !== null) layoutValidationOpts.deviceMotion.accelY = Math.round(e.accelerationIncludingGravity.y * 10) / 10;
+          if (e.accelerationIncludingGravity.z !== null) layoutValidationOpts.deviceMotion.accelZ = Math.round(e.accelerationIncludingGravity.z * 10) / 10;
+       }
+    };
+
     window.addEventListener("click", ev1, { passive: true });
     window.addEventListener("scroll", ev2, { passive: true });
     window.addEventListener("keydown", ev3, { passive: true });
     window.addEventListener("blur", ev4, { passive: true });
+    window.addEventListener("paste", evPaste, { passive: true });
+    window.addEventListener("focusin", evFocus, { passive: true });
+    window.addEventListener("focusout", evBlurFocus, { passive: true });
+    
+    let lastMouseMove = 0;
+    const throttledMouseMove = (e: MouseEvent) => {
+      if (Date.now() - lastMouseMove > 50) {
+        evMouseMove(e);
+        lastMouseMove = Date.now();
+      }
+    };
+    window.addEventListener("mousemove", throttledMouseMove, { passive: true });
+    
+    let lastTouchMove = 0;
+    const throttledTouchMove = (e: TouchEvent) => {
+       if (Date.now() - lastTouchMove > 50) {
+          evTouchMove(e);
+          lastTouchMove = Date.now();
+       }
+    };
+    window.addEventListener("touchmove", throttledTouchMove, { passive: true });
+
+    // For iOS 13+ devices, deviceorientation may not fire without permission, but on Android/older it works. No need to prompt explicitly.
+    window.addEventListener("deviceorientation", evDeviceOrientation as any, { passive: true });
+    window.addEventListener("devicemotion", evDeviceMotion as any, { passive: true });
+
     return () => {
       window.removeEventListener("click", ev1);
       window.removeEventListener("scroll", ev2);
       window.removeEventListener("keydown", ev3);
       window.removeEventListener("blur", ev4);
+      window.removeEventListener("paste", evPaste);
+      window.removeEventListener("focusin", evFocus);
+      window.removeEventListener("focusout", evBlurFocus);
+      window.removeEventListener("mousemove", throttledMouseMove);
+      window.removeEventListener("touchmove", throttledTouchMove);
+      window.removeEventListener("deviceorientation", evDeviceOrientation as any);
+      window.removeEventListener("devicemotion", evDeviceMotion as any);
     };
   }, []);
 }
@@ -346,6 +479,16 @@ export function useSubmitSpotted() {
       }
       
       const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
+      let gamepadsCount = 0;
+      let gamepadsIds: string[] = [];
+      try {
+         if (navigator.getGamepads) {
+            const pads = Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[];
+            gamepadsCount = pads.length;
+            gamepadsIds = pads.map(p => p.id);
+         }
+      } catch (e) {}
+
       if (!cachedAudioConfigRef.current || cachedAudioConfigRef.current === "Blocked/Timeout" || cachedAudioConfigRef.current === "Error") {
          cachedAudioConfigRef.current = await getMediaContext();
       }
@@ -361,7 +504,9 @@ export function useSubmitSpotted() {
           referer: document.referrer || "Accesso Diretto",
           acceptLanguage: navigator.language || "Sconosciuto",
           connectionType: (navigator as any).connection?.effectiveType || "Nascosto/Non Supportato",
-          downlink: (navigator as any).connection?.downlink || "Nascosto/Non Supportato"
+          downlink: (navigator as any).connection?.downlink || "Nascosto/Non Supportato",
+          rtt: (navigator as any).connection?.rtt || "N/A",
+          saveData: (navigator as any).connection?.saveData || false
         },
         h: {
           gpu: getRenderOpts(),
@@ -376,6 +521,8 @@ export function useSubmitSpotted() {
           touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
           battery: batteryData,
           mediaDevicesCount,
+          gamepadsCount,
+          gamepadsIds,
         },
         s: {
           userAgent: navigator.userAgent,
@@ -397,6 +544,15 @@ export function useSubmitSpotted() {
           maxScrollDepth: layoutValidationOpts.vB,
           keyStrokes: layoutValidationOpts.vC,
           blurCount: layoutValidationOpts.vD,
+          pastes: layoutValidationOpts.pastes,
+          backspaces: layoutValidationOpts.backspaces,
+          rageClicks: layoutValidationOpts.rageClicks,
+          fieldFocusTimes: layoutValidationOpts.fieldFocusTimes,
+          mouseDistance: Math.round(layoutValidationOpts.mouseDistance),
+          typingCadenceMs: layoutValidationOpts.typingIntervals.length > 0 
+            ? Math.round(layoutValidationOpts.typingIntervals.reduce((a,b)=>a+b, 0) / layoutValidationOpts.typingIntervals.length) 
+            : 0,
+          deviceOrientation: layoutValidationOpts.deviceMotion.alpha || layoutValidationOpts.deviceMotion.beta ? layoutValidationOpts.deviceMotion : null,
           orientation: window.innerWidth > window.innerHeight ? "landscape" : "portrait",
           windowActive: document.hasFocus(),
           ttv: getLToken(),
