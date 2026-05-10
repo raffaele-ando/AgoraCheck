@@ -1,5 +1,4 @@
 import React, { ErrorInfo } from "react";
-import { Link } from "react-router-dom";
 
 interface Props {
   children: React.ReactNode;

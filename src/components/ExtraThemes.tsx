@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Clock, MapPin, Instagram, Search } from "lucide-react";
 import { useSubmitSpotted } from "../pages/Home";
 import { motion } from "motion/react";
 import { Logo } from "./Logo";
@@ -42,7 +42,7 @@ export function ThemeCorkboard() {
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#F4F1EA]/80 shadow-md rotate-[-3deg] border border-[#000000]/10 z-50 overflow-visible" style={{ clipPath: "polygon(5% 0%, 95% 4%, 100% 100%, 0% 96%)" }}></div>
         
         <div className="mb-2 sm:mb-6 text-center space-y-2 pt-2">
-          <Logo className="scale-50 origin-top mx-auto -mb-2" />
+          <Logo className="w-32 h-10 mx-auto mb-2" />
           
           <div>
             <h2 className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
@@ -51,7 +51,6 @@ export function ThemeCorkboard() {
             <h3 className="text-sm sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
               SPOTTED AL POLIMI
             </h3>
-            <p className="text-[9px] uppercase font-bold text-[#DC5F00] mt-1 tracking-widest font-mono">Agorà Aby Project</p>
           </div>
         </div>
 
@@ -63,7 +62,7 @@ export function ThemeCorkboard() {
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5 font-mono text-[#000000]">
           <div className="px-2">
-            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">🗓️ 1. Quando? (Opz.)</label>
+            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase"><Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando? (Opz.)</label>
             <input
               type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
@@ -72,7 +71,7 @@ export function ThemeCorkboard() {
           </div>
 
           <div className="px-2">
-            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">📍 2. Dove? (Opz.)</label>
+            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase"><MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove? (Opz.)</label>
             <input
               type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
@@ -82,7 +81,7 @@ export function ThemeCorkboard() {
           
           <div className="p-2 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1">
             <div className="flex items-center justify-between mb-0.5">
-              <label className="text-[10px] sm:text-xs font-bold text-[#000000] uppercase">📸 3. Il tuo Instagram</label>
+              <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] uppercase"><Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 3. Il tuo Instagram</label>
               <span className="text-[8px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1 py-0.5 rounded">OPZ.</span>
             </div>
             <p className="text-[9px] leading-tight text-[#000000]/60 mb-1 font-medium">
@@ -99,7 +98,7 @@ export function ThemeCorkboard() {
           </div>
 
           <div className="px-2 relative">
-            <label className="block text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">🔎 4. Chi cerchi? *</label>
+            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase"><Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 4. Chi cerchi? *</label>
             <textarea
               required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
@@ -107,10 +106,15 @@ export function ThemeCorkboard() {
             />
           </div>
 
-          <div className="flex justify-center mt-2 sm:mt-6">
-            <button disabled={!form.lookingFor || isSubmitting || isSuccess || cooldown > 0} className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent">
-              {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : cooldown > 0 ? `Attendi ${cooldown}s` : "Invia"}
-            </button>
+          <div className="flex flex-col mt-2 sm:mt-6">
+            <div className="flex justify-center">
+              <button disabled={!form.lookingFor || isSubmitting || isSuccess || cooldown > 0} className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent">
+                {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : cooldown > 0 ? `Attendi ${cooldown}s` : "Invia"}
+              </button>
+            </div>
+            <div className="w-full text-right mt-3 pl-2">
+              <p className="text-[10px] uppercase font-black text-[#DC5F00]/80 tracking-widest font-mono inline-block">Agorà Aby Project</p>
+            </div>
           </div>
         </form>
       </motion.div>

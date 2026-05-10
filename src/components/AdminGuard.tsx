@@ -94,7 +94,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center"
         >
-          <Logo className="mb-8 scale-75" />
+          <Logo className="mb-8 w-48 h-16 mx-auto" />
           <h2 className="text-2xl font-bold mb-2">Accesso Riservato</h2>
           <p className="text-gray-500 mb-8">Accedi con l'account amministratore per visualizzare i messaggi.</p>
           

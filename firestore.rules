@@ -20,7 +20,7 @@ service cloud.firestore {
 
     function isValidMessage(data) {
       return hasRequiredFields(['lookingFor', 'createdAt', 'deviceInfo']) &&
-             data.lookingFor is string && data.lookingFor.size() <= 1000 &&
+             data.lookingFor is string && data.lookingFor.size() > 0 && data.lookingFor.size() <= 1000 &&
              (!('isArchived' in data) || data.isArchived is bool) &&
              (!('when' in data) || (data.when is string && data.when.size() <= 200)) &&
              (!('where' in data) || (data.where is string && data.where.size() <= 200)) &&

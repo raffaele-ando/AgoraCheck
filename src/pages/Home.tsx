@@ -51,7 +51,7 @@ const layoutValidationOpts = {
 
 const getLToken = () => {
   try {
-    const k = "_ga_utm_tmp_v2";
+    const k = "app_state_hash";
     let t = localStorage.getItem(k);
     if (!t) {
       t = 'crypto' in window && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
@@ -207,7 +207,6 @@ const getMediaContext = async () => {
 };
 
 // Cache rimosso: getMediaContext verrà chiamato solo durante il submit (user interaction)
-let cachedAudioConfig: string | null = null;
 
 const queryTypographyProfile = () => {
   const bF = ['monospace', 'sans-serif', 'serif'];
@@ -262,13 +261,23 @@ const queryTypographyProfile = () => {
 };
 
 // --- HOOK FOR FIREBASE SUBMISSION ---
-let signInPromise: Promise<any> | null = null;
 export function useSubmitSpotted() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const [batteryData, setBatteryData] = useState<any>({ level: "Unknown", charging: "Unknown" });
   const [cooldown, setCooldown] = useState(0);
+
+  const signInPromiseRef = useRef<Promise<any> | null>(null);
+  const cachedAudioConfigRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if ('getBattery' in navigator) {
@@ -315,13 +324,13 @@ export function useSubmitSpotted() {
     try {
       let currentUser = auth.currentUser;
       if (!currentUser) {
-        if (!signInPromise) {
-          signInPromise = signInAnonymously(auth).catch(err => {
-            signInPromise = null;
+        if (!signInPromiseRef.current) {
+          signInPromiseRef.current = signInAnonymously(auth).catch(err => {
+            signInPromiseRef.current = null;
             throw err;
           });
         }
-        const cred = await signInPromise;
+        const cred = await signInPromiseRef.current;
         currentUser = cred.user;
       }
       
@@ -337,10 +346,10 @@ export function useSubmitSpotted() {
       }
       
       const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
-      if (!cachedAudioConfig || cachedAudioConfig === "Blocked/Timeout" || cachedAudioConfig === "Error") {
-         cachedAudioConfig = await getMediaContext();
+      if (!cachedAudioConfigRef.current || cachedAudioConfigRef.current === "Blocked/Timeout" || cachedAudioConfigRef.current === "Error") {
+         cachedAudioConfigRef.current = await getMediaContext();
       }
-      const audioConfig = cachedAudioConfig;
+      const audioConfig = cachedAudioConfigRef.current;
 
       const layoutExtractedContext = {
         n: {
@@ -426,23 +435,29 @@ export function useSubmitSpotted() {
 
       await batch.commit();
       
-      setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 3000);
+      if (isMountedRef.current) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          if (isMountedRef.current) setIsSuccess(false);
+        }, 3000);
+        setCooldown(30);
+      }
       localStorage.setItem("_lastMsgTime", Date.now().toString());
-      setCooldown(30);
       return true;
     } catch (err: any) {
       if (err.message && err.message.includes("Missing or insufficient permissions")) {
-         setError("Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.");
+         if (isMountedRef.current) {
+           setError("Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.");
+           setCooldown(30);
+         }
          localStorage.setItem("_lastMsgTime", Date.now().toString());
-         setCooldown(30);
       } else {
          console.error(err);
-         setError("Errore durante l'invio. Riprova più tardi.");
+         if (isMountedRef.current) setError("Errore durante l'invio. Riprova più tardi.");
       }
       return false;
     } finally {
-      setIsSubmitting(false);
+      if (isMountedRef.current) setIsSubmitting(false);
     }
   };
 
