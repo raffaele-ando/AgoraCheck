@@ -8,47 +8,68 @@ import { Link } from "react-router-dom";
 // THEME 11: CORKBOARD (Old Theme 4 adapted to brand colors)
 // ==========================================
 export function ThemeCorkboard() {
-  const { submit, isSubmitting, isSuccess, error, cooldown } = useSubmitSpotted();
-  const [form, setForm] = useState({ lookingFor: "", when: "", where: "", instagram: "" });
+  const { submit, isSubmitting, isSuccess, error, cooldown } =
+    useSubmitSpotted();
+  const [form, setForm] = useState({
+    lookingFor: "",
+    when: "",
+    where: "",
+    instagram: "",
+  });
   const [lastSubmit, setLastSubmit] = useState(0);
   const [localError, setLocalError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.lookingFor) return;
-    
+
     // Client-side rate limiting
     if (cooldown > 0) {
-      setLocalError(`Aspetta ${cooldown} secondi prima di inviare un altro form!`);
+      setLocalError(
+        `Aspetta ${cooldown} secondi prima di inviare un altro form!`,
+      );
       return;
     }
-    
+
     setLocalError("");
     setLastSubmit(Date.now());
-    
+
     submit(form)
-      .then(ok => {
-         if(ok) setForm({ lookingFor: "", when: "", where: "", instagram: "" });
+      .then((ok) => {
+        if (ok) setForm({ lookingFor: "", when: "", where: "", instagram: "" });
       })
-      .catch(err => setLocalError(err.message || "Errore sconosciuto"));
+      .catch((err) => setLocalError(err.message || "Errore sconosciuto"));
   };
 
   const displayError = localError || error;
 
   return (
     <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
-      <motion.div initial={{ rotate: -2, scale: 0.9 }} animate={{ rotate: 1, scale: 0.95 }} className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mx-auto mt-2">
+      <motion.div
+        initial={{ rotate: -2, scale: 0.9 }}
+        animate={{ rotate: 1, scale: 0.95 }}
+        className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mx-auto mt-2"
+      >
         {/* Fix per il pezzo di scotch in alto: metto un bello z-index e levo il mix blend che bugga con il backdrop-blur su mobile e safari */}
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#F4F1EA]/80 shadow-md rotate-[-3deg] border border-[#000000]/10 z-50 overflow-visible" style={{ clipPath: "polygon(5% 0%, 95% 4%, 100% 100%, 0% 96%)" }}></div>
-        
+        <div
+          className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#F4F1EA]/80 shadow-md rotate-[-3deg] border border-[#000000]/10 z-50 overflow-visible"
+          style={{ clipPath: "polygon(5% 0%, 95% 4%, 100% 100%, 0% 96%)" }}
+        ></div>
+
         <div className="mb-2 sm:mb-6 text-center space-y-2 pt-2">
           <Logo className="w-32 h-10 mx-auto mb-2" />
-          
+
           <div>
-            <h2 className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none" style={{ fontFamily: 'Impact, sans-serif' }}>
+            <h2
+              className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none"
+              style={{ fontFamily: "Impact, sans-serif" }}
+            >
               WANTED!
             </h2>
-            <h3 className="text-sm sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1" style={{ fontFamily: 'Impact, sans-serif' }}>
+            <h3
+              className="text-sm sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1"
+              style={{ fontFamily: "Impact, sans-serif" }}
+            >
               SPOTTED AL POLIMI
             </h3>
           </div>
@@ -60,37 +81,67 @@ export function ThemeCorkboard() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5 font-mono text-[#000000]">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-3 sm:space-y-5 font-mono text-[#000000]"
+        >
           <div className="px-2">
-            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase"><Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando? (Opz.)</label>
+            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando?
+              (Opz.)
+            </label>
             <input
-              type="text" value={form.when} onChange={e => setForm({...form, when: e.target.value})}
+              type="text"
+              value={form.when}
+              onChange={(e) => setForm({ ...form, when: e.target.value })}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Es. Ieri alle 14:00"
             />
           </div>
 
           <div className="px-2">
-            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase"><MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove? (Opz.)</label>
+            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove?
+              (Opz.)
+            </label>
             <input
-              type="text" value={form.where} onChange={e => setForm({...form, where: e.target.value})}
+              type="text"
+              value={form.where}
+              onChange={(e) => setForm({ ...form, where: e.target.value })}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Es. Edificio 13"
             />
           </div>
-          
+
           <div className="p-2 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1">
             <div className="flex items-center justify-between mb-0.5">
-              <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] uppercase"><Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 3. Il tuo Instagram</label>
-              <span className="text-[8px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1 py-0.5 rounded">OPZ.</span>
+              <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] uppercase">
+                <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 3. Il
+                tuo Instagram
+              </label>
+              <span className="text-[8px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1 py-0.5 rounded">
+                OPZ.
+              </span>
             </div>
             <p className="text-[9px] leading-tight text-[#000000]/60 mb-1 font-medium">
-              Non sarà pubblico. Verrai avvisato in privato se qualcuno risponde, utilissimo per non perderti gli aggiornamenti!
+              Non sarà pubblico. Verrai avvisato in privato se qualcuno
+              risponde, utilissimo per non perderti gli aggiornamenti!
             </p>
             <div className="relative flex items-center border-b-2 border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-0.5">
-              <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5">@</span>
+              <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5">
+                @
+              </span>
               <input
-                type="text" value={form.instagram} onChange={e => setForm({...form, instagram: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '')})}
+                type="text"
+                value={form.instagram}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    instagram: e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9._]/g, ""),
+                  })
+                }
                 className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40"
                 placeholder="tuo.tag"
               />
@@ -98,9 +149,14 @@ export function ThemeCorkboard() {
           </div>
 
           <div className="px-2 relative">
-            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase"><Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 4. Chi cerchi? *</label>
+            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase">
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 4. Chi
+              cerchi? *
+            </label>
             <textarea
-              required value={form.lookingFor} onChange={e => setForm({...form, lookingFor: e.target.value})}
+              required
+              value={form.lookingFor}
+              onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
               className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
               placeholder="Il tipo con lo zaino giallo..."
             />
@@ -108,12 +164,25 @@ export function ThemeCorkboard() {
 
           <div className="flex flex-col mt-2 sm:mt-6">
             <div className="flex justify-center">
-              <button disabled={!form.lookingFor || isSubmitting || isSuccess || cooldown > 0} className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent">
-                {isSubmitting ? "Inviando..." : isSuccess ? "Inviato!" : cooldown > 0 ? `Attendi ${cooldown}s` : "Invia"}
+              <button
+                disabled={
+                  !form.lookingFor || isSubmitting || isSuccess || cooldown > 0
+                }
+                className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent"
+              >
+                {isSubmitting
+                  ? "Inviando..."
+                  : isSuccess
+                    ? "Inviato!"
+                    : cooldown > 0
+                      ? `Attendi ${cooldown}s`
+                      : "Invia"}
               </button>
             </div>
             <div className="w-full text-right mt-3 pl-2">
-              <p className="text-[10px] uppercase font-black text-[#DC5F00]/80 tracking-widest font-mono inline-block">Agorà Aby Project</p>
+              <p className="text-[10px] uppercase font-black text-[#DC5F00]/80 tracking-widest font-mono inline-block">
+                Agorà Aby Project
+              </p>
             </div>
           </div>
         </form>

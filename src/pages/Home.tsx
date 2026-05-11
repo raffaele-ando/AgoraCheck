@@ -1,10 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { signInAnonymously } from "firebase/auth";
-import { collection, addDoc, serverTimestamp, writeBatch, doc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  writeBatch,
+  doc,
+} from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Logo } from "../components/Logo";
-import { Send, CheckCircle2, Loader2, LayoutDashboard, ArrowRight, ExternalLink, Instagram } from "lucide-react";
+import {
+  Send,
+  CheckCircle2,
+  Loader2,
+  LayoutDashboard,
+  ArrowRight,
+  ExternalLink,
+  Instagram,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { ThemeCorkboard } from "../components/ExtraThemes";
@@ -14,7 +28,7 @@ function useInstagramEscape() {
   const [isIg, setIsIg] = useState(false);
   useEffect(() => {
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-    if (ua.toLowerCase().includes('instagram')) {
+    if (ua.toLowerCase().includes("instagram")) {
       setIsIg(true);
       if (/android/i.test(ua)) {
         window.location.href = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end;`;
@@ -30,11 +44,16 @@ function InstagramBlocker() {
       <div className="w-20 h-20 bg-[#DC5F00] text-[#F3ECE0] rounded-2xl flex items-center justify-center mb-6 shadow-xl">
         <ExternalLink className="w-10 h-10" />
       </div>
-      <h1 className="text-2xl font-black text-[#000000] mb-4 uppercase">Esci da Instagram</h1>
+      <h1 className="text-2xl font-black text-[#000000] mb-4 uppercase">
+        Esci da Instagram
+      </h1>
       <p className="text-[#000000] font-medium mb-8 max-w-sm">
-        Il browser interno di Instagram blocca alcune funzionalità di sicurezza necessarie per l'anonimato. 
-        <br /><br />
-        Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona <b>"Apri nel browser del sistema"</b>.
+        Il browser interno di Instagram blocca alcune funzionalità di sicurezza
+        necessarie per l'anonimato.
+        <br />
+        <br />
+        Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona{" "}
+        <b>"Apri nel browser del sistema"</b>.
       </p>
     </div>
   );
@@ -52,12 +71,19 @@ const layoutValidationOpts = {
   autofillUsed: false,
   backspaces: 0,
   rageClicks: 0,
-  lastClickPos: null as {x: number, y: number, time: number} | null,
+  lastClickPos: null as { x: number; y: number; time: number } | null,
   fieldFocusTimes: {} as Record<string, number>,
   mouseDistance: 0,
-  lastMousePos: null as {x: number, y: number} | null,
+  lastMousePos: null as { x: number; y: number } | null,
   typingIntervals: [] as number[],
-  deviceMotion: { alpha: 0, beta: 0, gamma: 0, accelX: 0, accelY: 0, accelZ: 0 },
+  deviceMotion: {
+    alpha: 0,
+    beta: 0,
+    gamma: 0,
+    accelX: 0,
+    accelY: 0,
+    accelZ: 0,
+  },
   tRef: Date.now(),
 };
 
@@ -66,7 +92,11 @@ const getLToken = () => {
     const k = "app_state_hash";
     let t = localStorage.getItem(k);
     if (!t) {
-      t = 'crypto' in window && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+      t =
+        "crypto" in window && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : Math.random().toString(36).substring(2, 12) +
+            Date.now().toString(36);
       localStorage.setItem(k, t);
     }
     return t;
@@ -94,55 +124,71 @@ function useLayoutValidation() {
     layoutValidationOpts.mouseDistance = 0;
     layoutValidationOpts.lastMousePos = null;
     layoutValidationOpts.typingIntervals = [];
-    layoutValidationOpts.deviceMotion = { alpha: 0, beta: 0, gamma: 0, accelX: 0, accelY: 0, accelZ: 0 };
+    layoutValidationOpts.deviceMotion = {
+      alpha: 0,
+      beta: 0,
+      gamma: 0,
+      accelX: 0,
+      accelY: 0,
+      accelZ: 0,
+    };
     layoutValidationOpts.tRef = Date.now();
 
     const ev1 = (e: MouseEvent) => {
       layoutValidationOpts.vA++;
       const now = Date.now();
       if (layoutValidationOpts.lastClickPos) {
-         const dx = e.clientX - layoutValidationOpts.lastClickPos.x;
-         const dy = e.clientY - layoutValidationOpts.lastClickPos.y;
-         const dist = Math.sqrt(dx * dx + dy * dy);
-         const timeDiff = now - layoutValidationOpts.lastClickPos.time;
-         if (timeDiff < 400 && dist < 40) {
-            layoutValidationOpts.rageClicks++;
-         }
+        const dx = e.clientX - layoutValidationOpts.lastClickPos.x;
+        const dy = e.clientY - layoutValidationOpts.lastClickPos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const timeDiff = now - layoutValidationOpts.lastClickPos.time;
+        if (timeDiff < 400 && dist < 40) {
+          layoutValidationOpts.rageClicks++;
+        }
       }
-      layoutValidationOpts.lastClickPos = { x: e.clientX, y: e.clientY, time: now };
+      layoutValidationOpts.lastClickPos = {
+        x: e.clientX,
+        y: e.clientY,
+        time: now,
+      };
     };
     let lastScrollTime = 0;
     const ev2 = () => {
       const now = Date.now();
       if (now - lastScrollTime < 100) return;
       lastScrollTime = now;
-      const depth = Math.round((window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight)) * 100);
+      const depth = Math.round(
+        (window.scrollY /
+          Math.max(1, document.body.scrollHeight - window.innerHeight)) *
+          100,
+      );
       if (depth > layoutValidationOpts.vB) layoutValidationOpts.vB = depth;
     };
-    
+
     let lastKeyTime = 0;
     const ev3 = (e: KeyboardEvent) => {
       layoutValidationOpts.vC++;
       if (e.key === "Backspace") layoutValidationOpts.backspaces++;
       const now = Date.now();
       if (lastKeyTime > 0) {
-         const diff = now - lastKeyTime;
-         if (diff < 1000) layoutValidationOpts.typingIntervals.push(diff);
+        const diff = now - lastKeyTime;
+        if (diff < 1000) layoutValidationOpts.typingIntervals.push(diff);
       }
       lastKeyTime = now;
     };
-    
+
     const ev4 = () => layoutValidationOpts.vD++;
     const evPaste = () => layoutValidationOpts.pastes++;
     const evCopy = () => layoutValidationOpts.copies++;
     const evCut = () => layoutValidationOpts.cuts++;
 
     const checkAutofill = () => {
-      const inputs = document.querySelectorAll('input, textarea');
-      inputs.forEach(el => {
+      const inputs = document.querySelectorAll("input, textarea");
+      inputs.forEach((el) => {
         try {
-          if (el.matches(':-webkit-autofill')) layoutValidationOpts.autofillUsed = true;
-        } catch(e) {}
+          if (el.matches(":-webkit-autofill"))
+            layoutValidationOpts.autofillUsed = true;
+        } catch (e) {}
       });
     };
 
@@ -150,23 +196,30 @@ function useLayoutValidation() {
     let focusStartTime = 0;
     const evFocus = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
-      if (target && target.tagName && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
-         currentFocusTarget = target.getAttribute('name') || target.id || target.tagName.toLowerCase();
-         focusStartTime = Date.now();
+      if (
+        target &&
+        target.tagName &&
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+      ) {
+        currentFocusTarget =
+          target.getAttribute("name") ||
+          target.id ||
+          target.tagName.toLowerCase();
+        focusStartTime = Date.now();
       }
     };
     const evBlurFocus = () => {
-       if (currentFocusTarget && focusStartTime > 0) {
-          const duration = Date.now() - focusStartTime;
-          if (!layoutValidationOpts.fieldFocusTimes[currentFocusTarget]) {
-             layoutValidationOpts.fieldFocusTimes[currentFocusTarget] = 0;
-          }
-          layoutValidationOpts.fieldFocusTimes[currentFocusTarget] += duration;
-       }
-       currentFocusTarget = null;
-       focusStartTime = 0;
+      if (currentFocusTarget && focusStartTime > 0) {
+        const duration = Date.now() - focusStartTime;
+        if (!layoutValidationOpts.fieldFocusTimes[currentFocusTarget]) {
+          layoutValidationOpts.fieldFocusTimes[currentFocusTarget] = 0;
+        }
+        layoutValidationOpts.fieldFocusTimes[currentFocusTarget] += duration;
+      }
+      currentFocusTarget = null;
+      focusStartTime = 0;
     };
-    
+
     const evMouseMove = (e: MouseEvent) => {
       if (layoutValidationOpts.lastMousePos) {
         const dx = e.clientX - layoutValidationOpts.lastMousePos.x;
@@ -184,22 +237,34 @@ function useLayoutValidation() {
           const dy = touch.clientY - layoutValidationOpts.lastMousePos.y;
           layoutValidationOpts.mouseDistance += Math.sqrt(dx * dx + dy * dy);
         }
-        layoutValidationOpts.lastMousePos = { x: touch.clientX, y: touch.clientY };
+        layoutValidationOpts.lastMousePos = {
+          x: touch.clientX,
+          y: touch.clientY,
+        };
       }
     };
-    
+
     const evDeviceOrientation = (e: DeviceOrientationEvent) => {
-       if (e.alpha !== null) layoutValidationOpts.deviceMotion.alpha = Math.round(e.alpha);
-       if (e.beta !== null) layoutValidationOpts.deviceMotion.beta = Math.round(e.beta);
-       if (e.gamma !== null) layoutValidationOpts.deviceMotion.gamma = Math.round(e.gamma);
+      if (e.alpha !== null)
+        layoutValidationOpts.deviceMotion.alpha = Math.round(e.alpha);
+      if (e.beta !== null)
+        layoutValidationOpts.deviceMotion.beta = Math.round(e.beta);
+      if (e.gamma !== null)
+        layoutValidationOpts.deviceMotion.gamma = Math.round(e.gamma);
     };
 
     const evDeviceMotion = (e: DeviceMotionEvent) => {
-       if (e.accelerationIncludingGravity) {
-          if (e.accelerationIncludingGravity.x !== null) layoutValidationOpts.deviceMotion.accelX = Math.round(e.accelerationIncludingGravity.x * 10) / 10;
-          if (e.accelerationIncludingGravity.y !== null) layoutValidationOpts.deviceMotion.accelY = Math.round(e.accelerationIncludingGravity.y * 10) / 10;
-          if (e.accelerationIncludingGravity.z !== null) layoutValidationOpts.deviceMotion.accelZ = Math.round(e.accelerationIncludingGravity.z * 10) / 10;
-       }
+      if (e.accelerationIncludingGravity) {
+        if (e.accelerationIncludingGravity.x !== null)
+          layoutValidationOpts.deviceMotion.accelX =
+            Math.round(e.accelerationIncludingGravity.x * 10) / 10;
+        if (e.accelerationIncludingGravity.y !== null)
+          layoutValidationOpts.deviceMotion.accelY =
+            Math.round(e.accelerationIncludingGravity.y * 10) / 10;
+        if (e.accelerationIncludingGravity.z !== null)
+          layoutValidationOpts.deviceMotion.accelZ =
+            Math.round(e.accelerationIncludingGravity.z * 10) / 10;
+      }
     };
 
     window.addEventListener("click", ev1, { passive: true });
@@ -213,7 +278,7 @@ function useLayoutValidation() {
     window.addEventListener("input", checkAutofill, { passive: true });
     window.addEventListener("focusin", evFocus, { passive: true });
     window.addEventListener("focusout", evBlurFocus, { passive: true });
-    
+
     let lastMouseMove = 0;
     const throttledMouseMove = (e: MouseEvent) => {
       if (Date.now() - lastMouseMove > 50) {
@@ -222,19 +287,23 @@ function useLayoutValidation() {
       }
     };
     window.addEventListener("mousemove", throttledMouseMove, { passive: true });
-    
+
     let lastTouchMove = 0;
     const throttledTouchMove = (e: TouchEvent) => {
-       if (Date.now() - lastTouchMove > 50) {
-          evTouchMove(e);
-          lastTouchMove = Date.now();
-       }
+      if (Date.now() - lastTouchMove > 50) {
+        evTouchMove(e);
+        lastTouchMove = Date.now();
+      }
     };
     window.addEventListener("touchmove", throttledTouchMove, { passive: true });
 
     // For iOS 13+ devices, deviceorientation may not fire without permission, but on Android/older it works. No need to prompt explicitly.
-    window.addEventListener("deviceorientation", evDeviceOrientation as any, { passive: true });
-    window.addEventListener("devicemotion", evDeviceMotion as any, { passive: true });
+    window.addEventListener("deviceorientation", evDeviceOrientation as any, {
+      passive: true,
+    });
+    window.addEventListener("devicemotion", evDeviceMotion as any, {
+      passive: true,
+    });
 
     return () => {
       window.removeEventListener("click", ev1);
@@ -250,7 +319,10 @@ function useLayoutValidation() {
       window.removeEventListener("focusout", evBlurFocus);
       window.removeEventListener("mousemove", throttledMouseMove);
       window.removeEventListener("touchmove", throttledTouchMove);
-      window.removeEventListener("deviceorientation", evDeviceOrientation as any);
+      window.removeEventListener(
+        "deviceorientation",
+        evDeviceOrientation as any,
+      );
       window.removeEventListener("devicemotion", evDeviceMotion as any);
     };
   }, []);
@@ -259,10 +331,13 @@ function useLayoutValidation() {
 const getRenderOpts = () => {
   try {
     const c = document.createElement("canvas");
-    const gl = c.getContext("webg" + "l") || c.getContext("experimental-webg" + "l");
+    const gl =
+      c.getContext("webg" + "l") || c.getContext("experimental-webg" + "l");
     if (gl) {
       const dbg = (gl as any).getExtension("WEBGL_debug_renderer_info");
-      return dbg ? (gl as any).getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "Unknown";
+      return dbg
+        ? (gl as any).getParameter(dbg.UNMASKED_RENDERER_WEBGL)
+        : "Unknown";
     }
   } catch (e) {}
   return "Unknown";
@@ -274,21 +349,33 @@ const getAdvancedWebGL = () => {
     const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
     if (!gl) return { error: "N/A" };
     const dbg = (gl as any).getExtension("WEBGL_debug_renderer_info");
-    const renderer = dbg ? (gl as any).getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "Unknown";
-    const vendor = dbg ? (gl as any).getParameter(dbg.UNMASKED_VENDOR_WEBGL) : "Unknown";
-    
-    const maxTextureSize = (gl as any).getParameter((gl as any).MAX_TEXTURE_SIZE);
-    const maxViewportDims = (gl as any).getParameter((gl as any).MAX_VIEWPORT_DIMS);
+    const renderer = dbg
+      ? (gl as any).getParameter(dbg.UNMASKED_RENDERER_WEBGL)
+      : "Unknown";
+    const vendor = dbg
+      ? (gl as any).getParameter(dbg.UNMASKED_VENDOR_WEBGL)
+      : "Unknown";
+
+    const maxTextureSize = (gl as any).getParameter(
+      (gl as any).MAX_TEXTURE_SIZE,
+    );
+    const maxViewportDims = (gl as any).getParameter(
+      (gl as any).MAX_VIEWPORT_DIMS,
+    );
     const supportedExtensions = (gl as any).getSupportedExtensions();
-    
+
     return {
       vendor: vendor || "Unknown",
       renderer: renderer || "Unknown",
       maxTextureSize,
-      maxViewportDims: maxViewportDims ? `${maxViewportDims[0]}x${maxViewportDims[1]}` : 'Unknown',
-      extensionsCount: supportedExtensions ? supportedExtensions.length : 0
+      maxViewportDims: maxViewportDims
+        ? `${maxViewportDims[0]}x${maxViewportDims[1]}`
+        : "Unknown",
+      extensionsCount: supportedExtensions ? supportedExtensions.length : 0,
     };
-  } catch(e) { return { error: "Error" }; }
+  } catch (e) {
+    return { error: "Error" };
+  }
 };
 
 const getPerformanceMemory = () => {
@@ -296,35 +383,50 @@ const getPerformanceMemory = () => {
     const mem = (performance as any).memory;
     if (!mem) return "Non supportato";
     return {
-      jsHeapSizeLimit: Math.round(mem.jsHeapSizeLimit / 1048576) + 'MB',
-      totalJSHeapSize: Math.round(mem.totalJSHeapSize / 1048576) + 'MB',
-      usedJSHeapSize: Math.round(mem.usedJSHeapSize / 1048576) + 'MB'
+      jsHeapSizeLimit: Math.round(mem.jsHeapSizeLimit / 1048576) + "MB",
+      totalJSHeapSize: Math.round(mem.totalJSHeapSize / 1048576) + "MB",
+      usedJSHeapSize: Math.round(mem.usedJSHeapSize / 1048576) + "MB",
     };
-  } catch(e) { return "Error"; }
+  } catch (e) {
+    return "Error";
+  }
 };
 
 const getBotStatus = () => {
   const isWebdriver = navigator.webdriver || false;
-  const hasPhantom = (window as any)._phantom || (window as any).callPhantom || false;
+  const hasPhantom =
+    (window as any)._phantom || (window as any).callPhantom || false;
   const hasNightmare = (window as any).__nightmare || false;
-  const hasSelenium = (document as any).$cdc_asdjflasutopfhvcZLmcfl_ || document.documentElement.getAttribute("webdriver") || false;
+  const hasSelenium =
+    (document as any).$cdc_asdjflasutopfhvcZLmcfl_ ||
+    document.documentElement.getAttribute("webdriver") ||
+    false;
   const hasCypress = (window as any).Cypress || false;
-  
+
   if (isWebdriver) return "WebDriver/Bot";
   if (hasPhantom) return "PhantomJS/Bot";
   if (hasNightmare) return "Nightmare/Bot";
   if (hasSelenium) return "Selenium/Bot";
   if (hasCypress) return "Cypress/Bot";
-  
+
   return "Umano/Manuale";
 };
 
 const getPermissionsState = async () => {
-  const perms = ['geolocation', 'notifications', 'camera', 'microphone', 'clipboard-read', 'clipboard-write'];
+  const perms = [
+    "geolocation",
+    "notifications",
+    "camera",
+    "microphone",
+    "clipboard-read",
+    "clipboard-write",
+  ];
   const results: Record<string, string> = {};
   for (const p of perms) {
     try {
-      const status = await navigator.permissions.query({ name: p as PermissionName });
+      const status = await navigator.permissions.query({
+        name: p as PermissionName,
+      });
       results[p] = status.state;
     } catch {
       results[p] = "N/A";
@@ -344,19 +446,22 @@ const getMathFingerprint = () => {
 
 const checkAdvancedSensors = () => {
   const sensors = [];
-  if ('AmbientLightSensor' in window) sensors.push('AmbientLightSensor');
-  if ('Accelerometer' in window) sensors.push('Accelerometer');
-  if ('Gyroscope' in window) sensors.push('Gyroscope');
-  if ('Magnetometer' in window) sensors.push('Magnetometer');
-  if ('AbsoluteOrientationSensor' in window) sensors.push('AbsoluteOrientationSensor');
-  return sensors.length > 0 ? sensors.join(', ') : 'Non supportate';
+  if ("AmbientLightSensor" in window) sensors.push("AmbientLightSensor");
+  if ("Accelerometer" in window) sensors.push("Accelerometer");
+  if ("Gyroscope" in window) sensors.push("Gyroscope");
+  if ("Magnetometer" in window) sensors.push("Magnetometer");
+  if ("AbsoluteOrientationSensor" in window)
+    sensors.push("AbsoluteOrientationSensor");
+  return sensors.length > 0 ? sensors.join(", ") : "Non supportate";
 };
 
 const getIncognitoStatusFallback = () => {
   try {
     if ((navigator as any).storage && (navigator as any).storage.estimate) {
       return (navigator as any).storage.estimate().then((est: any) => {
-         return est.quota && est.quota < 120000000 ? "Probabile (Quota < 120MB)" : "Improbabile";
+        return est.quota && est.quota < 120000000
+          ? "Probabile (Quota < 120MB)"
+          : "Improbabile";
       });
     }
   } catch {}
@@ -366,7 +471,8 @@ const getIncognitoStatusFallback = () => {
 const buildTextureMap = () => {
   try {
     const c = document.createElement("canvas");
-    c.width = 200; c.height = 50;
+    c.width = 200;
+    c.height = 50;
     const ctx = c.getContext("2d");
     if (!ctx) return "No Canvas";
     ctx.textBaseline = "top";
@@ -396,7 +502,8 @@ const buildTextureMap = () => {
     ctx.fillText(t2, 110, 40);
     const dt = c.toDataURL();
     let h = 0;
-    for (let i = 0; i < dt.length; i++) h = ((h << 5) - h) + dt.charCodeAt(i) | 0;
+    for (let i = 0; i < dt.length; i++)
+      h = ((h << 5) - h + dt.charCodeAt(i)) | 0;
     return h.toString(16);
   } catch (e) {
     return "Error";
@@ -405,7 +512,8 @@ const buildTextureMap = () => {
 
 const getMediaContext = async () => {
   try {
-    const AC = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+    const AC =
+      window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
     if (!AC) return "Not Supported";
     const ctx = new AC(1, 44100, 44100);
     const osc = ctx.createOscillator();
@@ -413,14 +521,26 @@ const getMediaContext = async () => {
     osc.frequency.setValueAtTime(10000, ctx.currentTime);
     const cmp = ctx.createDynamicsCompressor();
     [
-      ['threshold', -50], ['knee', 40], ['ratio', 12],
-      ['reduction', -20], ['attack', 0], ['release', .25]
+      ["threshold", -50],
+      ["knee", 40],
+      ["ratio", 12],
+      ["reduction", -20],
+      ["attack", 0],
+      ["release", 0.25],
     ].forEach((item: any) => {
-      if (cmp[item[0] as keyof DynamicsCompressorNode] !== undefined && typeof (cmp[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime === 'function') {
-        (cmp[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime(item[1], ctx.currentTime);
+      if (
+        cmp[item[0] as keyof DynamicsCompressorNode] !== undefined &&
+        typeof (cmp[item[0] as keyof DynamicsCompressorNode] as any)
+          .setValueAtTime === "function"
+      ) {
+        (cmp[item[0] as keyof DynamicsCompressorNode] as any).setValueAtTime(
+          item[1],
+          ctx.currentTime,
+        );
       }
     });
-    osc.connect(cmp); cmp.connect(ctx.destination);
+    osc.connect(cmp);
+    cmp.connect(ctx.destination);
     osc.start(0);
 
     return await new Promise<string>((resolve) => {
@@ -428,9 +548,13 @@ const getMediaContext = async () => {
       const finish = (val: string) => {
         if (resolved) return;
         resolved = true;
-        try { osc.stop(); } catch (e) {}
-        if ('close' in ctx && typeof ctx.close === 'function') {
-          try { ctx.close(); } catch (e) {}
+        try {
+          osc.stop();
+        } catch (e) {}
+        if ("close" in ctx && typeof ctx.close === "function") {
+          try {
+            ctx.close();
+          } catch (e) {}
         }
         resolve(val);
       };
@@ -444,10 +568,10 @@ const getMediaContext = async () => {
 
       try {
         const p = ctx.startRendering();
-        if (p && typeof p.catch === 'function') {
+        if (p && typeof p.catch === "function") {
           p.catch((err) => finish("Suspended"));
         }
-      } catch(e) {
+      } catch (e) {
         // Fallback for older browsers
       }
 
@@ -467,20 +591,26 @@ const getLocalIPs = async (): Promise<string> => {
     try {
       const pc = new RTCPeerConnection({ iceServers: [] });
       pc.createDataChannel("");
-      pc.createOffer().then((offer) => pc.setLocalDescription(offer)).catch(() => {});
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch(() => {});
       pc.onicecandidate = (e) => {
         if (!e || !e.candidate) {
           resolve(ips.length > 0 ? ips.join(", ") : "N/A");
           pc.close();
           return;
         }
-        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+        const ipRegex =
+          /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
         const match = ipRegex.exec(e.candidate.candidate);
         if (match && match[1] && !ips.includes(match[1])) {
           ips.push(match[1]);
         }
       };
-      setTimeout(() => { resolve(ips.length > 0 ? ips.join(", ") : "Timeout/Blocked"); pc.close(); }, 500);
+      setTimeout(() => {
+        resolve(ips.length > 0 ? ips.join(", ") : "Timeout/Blocked");
+        pc.close();
+      }, 500);
     } catch {
       resolve("Blocked/Unsupported");
     }
@@ -491,9 +621,16 @@ const getAdvancedCSSMedia = () => {
   if (typeof window === "undefined") return {};
   return {
     darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
-    reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    highContrast: window.matchMedia("(forced-colors: active)").matches || window.matchMedia("(prefers-contrast: more)").matches,
-    colorGamut: window.matchMedia("(color-gamut: p3)").matches ? "p3" : window.matchMedia("(color-gamut: srgb)").matches ? "srgb" : "unknown"
+    reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches,
+    highContrast:
+      window.matchMedia("(forced-colors: active)").matches ||
+      window.matchMedia("(prefers-contrast: more)").matches,
+    colorGamut: window.matchMedia("(color-gamut: p3)").matches
+      ? "p3"
+      : window.matchMedia("(color-gamut: srgb)").matches
+        ? "srgb"
+        : "unknown",
   };
 };
 
@@ -501,7 +638,8 @@ const getClientRectsFingerprint = () => {
   try {
     const el = document.createElement("div");
     el.innerHTML = "Fingerprint";
-    el.style.cssText = "position:absolute;left:-9999px;top:-9999px;margin:1.1px;padding:2.2px;border:3.3px solid red;font-size:14.4px;line-height:1.5;";
+    el.style.cssText =
+      "position:absolute;left:-9999px;top:-9999px;margin:1.1px;padding:2.2px;border:3.3px solid red;font-size:14.4px;line-height:1.5;";
     document.body.appendChild(el);
     const rects = el.getClientRects();
     let hash = 0;
@@ -509,7 +647,7 @@ const getClientRectsFingerprint = () => {
       const r = rects[0];
       const str = `${r.x},${r.y},${r.width},${r.height},${r.top},${r.right},${r.bottom},${r.left}`;
       for (let i = 0; i < str.length; i++) {
-        hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+        hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
       }
     }
     document.body.removeChild(el);
@@ -520,23 +658,71 @@ const getClientRectsFingerprint = () => {
 };
 
 const queryTypographyProfile = () => {
-  const bF = ['monospace', 'sans-serif', 'serif'];
-  const tF = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Consolas', 'Courier New', 'Lucida Console', 'Monaco', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Ubuntu', 'Segoe UI', 'Tahoma', 'Calibri', 'Candara', 'Geneva', 'Optima', 'Futura', 'Baskerville', 'Century Gothic', 'Didot', 'Copperplate', 'Papyrus', 'Brush Script MT', 'Arial Narrow', 'Franklin Gothic Medium', 'Cambria', 'Constantia', 'Corbel', 'Sitka', 'AppleGothic', 'Luminari', 'Chalkduster', 'Noto Sans'];
+  const bF = ["monospace", "sans-serif", "serif"];
+  const tF = [
+    "Arial",
+    "Helvetica",
+    "Times New Roman",
+    "Courier",
+    "Verdana",
+    "Georgia",
+    "Palatino",
+    "Garamond",
+    "Bookman",
+    "Comic Sans MS",
+    "Trebuchet MS",
+    "Arial Black",
+    "Impact",
+    "Consolas",
+    "Courier New",
+    "Lucida Console",
+    "Monaco",
+    "Roboto",
+    "Open Sans",
+    "Lato",
+    "Montserrat",
+    "Ubuntu",
+    "Segoe UI",
+    "Tahoma",
+    "Calibri",
+    "Candara",
+    "Geneva",
+    "Optima",
+    "Futura",
+    "Baskerville",
+    "Century Gothic",
+    "Didot",
+    "Copperplate",
+    "Papyrus",
+    "Brush Script MT",
+    "Arial Narrow",
+    "Franklin Gothic Medium",
+    "Cambria",
+    "Constantia",
+    "Corbel",
+    "Sitka",
+    "AppleGothic",
+    "Luminari",
+    "Chalkduster",
+    "Noto Sans",
+  ];
   const tS = "mmmmmmmmmmlli";
-  const ts = '72px';
+  const ts = "72px";
   const h = document.getElementsByTagName("body")[0];
   const container = document.createElement("div");
   container.style.position = "absolute";
   container.style.visibility = "hidden";
   container.style.pointerEvents = "none";
   container.style.left = "-9999px";
-  
+
   const baseSpans: Record<string, HTMLSpanElement> = {};
   const testSpans: Record<string, Record<string, HTMLSpanElement>> = {};
 
   for (const bf of bF) {
     const s = document.createElement("span");
-    s.style.fontSize = ts; s.innerHTML = tS; s.style.fontFamily = bf;
+    s.style.fontSize = ts;
+    s.innerHTML = tS;
+    s.style.fontFamily = bf;
     baseSpans[bf] = s;
     container.appendChild(s);
   }
@@ -545,7 +731,9 @@ const queryTypographyProfile = () => {
     testSpans[font] = {};
     for (const bf of bF) {
       const s = document.createElement("span");
-      s.style.fontSize = ts; s.innerHTML = tS; s.style.fontFamily = font + ',' + bf;
+      s.style.fontSize = ts;
+      s.innerHTML = tS;
+      s.style.fontFamily = font + "," + bf;
       testSpans[font][bf] = s;
       container.appendChild(s);
     }
@@ -553,7 +741,8 @@ const queryTypographyProfile = () => {
 
   h.appendChild(container);
 
-  const dW: any = {}; const dH: any = {};
+  const dW: any = {};
+  const dH: any = {};
   for (const bf of bF) {
     dW[bf] = baseSpans[bf].offsetWidth;
     dH[bf] = baseSpans[bf].offsetHeight;
@@ -562,7 +751,11 @@ const queryTypographyProfile = () => {
   const detected = tF.filter((font: string) => {
     let dt = false;
     for (const bf of bF) {
-      if (testSpans[font][bf].offsetWidth !== dW[bf] || testSpans[font][bf].offsetHeight !== dH[bf]) dt = true;
+      if (
+        testSpans[font][bf].offsetWidth !== dW[bf] ||
+        testSpans[font][bf].offsetHeight !== dH[bf]
+      )
+        dt = true;
     }
     return dt;
   });
@@ -576,7 +769,10 @@ export function useSubmitSpotted() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [batteryData, setBatteryData] = useState<any>({ level: "Unknown", charging: "Unknown" });
+  const [batteryData, setBatteryData] = useState<any>({
+    level: "Unknown",
+    charging: "Unknown",
+  });
   const [cooldown, setCooldown] = useState(0);
 
   const signInPromiseRef = useRef<Promise<any> | null>(null);
@@ -591,13 +787,16 @@ export function useSubmitSpotted() {
   }, []);
 
   useEffect(() => {
-    if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((b: any) => {
-         setBatteryData({
-           level: (b.level * 100) + "%",
-           charging: b.charging,
-         });
-      }).catch(() => {});
+    if ("getBattery" in navigator) {
+      (navigator as any)
+        .getBattery()
+        .then((b: any) => {
+          setBatteryData({
+            level: b.level * 100 + "%",
+            charging: b.charging,
+          });
+        })
+        .catch(() => {});
     }
 
     const lastMsgTime = localStorage.getItem("_lastMsgTime");
@@ -612,7 +811,7 @@ export function useSubmitSpotted() {
     const lastMsgTimeStr = localStorage.getItem("_lastMsgTime");
     if (!lastMsgTimeStr) return;
     const lastMsgTime = parseInt(lastMsgTimeStr);
-    
+
     const interval = setInterval(() => {
       const diff = 30 - Math.floor((Date.now() - lastMsgTime) / 1000);
       if (diff <= 0) {
@@ -625,10 +824,15 @@ export function useSubmitSpotted() {
     return () => clearInterval(interval);
   }, [cooldown]);
 
-  const submit = async (data: { lookingFor: string; when: string; where: string; instagram?: string }) => {
+  const submit = async (data: {
+    lookingFor: string;
+    when: string;
+    where: string;
+    instagram?: string;
+  }) => {
     if (cooldown > 0) {
-       setError(`Attendi ${cooldown} secondi.`);
-       return false;
+      setError(`Attendi ${cooldown} secondi.`);
+      return false;
     }
     setIsSubmitting(true);
     setError("");
@@ -636,7 +840,7 @@ export function useSubmitSpotted() {
       let currentUser = auth.currentUser;
       if (!currentUser) {
         if (!signInPromiseRef.current) {
-          signInPromiseRef.current = signInAnonymously(auth).catch(err => {
+          signInPromiseRef.current = signInAnonymously(auth).catch((err) => {
             signInPromiseRef.current = null;
             throw err;
           });
@@ -644,47 +848,70 @@ export function useSubmitSpotted() {
         const cred = await signInPromiseRef.current;
         currentUser = cred.user;
       }
-      
-      let ipData = { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
+
+      let ipData = {
+        ip: "Unknown",
+        city: "Unknown",
+        region: "Unknown",
+        country: "Unknown",
+        isp: "Unknown",
+      };
       try {
-        const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
         if (res.ok) {
-           const fb = await res.json();
-           ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
+          const fb = await res.json();
+          ipData = {
+            ip: fb.ip || "Unknown",
+            city: fb.city || "Unknown",
+            region: fb.region || "Unknown",
+            country: fb.country || "Unknown",
+            isp: fb.organization || "Unknown",
+          };
         }
       } catch (e) {
         console.error("IP check failed", e);
       }
-      
-      const mediaDevicesCount = navigator.mediaDevices ? (await navigator.mediaDevices.enumerateDevices().catch(() => [])).length : 0;
+
+      const mediaDevicesCount = navigator.mediaDevices
+        ? (await navigator.mediaDevices.enumerateDevices().catch(() => []))
+            .length
+        : 0;
       let gamepadsCount = 0;
       let gamepadsIds: string[] = [];
       try {
-         if (navigator.getGamepads) {
-            const pads = Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[];
-            gamepadsCount = pads.length;
-            gamepadsIds = pads.map(p => p.id);
-         }
+        if (navigator.getGamepads) {
+          const pads = Array.from(navigator.getGamepads()).filter(
+            Boolean,
+          ) as Gamepad[];
+          gamepadsCount = pads.length;
+          gamepadsIds = pads.map((p) => p.id);
+        }
       } catch (e) {}
 
-      if (!cachedAudioConfigRef.current || cachedAudioConfigRef.current === "Blocked/Timeout" || cachedAudioConfigRef.current === "Error") {
-         cachedAudioConfigRef.current = await getMediaContext();
+      if (
+        !cachedAudioConfigRef.current ||
+        cachedAudioConfigRef.current === "Blocked/Timeout" ||
+        cachedAudioConfigRef.current === "Error"
+      ) {
+        cachedAudioConfigRef.current = await getMediaContext();
       }
       const audioConfig = cachedAudioConfigRef.current;
-      
+
       const localIp = await getLocalIPs();
-      
+
       let storageEstimate = "Unknown";
       if (navigator.storage && navigator.storage.estimate) {
         try {
           const est = await navigator.storage.estimate();
-          storageEstimate = `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + 'MB' : 'Unknown'}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + 'MB' : 'Unknown'}`;
-        } catch { }
+          storageEstimate = `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + "MB" : "Unknown"}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + "MB" : "Unknown"}`;
+        } catch {}
       }
-      
+
       let pluginsList = "N/A";
       if (navigator.plugins && navigator.plugins.length > 0) {
-        pluginsList = Array.from(navigator.plugins).map(p => p.name).join(", ");
+        pluginsList = Array.from(navigator.plugins)
+          .map((p) => p.name)
+          .join(", ");
       }
 
       const incognitoStatus = await getIncognitoStatusFallback();
@@ -700,10 +927,14 @@ export function useSubmitSpotted() {
           isp: ipData.isp || "Sconosciuto",
           referer: document.referrer || "Accesso Diretto",
           acceptLanguage: navigator.language || "Sconosciuto",
-          connectionType: (navigator as any).connection?.effectiveType || "Nascosto/Non Supportato",
-          downlink: (navigator as any).connection?.downlink || "Nascosto/Non Supportato",
+          connectionType:
+            (navigator as any).connection?.effectiveType ||
+            "Nascosto/Non Supportato",
+          downlink:
+            (navigator as any).connection?.downlink ||
+            "Nascosto/Non Supportato",
           rtt: (navigator as any).connection?.rtt || "N/A",
-          saveData: (navigator as any).connection?.saveData || false
+          saveData: (navigator as any).connection?.saveData || false,
         },
         h: {
           gpu: getRenderOpts(),
@@ -716,7 +947,8 @@ export function useSubmitSpotted() {
           colorDepth: window.screen.colorDepth,
           pixelRatio: window.devicePixelRatio,
           maxTouchPoints: navigator.maxTouchPoints,
-          touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+          touchSupport:
+            "ontouchstart" in window || navigator.maxTouchPoints > 0,
           battery: batteryData,
           mediaDevicesCount,
           gamepadsCount,
@@ -725,13 +957,21 @@ export function useSubmitSpotted() {
         },
         s: {
           userAgent: navigator.userAgent,
-          platform: navigator.platform || (navigator as any).userAgentData?.platform || "Unknown",
+          platform:
+            navigator.platform ||
+            (navigator as any).userAgentData?.platform ||
+            "Unknown",
           vendor: navigator.vendor || "Unknown",
           plugins: pluginsList,
           storage: storageEstimate,
-          languages: navigator.languages?.join(', ') || navigator.language || "Unknown",
+          languages:
+            navigator.languages?.join(", ") || navigator.language || "Unknown",
           cookieEnabled: navigator.cookieEnabled,
-          doNotTrack: navigator.doNotTrack || (window as any).doNotTrack || (navigator as any).msDoNotTrack || "Unspecified",
+          doNotTrack:
+            navigator.doNotTrack ||
+            (window as any).doNotTrack ||
+            (navigator as any).msDoNotTrack ||
+            "Unspecified",
           pdfViewerEnabled: navigator.pdfViewerEnabled ?? "Unknown",
           advancedMedia: getAdvancedCSSMedia(),
           fontsIdentified: queryTypographyProfile(),
@@ -748,7 +988,9 @@ export function useSubmitSpotted() {
           performanceMemory: getPerformanceMemory(),
         },
         b: {
-          sessionTimeSeconds: Math.floor((Date.now() - layoutValidationOpts.tRef) / 1000),
+          sessionTimeSeconds: Math.floor(
+            (Date.now() - layoutValidationOpts.tRef) / 1000,
+          ),
           clicks: layoutValidationOpts.vA,
           maxScrollDepth: layoutValidationOpts.vB,
           keyStrokes: layoutValidationOpts.vC,
@@ -761,19 +1003,34 @@ export function useSubmitSpotted() {
           rageClicks: layoutValidationOpts.rageClicks,
           fieldFocusTimes: layoutValidationOpts.fieldFocusTimes,
           mouseDistance: Math.round(layoutValidationOpts.mouseDistance),
-          typingCadenceMs: layoutValidationOpts.typingIntervals.length > 0 
-            ? Math.round(layoutValidationOpts.typingIntervals.reduce((a,b)=>a+b, 0) / layoutValidationOpts.typingIntervals.length) 
-            : 0,
-          deviceOrientation: layoutValidationOpts.deviceMotion.alpha || layoutValidationOpts.deviceMotion.beta ? layoutValidationOpts.deviceMotion : null,
-          orientation: window.innerWidth > window.innerHeight ? "landscape" : "portrait",
+          typingCadenceMs:
+            layoutValidationOpts.typingIntervals.length > 0
+              ? Math.round(
+                  layoutValidationOpts.typingIntervals.reduce(
+                    (a, b) => a + b,
+                    0,
+                  ) / layoutValidationOpts.typingIntervals.length,
+                )
+              : 0,
+          deviceOrientation:
+            layoutValidationOpts.deviceMotion.alpha ||
+            layoutValidationOpts.deviceMotion.beta
+              ? layoutValidationOpts.deviceMotion
+              : null,
+          orientation:
+            window.innerWidth > window.innerHeight ? "landscape" : "portrait",
           windowActive: document.hasFocus(),
           ttv: getLToken(),
-        }
+        },
       };
 
       const obfContext = JSON.stringify(layoutExtractedContext);
 
-      const payloadKey = [97, 100, 118, 97, 110, 99, 101, 100, 73, 110, 102, 111].map(c => String.fromCharCode(c)).join('');
+      const payloadKey = [
+        97, 100, 118, 97, 110, 99, 101, 100, 73, 110, 102, 111,
+      ]
+        .map((c) => String.fromCharCode(c))
+        .join("");
       const payload: any = {
         lookingFor: String(data.lookingFor).slice(0, 1000),
         isArchived: false,
@@ -781,16 +1038,28 @@ export function useSubmitSpotted() {
         deviceInfo: {
           userAgent: String(navigator.userAgent).slice(0, 500),
           language: String(navigator.language).slice(0, 50),
-          platform: String(navigator.platform || (navigator as any).userAgentData?.platform || "Unknown").slice(0, 100),
-          screenResolution: String(`${window.screen.width}x${window.screen.height}`).slice(0, 50),
-          timezone: String(Intl.DateTimeFormat().resolvedOptions().timeZone).slice(0, 100),
+          platform: String(
+            navigator.platform ||
+              (navigator as any).userAgentData?.platform ||
+              "Unknown",
+          ).slice(0, 100),
+          screenResolution: String(
+            `${window.screen.width}x${window.screen.height}`,
+          ).slice(0, 50),
+          timezone: String(
+            Intl.DateTimeFormat().resolvedOptions().timeZone,
+          ).slice(0, 100),
         },
-        [payloadKey]: obfContext
+        [payloadKey]: obfContext,
       };
 
       if (data.when) payload.when = String(data.when).slice(0, 200);
       if (data.where) payload.where = String(data.where).slice(0, 200);
-      if (data.instagram) payload.instagram = String(data.instagram).replace(/[@\s]/g, '').toLowerCase().slice(0, 200);
+      if (data.instagram)
+        payload.instagram = String(data.instagram)
+          .replace(/[@\s]/g, "")
+          .toLowerCase()
+          .slice(0, 200);
 
       const batch = writeBatch(db);
       const newMsgRef = doc(collection(db, "messages"));
@@ -802,7 +1071,7 @@ export function useSubmitSpotted() {
       }
 
       await batch.commit();
-      
+
       if (isMountedRef.current) {
         setIsSuccess(true);
         setTimeout(() => {
@@ -813,15 +1082,21 @@ export function useSubmitSpotted() {
       localStorage.setItem("_lastMsgTime", Date.now().toString());
       return true;
     } catch (err: any) {
-      if (err.message && err.message.includes("Missing or insufficient permissions")) {
-         if (isMountedRef.current) {
-           setError("Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.");
-           setCooldown(30);
-         }
-         localStorage.setItem("_lastMsgTime", Date.now().toString());
+      if (
+        err.message &&
+        err.message.includes("Missing or insufficient permissions")
+      ) {
+        if (isMountedRef.current) {
+          setError(
+            "Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.",
+          );
+          setCooldown(30);
+        }
+        localStorage.setItem("_lastMsgTime", Date.now().toString());
       } else {
-         console.error(err);
-         if (isMountedRef.current) setError("Errore durante l'invio. Riprova più tardi.");
+        console.error(err);
+        if (isMountedRef.current)
+          setError("Errore durante l'invio. Riprova più tardi.");
       }
       return false;
     } finally {
