@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { parseUserAgent } from "../utils/uaParser";
 import { motion } from "motion/react";
 import {
   collection,
@@ -696,7 +697,7 @@ export default function Dashboard() {
       }
       if (m.deviceInfo?.userAgent) {
         hardwareFingerprints.add(
-          `Browser: ${m.deviceInfo.userAgent.substring(0, 40)}...`,
+          `Browser/Device: ${m.deviceInfo.userAgent}`
         );
       }
     });
@@ -1606,68 +1607,7 @@ export default function Dashboard() {
                             )}{" "}
                           </div>
                         )}{" "}
-                        {(() => {
-                          const adv = msg.parsedAdvanced;
-                          if (!adv) return null;
-                          const botStatus =
-                            adv.software?.botStatus || adv.s?.botStatus;
-                          const incognito =
-                            adv.software?.incognito || adv.s?.incognito;
-                          const p =
-                            adv.software?.permissions || adv.s?.permissions;
-                          const pCount = p
-                            ? Object.keys(p).filter((k) => p[k] !== "prompt")
-                                .length
-                            : 0;
-                          const tags = [];
-                          if (botStatus)
-                            tags.push({
-                              label: botStatus,
-                              c: "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-800 ",
-                            });
-                          if (incognito)
-                            tags.push({
-                              label: incognito,
-                              c: "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-800 ",
-                            });
-                          if (pCount > 0)
-                            tags.push({
-                              label: `${pCount} Permessi`,
-                              c: "bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-100 dark:border-teal-800 ",
-                            });
-                          if (
-                            adv.hardware?.advancedSensors &&
-                            adv.hardware.advancedSensors !== "N/A" &&
-                            adv.hardware.advancedSensors !== "Non Supportato"
-                          )
-                            tags.push({
-                              label: "Sensori Attivi",
-                              c: "bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-800 ",
-                            });
-                          if (
-                            adv.software?.mathFingerprint?.pi ||
-                            adv.s?.mathFingerprint?.pi
-                          )
-                            tags.push({
-                              label: "Math FP",
-                              c: "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800 ",
-                            });
-                          if (tags.length === 0) return null;
-                          return (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {" "}
-                              {tags.map((t, i) => (
-                                <span
-                                  key={i}
-                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${t.c}`}
-                                >
-                                  {" "}
-                                  {t.label}{" "}
-                                </span>
-                              ))}{" "}
-                            </div>
-                          );
-                        })()}{" "}
+
                         {(() => {
                           const { tags, hasMultiple } =
                             getProfileInstagrams(profileId);
@@ -2386,68 +2326,7 @@ export default function Dashboard() {
                           </div>{" "}
                         </div>{" "}
                       </div>{" "}
-                      {(() => {
-                        const adv = macro.mostRecentMsg?.parsedAdvanced;
-                        if (!adv) return null;
-                        const botStatus =
-                          adv.software?.botStatus || adv.s?.botStatus;
-                        const incognito =
-                          adv.software?.incognito || adv.s?.incognito;
-                        const p =
-                          adv.software?.permissions || adv.s?.permissions;
-                        const pCount = p
-                          ? Object.keys(p).filter((k) => p[k] !== "prompt")
-                              .length
-                          : 0;
-                        const tags = [];
-                        if (botStatus)
-                          tags.push({
-                            label: botStatus,
-                            c: "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-800 ",
-                          });
-                        if (incognito)
-                          tags.push({
-                            label: incognito,
-                            c: "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-800 ",
-                          });
-                        if (pCount > 0)
-                          tags.push({
-                            label: `${pCount} Permessi`,
-                            c: "bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-100 dark:border-teal-800 ",
-                          });
-                        if (
-                          adv.hardware?.advancedSensors &&
-                          adv.hardware.advancedSensors !== "N/A" &&
-                          adv.hardware.advancedSensors !== "Non Supportato"
-                        )
-                          tags.push({
-                            label: "Sensori",
-                            c: "bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-800 ",
-                          });
-                        if (
-                          adv.software?.mathFingerprint?.pi ||
-                          adv.s?.mathFingerprint?.pi
-                        )
-                          tags.push({
-                            label: "Math FP",
-                            c: "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800 ",
-                          });
-                        if (tags.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1.5 mb-4 relative z-20">
-                            {" "}
-                            {tags.map((t, i) => (
-                              <span
-                                key={i}
-                                className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${t.c}`}
-                              >
-                                {" "}
-                                {t.label}{" "}
-                              </span>
-                            ))}{" "}
-                          </div>
-                        );
-                      })()}{" "}
+
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         {" "}
                         <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
@@ -2686,7 +2565,7 @@ export default function Dashboard() {
                                               className="w-[14rem] sm:w-[16rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md p-2.5 shadow-sm shrink-0 snap-start flex flex-col justify-between"
                                             >
                                               {" "}
-                                              <div className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 line-clamp-3 mb-2 break-words">
+                                              <div className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 mb-2 break-words">
                                                 "{msg.lookingFor}"
                                               </div>{" "}
                                               <div className="text-[9px] text-gray-500 dark:text-gray-400 space-y-0.5">
@@ -3202,10 +3081,7 @@ export default function Dashboard() {
                         </div>
                       ) : (
                         viewingMacroStats.messages.map((msg, idx) => {
-                          const isInstagram =
-                            msg.deviceInfo?.userAgent?.includes("Instagram");
-                          const isBrowser =
-                            !isInstagram && !!msg.deviceInfo?.userAgent;
+                          const parsedUA = msg.deviceInfo?.userAgent ? parseUserAgent(msg.deviceInfo.userAgent) : null;
                           const hasMessage = !!msg.lookingFor;
                           const adv = msg.parsedAdvanced || null;
                           const ip = adv ? adv.network?.ip || adv.n?.ip : null;
@@ -3240,19 +3116,24 @@ export default function Dashboard() {
                                         )
                                       : "Data sconosciuta"}{" "}
                                   </div>{" "}
-                                  {isInstagram ? (
-                                    <div className="text-[10px] font-bold text-pink-600 bg-pink-50 dark:bg-pink-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-pink-100 dark:border-pink-800 ">
-                                      {" "}
-                                      <Instagram className="w-3 h-3" /> In-App
-                                      Browser (Instagram){" "}
-                                    </div>
-                                  ) : isBrowser ? (
-                                    <div className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-blue-100 dark:border-blue-800 ">
-                                      {" "}
-                                      <Monitor className="w-3 h-3" /> Browser
-                                      Standard{" "}
-                                    </div>
-                                  ) : null}{" "}
+                                  {parsedUA && (
+                                    <>
+                                      <div className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 border ${parsedUA.browser === 'Instagram In-App' ? 'text-pink-600 bg-pink-50 dark:bg-pink-900/40 border-pink-100 dark:border-pink-800' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/40 border-blue-100 dark:border-blue-800'}`}>
+                                        {parsedUA.browser === 'Instagram In-App' ? <Instagram className="w-3 h-3" /> : <Monitor className="w-3 h-3" />} {parsedUA.browser} {parsedUA.instagram?.version ? `v${parsedUA.instagram.version}` : ''}
+                                      </div>
+                                      <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
+                                        OS: {parsedUA.os}
+                                      </div>
+                                      <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
+                                        Device: {parsedUA.device}
+                                      </div>
+                                      {parsedUA.instagram?.build && (
+                                        <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700">
+                                          Build: {parsedUA.instagram.build}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
                                   {msg.deviceInfo?.location && (
                                     <div className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
                                       {" "}
@@ -3419,7 +3300,7 @@ export default function Dashboard() {
                                           className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-3 shadow-sm"
                                         >
                                           {" "}
-                                          <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 line-clamp-2 break-words mb-2 leading-snug">
+                                          <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-2 break-words leading-snug">
                                             "{msg.lookingFor}"
                                           </div>{" "}
                                           <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 dark:text-gray-500 ">
@@ -3530,22 +3411,60 @@ export default function Dashboard() {
                         {" "}
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
                           <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" /> Hardware
-                          Fingerprints (
+                          Fingerprints e Dispositivi (
                           {viewingMacroStats.hardwareFingerprints.length})
                         </h4>{" "}
                         {viewingMacroStats.hardwareFingerprints.length > 0 ? (
-                          <div className="flex flex-wrap gap-2.5">
+                          <div className="flex flex-col gap-3">
                             {" "}
                             {viewingMacroStats.hardwareFingerprints.map(
-                              (fp) => (
-                                <span
-                                  key={fp}
-                                  className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800 shadow-sm"
-                                >
-                                  {" "}
-                                  {fp}{" "}
-                                </span>
-                              ),
+                              (fp) => {
+                                let parsed = null;
+                                if (fp.startsWith("Browser/Device: ")) {
+                                  const raw = fp.replace("Browser/Device: ", "");
+                                  parsed = parseUserAgent(raw);
+                                  return (
+                                    <div key={fp} className="bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800 shadow-sm space-y-2">
+                                      {parsed ? (
+                                        <>
+                                          <div className="flex flex-wrap gap-2 text-[10px] font-bold">
+                                            <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
+                                              {parsed.browser} {parsed.instagram?.version ? `v${parsed.instagram.version}` : ''}
+                                            </div>
+                                            <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
+                                              OS: {parsed.os}
+                                            </div>
+                                            <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
+                                              Device: {parsed.device}
+                                            </div>
+                                            {parsed.instagram?.build && (
+                                              <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
+                                                Build: {parsed.instagram.build}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-200 bg-white dark:bg-gray-800/50 p-2 rounded border border-emerald-200 dark:border-emerald-800 break-words whitespace-pre-wrap leading-relaxed opacity-80">
+                                            {raw}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-200 break-words whitespace-pre-wrap max-w-full">
+                                          {fp}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <span
+                                    key={fp}
+                                    className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800 shadow-sm break-words whitespace-pre-wrap max-w-full inline-block"
+                                  >
+                                    {" "}
+                                    {fp}{" "}
+                                  </span>
+                                );
+                              }
                             )}{" "}
                           </div>
                         ) : (
