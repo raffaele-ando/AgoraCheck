@@ -30,9 +30,9 @@ function useInstagramEscape() {
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
     if (ua.toLowerCase().includes("instagram")) {
       setIsIg(true);
-      if (/android/i.test(ua)) {
-        window.location.href = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end;`;
-      }
+      // if (/android/i.test(ua)) {
+      //   window.location.href = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end;`;
+      // }
     }
   }, []);
   return isIg;
@@ -1114,7 +1114,7 @@ export default function Home() {
   const isInstagram = useInstagramEscape();
   useLayoutValidation();
 
-  if (isInstagram) return <InstagramBlocker />;
+  // if (isInstagram) return <InstagramBlocker />;
 
   return (
     <div className="relative min-h-[100dvh] bg-[#F3ECE0]">
