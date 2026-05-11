@@ -44,11 +44,11 @@ export function ThemeCorkboard() {
   const displayError = localError || error;
 
   return (
-    <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
+    <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#F3ECE0] dark:bg-slate-950 bg-[radial-gradient(rgba(0,0,0,0.03)_2px,transparent_2px)] dark:bg-[radial-gradient(rgba(255,255,255,0.03)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden transition-colors">
       <motion.div
         initial={{ rotate: -2, scale: 0.9 }}
         animate={{ rotate: 1, scale: 0.95 }}
-        className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] dark:from-gray-800 dark:to-gray-900 p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] dark:shadow-[8px_16px_40px_rgba(0,0,0,0.9),inset_0_0_20px_rgba(255,255,255,0.05)] border border-[#000000]/20 dark:border-white/10 mx-auto mt-2 transition-colors"
+        className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F4F1EA] to-[#E8DEC8] dark:from-slate-800 dark:to-slate-900 p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.3),inset_0_0_20px_rgba(255,255,255,0.8)] dark:shadow-[8px_16px_40px_rgba(0,0,0,0.9),inset_0_0_20px_rgba(255,255,255,0.02)] border border-[#000000]/10 dark:border-white/5 mx-auto mt-2 transition-colors"
       >
         {/* Fix per il pezzo di scotch in alto: metto un bello z-index e levo il mix blend che bugga con il backdrop-blur su mobile e safari */}
         <div

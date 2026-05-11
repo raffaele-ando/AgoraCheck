@@ -1136,21 +1136,21 @@ export default function Dashboard() {
                   {" "}
                   <button
                     onClick={() => setActiveTab("messages")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "messages" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "messages" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white "}`}
                   >
                     {" "}
                     Messaggi{" "}
                   </button>{" "}
                   <button
                     onClick={() => setActiveTab("profiles")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white "}`}
                   >
                     {" "}
                     Profili{" "}
                   </button>{" "}
                   <button
                     onClick={() => setActiveTab("analytics")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white "}`}
                   >
                     {" "}
                     Analytics{" "}
@@ -1287,7 +1287,7 @@ export default function Dashboard() {
                     <button
                       onClick={handleGroupDevices}
                       disabled={selectedMessages.length === 0}
-                      className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-indigo-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-indigo-400/50"
+                      className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-indigo-500 dark:bg-indigo-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-indigo-400/50"
                     >
                       {" "}
                       <Layers className="w-4 h-4 shrink-0" />{" "}
@@ -1380,7 +1380,7 @@ export default function Dashboard() {
                     setViewFilter("new");
                     setSelectedMessages([]);
                   }}
-                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 "}`}
+                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-md shadow-indigo-200" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:text-gray-200 dark:hover:text-gray-200 "}`}
                 >
                   {" "}
                   <InboxIcon className="w-4 h-4 shrink-0" /> Spotted Nuovi{" "}
@@ -1390,7 +1390,7 @@ export default function Dashboard() {
                     setViewFilter("archived");
                     setSelectedMessages([]);
                   }}
-                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-gray-800 text-white shadow-md shadow-gray-300" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 "}`}
+                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-gray-800 text-white shadow-md shadow-gray-300" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:text-gray-200 dark:hover:text-gray-200 "}`}
                 >
                   {" "}
                   <Archive className="w-4 h-4 shrink-0" /> Letti /
@@ -1399,7 +1399,7 @@ export default function Dashboard() {
                 <div className="h-8 w-px bg-gray-300 mx-2 hidden sm:block"></div>{" "}
                 <div className="flex flex-1 sm:flex-none justify-end items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                   {" "}
-                  <span className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <span className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
                     Per Pagina:
                   </span>{" "}
                   <select
@@ -1428,7 +1428,7 @@ export default function Dashboard() {
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
                   Nessun messaggio
                 </h3>{" "}
-                <p className="text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 ">
+                <p className="text-gray-500 dark:text-gray-400 ">
                   I messaggi in questa sezione appariranno qui.
                 </p>{" "}
               </div>
@@ -1458,7 +1458,7 @@ export default function Dashboard() {
                           {" "}
                           {isSelectMode && (
                             <div
-                              className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-indigo-500 border-indigo-500 scale-110 shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
+                              className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-indigo-500 dark:bg-indigo-600 border-indigo-500 scale-110 shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
                             >
                               {" "}
                               {isSelected && (
@@ -1682,7 +1682,7 @@ export default function Dashboard() {
                                 </div>
                               )}{" "}
                               <div
-                                className={`flex items-center gap-2 text-purple-600 ${!msg.instagram ? "pr-16" : ""}`}
+                                className={`flex items-center gap-2 text-purple-600 dark:text-purple-400 ${!msg.instagram ? "pr-16" : ""}`}
                               >
                                 {" "}
                                 <Instagram className="w-4 h-4 shrink-0" />{" "}
@@ -1690,7 +1690,7 @@ export default function Dashboard() {
                                   Instagram associati
                                 </span>{" "}
                                 {hasMultiple && (
-                                  <span className="text-[9px] font-black bg-purple-200/80 px-1.5 py-0.5 rounded text-purple-800 shadow-sm shrink-0">
+                                  <span className="text-[9px] font-black bg-purple-200/80 dark:bg-purple-900/40 px-1.5 py-0.5 rounded text-purple-800 dark:text-purple-200 shadow-sm shrink-0">
                                     MULTIPLE
                                   </span>
                                 )}{" "}
@@ -1747,7 +1747,7 @@ export default function Dashboard() {
                           <div className="flex items-center justify-between mb-2">
                             {" "}
                             <div
-                              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600" : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 "}`}
+                              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600 dark:text-sky-400" : "text-gray-500 dark:text-gray-400 "}`}
                             >
                               {" "}
                               <CheckCircle2 className="w-4 h-4 shrink-0" />{" "}
@@ -1765,7 +1765,7 @@ export default function Dashboard() {
                                   setEditingMessageId(msg.id);
                                   setResolutionInput(msg.resolution || "");
                                 }}
-                                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 ${msg.resolution ? "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 hover:bg-sky-200 shadow-sm" : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 hover:bg-gray-300"}`}
+                                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 ${msg.resolution ? "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 hover:bg-sky-200 shadow-sm" : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-300"}`}
                               >
                                 {" "}
                                 {msg.resolution ? "Modifica" : "Inserisci"}{" "}
@@ -1799,7 +1799,7 @@ export default function Dashboard() {
                                 </button>{" "}
                                 <button
                                   onClick={() => saveMessageResolution(msg.id)}
-                                  className="px-3 py-1.5 bg-sky-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-sky-700 transition-colors shadow-sm"
+                                  className="px-3 py-1.5 bg-sky-600 dark:bg-sky-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-sky-700 transition-colors shadow-sm"
                                 >
                                   {" "}
                                   Salva{" "}
@@ -1818,7 +1818,7 @@ export default function Dashboard() {
                       {/* Telemetry Details */}{" "}
                       <details className="group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none">
                         {" "}
-                        <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                        <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-white transition-colors list-none [&::-webkit-details-marker]:hidden">
                           {" "}
                           <div className="flex items-center gap-2">
                             {" "}
@@ -1904,12 +1904,12 @@ export default function Dashboard() {
                                   behavior: p.behavior || p.b || {},
                                 };
                                 return (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[10px] font-mono text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 ">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[10px] font-mono text-gray-600 dark:text-gray-400 ">
                                     {" "}
                                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
                                       {" "}
                                       <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                                        <Globe className="w-3 h-3 text-blue-500" />{" "}
+                                        <Globe className="w-3 h-3 text-blue-500 dark:text-blue-400" />{" "}
                                         Rete & Posizione
                                       </strong>{" "}
                                       <div>
@@ -2318,7 +2318,7 @@ export default function Dashboard() {
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
                   Nessun profilo identificato
                 </h3>{" "}
-                <p className="text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 ">
+                <p className="text-gray-500 dark:text-gray-400 ">
                   I profili analizzati dal tracker appariranno qui.
                 </p>{" "}
               </div>
@@ -2359,7 +2359,7 @@ export default function Dashboard() {
                         >
                           {" "}
                           <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isProfileSelected ? "bg-indigo-500 border-indigo-500 text-white shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 backdrop-blur-sm"}`}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isProfileSelected ? "bg-indigo-500 dark:bg-indigo-600 border-indigo-500 text-white shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 backdrop-blur-sm"}`}
                           >
                             {" "}
                             {isProfileSelected && (
@@ -2388,7 +2388,7 @@ export default function Dashboard() {
                             {" "}
                             {macro.name}{" "}
                           </h3>{" "}
-                          <div className="text-xs text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 font-medium mt-0.5">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
                             {" "}
                             {macro.msgCount}{" "}
                             {macro.msgCount === 1
@@ -2508,7 +2508,7 @@ export default function Dashboard() {
                         {/* Suspects */}{" "}
                         <div>
                           {" "}
-                          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <ShieldAlert className="w-3.5 h-3.5" /> Sospetti
                           </div>{" "}
                           <div className="flex flex-wrap gap-1.5">
@@ -2532,7 +2532,7 @@ export default function Dashboard() {
                         {/* Instagrams */}{" "}
                         <div>
                           {" "}
-                          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <Instagram className="w-3.5 h-3.5" /> Instagram
                             Associati
                           </div>{" "}
@@ -2562,7 +2562,7 @@ export default function Dashboard() {
                           {" "}
                           <details className="group">
                             {" "}
-                            <summary className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <summary className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer list-none flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                               {" "}
                               <span>
                                 Profili Dispositivo/Manuali (
@@ -2652,7 +2652,7 @@ export default function Dashboard() {
                                             e.stopPropagation();
                                             setEditingProfileId(pid);
                                           }}
-                                          className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 font-bold px-2 py-1 rounded text-[10px] transition-colors"
+                                          className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 font-bold px-2 py-1 rounded text-[10px] transition-colors"
                                           title="Modifica Identità Dati..."
                                         >
                                           Modifica
@@ -2700,7 +2700,7 @@ export default function Dashboard() {
                                               <div className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 line-clamp-3 mb-2 break-words">
                                                 "{msg.lookingFor}"
                                               </div>{" "}
-                                              <div className="text-[9px] text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 space-y-0.5">
+                                              <div className="text-[9px] text-gray-500 dark:text-gray-400 space-y-0.5">
                                                 {" "}
                                                 {msg.when && (
                                                   <div>
@@ -2762,7 +2762,7 @@ export default function Dashboard() {
                 {" "}
                 Pagina Precedente{" "}
               </button>{" "}
-              <span className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 order-first sm:order-none">
+              <span className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 order-first sm:order-none">
                 {" "}
                 Pagina {currentPage} di{" "}
                 {activeTab === "messages" ? totalPagesMsg : totalPagesProf}{" "}
@@ -2774,7 +2774,7 @@ export default function Dashboard() {
                     ? currentPage >= totalPagesMsg
                     : currentPage >= totalPagesProf
                 }
-                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-xs sm:text-sm ${(activeTab === "messages" ? currentPage >= totalPagesMsg : currentPage >= totalPagesProf) ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 " : "bg-indigo-600 hover:bg-indigo-700 text-white"} border border-transparent font-semibold rounded-xl shadow-sm transition-all text-center`}
+                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-xs sm:text-sm ${(activeTab === "messages" ? currentPage >= totalPagesMsg : currentPage >= totalPagesProf) ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 " : "bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 text-white"} border border-transparent font-semibold rounded-xl shadow-sm transition-all text-center`}
               >
                 {" "}
                 Prossima Pagina{" "}
@@ -2794,7 +2794,7 @@ export default function Dashboard() {
             <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
               Conferma Operazione
             </h3>{" "}
-            <p className="text-sm text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 mb-6 font-medium">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
               {" "}
               {confirmModalState.type === "delete"
                 ? "Sei sicuro di voler eliminare questo messaggio? L'azione è irreversibile."
@@ -2821,7 +2821,7 @@ export default function Dashboard() {
               </button>{" "}
               <button
                 onClick={confirmAction}
-                className={`flex-1 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors text-white shadow-lg ${confirmModalState.type === "delete" || confirmModalState.type === "delete-bulk" || confirmModalState.type === "delete-profile-bulk" ? "bg-red-600 hover:bg-red-500 shadow-red-500/30" : "bg-orange-500 hover:bg-orange-400 shadow-orange-500/30"}`}
+                className={`flex-1 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors text-white shadow-lg ${confirmModalState.type === "delete" || confirmModalState.type === "delete-bulk" || confirmModalState.type === "delete-profile-bulk" ? "bg-red-600 hover:bg-red-500 shadow-red-500/30" : "bg-orange-500 dark:bg-orange-600 hover:bg-orange-400 shadow-orange-500/30"}`}
               >
                 {" "}
                 Conferma{" "}
@@ -2842,7 +2842,7 @@ export default function Dashboard() {
             <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
               Salva Gruppo
             </h3>{" "}
-            <p className="text-sm text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 mb-6 font-medium">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
               Inserisci un identificativo per questo gruppo (lascia vuoto per
               casuale):
             </p>{" "}
@@ -2865,7 +2865,7 @@ export default function Dashboard() {
               </button>{" "}
               <button
                 onClick={confirmGroupDevices}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30"
+                className="flex-1 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-500 dark:bg-indigo-600 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 dark:shadow-indigo-900/20"
               >
                 {" "}
                 Conferma{" "}
@@ -2886,7 +2886,7 @@ export default function Dashboard() {
             <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
               Unisci Profili
             </h3>{" "}
-            <p className="text-sm text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 mb-4 font-medium">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium">
               Seleziona i profili che vuoi accorpare (questo diventerà il gruppo
               principale):
             </p>{" "}
@@ -2915,7 +2915,7 @@ export default function Dashboard() {
                   });
                 if (filtered.length === 0) {
                   return (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 font-medium">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 font-medium">
                       Nessun profilo trovato.
                     </div>
                   );
@@ -2963,7 +2963,7 @@ export default function Dashboard() {
                         >
                           {" "}
                           <div
-                            className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-indigo-500 border-indigo-500 text-white" : "border-gray-400 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
+                            className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-indigo-500 dark:bg-indigo-600 border-indigo-500 text-white" : "border-gray-400 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
                           >
                             {" "}
                             {isSelected && (
@@ -2986,7 +2986,7 @@ export default function Dashboard() {
                             <h4 className="font-bold text-gray-900 dark:text-gray-100 truncate">
                               {macro.name}
                             </h4>{" "}
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 truncate font-semibold uppercase tracking-wider mt-0.5">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate font-semibold uppercase tracking-wider mt-0.5">
                               {" "}
                               {macro.profileIds.length} dispositivi{" "}
                               <span className="mx-1 opacity-50">•</span>{" "}
@@ -3023,7 +3023,7 @@ export default function Dashboard() {
               <button
                 onClick={confirmMergeMacro}
                 disabled={mergeSelectedProfiles.length === 0}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 disabled:opacity-50"
+                className="flex-1 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-500 dark:bg-indigo-600 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 dark:shadow-indigo-900/20 disabled:opacity-50"
               >
                 {" "}
                 Conferma ({mergeSelectedProfiles.length}){" "}
@@ -3044,7 +3044,7 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold mb-1">
               Gestione Profilo Singolo
             </h3>{" "}
-            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 mb-6 bg-gray-100 dark:bg-gray-700 p-2 rounded inline-block">
+            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 mb-6 bg-gray-100 dark:bg-gray-700 p-2 rounded inline-block">
               {editingProfileId}
             </div>{" "}
             <div className="space-y-4">
@@ -3117,15 +3117,15 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-4xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl w-full max-w-4xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden"
           >
             {" "}
-            <div className="p-4 sm:p-6 md:p-8 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
+            <div className="p-4 sm:p-5 md:px-6 md:py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
               {" "}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 {" "}
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-base sm:text-lg"
                   style={{
                     backgroundColor: getProfileColor(
                       viewingMacro.profileIds[0],
@@ -3133,15 +3133,15 @@ export default function Dashboard() {
                   }}
                 >
                   {" "}
-                  <UserIcon className="w-6 h-6" />{" "}
+                  <UserIcon className="w-5 h-5 sm:w-6 sm:h-6" />{" "}
                 </div>{" "}
                 <div>
                   {" "}
-                  <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+                  <h2 className="text-base sm:text-lg md:text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
                     {" "}
                     {viewingMacro.name}{" "}
                   </h2>{" "}
-                  <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest mt-1">
+                  <div className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5 sm:mt-1">
                     {" "}
                     {viewingMacro.profileIds.length}{" "}
                     {viewingMacro.profileIds.length === 1
@@ -3153,28 +3153,28 @@ export default function Dashboard() {
               </div>{" "}
               <button
                 onClick={() => setViewingMacroId(null)}
-                className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/60 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:text-red-500 rounded-xl transition-colors"
+                className="p-2 sm:p-3 bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/60 text-gray-500 dark:text-gray-400 hover:text-red-500 rounded-xl transition-colors"
                 title="Chiudi"
               >
                 {" "}
-                <X className="w-6 h-6" />{" "}
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />{" "}
               </button>{" "}
             </div>{" "}
             <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
               {" "}
               {/* Sidebar/Top Navbar for Modal */}{" "}
-              <div className="md:w-64 shrink-0 bg-gray-50 dark:bg-gray-800/50 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 p-4 md:p-6 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto hide-scrollbar">
+              <div className="md:w-56 lg:w-64 shrink-0 bg-gray-50 dark:bg-gray-800/50 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 p-3 md:p-4 flex flex-row md:flex-col gap-2 md:gap-2 overflow-x-auto md:overflow-y-auto hide-scrollbar">
                 {" "}
                 <button
                   onClick={() => setMacroModalTab("timeline")}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-white "}`}
                 >
                   {" "}
                   <Activity className="w-4 h-4 shrink-0" /> Timeline{" "}
                 </button>{" "}
                 <button
                   onClick={() => setMacroModalTab("identita")}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-blue-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-blue-600 dark:bg-blue-500 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-white "}`}
                 >
                   {" "}
                   <UserIcon className="w-4 h-4 shrink-0" /> Identità (
@@ -3182,27 +3182,27 @@ export default function Dashboard() {
                 </button>{" "}
                 <button
                   onClick={() => setMacroModalTab("dettagli")}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 dark:bg-emerald-500 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-white "}`}
                 >
                   {" "}
                   <Cpu className="w-4 h-4 shrink-0" /> Info Tecniche{" "}
                 </button>{" "}
               </div>{" "}
-              <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-4 md:p-8 relative">
+              <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800/80 p-3 sm:p-4 md:p-6 relative">
                 {" "}
                 {macroModalTab === "timeline" && (
-                  <div className="max-w-3xl mx-auto flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="max-w-3xl mx-auto flex flex-col h-full animate-in w-full fade-in slide-in-from-bottom-4 duration-500">
                     {" "}
-                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-600 pb-4">
+                    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
                       {" "}
-                      <h4 className="text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         {" "}
-                        <Activity className="w-5 h-5 text-indigo-500 dark:text-indigo-400 " />{" "}
+                        <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />{" "}
                         Timeline Accessi & Messaggi{" "}
                       </h4>{" "}
-                      <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto uppercase tracking-wide">
+                      <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto uppercase tracking-wide">
                         {" "}
-                        {viewingMacroStats.messages.length} Eventi totali{" "}
+                        {viewingMacroStats.messages.length} Eventi{" "}
                       </div>{" "}
                     </div>{" "}
                     <div className="space-y-4">
@@ -3235,13 +3235,13 @@ export default function Dashboard() {
                               )}{" "}
                               {/* Timeline dot */}{" "}
                               <div
-                                className={`absolute left-[5px] top-[14px] w-3 h-3 rounded-full border-2 border-white shadow-sm ${hasMessage ? "bg-indigo-500" : "bg-slate-400"}`}
+                                className={`absolute left-[7px] sm:left-[5px] top-[14px] w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white dark:border-gray-800 shadow-sm ${hasMessage ? "bg-indigo-500 dark:bg-indigo-600" : "bg-slate-400"}`}
                               ></div>{" "}
-                              <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
+                              <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
                                 {" "}
-                                <div className="flex flex-wrap items-center gap-2 mb-4">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                                   {" "}
-                                  <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700 flex items-center gap-1">
+                                  <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700 flex items-center gap-1">
                                     {" "}
                                     <Clock className="w-3 h-3" />{" "}
                                     {msg.createdAt
@@ -3258,14 +3258,14 @@ export default function Dashboard() {
                                       Browser (Instagram){" "}
                                     </div>
                                   ) : isBrowser ? (
-                                    <div className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-blue-100 dark:border-blue-800 ">
+                                    <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-blue-100 dark:border-blue-800 ">
                                       {" "}
                                       <Monitor className="w-3 h-3" /> Browser
                                       Standard{" "}
                                     </div>
                                   ) : null}{" "}
                                   {msg.deviceInfo?.location && (
-                                    <div className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
+                                    <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
                                       {" "}
                                       <MapPin className="w-3 h-3" />{" "}
                                       {msg.deviceInfo.location.city ||
@@ -3277,14 +3277,14 @@ export default function Dashboard() {
                                   )}{" "}
                                 </div>{" "}
                                 {hasMessage ? (
-                                  <div className="bg-indigo-50 dark:bg-indigo-900/40 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 ">
+                                  <div className="bg-indigo-50 dark:bg-indigo-900/40 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-indigo-100 dark:border-indigo-800 ">
                                     {" "}
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100 border-l-2 border-indigo-400 pl-3 break-words leading-relaxed mb-3">
+                                    <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 border-l-2 border-indigo-400 pl-2 sm:pl-3 break-words leading-relaxed mb-2 sm:mb-3">
                                       {" "}
                                       "{msg.lookingFor}"{" "}
                                     </div>{" "}
                                     {(msg.where || msg.when) && (
-                                      <div className="flex flex-wrap gap-2 text-[11px] text-gray-700 dark:text-gray-300 mt-2 pl-3">
+                                      <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-gray-700 dark:text-gray-300 mt-2 pl-2 sm:pl-3">
                                         {" "}
                                         {msg.where && (
                                           <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
@@ -3312,14 +3312,14 @@ export default function Dashboard() {
                                         <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />{" "}
                                         <div>
                                           {" "}
-                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600">
+                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600 dark:text-sky-400">
                                             Risoluzione Inserita
                                           </span>{" "}
                                           {msg.resolution}{" "}
                                         </div>{" "}
                                       </div>
                                     ) : msg.instagram ? (
-                                      <div className="text-[11px] text-purple-800 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/40 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800 mt-3 font-medium flex items-start gap-2 shadow-inner">
+                                      <div className="text-[11px] text-purple-800 dark:text-purple-200 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/40 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800 mt-3 font-medium flex items-start gap-2 shadow-inner">
                                         {" "}
                                         <Instagram className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />{" "}
                                         <div>
@@ -3350,14 +3350,14 @@ export default function Dashboard() {
                 {macroModalTab === "identita" && (
                   <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {" "}
-                    <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-600 pb-4">
+                    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
                       {" "}
-                      <h4 className="text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         {" "}
-                        <UserIcon className="w-5 h-5 text-blue-500" /> Identità
-                        Separate{" "}
+                        <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400" />{" "}
+                        Identità Separate{" "}
                       </h4>{" "}
-                      <div className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
+                      <div className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
                         {" "}
                         Formato da {viewingMacro.profileIds.length}{" "}
                         dispositivi{" "}
@@ -3372,31 +3372,31 @@ export default function Dashboard() {
                         return (
                           <div
                             key={pid}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:border-blue-300 transition-colors duration-300 group"
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-300 group"
                           >
                             {" "}
-                            <div className="p-5 flex flex-col">
+                            <div className="p-4 sm:p-5 flex flex-col">
                               {" "}
-                              <div className="flex items-center justify-between gap-3 mb-4">
+                              <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
                                 {" "}
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                                   {" "}
                                   <div
-                                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-inner"
+                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-inner"
                                     style={{
                                       backgroundColor: getProfileColor(pid),
                                     }}
                                   >
                                     {" "}
-                                    <UserIcon className="w-5 h-5" />{" "}
+                                    <UserIcon className="w-4 h-4 sm:w-5 sm:h-5" />{" "}
                                   </div>{" "}
                                   <div className="flex flex-col min-w-0">
                                     {" "}
-                                    <span className="font-bold text-gray-900 dark:text-gray-100 text-sm truncate">
+                                    <span className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate">
                                       {profiles[pid]?.name ||
                                         "Profilo senza nome"}
                                     </span>{" "}
-                                    <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 truncate mt-0.5 bg-gray-50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 self-start">
+                                    <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 truncate mt-0.5 bg-gray-50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 self-start">
                                       {pid}
                                     </span>{" "}
                                   </div>{" "}
@@ -3417,9 +3417,9 @@ export default function Dashboard() {
                               <div className="w-full">
                                 {" "}
                                 {profileMsgs.length > 0 ? (
-                                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 ">
+                                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700 ">
                                     {" "}
-                                    <h5 className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-2.5 px-1">
+                                    <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 mb-2 sm:mb-2.5 px-1">
                                       {profileMsgs.length} Spotted inviati
                                     </h5>{" "}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -3482,28 +3482,28 @@ export default function Dashboard() {
                 {macroModalTab === "dettagli" && (
                   <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {" "}
-                    <div className="mb-8 border-b border-gray-200 dark:border-gray-600 pb-4">
+                    <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
                       {" "}
-                      <h4 className="text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         {" "}
-                        <Cpu className="w-5 h-5 text-emerald-500" />{" "}
+                        <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />{" "}
                         Informazioni di Rete e Dispositivo{" "}
                       </h4>{" "}
                     </div>{" "}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
                       {" "}
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-4">
+                      <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-3 sm:gap-4">
                         {" "}
-                        <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
                           {" "}
-                          <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400 " />{" "}
+                          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 " />{" "}
                         </div>{" "}
                         <div>
                           {" "}
-                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-1">
+                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 sm:mb-1">
                             Primo Avvistamento
                           </div>{" "}
-                          <div className="text-sm font-black text-indigo-900">
+                          <div className="text-xs sm:text-sm font-black text-indigo-900 dark:text-indigo-200">
                             {viewingMacroStats.oldest
                               ? format(
                                   viewingMacroStats.oldest,
@@ -3513,18 +3513,18 @@ export default function Dashboard() {
                           </div>{" "}
                         </div>{" "}
                       </div>{" "}
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-4">
+                      <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-3 sm:gap-4">
                         {" "}
-                        <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
                           {" "}
-                          <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400 " />{" "}
+                          <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 " />{" "}
                         </div>{" "}
                         <div>
                           {" "}
                           <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-1">
                             Ultimo Avvistamento
                           </div>{" "}
-                          <div className="text-sm font-black text-indigo-900">
+                          <div className="text-sm font-black text-indigo-900 dark:text-indigo-200">
                             {viewingMacroStats.newest
                               ? format(
                                   viewingMacroStats.newest,
@@ -3535,13 +3535,13 @@ export default function Dashboard() {
                         </div>{" "}
                       </div>{" "}
                     </div>{" "}
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                       {" "}
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         {" "}
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2">
-                          <Fingerprint className="w-5 h-5" /> Hardware
-                          Fingerprints (
+                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-3 sm:mb-4 flex items-center gap-2">
+                          <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" />{" "}
+                          Hardware Fingerprints (
                           {viewingMacroStats.hardwareFingerprints.length})
                         </h4>{" "}
                         {viewingMacroStats.hardwareFingerprints.length > 0 ? (
@@ -3551,7 +3551,7 @@ export default function Dashboard() {
                               (fp) => (
                                 <span
                                   key={fp}
-                                  className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800 shadow-sm"
+                                  className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800 shadow-sm"
                                 >
                                   {" "}
                                   {fp}{" "}
@@ -3565,10 +3565,11 @@ export default function Dashboard() {
                           </div>
                         )}{" "}
                       </div>{" "}
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         {" "}
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-orange-600 mb-4 flex items-center gap-2">
-                          <Globe className="w-5 h-5" /> Rete & IP (
+                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 mb-3 sm:mb-4 flex items-center gap-2">
+                          <Globe className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP
+                          (
                           {viewingMacroStats.ipAddresses.length +
                             viewingMacroStats.localIps.length}
                           )
@@ -3586,7 +3587,7 @@ export default function Dashboard() {
                                 {viewingMacroStats.ipAddresses.map((ip) => (
                                   <span
                                     key={ip}
-                                    className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-orange-100 dark:border-orange-800 shadow-sm"
+                                    className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-orange-100 dark:border-orange-800 shadow-sm"
                                   >
                                     {" "}
                                     {ip}{" "}
@@ -3606,7 +3607,7 @@ export default function Dashboard() {
                                 {viewingMacroStats.localIps.map((ip) => (
                                   <span
                                     key={ip}
-                                    className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-orange-100 dark:border-orange-800 shadow-sm"
+                                    className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-orange-100 dark:border-orange-800 shadow-sm"
                                   >
                                     {" "}
                                     {ip}{" "}
@@ -3617,17 +3618,18 @@ export default function Dashboard() {
                           )}{" "}
                         </div>{" "}
                       </div>{" "}
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-3xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         {" "}
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-4 flex items-center gap-2">
-                          <Cpu className="w-5 h-5" /> Sicurezza & Configurazione
+                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 flex items-center gap-2">
+                          <Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Sicurezza &
+                          Configurazione
                         </h4>{" "}
                         <div className="flex flex-wrap gap-2.5">
                           {" "}
                           {viewingMacroStats.botStatuses.map((bot) => (
                             <span
                               key={bot}
-                              className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-indigo-100 dark:border-indigo-800 shadow-sm"
+                              className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm"
                             >
                               {" "}
                               {bot}{" "}
@@ -3636,7 +3638,7 @@ export default function Dashboard() {
                           {viewingMacroStats.permissionsList.map((p) => (
                             <span
                               key={p}
-                              className="bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-teal-100 dark:border-teal-800 shadow-sm"
+                              className="bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-teal-100 dark:border-teal-800 shadow-sm"
                             >
                               {" "}
                               {p}{" "}
@@ -3645,7 +3647,7 @@ export default function Dashboard() {
                           {viewingMacroStats.storageInfo.map((s) => (
                             <span
                               key={s}
-                              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono text-[11px] font-bold px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm"
+                              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
                             >
                               {" "}
                               {s}{" "}
