@@ -12,12 +12,6 @@ import { AdminGuard } from "./components/AdminGuard";
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
 
 export default function App() {
-  useEffect(() => {
-    if (localStorage.getItem("theme") === "dark") {
-      document.documentElement.classList.add("dark-theme");
-    }
-  }, []);
-
   return (
     <ErrorBoundary>
       <BrowserRouter>
@@ -29,8 +23,8 @@ export default function App() {
               <AdminGuard>
                 <Suspense
                   fallback={
-                    <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center transition-colors">
-                      <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
+                    <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center transition-colors">
+                      <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   }
                 >

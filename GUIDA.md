@@ -55,7 +55,6 @@ Li trovi qui:
 Verso la fine del file, partendo da _"export function ThemeCorkboard()"_ troverai tutti i testi del modulo:
 
 * **Titolo Principale**: Cerca la scritta `WANTED!` nel blocco HTML.
-* **Sottotitolo**: Cerca `SPOTTED AL POLIMI`.
 * **Campi e Placeholder**:
     * `1. Quando? (Opz.)` e il testo d'esempio in grigio chiaro `Es. Ieri alle 14:00` (è l'attributo `placeholder="..."`).
     * `2. Dove? (Opz.)` e il suo placeholder `Es. Edificio 13`.

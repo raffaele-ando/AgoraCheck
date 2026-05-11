@@ -44,11 +44,11 @@ export function ThemeCorkboard() {
   const displayError = localError || error;
 
   return (
-    <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#F3ECE0] bg-[radial-gradient(rgba(0,0,0,0.03)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden transition-colors">
+    <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
       <motion.div
         initial={{ rotate: -2, scale: 0.9 }}
         animate={{ rotate: 1, scale: 0.95 }}
-        className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F4F1EA] to-[#E8DEC8] p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.3),inset_0_0_20px_rgba(255,255,255,0.8)] border border-[#000000]/10 mx-auto mt-2 transition-colors"
+        className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)](0,0,0,0.9),inset_0_0_20px_rgba(255,255,255,0.05)] border border-[#000000]/20 mx-auto mt-2 transition-colors"
       >
         {/* Fix per il pezzo di scotch in alto: metto un bello z-index e levo il mix blend che bugga con il backdrop-blur su mobile e safari */}
         <div
@@ -66,12 +66,6 @@ export function ThemeCorkboard() {
             >
               WANTED!
             </h2>
-            <h3
-              className="text-sm sm:text-lg font-black text-[#000000] uppercase tracking-wider leading-none mt-1 transition-colors"
-              style={{ fontFamily: "Impact, sans-serif" }}
-            >
-              SPOTTED AL POLIMI
-            </h3>
           </div>
         </div>
 
@@ -94,7 +88,7 @@ export function ThemeCorkboard() {
               type="text"
               value={form.when}
               onChange={(e) => setForm({ ...form, when: e.target.value })}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00]:border-orange-500 outline-none text-sm sm:text-base placeholder:text-[#000000]/40:text-gray-500 font-bold transition-colors"
               placeholder="Es. Ieri alle 14:00"
             />
           </div>
@@ -108,7 +102,7 @@ export function ThemeCorkboard() {
               type="text"
               value={form.where}
               onChange={(e) => setForm({ ...form, where: e.target.value })}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00]:border-orange-500 outline-none text-sm sm:text-base placeholder:text-[#000000]/40:text-gray-500 font-bold transition-colors"
               placeholder="Es. Edificio 13"
             />
           </div>
@@ -127,7 +121,7 @@ export function ThemeCorkboard() {
               Non sarà pubblico. Verrai avvisato in privato se qualcuno
               risponde, utilissimo per non perderti gli aggiornamenti!
             </p>
-            <div className="relative flex items-center border-b-2 border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-0.5">
+            <div className="relative flex items-center border-b-2 border-[#000000]/20 focus-within:border-[#DC5F00]:border-orange-500 transition-colors pb-0.5">
               <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5 transition-colors">
                 @
               </span>
@@ -142,7 +136,7 @@ export function ThemeCorkboard() {
                       .replace(/[^a-z0-9._]/g, ""),
                   })
                 }
-                className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40 transition-colors"
+                className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40:text-gray-500 transition-colors"
                 placeholder="tuo.tag"
               />
             </div>
@@ -157,7 +151,7 @@ export function ThemeCorkboard() {
               required
               value={form.lookingFor}
               onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors"
+              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00]:border-orange-500 outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40:text-gray-500 font-bold transition-colors"
               placeholder="Il tipo con lo zaino giallo..."
             />
           </div>
@@ -168,7 +162,7 @@ export function ThemeCorkboard() {
                 disabled={
                   !form.lookingFor || isSubmitting || isSuccess || cooldown > 0
                 }
-                className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00] hover:border-[#DC5F00] hover:text-[#F3ECE0] transition-colors disabled:opacity-50 relative z-10 bg-transparent"
+                className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00]:bg-orange-600 hover:border-[#DC5F00]:border-orange-600 hover:text-[#F3ECE0]:text-white transition-colors disabled:opacity-50 relative z-10 bg-transparent"
               >
                 {isSubmitting
                   ? "Inviando..."

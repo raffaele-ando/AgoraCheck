@@ -253,7 +253,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
               </div>{" "}
               Andamento Traffico{" "}
             </h3>{" "}
-            <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-xl">
+            <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 px-3 py-1.5 rounded-xl">
               Ultimi 14 Giorni
             </span>{" "}
           </div>{" "}
@@ -536,13 +536,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {detailView.data.length}
                     </span>{" "}
                   </h2>{" "}
-                  <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-wide uppercase">
+                  <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 font-semibold tracking-wide uppercase">
                     Dettaglio statistica per la voce selezionata
                   </p>{" "}
                 </div>{" "}
                 <button
                   onClick={() => setDetailView(null)}
-                  className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 transition-all active:scale-95 shrink-0 ml-4"
+                  className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 transition-all active:scale-95 shrink-0 ml-4"
                 >
                   {" "}
                   <X className="w-5 h-5" />{" "}
@@ -560,7 +560,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {" "}
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
                         {" "}
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 border-collapse">
                           {" "}
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
                             {" "}
@@ -601,7 +601,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                       <div className="font-black text-gray-800 dark:text-gray-200 mb-1 leading-relaxed">
                                         "{m.lookingFor}"
                                       </div>{" "}
-                                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 flex gap-3">
+                                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 flex gap-3">
                                         {" "}
                                         {m.where && (
                                           <span className="flex items-center gap-1">
@@ -661,7 +661,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                     <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-1.5 rounded-xl font-black w-24 text-center">
                                       {getPlatform(m)}
                                     </span>{" "}
-                                    <span className="text-[11px] bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-3 py-1.5 rounded-xl font-black w-24 text-center">
+                                    <span className="text-[11px] bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-3 py-1.5 rounded-xl font-black w-24 text-center">
                                       {getBrowser(m)}
                                     </span>{" "}
                                   </div>{" "}
@@ -685,7 +685,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             {" "}
                             <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                               {" "}
-                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 " />{" "}
+                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 " />{" "}
                               {m.createdAt
                                 ? format(
                                     m.createdAt.toDate(),
@@ -698,7 +698,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                               <span className="text-[10px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider">
                                 {getPlatform(m)}
                               </span>{" "}
-                              <span className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider">
+                              <span className="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider">
                                 {getBrowser(m)}
                               </span>{" "}
                             </div>{" "}
@@ -711,7 +711,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 <div className="font-black text-gray-900 dark:text-gray-100 text-sm leading-relaxed mb-3">
                                   "{m.lookingFor}"
                                 </div>{" "}
-                                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 flex flex-wrap gap-x-4 gap-y-2">
+                                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 flex flex-wrap gap-x-4 gap-y-2">
                                   {" "}
                                   {m.where && (
                                     <span className="flex items-center gap-1.5">
@@ -778,7 +778,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {" "}
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
                         {" "}
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 border-collapse">
                           {" "}
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
                             {" "}
@@ -828,7 +828,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         <div className="font-black text-gray-900 dark:text-gray-100 text-base">
                                           {p.name || "Senza Nome"}
                                         </div>{" "}
-                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
+                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
                                           {p.id}
                                         </div>{" "}
                                       </div>{" "}
@@ -908,14 +908,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 <div className="font-black text-gray-900 dark:text-gray-100 text-base truncate">
                                   {p.name || "Senza Nome"}
                                 </div>{" "}
-                                <div className="text-[10px] font-bold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
+                                <div className="text-[10px] font-bold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
                                   {p.id}
                                 </div>{" "}
                               </div>{" "}
                             </div>{" "}
                             <div className="flex flex-col bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 gap-3 text-center">
                               {" "}
-                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest">
                                 Accessi Registrati
                               </span>{" "}
                               <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 block">
@@ -965,7 +965,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {" "}
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
                         {" "}
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 border-collapse">
                           {" "}
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
                             {" "}
@@ -1037,7 +1037,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         {m.profileIds.map((pid: string) => (
                                           <span
                                             key={pid}
-                                            className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5"
+                                            className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 flex items-center gap-1.5"
                                           >
                                             {" "}
                                             <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />{" "}
@@ -1124,7 +1124,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </div>{" "}
                             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-gray-700 ">
                               {" "}
-                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
                                 <Cpu className="w-3.5 h-3.5" /> Dispositivi
                                 Collegati
                               </span>{" "}
@@ -1164,7 +1164,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </div>{" "}
                             <div className="flex items-center justify-between pt-2">
                               {" "}
-                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest">
                                 Ultima acquisizione
                               </span>{" "}
                               <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm px-3 py-1.5 rounded-xl flex items-center gap-1.5">

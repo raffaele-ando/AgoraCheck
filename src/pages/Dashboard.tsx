@@ -1077,9 +1077,9 @@ export default function Dashboard() {
                   {" "}
                   <Link to="/" className="shrink-0 flex items-center">
                     {" "}
-                    <Logo className="h-8 w-[100px] sm:h-10 sm:w-[130px] hover:opacity-80 transition-all duration-300 dark:[&_img]:invert dark:[&_h1]:text-white" />{" "}
+                    <Logo className="h-8 w-[100px] sm:h-10 sm:w-[130px] hover:opacity-80 transition-all duration-300" />{" "}
                   </Link>{" "}
-                  <div className="h-8 w-px bg-gray-300 shrink-0 hidden md:block"></div>{" "}
+                  <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 shrink-0 hidden md:block"></div>{" "}
                   <h1 className="text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden xl:block shrink-0">
                     Dashboard
                   </h1>{" "}
@@ -1136,28 +1136,28 @@ export default function Dashboard() {
                   {" "}
                   <button
                     onClick={() => setActiveTab("messages")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "messages" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white "}`}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "messages" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                   >
                     {" "}
                     Messaggi{" "}
                   </button>{" "}
                   <button
                     onClick={() => setActiveTab("profiles")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white "}`}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                   >
                     {" "}
                     Profili{" "}
                   </button>{" "}
                   <button
                     onClick={() => setActiveTab("analytics")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white "}`}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                   >
                     {" "}
                     Analytics{" "}
                   </button>{" "}
                 </div>{" "}
                 {/* Desktop Icons */}{" "}
-                <div className="hidden md:flex items-center gap-2 border-l pl-2 ml-1">
+                <div className="hidden md:flex items-center gap-2 border-l border-gray-300 dark:border-gray-600 pl-2 ml-1">
                   {" "}
                   <button
                     onClick={() => setIsDarkMode(!isDarkMode)}
@@ -1171,7 +1171,7 @@ export default function Dashboard() {
                       <Moon className="w-5 h-5" />
                     )}{" "}
                   </button>{" "}
-                  <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700 truncate max-w-[150px] xl:max-w-[200px] shrink-0 hidden lg:block">
+                  <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700 break-words whitespace-pre-wrap max-w-[150px] xl:max-w-[200px] shrink-0 hidden lg:block">
                     {" "}
                     {auth.currentUser?.email}{" "}
                   </div>{" "}
@@ -1287,7 +1287,7 @@ export default function Dashboard() {
                     <button
                       onClick={handleGroupDevices}
                       disabled={selectedMessages.length === 0}
-                      className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-indigo-500 dark:bg-indigo-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-indigo-400/50"
+                      className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-indigo-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-indigo-400/50"
                     >
                       {" "}
                       <Layers className="w-4 h-4 shrink-0" />{" "}
@@ -1380,7 +1380,7 @@ export default function Dashboard() {
                     setViewFilter("new");
                     setSelectedMessages([]);
                   }}
-                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-md shadow-indigo-200" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:text-gray-200 dark:hover:text-gray-200 "}`}
+                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"}`}
                 >
                   {" "}
                   <InboxIcon className="w-4 h-4 shrink-0" /> Spotted Nuovi{" "}
@@ -1390,13 +1390,13 @@ export default function Dashboard() {
                     setViewFilter("archived");
                     setSelectedMessages([]);
                   }}
-                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-gray-800 text-white shadow-md shadow-gray-300" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:text-gray-200 dark:hover:text-gray-200 "}`}
+                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-gray-800 dark:bg-gray-700 text-white shadow-md shadow-gray-300 dark:shadow-none" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"}`}
                 >
                   {" "}
                   <Archive className="w-4 h-4 shrink-0" /> Letti /
                   Archiviati{" "}
                 </button>{" "}
-                <div className="h-8 w-px bg-gray-300 mx-2 hidden sm:block"></div>{" "}
+                <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2 hidden sm:block"></div>{" "}
                 <div className="flex flex-1 sm:flex-none justify-end items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                   {" "}
                   <span className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
@@ -1458,7 +1458,7 @@ export default function Dashboard() {
                           {" "}
                           {isSelectMode && (
                             <div
-                              className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-indigo-500 dark:bg-indigo-600 border-indigo-500 scale-110 shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
+                              className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-indigo-500 border-indigo-500 scale-110 shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
                             >
                               {" "}
                               {isSelected && (
@@ -1675,14 +1675,9 @@ export default function Dashboard() {
                           return (
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/40 dark:to-pink-900/40 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-800 relative overflow-hidden shadow-sm flex flex-col gap-2">
                               {" "}
-                              {!msg.instagram && (
-                                <div className="absolute top-0 right-0 bg-gradient-to-bl from-purple-200 to-purple-100/50 dark:from-purple-800/80 dark:to-purple-900/50 text-purple-700 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider backdrop-blur-sm z-10 border-b border-l border-white/50 dark:border-white/10">
-                                  {" "}
-                                  Profilato{" "}
-                                </div>
-                              )}{" "}
+                              {" "}
                               <div
-                                className={`flex items-center gap-2 text-purple-600 dark:text-purple-400 ${!msg.instagram ? "pr-16" : ""}`}
+                                className={`flex items-center gap-2 text-purple-600 ${!msg.instagram ? "pr-16" : ""}`}
                               >
                                 {" "}
                                 <Instagram className="w-4 h-4 shrink-0" />{" "}
@@ -1690,7 +1685,7 @@ export default function Dashboard() {
                                   Instagram associati
                                 </span>{" "}
                                 {hasMultiple && (
-                                  <span className="text-[9px] font-black bg-purple-200/80 dark:bg-purple-900/40 px-1.5 py-0.5 rounded text-purple-800 dark:text-purple-200 shadow-sm shrink-0">
+                                  <span className="text-[9px] font-black bg-purple-200/80 dark:bg-purple-900/60 px-1.5 py-0.5 rounded text-purple-800 dark:text-purple-300 shadow-sm shrink-0">
                                     MULTIPLE
                                   </span>
                                 )}{" "}
@@ -1703,7 +1698,7 @@ export default function Dashboard() {
                                     href={`https://instagram.com/${tag}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="hover:scale-105 transition-transform text-white text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-500 dark:to-pink-400 shadow-indigo-200/50 dark:shadow-none shadow-md px-3 py-1.5 rounded-xl block max-w-full truncate"
+                                    className="hover:scale-105 transition-transform text-white text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-500 dark:to-pink-400 shadow-indigo-200/50 dark:shadow-none shadow-md px-3 py-1.5 rounded-xl block max-w-full break-words whitespace-pre-wrap"
                                   >
                                     {" "}
                                     @{tag}{" "}
@@ -1747,7 +1742,7 @@ export default function Dashboard() {
                           <div className="flex items-center justify-between mb-2">
                             {" "}
                             <div
-                              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600 dark:text-sky-400" : "text-gray-500 dark:text-gray-400 "}`}
+                              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600" : "text-gray-500 dark:text-gray-400 "}`}
                             >
                               {" "}
                               <CheckCircle2 className="w-4 h-4 shrink-0" />{" "}
@@ -1799,7 +1794,7 @@ export default function Dashboard() {
                                 </button>{" "}
                                 <button
                                   onClick={() => saveMessageResolution(msg.id)}
-                                  className="px-3 py-1.5 bg-sky-600 dark:bg-sky-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-sky-700 transition-colors shadow-sm"
+                                  className="px-3 py-1.5 bg-sky-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-sky-700 transition-colors shadow-sm"
                                 >
                                   {" "}
                                   Salva{" "}
@@ -1818,7 +1813,7 @@ export default function Dashboard() {
                       {/* Telemetry Details */}{" "}
                       <details className="group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none">
                         {" "}
-                        <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-white transition-colors list-none [&::-webkit-details-marker]:hidden">
+                        <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
                           {" "}
                           <div className="flex items-center gap-2">
                             {" "}
@@ -1846,7 +1841,7 @@ export default function Dashboard() {
                                   Piattaforma
                                 </div>{" "}
                                 <div
-                                  className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate"
+                                  className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap"
                                   title={msg.deviceInfo?.platform}
                                 >
                                   {" "}
@@ -1863,7 +1858,7 @@ export default function Dashboard() {
                                 <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
                                   Risoluzione
                                 </div>{" "}
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
                                   {" "}
                                   {msg.deviceInfo?.screenResolution ||
                                     "Sconosciuta"}{" "}
@@ -1878,7 +1873,7 @@ export default function Dashboard() {
                                 <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
                                   Lingua & Fuso
                                 </div>{" "}
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
                                   {" "}
                                   {msg.deviceInfo?.language || "N/A"} •{" "}
                                   {msg.deviceInfo?.timezone
@@ -1909,7 +1904,7 @@ export default function Dashboard() {
                                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
                                       {" "}
                                       <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                                        <Globe className="w-3 h-3 text-blue-500 dark:text-blue-400" />{" "}
+                                        <Globe className="w-3 h-3 text-blue-500" />{" "}
                                         Rete & Posizione
                                       </strong>{" "}
                                       <div>
@@ -1918,7 +1913,7 @@ export default function Dashboard() {
                                         </span>{" "}
                                         {adv.network?.ip || "N/A"}
                                       </div>{" "}
-                                      <div className="truncate">
+                                      <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           IP LOC:
                                         </span>{" "}
@@ -1931,13 +1926,13 @@ export default function Dashboard() {
                                         {adv.network?.city},{" "}
                                         {adv.network?.region}
                                       </div>{" "}
-                                      <div className="truncate">
+                                      <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           ISP:
                                         </span>{" "}
                                         {adv.network?.isp}
                                       </div>{" "}
-                                      <div className="truncate">
+                                      <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           REF:
                                         </span>{" "}
@@ -1962,7 +1957,7 @@ export default function Dashboard() {
                                         Hardware
                                       </strong>{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={
                                           adv.hardware?.detailedWebGL
                                             ? `Vend: ${adv.hardware.detailedWebGL.vendor}, Rndr: ${adv.hardware.detailedWebGL.renderer}, MaxTex: ${adv.hardware.detailedWebGL.maxTextureSize}, Exts: ${adv.hardware.detailedWebGL.extensionsCount}`
@@ -2009,7 +2004,7 @@ export default function Dashboard() {
                                           : `${adv.hardware?.battery?.level} (${adv.hardware?.battery?.charging === true ? "In Carica" : adv.hardware?.battery?.charging === false ? "A Batteria" : "ND"})`}
                                       </div>{" "}
                                       {adv.hardware?.gamepadsCount > 0 && (
-                                        <div className="truncate">
+                                        <div className="break-words whitespace-pre-wrap">
                                           <span className="text-gray-400 dark:text-gray-500 ">
                                             GPAD:
                                           </span>{" "}
@@ -2021,7 +2016,7 @@ export default function Dashboard() {
                                         </div>
                                       )}{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={adv.hardware?.advancedSensors}
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
@@ -2050,7 +2045,7 @@ export default function Dashboard() {
                                         {adv.behavior?.clicks} /{" "}
                                         {adv.behavior?.rageClicks || 0}
                                       </div>{" "}
-                                      <div className="truncate">
+                                      <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           DIST:
                                         </span>{" "}
@@ -2069,7 +2064,7 @@ export default function Dashboard() {
                                         / {adv.behavior?.backspaces || 0} bs
                                       </div>{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={
                                           adv.behavior?.fieldFocusTimes &&
                                           Object.keys(
@@ -2130,7 +2125,7 @@ export default function Dashboard() {
                                         <Monitor className="w-3 h-3 text-emerald-500" />{" "}
                                         Software / Hash
                                       </strong>{" "}
-                                      <div className="truncate">
+                                      <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           PR:
                                         </span>{" "}
@@ -2139,7 +2134,7 @@ export default function Dashboard() {
                                           ? `(Hist: ${adv.software.historyLength})`
                                           : ""}
                                       </div>{" "}
-                                      <div className="truncate">
+                                      <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           CSS:
                                         </span>{" "}
@@ -2155,7 +2150,7 @@ export default function Dashboard() {
                                         {adv.software?.incognito || "N/A"}
                                       </div>{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={
                                           adv.software?.performanceMemory
                                             ? `L:${adv.software.performanceMemory.jsHeapSizeLimit} T:${adv.software.performanceMemory.totalJSHeapSize} U:${adv.software.performanceMemory.usedJSHeapSize}`
@@ -2170,7 +2165,7 @@ export default function Dashboard() {
                                           : "N/A"}
                                       </div>{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={
                                           adv.software?.permissions
                                             ? `Geo: ${adv.software.permissions.geolocation}, Notif: ${adv.software.permissions.notifications}, Cam: ${adv.software.permissions.camera}, Mic: ${adv.software.permissions.microphone}, ClipR: ${adv.software.permissions["clipboard-read"]}, ClipW: ${adv.software.permissions["clipboard-write"]}`
@@ -2240,7 +2235,7 @@ export default function Dashboard() {
                                         </span>
                                       </div>{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={adv.software?.fontsIdentified?.join(
                                           ", ",
                                         )}
@@ -2252,7 +2247,7 @@ export default function Dashboard() {
                                         Identificati
                                       </div>{" "}
                                       <div
-                                        className="truncate"
+                                        className="break-words whitespace-pre-wrap"
                                         title={adv.software?.plugins}
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
@@ -2345,13 +2340,7 @@ export default function Dashboard() {
                       }}
                     >
                       {" "}
-                      {/* show id, just the top one or macro id */}{" "}
-                      <div className="absolute top-0 right-0 px-3 py-1 bg-gray-50 dark:bg-gray-800/50 text-[9px] font-mono text-gray-400 dark:text-gray-500 border-b border-l border-gray-200 dark:border-gray-600 rounded-bl-xl z-10">
-                        {" "}
-                        {macro.profileIds.length > 1
-                          ? `AGGREGATO (${macro.profileIds.length})`
-                          : macro.id.slice(0, 12)}{" "}
-                      </div>{" "}
+                      {" "}
                       {/* Selection Mode Checkbox Overlay */}{" "}
                       {isProfileSelectMode && (
                         <div
@@ -2359,7 +2348,7 @@ export default function Dashboard() {
                         >
                           {" "}
                           <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isProfileSelected ? "bg-indigo-500 dark:bg-indigo-600 border-indigo-500 text-white shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 backdrop-blur-sm"}`}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isProfileSelected ? "bg-indigo-500 border-indigo-500 text-white shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 backdrop-blur-sm"}`}
                           >
                             {" "}
                             {isProfileSelected && (
@@ -2382,7 +2371,7 @@ export default function Dashboard() {
                         <div className="min-w-0 flex-1">
                           {" "}
                           <h3
-                            className="font-bold text-gray-900 dark:text-gray-100 text-lg sm:text-xl truncate relative z-20"
+                            className="font-bold text-gray-900 dark:text-gray-100 text-lg sm:text-xl break-words whitespace-pre-wrap relative z-20"
                             title={macro.name}
                           >
                             {" "}
@@ -2562,7 +2551,7 @@ export default function Dashboard() {
                           {" "}
                           <details className="group">
                             {" "}
-                            <summary className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer list-none flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <summary className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                               {" "}
                               <span>
                                 Profili Dispositivo/Manuali (
@@ -2579,7 +2568,7 @@ export default function Dashboard() {
                                       sourceMacroId: macro.id,
                                     });
                                   }}
-                                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 text-[10px] flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-md"
+                                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-[10px] flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-md"
                                 >
                                   Unisci
                                 </button>{" "}
@@ -2618,7 +2607,7 @@ export default function Dashboard() {
                                     {" "}
                                     <summary className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer list-none outline-none">
                                       {" "}
-                                      <div className="truncate flex-1 flex flex-col min-w-0 flex-row items-center gap-2">
+                                      <div className="break-words whitespace-pre-wrap flex-1 flex flex-col min-w-0 flex-row items-center gap-2">
                                         {" "}
                                         <svg
                                           className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 group-open/sub:rotate-90 transition-transform shrink-0"
@@ -2635,11 +2624,11 @@ export default function Dashboard() {
                                         </svg>{" "}
                                         <div className="flex flex-col min-w-0">
                                           {" "}
-                                          <span className="font-semibold text-gray-800 dark:text-gray-200 text-xs truncate">
+                                          <span className="font-semibold text-gray-800 dark:text-gray-200 text-xs break-words whitespace-pre-wrap">
                                             {profiles[pid]?.name ||
                                               "Profilo senza nome"}
                                           </span>{" "}
-                                          <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500 truncate">
+                                          <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500 break-words whitespace-pre-wrap">
                                             {pid.slice(0, 12)}...
                                           </span>{" "}
                                         </div>{" "}
@@ -2707,7 +2696,7 @@ export default function Dashboard() {
                                                     <span className="font-bold text-gray-700 dark:text-gray-300 ">
                                                       Quando:
                                                     </span>{" "}
-                                                    <span className="truncate block">
+                                                    <span className="break-words whitespace-pre-wrap block">
                                                       {msg.when}
                                                     </span>
                                                   </div>
@@ -2717,7 +2706,7 @@ export default function Dashboard() {
                                                     <span className="font-bold text-gray-700 dark:text-gray-300 ">
                                                       Dove:
                                                     </span>{" "}
-                                                    <span className="truncate block">
+                                                    <span className="break-words whitespace-pre-wrap block">
                                                       {msg.where}
                                                     </span>
                                                   </div>
@@ -2774,7 +2763,7 @@ export default function Dashboard() {
                     ? currentPage >= totalPagesMsg
                     : currentPage >= totalPagesProf
                 }
-                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-xs sm:text-sm ${(activeTab === "messages" ? currentPage >= totalPagesMsg : currentPage >= totalPagesProf) ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 " : "bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 text-white"} border border-transparent font-semibold rounded-xl shadow-sm transition-all text-center`}
+                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-xs sm:text-sm ${(activeTab === "messages" ? currentPage >= totalPagesMsg : currentPage >= totalPagesProf) ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 " : "bg-indigo-600 hover:bg-indigo-700 text-white"} border border-transparent font-semibold rounded-xl shadow-sm transition-all text-center`}
               >
                 {" "}
                 Prossima Pagina{" "}
@@ -2821,7 +2810,7 @@ export default function Dashboard() {
               </button>{" "}
               <button
                 onClick={confirmAction}
-                className={`flex-1 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors text-white shadow-lg ${confirmModalState.type === "delete" || confirmModalState.type === "delete-bulk" || confirmModalState.type === "delete-profile-bulk" ? "bg-red-600 hover:bg-red-500 shadow-red-500/30" : "bg-orange-500 dark:bg-orange-600 hover:bg-orange-400 shadow-orange-500/30"}`}
+                className={`flex-1 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors text-white shadow-lg ${confirmModalState.type === "delete" || confirmModalState.type === "delete-bulk" || confirmModalState.type === "delete-profile-bulk" ? "bg-red-600 hover:bg-red-500 shadow-red-500/30" : "bg-orange-500 hover:bg-orange-400 shadow-orange-500/30"}`}
               >
                 {" "}
                 Conferma{" "}
@@ -2865,7 +2854,7 @@ export default function Dashboard() {
               </button>{" "}
               <button
                 onClick={confirmGroupDevices}
-                className="flex-1 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-500 dark:bg-indigo-600 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 dark:shadow-indigo-900/20"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30"
               >
                 {" "}
                 Conferma{" "}
@@ -2963,7 +2952,7 @@ export default function Dashboard() {
                         >
                           {" "}
                           <div
-                            className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-indigo-500 dark:bg-indigo-600 border-indigo-500 text-white" : "border-gray-400 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
+                            className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-indigo-500 border-indigo-500 text-white" : "border-gray-400 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
                           >
                             {" "}
                             {isSelected && (
@@ -2983,10 +2972,10 @@ export default function Dashboard() {
                           </div>{" "}
                           <div className="min-w-0 flex-1">
                             {" "}
-                            <h4 className="font-bold text-gray-900 dark:text-gray-100 truncate">
+                            <h4 className="font-bold text-gray-900 dark:text-gray-100 break-words whitespace-pre-wrap">
                               {macro.name}
                             </h4>{" "}
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate font-semibold uppercase tracking-wider mt-0.5">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 break-words whitespace-pre-wrap font-semibold uppercase tracking-wider mt-0.5">
                               {" "}
                               {macro.profileIds.length} dispositivi{" "}
                               <span className="mx-1 opacity-50">•</span>{" "}
@@ -3023,7 +3012,7 @@ export default function Dashboard() {
               <button
                 onClick={confirmMergeMacro}
                 disabled={mergeSelectedProfiles.length === 0}
-                className="flex-1 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-500 dark:bg-indigo-600 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 dark:shadow-indigo-900/20 disabled:opacity-50"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 disabled:opacity-50"
               >
                 {" "}
                 Conferma ({mergeSelectedProfiles.length}){" "}
@@ -3137,7 +3126,7 @@ export default function Dashboard() {
                 </div>{" "}
                 <div>
                   {" "}
-                  <h2 className="text-base sm:text-lg md:text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
                     {" "}
                     {viewingMacro.name}{" "}
                   </h2>{" "}
@@ -3163,18 +3152,18 @@ export default function Dashboard() {
             <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
               {" "}
               {/* Sidebar/Top Navbar for Modal */}{" "}
-              <div className="md:w-56 lg:w-64 shrink-0 bg-gray-50 dark:bg-gray-800/50 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 p-3 md:p-4 flex flex-row md:flex-col gap-2 md:gap-2 overflow-x-auto md:overflow-y-auto hide-scrollbar">
+              <div className="md:w-56 lg:w-64 shrink-0 bg-gray-50 dark:bg-gray-800/50 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 p-3 md:p-4 flex flex-row md:flex-col gap-1.5 md:gap-2 overflow-x-auto md:overflow-y-auto hide-scrollbar">
                 {" "}
                 <button
                   onClick={() => setMacroModalTab("timeline")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-white "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
                   {" "}
                   <Activity className="w-4 h-4 shrink-0" /> Timeline{" "}
                 </button>{" "}
                 <button
                   onClick={() => setMacroModalTab("identita")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-blue-600 dark:bg-blue-500 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-white "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-blue-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
                   {" "}
                   <UserIcon className="w-4 h-4 shrink-0" /> Identità (
@@ -3182,16 +3171,16 @@ export default function Dashboard() {
                 </button>{" "}
                 <button
                   onClick={() => setMacroModalTab("dettagli")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 dark:bg-emerald-500 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-white "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
                   {" "}
                   <Cpu className="w-4 h-4 shrink-0" /> Info Tecniche{" "}
                 </button>{" "}
               </div>{" "}
-              <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800/80 p-3 sm:p-4 md:p-6 relative">
+              <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
                 {" "}
                 {macroModalTab === "timeline" && (
-                  <div className="max-w-3xl mx-auto flex flex-col h-full animate-in w-full fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="max-w-3xl mx-auto flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {" "}
                     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
                       {" "}
@@ -3235,7 +3224,7 @@ export default function Dashboard() {
                               )}{" "}
                               {/* Timeline dot */}{" "}
                               <div
-                                className={`absolute left-[7px] sm:left-[5px] top-[14px] w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white dark:border-gray-800 shadow-sm ${hasMessage ? "bg-indigo-500 dark:bg-indigo-600" : "bg-slate-400"}`}
+                                className={`absolute left-[7px] sm:left-[5px] top-[14px] w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-sm ${hasMessage ? "bg-indigo-500" : "bg-slate-400"}`}
                               ></div>{" "}
                               <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
                                 {" "}
@@ -3258,14 +3247,14 @@ export default function Dashboard() {
                                       Browser (Instagram){" "}
                                     </div>
                                   ) : isBrowser ? (
-                                    <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-blue-100 dark:border-blue-800 ">
+                                    <div className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-blue-100 dark:border-blue-800 ">
                                       {" "}
                                       <Monitor className="w-3 h-3" /> Browser
                                       Standard{" "}
                                     </div>
                                   ) : null}{" "}
                                   {msg.deviceInfo?.location && (
-                                    <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
+                                    <div className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
                                       {" "}
                                       <MapPin className="w-3 h-3" />{" "}
                                       {msg.deviceInfo.location.city ||
@@ -3312,14 +3301,14 @@ export default function Dashboard() {
                                         <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />{" "}
                                         <div>
                                           {" "}
-                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600 dark:text-sky-400">
+                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600">
                                             Risoluzione Inserita
                                           </span>{" "}
                                           {msg.resolution}{" "}
                                         </div>{" "}
                                       </div>
                                     ) : msg.instagram ? (
-                                      <div className="text-[11px] text-purple-800 dark:text-purple-200 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/40 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800 mt-3 font-medium flex items-start gap-2 shadow-inner">
+                                      <div className="text-[11px] text-purple-800 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/40 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800 mt-3 font-medium flex items-start gap-2 shadow-inner">
                                         {" "}
                                         <Instagram className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />{" "}
                                         <div>
@@ -3354,10 +3343,10 @@ export default function Dashboard() {
                       {" "}
                       <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         {" "}
-                        <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400" />{" "}
-                        Identità Separate{" "}
+                        <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> Identità
+                        Separate{" "}
                       </h4>{" "}
-                      <div className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
+                      <div className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
                         {" "}
                         Formato da {viewingMacro.profileIds.length}{" "}
                         dispositivi{" "}
@@ -3392,11 +3381,11 @@ export default function Dashboard() {
                                   </div>{" "}
                                   <div className="flex flex-col min-w-0">
                                     {" "}
-                                    <span className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate">
+                                    <span className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base break-words whitespace-pre-wrap">
                                       {profiles[pid]?.name ||
                                         "Profilo senza nome"}
                                     </span>{" "}
-                                    <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 truncate mt-0.5 bg-gray-50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 self-start">
+                                    <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 break-words whitespace-pre-wrap mt-0.5 bg-gray-50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 self-start">
                                       {pid}
                                     </span>{" "}
                                   </div>{" "}
@@ -3419,7 +3408,7 @@ export default function Dashboard() {
                                 {profileMsgs.length > 0 ? (
                                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700 ">
                                     {" "}
-                                    <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 mb-2 sm:mb-2.5 px-1">
+                                    <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-2 sm:mb-2.5 px-1">
                                       {profileMsgs.length} Spotted inviati
                                     </h5>{" "}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -3503,7 +3492,7 @@ export default function Dashboard() {
                           <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 sm:mb-1">
                             Primo Avvistamento
                           </div>{" "}
-                          <div className="text-xs sm:text-sm font-black text-indigo-900 dark:text-indigo-200">
+                          <div className="text-xs sm:text-sm font-black text-indigo-900 dark:text-indigo-300">
                             {viewingMacroStats.oldest
                               ? format(
                                   viewingMacroStats.oldest,
@@ -3524,7 +3513,7 @@ export default function Dashboard() {
                           <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-1">
                             Ultimo Avvistamento
                           </div>{" "}
-                          <div className="text-sm font-black text-indigo-900 dark:text-indigo-200">
+                          <div className="text-sm font-black text-indigo-900 dark:text-indigo-300">
                             {viewingMacroStats.newest
                               ? format(
                                   viewingMacroStats.newest,
@@ -3539,9 +3528,9 @@ export default function Dashboard() {
                       {" "}
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         {" "}
-                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" />{" "}
-                          Hardware Fingerprints (
+                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
+                          <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" /> Hardware
+                          Fingerprints (
                           {viewingMacroStats.hardwareFingerprints.length})
                         </h4>{" "}
                         {viewingMacroStats.hardwareFingerprints.length > 0 ? (
@@ -3567,9 +3556,8 @@ export default function Dashboard() {
                       </div>{" "}
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         {" "}
-                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Globe className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP
-                          (
+                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-orange-600 mb-3 sm:mb-4 flex items-center gap-2">
+                          <Globe className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP (
                           {viewingMacroStats.ipAddresses.length +
                             viewingMacroStats.localIps.length}
                           )
@@ -3621,8 +3609,7 @@ export default function Dashboard() {
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         {" "}
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Sicurezza &
-                          Configurazione
+                          <Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Sicurezza & Configurazione
                         </h4>{" "}
                         <div className="flex flex-wrap gap-2.5">
                           {" "}

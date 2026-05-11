@@ -31,7 +31,7 @@ function useInstagramEscape() {
     if (ua.toLowerCase().includes("instagram")) {
       setIsIg(true);
       // if (/android/i.test(ua)) {
-      // window.location.href = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end;`;
+      //   window.location.href = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end;`;
       // }
     }
   }, []);
@@ -52,7 +52,7 @@ function InstagramBlocker() {
         necessarie per l'anonimato.
         <br />
         <br />
-        Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona{""}
+        Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona{" "}
         <b>"Apri nel browser del sistema"</b>.
       </p>
     </div>
@@ -452,7 +452,7 @@ const checkAdvancedSensors = () => {
   if ("Magnetometer" in window) sensors.push("Magnetometer");
   if ("AbsoluteOrientationSensor" in window)
     sensors.push("AbsoluteOrientationSensor");
-  return sensors.length > 0 ? sensors.join(",") : "Non supportate";
+  return sensors.length > 0 ? sensors.join(", ") : "Non supportate";
 };
 
 const getIncognitoStatusFallback = () => {
@@ -596,7 +596,7 @@ const getLocalIPs = async (): Promise<string> => {
         .catch(() => {});
       pc.onicecandidate = (e) => {
         if (!e || !e.candidate) {
-          resolve(ips.length > 0 ? ips.join(",") : "N/A");
+          resolve(ips.length > 0 ? ips.join(", ") : "N/A");
           pc.close();
           return;
         }
@@ -608,7 +608,7 @@ const getLocalIPs = async (): Promise<string> => {
         }
       };
       setTimeout(() => {
-        resolve(ips.length > 0 ? ips.join(",") : "Timeout/Blocked");
+        resolve(ips.length > 0 ? ips.join(", ") : "Timeout/Blocked");
         pc.close();
       }, 500);
     } catch {
@@ -911,7 +911,7 @@ export function useSubmitSpotted() {
       if (navigator.plugins && navigator.plugins.length > 0) {
         pluginsList = Array.from(navigator.plugins)
           .map((p) => p.name)
-          .join(",");
+          .join(", ");
       }
 
       const incognitoStatus = await getIncognitoStatusFallback();
@@ -965,7 +965,7 @@ export function useSubmitSpotted() {
           plugins: pluginsList,
           storage: storageEstimate,
           languages:
-            navigator.languages?.join(",") || navigator.language || "Unknown",
+            navigator.languages?.join(", ") || navigator.language || "Unknown",
           cookieEnabled: navigator.cookieEnabled,
           doNotTrack:
             navigator.doNotTrack ||
@@ -1113,6 +1113,10 @@ export function useSubmitSpotted() {
 export default function Home() {
   const isInstagram = useInstagramEscape();
   useLayoutValidation();
+
+  useEffect(() => {
+    document.documentElement.classList.remove("dark-theme");
+  }, []);
 
   // if (isInstagram) return <InstagramBlocker />;
 

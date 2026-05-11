@@ -187,7 +187,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
           </p>
           <button
             onClick={handleLogout}
-            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:text-white dark:hover:text-white transition-colors"
+            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
           >
             Disconnetti
           </button>
