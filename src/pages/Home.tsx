@@ -40,14 +40,14 @@ function useInstagramEscape() {
 
 function InstagramBlocker() {
   return (
-    <div className="fixed inset-0 bg-[#F3ECE0] z-[9999] p-8 flex flex-col items-center justify-center text-center">
-      <div className="w-20 h-20 bg-[#DC5F00] text-[#F3ECE0] rounded-2xl flex items-center justify-center mb-6 shadow-xl">
+    <div className="fixed inset-0 bg-[#F3ECE0] dark:bg-gray-900 z-[9999] p-8 flex flex-col items-center justify-center text-center transition-colors">
+      <div className="w-20 h-20 bg-[#DC5F00] dark:bg-orange-600 text-[#F3ECE0] dark:text-white rounded-2xl flex items-center justify-center mb-6 shadow-xl">
         <ExternalLink className="w-10 h-10" />
       </div>
-      <h1 className="text-2xl font-black text-[#000000] mb-4 uppercase">
+      <h1 className="text-2xl font-black text-[#000000] dark:text-white mb-4 uppercase transition-colors">
         Esci da Instagram
       </h1>
-      <p className="text-[#000000] font-medium mb-8 max-w-sm">
+      <p className="text-[#000000] dark:text-gray-300 font-medium mb-8 max-w-sm transition-colors">
         Il browser interno di Instagram blocca alcune funzionalità di sicurezza
         necessarie per l'anonimato.
         <br />
@@ -1117,7 +1117,7 @@ export default function Home() {
   // if (isInstagram) return <InstagramBlocker />;
 
   return (
-    <div className="relative min-h-[100dvh] bg-[#F3ECE0]">
+    <div className="relative min-h-[100dvh] bg-[#F3ECE0] dark:bg-gray-900 transition-colors duration-300">
       <ThemeCorkboard />
     </div>
   );

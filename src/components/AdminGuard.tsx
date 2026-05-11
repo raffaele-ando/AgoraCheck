@@ -105,15 +105,15 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (authLoading || verifying) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center transition-colors">
+        <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center p-4 relative">
+      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center p-4 relative transition-colors">
         <Link
           to="/"
           className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500"
@@ -123,11 +123,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center"
+          className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border dark:border-white/10"
         >
           <Logo className="mb-8 w-48 h-16 mx-auto" />
-          <h2 className="text-2xl font-bold mb-2">Accesso Riservato</h2>
-          <p className="text-gray-500 mb-8">
+          <h2 className="text-2xl font-bold mb-2 dark:text-white">Accesso Riservato</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">
             Accedi con l'account amministratore per visualizzare i messaggi.
           </p>
 
@@ -169,25 +169,25 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center p-4 relative">
+      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center p-4 relative transition-colors">
         <Link
           to="/"
           className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500"
         >
           &larr; Torna alla Home
         </Link>
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border dark:border-white/10">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4 border dark:border-red-800">
             <ShieldAlert className="w-8 h-8 text-red-500" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Accesso Negato</h2>
-          <p className="text-gray-500 mb-6">
+          <h2 className="text-xl font-bold mb-2 dark:text-white">Accesso Negato</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
             L'account corrente non è autorizzato o non dispone dei permessi
             necessari per visualizzare la bacheca.
           </p>
           <button
             onClick={handleLogout}
-            className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
+            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
           >
             Disconnetti
           </button>

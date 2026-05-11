@@ -1673,10 +1673,10 @@ export default function Dashboard() {
                             getProfileInstagrams(profileId);
                           if (tags.length === 0) return null;
                           return (
-                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-800 relative overflow-hidden shadow-sm flex flex-col gap-2">
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/40 dark:to-pink-900/40 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-800 relative overflow-hidden shadow-sm flex flex-col gap-2">
                               {" "}
                               {!msg.instagram && (
-                                <div className="absolute top-0 right-0 bg-gradient-to-bl from-purple-200 to-purple-100/50 text-purple-700 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider backdrop-blur-sm z-10 border-b border-l border-white/50">
+                                <div className="absolute top-0 right-0 bg-gradient-to-bl from-purple-200 to-purple-100/50 dark:from-purple-800/80 dark:to-purple-900/50 text-purple-700 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider backdrop-blur-sm z-10 border-b border-l border-white/50 dark:border-white/10">
                                   {" "}
                                   Profilato{" "}
                                 </div>
@@ -1703,7 +1703,7 @@ export default function Dashboard() {
                                     href={`https://instagram.com/${tag}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="hover:scale-105 transition-transform text-white text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-500 shadow-indigo-200/50 shadow-md px-3 py-1.5 rounded-xl block max-w-full truncate"
+                                    className="hover:scale-105 transition-transform text-white text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-500 dark:to-pink-400 shadow-indigo-200/50 dark:shadow-none shadow-md px-3 py-1.5 rounded-xl block max-w-full truncate"
                                   >
                                     {" "}
                                     @{tag}{" "}
@@ -3319,12 +3319,12 @@ export default function Dashboard() {
                                         </div>{" "}
                                       </div>
                                     ) : msg.instagram ? (
-                                      <div className="text-[11px] text-purple-800 bg-purple-100/50 px-3 py-2.5 rounded-lg border border-purple-200 mt-3 font-medium flex items-start gap-2 shadow-inner">
+                                      <div className="text-[11px] text-purple-800 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/40 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800 mt-3 font-medium flex items-start gap-2 shadow-inner">
                                         {" "}
                                         <Instagram className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />{" "}
                                         <div>
                                           {" "}
-                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-purple-600">
+                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-purple-600 dark:text-purple-400">
                                             Tag Instagram Originale
                                           </span>{" "}
                                           @{msg.instagram}{" "}

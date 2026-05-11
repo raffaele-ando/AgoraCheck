@@ -23,14 +23,14 @@ export function Logo({ className }: { className?: string }) {
           <img
             src="https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true"
             alt="Polimi Agorà Logo"
-            className="w-full h-full object-contain z-10 block invert-in-dark"
+            className="w-full h-full object-contain z-10 block dark:invert"
             onError={() => setImgFailed(true)}
           />
         )}
         {/* FALLBACK LOGO PREVIEW (Hidden by default, shown if image fails) */}
         {imgFailed && (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-[#000000] leading-none text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-black dark:text-white leading-none text-center">
               POLIMI
               <br />
               <span className="text-[#DC5F00]">AGORÀ</span>
