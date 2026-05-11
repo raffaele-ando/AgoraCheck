@@ -1077,7 +1077,7 @@ export default function Dashboard() {
                   {" "}
                   <Link to="/" className="shrink-0 flex items-center">
                     {" "}
-                    <Logo className="h-8 w-[100px] sm:h-10 sm:w-[130px] hover:opacity-80 transition-all duration-300" />{" "}
+                    <Logo className="h-8 w-[100px] sm:h-10 sm:w-[130px] hover:opacity-80 transition-all duration-300 dark:[&_img]:invert dark:[&_h1]:text-white" />{" "}
                   </Link>{" "}
                   <div className="h-8 w-px bg-gray-300 shrink-0 hidden md:block"></div>{" "}
                   <h1 className="text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden xl:block shrink-0">
