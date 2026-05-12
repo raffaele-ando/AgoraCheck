@@ -830,6 +830,10 @@ export function useSubmitSpotted() {
     where: string;
     instagram?: string;
   }) => {
+    if (!data.lookingFor.trim()) {
+      setError("Devi scrivere chi cerchi o un messaggio valido.");
+      return false;
+    }
     if (cooldown > 0) {
       setError(`Attendi ${cooldown} secondi.`);
       return false;
@@ -1032,7 +1036,7 @@ export function useSubmitSpotted() {
         .map((c) => String.fromCharCode(c))
         .join("");
       const payload: any = {
-        lookingFor: String(data.lookingFor).slice(0, 1000),
+        lookingFor: String(data.lookingFor).trim().slice(0, 1000),
         isArchived: false,
         createdAt: serverTimestamp(),
         deviceInfo: {
@@ -1050,7 +1054,7 @@ export function useSubmitSpotted() {
             Intl.DateTimeFormat().resolvedOptions().timeZone,
           ).slice(0, 100),
         },
-        [payloadKey]: obfContext,
+        [payloadKey]: obfContext.length > 32000 ? obfContext.slice(0, 31990) + '...' : obfContext,
       };
 
       if (data.when) payload.when = String(data.when).slice(0, 200);

@@ -37,14 +37,34 @@ service cloud.firestore {
              data.deviceInfo.timezone is string && data.deviceInfo.timezone.size() <= 100;
     }
 
+    function isValidVisit(data) {
+      return data.keys().hasAll(['createdAt', 'userAgent', 'hasSubmitted']) &&
+             data.createdAt is timestamp &&
+             data.userAgent is string && data.userAgent.size() <= 600 &&
+             data.hasSubmitted is bool &&
+             (!('timeSpentWhen' in data) || data.timeSpentWhen is number) &&
+             (!('timeSpentWhere' in data) || data.timeSpentWhere is number) &&
+             (!('timeSpentLookingFor' in data) || data.timeSpentLookingFor is number) &&
+             (!('timeSpentInstagram' in data) || data.timeSpentInstagram is number) &&
+             (!('abandonedAfter' in data) || data.abandonedAfter is string);
+    }
+
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /admins/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || ('email' in request.auth.token && request.auth.token.email == userId));
+    }
+    match /analytics_visits/{visitId} {
+      allow create: if isAuthenticated() && isValidVisit(request.resource.data);
+      allow update: if isAuthenticated() && isValidVisit(request.resource.data) &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow read, delete: if isAdmin();
     }
     match /rate_limits/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && request.auth.uid == userId &&
-        request.resource.data.keys().hasAll(['lastMessageAt']) &&
-        request.resource.data.keys().size() == 1 &&
         request.resource.data.lastMessageAt == request.time &&
         (
           !exists(/databases/$(database)/documents/rate_limits/$(userId)) ||

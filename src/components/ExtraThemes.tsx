@@ -1,13 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import TextareaAutosize from "react-textarea-autosize";
 import { CheckCircle2, Clock, MapPin, Instagram, Search } from "lucide-react";
 import { useSubmitSpotted } from "../pages/Home";
 import { motion } from "motion/react";
 import { Logo } from "./Logo";
 import { Link } from "react-router-dom";
+import { useVisitAnalytics } from "../hooks/useVisitAnalytics";
+
+// TYPEWRITER HOOK
+function useTypewriter(words: string[], speed = 60, waitTime = 2000) {
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    const handleTyping = () => {
+      const i = loopNum % words.length;
+      const fullText = words[i];
+
+      setText(
+        isDeleting
+          ? fullText.substring(0, text.length - 1)
+          : fullText.substring(0, text.length + 1)
+      );
+
+      let typeSpeed = speed;
+      if (isDeleting) typeSpeed /= 2;
+
+      if (!isDeleting && text === fullText) {
+        timer = setTimeout(() => setIsDeleting(true), waitTime);
+      } else if (isDeleting && text === "") {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+      } else {
+        timer = setTimeout(handleTyping, typeSpeed);
+      }
+    };
+
+    timer = setTimeout(handleTyping, 30);
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, loopNum, words, speed, waitTime]);
+
+  return text;
+}
 
 // THEME 11: CORKBOARD (Old Theme 4 adapted to brand colors)
 // ==========================================
 export function ThemeCorkboard() {
+  const { handleFocus, handleBlur, markSubmitted } = useVisitAnalytics();
   const { submit, isSubmitting, isSuccess, error, cooldown } =
     useSubmitSpotted();
   const [form, setForm] = useState({
@@ -18,6 +60,22 @@ export function ThemeCorkboard() {
   });
   const [lastSubmit, setLastSubmit] = useState(0);
   const [localError, setLocalError] = useState("");
+
+  const whenPlaceholder = useTypewriter([
+    "9 Maggio alle 9:35",
+    "12 Ottobre alle 14:15",
+    "Lunedì 3 Aprile alle 11:30",
+    "Giovedì 15 Novembre alle 18:20",
+    "22 Dicembre verso le 16:45",
+  ]);
+
+  const wherePlaceholder = useTypewriter([
+    "Davanti all'aula 4.0.1",
+    "Alla fila per la spritzeria",
+    "Sulle scale di piazza Leo",
+    "Dalla panchina gigante",
+    "In biblioteca",
+  ]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +94,10 @@ export function ThemeCorkboard() {
 
     submit(form)
       .then((ok) => {
-        if (ok) setForm({ lookingFor: "", when: "", where: "", instagram: "" });
+        if (ok) {
+          markSubmitted();
+          setForm({ lookingFor: "", when: "", where: "", instagram: "" });
+        }
       })
       .catch((err) => setLocalError(err.message || "Errore sconosciuto"));
   };
@@ -84,12 +145,14 @@ export function ThemeCorkboard() {
               <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando?
               (Opz.)
             </label>
-            <input
-              type="text"
+            <TextareaAutosize
+              minRows={1}
               value={form.when}
               onChange={(e) => setForm({ ...form, when: e.target.value })}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00]:border-orange-500 outline-none text-sm sm:text-base placeholder:text-[#000000]/40:text-gray-500 font-bold transition-colors"
-              placeholder="Es. Ieri alle 14:00"
+              onFocus={() => handleFocus("when")}
+              onBlur={() => handleBlur("when")}
+              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors resize-none overflow-hidden"
+              placeholder={`Es. ${whenPlaceholder}`}
             />
           </div>
 
@@ -98,12 +161,14 @@ export function ThemeCorkboard() {
               <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove?
               (Opz.)
             </label>
-            <input
-              type="text"
+            <TextareaAutosize
+              minRows={1}
               value={form.where}
               onChange={(e) => setForm({ ...form, where: e.target.value })}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00]:border-orange-500 outline-none text-sm sm:text-base placeholder:text-[#000000]/40:text-gray-500 font-bold transition-colors"
-              placeholder="Es. Edificio 13"
+              onFocus={() => handleFocus("where")}
+              onBlur={() => handleBlur("where")}
+              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors resize-none overflow-hidden"
+              placeholder={`Es. ${wherePlaceholder}`}
             />
           </div>
 
@@ -121,13 +186,15 @@ export function ThemeCorkboard() {
               Non sarà pubblico. Verrai avvisato in privato se qualcuno
               risponde, utilissimo per non perderti gli aggiornamenti!
             </p>
-            <div className="relative flex items-center border-b-2 border-[#000000]/20 focus-within:border-[#DC5F00]:border-orange-500 transition-colors pb-0.5">
+            <div className="relative flex items-center border-b border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-0.5">
               <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5 transition-colors">
                 @
               </span>
               <input
                 type="text"
                 value={form.instagram}
+                onFocus={() => handleFocus("instagram")}
+                onBlur={() => handleBlur("instagram")}
                 onChange={(e) =>
                   setForm({
                     ...form,
@@ -136,7 +203,7 @@ export function ThemeCorkboard() {
                       .replace(/[^a-z0-9._]/g, ""),
                   })
                 }
-                className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40:text-gray-500 transition-colors"
+                className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40 transition-colors"
                 placeholder="tuo.tag"
               />
             </div>
@@ -147,11 +214,14 @@ export function ThemeCorkboard() {
               <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 4. Chi
               cerchi? *
             </label>
-            <textarea
+            <TextareaAutosize
               required
+              minRows={2}
               value={form.lookingFor}
               onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
-              className="w-full bg-transparent border-b-2 border-[#000000]/20 focus:border-[#DC5F00]:border-orange-500 outline-none resize-none h-12 sm:h-16 text-sm sm:text-base placeholder:text-[#000000]/40:text-gray-500 font-bold transition-colors"
+              onFocus={() => handleFocus("lookingFor")}
+              onBlur={() => handleBlur("lookingFor")}
+              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors overflow-hidden py-1"
               placeholder="Il tipo con lo zaino giallo..."
             />
           </div>

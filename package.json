@@ -23,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.14.0",
+    "react-textarea-autosize": "^8.5.9",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.5.0"
   },
@@ -31,6 +32,7 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/react-textarea-autosize": "^4.3.6",
     "esbuild": "^0.28.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
