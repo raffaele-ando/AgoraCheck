@@ -31,6 +31,7 @@ import {
   Activity,
   Globe,
   Settings,
+  Smartphone,
 } from "lucide-react";
 interface AnalyticsProps {
   messages: any[];
@@ -84,7 +85,7 @@ const getBrowser = (m: any) => {
 };
 type DetailView = {
   title: string;
-  type: "messages" | "profiles" | "macro";
+  type: "messages" | "profiles" | "macro" | "visits";
   data: any[];
 } | null;
 export const Analytics: React.FC<AnalyticsProps> = ({
@@ -284,7 +285,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       bg: "bg-blue-50 dark:bg-blue-900/40 ",
       text: "text-blue-600 dark:text-blue-400 ",
       border: "group-hover:border-blue-200 dark:group-hover:border-blue-800 ",
-      onClick: () => {}
+      onClick: () =>
+        setDetailView({
+          title: "Totale Utenti (Entrati)",
+          type: "visits",
+          data: Array.isArray(visits) ? visits : [],
+        }),
     },
     {
       label: "Conversione spotted",
@@ -292,7 +298,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       bg: "bg-pink-50 dark:bg-pink-900/40 ",
       text: "text-pink-600 dark:text-pink-400 ",
       border: "group-hover:border-pink-200 dark:group-hover:border-pink-800 ",
-      onClick: () => {}
+      onClick: () =>
+        setDetailView({
+          title: "Conversione spotted",
+          type: "visits",
+          data: (Array.isArray(visits) ? visits : []).filter((v: any) => v.hasSubmitted),
+        }),
     },
   ];
   return (
@@ -354,369 +365,270 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6">
+      {/* Analytics Sections */}
+      <div className="space-y-12">
+        {/* SECTION 1: SPOTTED & MESSAGES */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0">
+              <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Avvistamenti & Spotted</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Statistiche relative ai messaggi ricevuti e traffico generato.</p>
+              <p className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1">Dati da {messages.length} log non ignorati</p>
+            </div>
+          </div>
 
-        {kpis.map((kpi, i) => (
-          <motion.div
-            key={kpi.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            onClick={kpi.onClick}
-            className="group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden relative"
-          >
-
-            <div className="relative z-10 flex flex-col items-start">
-
-              <div
-                className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {kpis.filter(k => ["Totale Avvistamenti", "Spotted Effettuati"].includes(k.label)).map((kpi, i) => (
+              <motion.div
+                key={kpi.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                onClick={kpi.onClick}
+                className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
               >
-
-                {kpi.label}
-              </div>
-              <div className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
-                {kpi.value.toLocaleString()}
-              </div>
-            </div>
-            <div
-              className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}
-            >
-
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-                Vedi dettagli
-              </span>
-              <ArrowRight
-                className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`}
-              />
-            </div>
-            {/* Background Decoration */}
-            <div
-              className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`}
-            ></div>
-          </motion.div>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-
-        {/* Main Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
-
-          <div className="flex items-center justify-between mb-8">
-
-            <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-3">
-
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center">
-
-                <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400 " />
-              </div>
-              Andamento Traffico
-            </h3>
-            <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 px-3 py-1.5 rounded-xl">
-              Ultimi 14 Giorni
-            </span>
-          </div>
-          <div className="relative h-[250px] sm:h-[350px] w-full mt-auto">
-
-            {isReady && (
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}><ResponsiveContainer width="100%" height="100%">
-
-                <AreaChart
-                  data={stats.trafficData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-
-                  <defs>
-
-                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-
-                      <stop
-                        offset="5%"
-                        stopColor="#6366f1"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="#6366f1"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                    <linearGradient
-                      id="colorActions"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-
-                      <stop
-                        offset="5%"
-                        stopColor="#10b981"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="#10b981"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="4 4"
-                    vertical={false}
-                    stroke="#f3f4f6"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }}
-                    dy={15}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }}
-                    dx={-10}
-                  />
-                  <RechartsTooltip
-                    contentStyle={{
-                      borderRadius: "16px",
-                      border: "none",
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                    }}
-                    cursor={{
-                      stroke: "#6366f1",
-                      strokeWidth: 1,
-                      strokeDasharray: "4 4",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="views"
-                    name="Accessi Totali"
-                    stroke="#6366f1"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorViews)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="actions"
-                    name="Spotted Effettuati"
-                    stroke="#10b981"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorActions)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer></div>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col gap-6 md:gap-8">
-
-          <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
-
-            <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-2.5">
-
-              Sistemi Operativi
-            </h3>
-            <div className="h-[180px] sm:h-[200px] w-full relative z-10">
-
-              {isReady && (
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}><ResponsiveContainer width="100%" height="100%">
-
-                  <PieChart>
-
-                    <Pie
-                      data={stats.platformData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                      className="cursor-pointer focus:outline-none transition-transform hover:scale-105 duration-300"
-                      onClick={(data) =>
-                        setDetailView({
-                          title: `Piattaforma: ${data.name}`,
-                          type: "messages",
-                          data: messages.filter(
-                            (m) => getPlatform(m) === data.name,
-                          ),
-                        })
-                      }
-                    >
-
-                      {stats.platformData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${entry.name}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip
-                      contentStyle={{
-                        borderRadius: "16px",
-                        border: "none",
-                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer></div>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center mt-6 relative z-10 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 ">
-
-              {stats.platformData.map((p, i) => (
-                <div
-                  key={p.name}
-                  className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300 font-bold tracking-wide bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm"
-                >
-
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                  ></div>
-                  {p.name}
-                  <span className="text-gray-400 dark:text-gray-500 font-medium">
-                    ({p.value})
-                  </span>
+                <div className="relative z-10 flex flex-col items-start">
+                  <div className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                    {kpi.label}
+                  </div>
+                  <div className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
+                    {kpi.value.toLocaleString()}
+                  </div>
                 </div>
-              ))}
+                <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
+                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
+                  <ArrowRight className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
+                </div>
+                <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`}></div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-3">
+                  Andamento Traffico
+                </h3>
+                <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 px-3 py-1.5 rounded-xl">
+                  Ultimi 14 Giorni
+                </span>
+              </div>
+              <div className="relative h-[250px] sm:h-[350px] w-full mt-auto">
+                {isReady && (
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={stats.trafficData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="colorActions" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f3f4f6" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} dy={15} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} dx={-10} />
+                        <RechartsTooltip contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                        <Area type="monotone" dataKey="views" name="Accessi Totali" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                        <Area type="monotone" dataKey="actions" name="Spotted Effettuati" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorActions)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-6 md:gap-8">
+              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
+                <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-2.5">
+                  Sistemi Operativi
+                </h3>
+                <div className="h-[180px] sm:h-[200px] w-full relative z-10">
+                  {isReady && (
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={stats.platformData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" className="cursor-pointer focus:outline-none transition-transform hover:scale-105 duration-300" onClick={(data) => setDetailView({ title: `Piattaforma: ${data.name}`, type: "messages", data: messages.filter((m) => getPlatform(m) === data.name) })}>
+                            {stats.platformData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />)}
+                          </Pie>
+                          <RechartsTooltip contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center mt-6 relative z-10 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  {stats.platformData.map((p, i) => (
+                    <div key={p.name} className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300 font-bold tracking-wide bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></div>
+                      {p.name} <span className="text-gray-400 dark:text-gray-500 font-medium">({p.value})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+                <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+                  Sorgente Accessi (Browser)
+                </h3>
+                <div className="relative h-[200px] sm:h-[220px] w-full mt-2">
+                  {isReady && (
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.browserData} layout="vertical" margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
+                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#9ca3af", fontWeight: 600 }} />
+                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#4b5563", fontWeight: "bold" }} width={100} />
+                          <RechartsTooltip cursor={{ fill: "#f3f4f6" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }} />
+                          <Bar dataKey="value" name="Visite" fill="#8b5cf6" radius={[0, 6, 6, 0]} className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(data) => setDetailView({ title: `Sorgente: ${data.name}`, type: "messages", data: messages.filter((m) => getBrowser(m) === data.name) })}>
+                            {stats.browserData.map((entry) => <Cell key={`cell-${entry.name}`} fill={COLORS[stats.browserData.indexOf(entry) % COLORS.length]} />)}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+        </section>
 
-            <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
-
-              Sorgente Accessi (Browser)
-            </h3>
-            <div className="relative h-[200px] sm:h-[220px] w-full mt-2">
-
-              {isReady && (
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}><ResponsiveContainer width="100%" height="100%">
-
-                  <BarChart
-                    data={stats.browserData}
-                    layout="vertical"
-                    margin={{ top: 0, right: 0, left: -10, bottom: 0 }}
-                  >
-
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={false}
-                      stroke="#f3f4f6"
-                    />
-                    <XAxis
-                      type="number"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 10, fill: "#9ca3af", fontWeight: 600 }}
-                    />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{
-                        fontSize: 11,
-                        fill: "#4b5563",
-                        fontWeight: "bold",
-                      }}
-                      width={100}
-                    />
-                    <RechartsTooltip
-                      cursor={{ fill: "#f3f4f6" }}
-                      contentStyle={{
-                        borderRadius: "16px",
-                        border: "none",
-                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                      }}
-                    />
-                    <Bar
-                      dataKey="value"
-                      name="Visite"
-                      fill="#8b5cf6"
-                      radius={[0, 6, 6, 0]}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={(data) =>
-                        setDetailView({
-                          title: `Sorgente: ${data.name}`,
-                          type: "messages",
-                          data: messages.filter(
-                            (m) => getBrowser(m) === data.name,
-                          ),
-                        })
-                      }
-                    >
-
-                      {stats.browserData.map((entry) => (
-                        <Cell
-                          key={`cell-${entry.name}`}
-                          fill={
-                            COLORS[
-                              stats.browserData.indexOf(entry) % COLORS.length
-                            ]
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer></div>
-              )}
+        {/* SECTION 2: USERS & IDENTITIES */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 flex items-center justify-center shrink-0">
+              <UserIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Dispositivi & Identità</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Analisi avanzata sulle identità univoche e i macro profili.</p>
+              <p className="text-[10px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest mt-1">Dati da {Object.keys(profiles).length} profili / {macroProfiles.length} identità (non n.)</p>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
-        {/* Abandonment Rate UI */}
-        <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-          <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
-            Abbandoni per Campo
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">1. Quando?</span>
-              <span className="font-black text-red-500 text-lg">{stats.abandoned.when}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {kpis.filter(k => ["Dispositivi Unici", "Identità Unificate"].includes(k.label)).map((kpi, i) => (
+              <motion.div
+                key={kpi.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                onClick={kpi.onClick}
+                className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+              >
+                <div className="relative z-10 flex flex-col items-start">
+                  <div className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                    {kpi.label}
+                  </div>
+                  <div className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
+                    {kpi.value.toLocaleString()}
+                  </div>
+                </div>
+                <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
+                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
+                  <ArrowRight className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
+                </div>
+                <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`}></div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 3: VISITS & FORMS */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-pink-50 dark:bg-pink-900/40 border border-pink-100 dark:border-pink-800 flex items-center justify-center shrink-0">
+              <Globe className="w-5 h-5 text-pink-600 dark:text-pink-400" />
             </div>
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">2. Dove?</span>
-              <span className="font-black text-red-500 text-lg">{stats.abandoned.where}</span>
-            </div>
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">3. Chi cerchi?</span>
-              <span className="font-black text-red-500 text-lg">{stats.abandoned.lookingFor}</span>
-            </div>
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">Interrotto prima di scrivere</span>
-              <span className="font-black text-red-500 text-lg">{stats.abandoned.none}</span>
+            <div>
+              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Visite & Form</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Comportamento degli utenti durante la compilazione del form.</p>
+              <p className="text-[10px] font-bold text-pink-500 dark:text-pink-400 uppercase tracking-widest mt-1">Dati da {Array.isArray(visits) ? visits.length : 0} sessioni anonime / accessi completi monitorati.</p>
             </div>
           </div>
-        </div>
 
-        {/* Time spent UI */}
-        <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-          <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
-            Tempo medio di compilazione
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">1. Quando?</span>
-              <span className="font-black text-indigo-500 text-lg">{stats.avgTimeWhen}s</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {kpis.filter(k => ["Totale Utenti (Entrati)", "Conversione spotted"].includes(k.label)).map((kpi, i) => (
+              <motion.div
+                key={kpi.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                onClick={kpi.onClick}
+                className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 flex flex-col justify-between overflow-hidden relative border-pink-100 cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+              >
+                <div className="relative z-10 flex flex-col items-start">
+                  <div className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                    {kpi.label}
+                  </div>
+                  <div className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight transition-transform transform origin-left">
+                    {kpi.value.toLocaleString()}
+                  </div>
+                </div>
+                <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
+                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
+                  <ArrowRight className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
+                </div>
+                <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl transition-transform duration-500 pointer-events-none`}></div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
+            {/* Abandonment Rate UI */}
+            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+              <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+                Abbandoni per Campo
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">1. Quando?</span>
+                  <span className="font-black text-red-500 text-lg">{stats.abandoned.when}</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">2. Dove?</span>
+                  <span className="font-black text-red-500 text-lg">{stats.abandoned.where}</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">3. Chi cerchi?</span>
+                  <span className="font-black text-red-500 text-lg">{stats.abandoned.lookingFor}</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">Interrotto prima di scrivere</span>
+                  <span className="font-black text-red-500 text-lg">{stats.abandoned.none}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">2. Dove?</span>
-              <span className="font-black text-indigo-500 text-lg">{stats.avgTimeWhere}s</span>
-            </div>
-            <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-              <span className="font-bold text-gray-600 dark:text-gray-400">3. Chi cerchi?</span>
-              <span className="font-black text-indigo-500 text-lg">{stats.avgTimeLookingFor}s</span>
+
+            {/* Time spent UI */}
+            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+              <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+                Tempo medio di compilazione
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">1. Quando?</span>
+                  <span className="font-black text-indigo-500 text-lg">{stats.avgTimeWhen}s</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">2. Dove?</span>
+                  <span className="font-black text-indigo-500 text-lg">{stats.avgTimeWhere}s</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-600 dark:text-gray-400">3. Chi cerchi?</span>
+                  <span className="font-black text-indigo-500 text-lg">{stats.avgTimeLookingFor}s</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       {createPortal(
@@ -1388,6 +1300,101 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                           </div>
                         );
                       })}
+                    </div>
+                  </div>
+                )}
+
+                {/* VISITS VIEW */}
+                {detailView.type === "visits" && (
+                  <div className="flex flex-col w-full">
+                    <div className="hidden md:block p-8">
+                      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
+                        <table className="min-w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                                Date / Time
+                              </th>
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                                Status
+                              </th>
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                                Timings
+                              </th>
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                                Platform / Browser
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                            {detailView.data.map((v) => (
+                              <tr key={v.id} className="hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors">
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-gray-400" />
+                                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                                      {v.createdAt ? format(v.createdAt.toDate ? v.createdAt.toDate() : new Date(v.createdAt), "dd/MM/yyyy HH:mm") : "-"}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  {v.hasSubmitted ? (
+                                    <span className="px-2 py-1 text-xs font-bold bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg">Completato</span>
+                                  ) : (
+                                    <div className="flex flex-col gap-1">
+                                      <span className="px-2 py-1 text-xs font-bold bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg inline-block w-fit">Abbandonato</span>
+                                      {v.abandonedAfter && v.abandonedAfter !== 'none' && <span className="text-xs text-gray-500">dopo {v.abandonedAfter.replace('timeSpent', '')}</span>}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2">
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">W: {v.timeSpentWhen || 0}s</span>
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">D: {v.timeSpentWhere || 0}s</span>
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">C: {v.timeSpentLookingFor || 0}s</span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100 space-x-1 flex items-center">
+                                      {v.platform === "iOS" && <Smartphone className="inline w-4 h-4 text-gray-400"/>}
+                                      {v.platform === "Android" && <Smartphone className="inline w-4 h-4 text-green-500"/>}
+                                      {(v.platform === "Mac OS" || v.platform === "Windows") && <Monitor className="inline w-4 h-4 text-blue-500"/>}
+                                      <span>{v.platform || "-"}</span>
+                                    </span>
+                                    <span className="text-xs text-gray-500">{v.browser || "-"}</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div className="md:hidden flex flex-col p-4 gap-4">
+                      {detailView.data.map((v) => (
+                        <div key={v.id} className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4">
+                          <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <span className="text-xs font-bold text-gray-500 flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              {v.createdAt ? format(v.createdAt.toDate ? v.createdAt.toDate() : new Date(v.createdAt), "dd/MM/yyyy HH:mm") : "-"}
+                            </span>
+                            {v.hasSubmitted ? (
+                              <span className="px-2 py-1 text-xs font-bold bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg">Completato</span>
+                            ) : (
+                              <span className="px-2 py-1 text-xs font-bold bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg">Abbandonato</span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-gray-500 mb-1 block">Timings (s)</span>
+                            <div className="flex gap-2">
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">When: {v.timeSpentWhen || 0}</span>
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Where: {v.timeSpentWhere || 0}</span>
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Who: {v.timeSpentLookingFor || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

@@ -1456,14 +1456,17 @@ export default function Dashboard() {
           <Analytics
             messages={messages.filter((m) => {
               const pid = getDeviceProfile(m);
+              if (profiles[pid]?.ignoredFromAnalytics) return false;
               const macro = macroProfiles.find((mac) => mac.profileIds.includes(pid));
-              // Exclude if any profile in the macro group is ignored
-              return !macro?.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics);
+              if (macro && macro.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics)) return false;
+              return true;
             })}
             profiles={Object.fromEntries(
               Object.entries(profiles).filter(([pid, _]) => {
+                if (profiles[pid]?.ignoredFromAnalytics) return false;
                 const macro = macroProfiles.find((mac) => mac.profileIds.includes(pid));
-                return !macro?.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics);
+                if (macro && macro.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics)) return false;
+                return true;
               })
             )}
             macroProfiles={macroProfiles.filter((m) => !m.profileIds.some((pid) => profiles[pid]?.ignoredFromAnalytics))}
