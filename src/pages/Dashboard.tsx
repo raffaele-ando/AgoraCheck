@@ -50,9 +50,12 @@ import {
   Layers,
   Moon,
   Sun,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
+import StoryExportBeta from "../components/StoryExportBeta";
+import StoryTemplateConfig from "../components/StoryTemplateConfig";
 interface Message {
   id: string;
   lookingFor: string;
@@ -167,6 +170,7 @@ export default function Dashboard() {
   const [pageSize, setPageSize] = useState(20);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [exportingMessage, setExportingMessage] = useState<Message | null>(null);
   const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
   const [isProfileSelectMode, setIsProfileSelectMode] = useState(false);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -185,7 +189,7 @@ export default function Dashboard() {
     useState("");
   const [viewFilter, setViewFilter] = useState<"new" | "archived">("new");
   const [activeTab, setActiveTab] = useState<
-    "messages" | "profiles" | "analytics"
+    "messages" | "profiles" | "analytics" | "story_template"
   >("messages");
   const [isDarkMode, setIsDarkMode] = useState(
     () => localStorage.getItem("theme") === "dark",
@@ -1234,6 +1238,13 @@ export default function Dashboard() {
 
                     Analytics
                   </button>
+                  <button
+                    onClick={() => setActiveTab("story_template")}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "story_template" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  >
+
+                    Template Storie
+                  </button>
                 </div>
                 {/* Desktop Icons */}
                 <div className="hidden md:flex items-center gap-2 border-l border-gray-300 dark:border-gray-600 pl-2 ml-1">
@@ -1459,6 +1470,9 @@ export default function Dashboard() {
             visits={visits}
           />
         )}
+        {activeTab === "story_template" && (
+          <StoryTemplateConfig />
+        )}
         {activeTab === "messages" && (
           <>
 
@@ -1663,6 +1677,19 @@ export default function Dashboard() {
                           </span>
                         </p>
                       </div>
+                      
+                      <div className="mb-4">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExportingMessage(msg);
+                          }}
+                          className="text-xs bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 dark:hover:bg-indigo-800/60 text-indigo-600 dark:text-indigo-400 font-bold px-3 py-1.5 rounded-xl transition-colors border border-indigo-100 dark:border-indigo-800 flex items-center gap-1.5 w-fit shadow-sm"
+                        >
+                           <ImageIcon className="w-3.5 h-3.5" /> Esporta Storia (Beta)
+                        </button>
+                      </div>
+
                       <div className="space-y-4 mb-5">
 
                         {(msg.when || msg.where) && (
@@ -3679,6 +3706,13 @@ export default function Dashboard() {
             </div>
           </motion.div>
         </div>
+      )}
+      
+      {exportingMessage && (
+        <StoryExportBeta
+          message={exportingMessage}
+          onClose={() => setExportingMessage(null)}
+        />
       )}
     </div>
   );
