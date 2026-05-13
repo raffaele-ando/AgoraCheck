@@ -10,6 +10,9 @@ export interface BoxConfig {
   fontSize: number;
   color: string;
   enabled: boolean;
+  alignItems?: "flex-start" | "center" | "flex-end";
+  justifyContent?: "flex-start" | "center" | "flex-end";
+  textAlign?: "left" | "center" | "right";
 }
 
 export interface TemplateConfig {
@@ -19,9 +22,9 @@ export interface TemplateConfig {
 }
 
 export const DEFAULT_CONFIG: TemplateConfig = {
-  chi: { top: 20, left: 10, width: 80, height: 25, fontSize: 60, color: "#000000", enabled: true },
-  quando: { top: 50, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true },
-  dove: { top: 70, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true },
+  chi: { top: 20, left: 10, width: 80, height: 25, fontSize: 60, color: "#000000", enabled: true, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
+  quando: { top: 50, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
+  dove: { top: 70, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
 };
 
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
@@ -121,12 +124,13 @@ export const AutoScalingText = ({ text, config, showBorders, isActive, label }: 
         width: `${config.width}%`,
         height: `${config.height}%`,
         display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start", // Force Left Align
+        alignItems: config.alignItems || "flex-start",
+        justifyContent: config.justifyContent || "flex-start",
         overflow: "visible", // let it temporarily overflow during calculation
         border: showBorders ? (isActive ? "2px dashed #4f46e5" : "1px dashed rgba(0,0,0,0.3)") : "none",
         backgroundColor: showBorders ? (isActive ? "rgba(79, 70, 229, 0.1)" : "rgba(0,0,0,0.05)") : "transparent",
         boxSizing: showBorders ? "border-box" : "content-box",
+        zIndex: 10,
       }}
     >
       {showBorders && label && (
@@ -139,12 +143,13 @@ export const AutoScalingText = ({ text, config, showBorders, isActive, label }: 
         style={{
           color: config.color,
           fontSize: `${currentSize}px`,
-          textAlign: "left", // Force Left Align
+          textAlign: config.textAlign || "left",
           fontWeight: "bold", // Force Bold
           fontFamily: "Inter, sans-serif",
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
           lineHeight: "1.2",
+          width: "100%",
         }}
       >
         {text}
@@ -282,14 +287,29 @@ export default function StoryTemplateConfig() {
                     top: 0,
                     left: 0,
                     backgroundColor: "#fff",
-                    backgroundImage: backgroundImage ? `url(${backgroundImage})` : "none",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    overflow: "hidden",
                   }}
                 >
-                  <AutoScalingText text="Nuova posizione rilevata (Es: Roma, Italia). L'utente cerca questo." config={config.chi} showBorders={true} isActive={activeTab === 'chi'} label="Cosa/Chi" />
-                  <AutoScalingText text="Oggi, 14:30" config={config.quando} showBorders={true} isActive={activeTab === 'quando'} label="Quando" />
-                  <AutoScalingText text="Roma, Italia" config={config.dove} showBorders={true} isActive={activeTab === 'dove'} label="Dove" />
+                  {backgroundImage && (
+                    <img 
+                      src={backgroundImage} 
+                      alt="background" 
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        zIndex: 0,
+                      }} 
+                    />
+                  )}
+                  <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
+                    <AutoScalingText text="Nuova posizione rilevata (Es: Roma, Italia). L'utente cerca questo." config={config.chi} showBorders={true} isActive={activeTab === 'chi'} label="Cosa/Chi" />
+                    <AutoScalingText text="Oggi, 14:30" config={config.quando} showBorders={true} isActive={activeTab === 'quando'} label="Quando" />
+                    <AutoScalingText text="Roma, Italia" config={config.dove} showBorders={true} isActive={activeTab === 'dove'} label="Dove" />
+                  </div>
                 </div>
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
@@ -461,6 +481,35 @@ export default function StoryTemplateConfig() {
                           onChange={(e) => handleConfigChange("color", e.target.value)}
                           className="flex-1 w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono"
                         />
+                      </div>
+                    </div>
+                    <div className="col-span-2 grid grid-cols-2 gap-4 mt-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Allineamento Orizzontale</label>
+                        <select
+                          value={activeBox.textAlign || "left"}
+                          onChange={(e) => {
+                            handleConfigChange("textAlign", e.target.value);
+                            handleConfigChange("justifyContent", e.target.value === "center" ? "center" : e.target.value === "right" ? "flex-end" : "flex-start");
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
+                        >
+                          <option value="left">Sinistra</option>
+                          <option value="center">Centro</option>
+                          <option value="right">Destra</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Allineamento Verticale</label>
+                        <select
+                          value={activeBox.alignItems || "flex-start"}
+                          onChange={(e) => handleConfigChange("alignItems", e.target.value)}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
+                        >
+                          <option value="flex-start">In Alto</option>
+                          <option value="center">Al Centro</option>
+                          <option value="flex-end">In Basso</option>
+                        </select>
                       </div>
                     </div>
                   </div>

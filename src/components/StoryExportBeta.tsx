@@ -123,14 +123,29 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                     top: 0,
                     left: 0,
                     backgroundColor: "#fff",
-                    backgroundImage: backgroundImage ? `url(${backgroundImage})` : "none",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    overflow: "hidden",
                   }}
                 >
-                  <AutoScalingText text={message.lookingFor} config={config.chi} />
-                  <AutoScalingText text={message.when || ""} config={config.quando} />
-                  <AutoScalingText text={message.where || ""} config={config.dove} />
+                  {backgroundImage && (
+                    <img 
+                      src={backgroundImage} 
+                      alt="background" 
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        zIndex: 0,
+                      }} 
+                    />
+                  )}
+                  <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
+                    <AutoScalingText text={message.lookingFor} config={config.chi} />
+                    <AutoScalingText text={message.when || ""} config={config.quando} />
+                    <AutoScalingText text={message.where || ""} config={config.dove} />
+                  </div>
                 </div>
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center bg-gray-50">

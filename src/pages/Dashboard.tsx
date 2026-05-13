@@ -56,6 +56,8 @@ import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
 import StoryExportBeta from "../components/StoryExportBeta";
 import StoryTemplateConfig from "../components/StoryTemplateConfig";
+import AppSettings, { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../components/AppSettings";
+import { LinkWidgetCard } from "../components/LinkWidgetCard";
 interface Message {
   id: string;
   lookingFor: string;
@@ -189,7 +191,7 @@ export default function Dashboard() {
     useState("");
   const [viewFilter, setViewFilter] = useState<"new" | "archived">("new");
   const [activeTab, setActiveTab] = useState<
-    "messages" | "profiles" | "analytics" | "story_template"
+    "messages" | "profiles" | "analytics" | "story_template" | "settings"
   >("messages");
   const [isDarkMode, setIsDarkMode] = useState(
     () => localStorage.getItem("theme") === "dark",
@@ -1245,6 +1247,13 @@ export default function Dashboard() {
 
                     Template Storie
                   </button>
+                  <button
+                    onClick={() => setActiveTab("settings")}
+                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "settings" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  >
+
+                    Impostazioni
+                  </button>
                 </div>
                 {/* Desktop Icons */}
                 <div className="hidden md:flex items-center gap-2 border-l border-gray-300 dark:border-gray-600 pl-2 ml-1">
@@ -1476,8 +1485,12 @@ export default function Dashboard() {
         {activeTab === "story_template" && (
           <StoryTemplateConfig />
         )}
+        {activeTab === "settings" && (
+          <AppSettings />
+        )}
         {activeTab === "messages" && (
           <>
+            <LinkWidgetCard />
 
             {!isSelectMode && (
               <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8 pb-2 sm:pb-0">
