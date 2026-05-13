@@ -11,7 +11,7 @@ import { useVisitAnalytics } from "../hooks/useVisitAnalytics";
 function useTypewriter(words: string[], speed = 60, waitTime = 2000) {
   const [text, setText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const [loopNum, setLoopNum] = useState(0);
+  const [loopNum, setLoopNum] = useState(() => Math.floor(Math.random() * words.length));
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -33,7 +33,11 @@ function useTypewriter(words: string[], speed = 60, waitTime = 2000) {
         timer = setTimeout(() => setIsDeleting(true), waitTime);
       } else if (isDeleting && text === "") {
         setIsDeleting(false);
-        setLoopNum(loopNum + 1);
+        let nextIndex = Math.floor(Math.random() * words.length);
+        if (words.length > 1 && nextIndex === loopNum) {
+          nextIndex = (nextIndex + 1) % words.length;
+        }
+        setLoopNum(nextIndex);
       } else {
         timer = setTimeout(handleTyping, typeSpeed);
       }
@@ -75,6 +79,11 @@ export function ThemeCorkboard() {
     "Sulle scale di piazza Leo",
     "Dalla panchina gigante",
     "In biblioteca",
+  ]);
+
+  const lookingForPlaceholder = useTypewriter([
+    "Il ragazzo in piedi con il maglione rosso con i capelli biondi e un tatuaggio sul braccio",
+    "La ragazza con la borsa a tracolla",
   ]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -222,7 +231,7 @@ export function ThemeCorkboard() {
               onFocus={() => handleFocus("lookingFor")}
               onBlur={() => handleBlur("lookingFor")}
               className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors overflow-hidden py-1"
-              placeholder="Il tipo con lo zaino giallo..."
+              placeholder={`Es. ${lookingForPlaceholder}`}
             />
           </div>
 
