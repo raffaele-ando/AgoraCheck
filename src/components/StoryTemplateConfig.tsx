@@ -24,51 +24,64 @@ export const DEFAULT_CONFIG: TemplateConfig = {
   dove: { top: 70, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true },
 };
 
-export const initDB = () => {
-  return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open("StoryExportDB", 1);
-    request.onupgradeneeded = (e) => {
-      const db = (e.target as any).result;
-      if (!db.objectStoreNames.contains("images")) {
-        db.createObjectStore("images");
-      }
-    };
-    request.onsuccess = (e) => resolve((e.target as any).result);
-    request.onerror = (e) => reject((e.target as any).error);
-  });
-};
+import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 export const saveImageToDB = async (dataUrl: string) => {
-  const db = await initDB();
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction("images", "readwrite");
-    const store = tx.objectStore("images");
-    store.put(dataUrl, "bgImage");
-    tx.oncomplete = () => resolve();
-    tx.onerror = (e) => reject((e.target as any).error);
-  });
+  try {
+    const imgDoc = doc(db, "settings", "story_template_image");
+    await setDoc(imgDoc, { bgImage: dataUrl });
+  } catch (error) {
+    console.error("Error saving image to Firestore", error);
+    throw error;
+  }
 };
 
 export const loadImageFromDB = async () => {
-  const db = await initDB();
-  return new Promise<string | null>((resolve, reject) => {
-    const tx = db.transaction("images", "readonly");
-    const store = tx.objectStore("images");
-    const request = store.get("bgImage");
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = (e) => reject((e.target as any).error);
-  });
+  try {
+    const imgDoc = doc(db, "settings", "story_template_image");
+    const snapshot = await getDoc(imgDoc);
+    if (snapshot.exists()) {
+      return snapshot.data().bgImage as string;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error loading image from Firestore", error);
+    return null;
+  }
 };
 
 export const clearImageFromDB = async () => {
-  const db = await initDB();
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction("images", "readwrite");
-    const store = tx.objectStore("images");
-    store.delete("bgImage");
-    tx.oncomplete = () => resolve();
-    tx.onerror = (e) => reject((e.target as any).error);
-  });
+  try {
+    const imgDoc = doc(db, "settings", "story_template_image");
+    await deleteDoc(imgDoc);
+  } catch (error) {
+    console.error("Error clearing image from Firestore", error);
+    throw error;
+  }
+};
+
+export const saveConfigToDB = async (config: TemplateConfig) => {
+  try {
+    const configDoc = doc(db, "settings", "story_template_config");
+    await setDoc(configDoc, { config });
+  } catch (error) {
+    console.error("Error saving config to Firestore", error);
+    throw error;
+  }
+};
+
+export const loadConfigFromDB = async () => {
+  try {
+    const configDoc = doc(db, "settings", "story_template_config");
+    const snapshot = await getDoc(configDoc);
+    if (snapshot.exists() && snapshot.data().config) {
+      return snapshot.data().config as TemplateConfig;
+    }
+  } catch (error) {
+    console.error("Error loading config from Firestore", error);
+  }
+  return null;
 };
 
 export const AutoScalingText = ({ text, config, showBorders, isActive, label }: { text: string; config: BoxConfig; showBorders?: boolean; isActive?: boolean; label?: string; }) => {
@@ -155,23 +168,19 @@ export default function StoryTemplateConfig() {
       if (img) setBackgroundImage(img);
       setIsDBReady(true);
     }).catch(err => {
-      console.warn("Could not load image from IndexedDB", err);
+      console.warn("Could not load image from DB", err);
       setIsDBReady(true);
     });
 
-    const savedConfig = localStorage.getItem("story_export_config");
-    if (savedConfig) {
-      try {
-        const parsed = JSON.parse(savedConfig);
-        if (parsed.chi && parsed.quando && parsed.dove) {
-           setConfig(parsed);
-        } else {
-           setConfig(DEFAULT_CONFIG);
-        }
-      } catch (e) {
+    loadConfigFromDB().then((savedConfig) => {
+      if (savedConfig) {
+        setConfig(savedConfig);
+      } else {
         setConfig(DEFAULT_CONFIG);
       }
-    }
+    }).catch((e) => {
+      setConfig(DEFAULT_CONFIG);
+    });
   }, []);
 
   useEffect(() => {
@@ -194,26 +203,50 @@ export default function StoryTemplateConfig() {
       [activeTab]: { ...config[activeTab], [key]: value } 
     };
     setConfig(newConfig);
-    localStorage.setItem("story_export_config", JSON.stringify(newConfig));
-    setSavedStatus(true);
-    setTimeout(() => setSavedStatus(false), 2000);
+    saveConfigToDB(newConfig).then(() => {
+      setSavedStatus(true);
+      setTimeout(() => setSavedStatus(false), 2000);
+    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = async (e) => {
+      reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
-        setBackgroundImage(dataUrl);
-        try {
-          await saveImageToDB(dataUrl);
-          setSavedStatus(true);
-          setTimeout(() => setSavedStatus(false), 2000);
-        } catch (err) {
-          console.warn("Could not save image to IndexedDB", err);
-          alert("Immagine troppo grande per essere salvata definitivamente.");
-        }
+        
+        // Compress image using canvas before saving
+        const img = new Image();
+        img.onload = async () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const maxWidth = 1080;
+          
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedUrl = canvas.toDataURL("image/jpeg", 0.7);
+            setBackgroundImage(compressedUrl);
+            try {
+              await saveImageToDB(compressedUrl);
+              setSavedStatus(true);
+              setTimeout(() => setSavedStatus(false), 2000);
+            } catch (err) {
+              console.warn("Could not save image to Firestore", err);
+              alert("Errore durante il salvataggio o immagine ancora troppo grande per il database.");
+            }
+          }
+        };
+        img.src = dataUrl;
       };
       reader.readAsDataURL(file);
     }

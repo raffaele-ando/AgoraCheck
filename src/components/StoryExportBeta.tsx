@@ -6,6 +6,7 @@ import {
   TemplateConfig,
   DEFAULT_CONFIG,
   loadImageFromDB,
+  loadConfigFromDB,
   AutoScalingText,
 } from "./StoryTemplateConfig";
 
@@ -35,23 +36,19 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
         setIsDBReady(true);
       })
       .catch((err) => {
-        console.warn("Could not load image from IndexedDB", err);
+        console.warn("Could not load image from DB", err);
         setIsDBReady(true);
       });
 
-    const savedConfig = localStorage.getItem("story_export_config");
-    if (savedConfig) {
-      try {
-        const parsed = JSON.parse(savedConfig);
-        if (parsed.chi && parsed.quando && parsed.dove) {
-           setConfig(parsed);
-        } else {
-           setConfig(DEFAULT_CONFIG);
-        }
-      } catch (e) {
+    loadConfigFromDB().then((savedConfig) => {
+      if (savedConfig) {
+        setConfig(savedConfig);
+      } else {
         setConfig(DEFAULT_CONFIG);
       }
-    }
+    }).catch((e) => {
+      setConfig(DEFAULT_CONFIG);
+    });
   }, []);
 
   useEffect(() => {
