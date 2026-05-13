@@ -107,9 +107,9 @@ export function ThemeCorkboard() {
   return (
     <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] overflow-hidden">
       <motion.div
-        initial={{ rotate: -2, scale: 0.9 }}
-        animate={{ rotate: 1, scale: 0.95 }}
-        className="relative w-full max-w-[340px] sm:max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-4 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)](0,0,0,0.9),inset_0_0_20px_rgba(255,255,255,0.05)] border border-[#000000]/20 mx-auto mt-2 transition-colors"
+        initial={{ rotate: -2, scale: 0.95 }}
+        animate={{ rotate: 1, scale: 1 }}
+        className="relative w-[92%] sm:w-full max-w-md bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-5 sm:p-8 pb-6 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mx-auto mt-2 transition-colors"
       >
         {/* Fix per il pezzo di scotch in alto: metto un bello z-index e levo il mix blend che bugga con il backdrop-blur su mobile e safari */}
         <div
@@ -122,7 +122,7 @@ export function ThemeCorkboard() {
 
           <div>
             <h2
-              className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none transition-colors"
+              className="text-3xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none transition-colors"
               style={{ fontFamily: "Impact, sans-serif" }}
             >
               WANTED!
@@ -141,8 +141,8 @@ export function ThemeCorkboard() {
           className="space-y-3 sm:space-y-5 font-mono text-[#000000] transition-colors"
         >
           <div className="px-2">
-            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando?
+            <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
+              <Clock className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando?
               (Opz.)
             </label>
             <TextareaAutosize
@@ -151,14 +151,14 @@ export function ThemeCorkboard() {
               onChange={(e) => setForm({ ...form, when: e.target.value })}
               onFocus={() => handleFocus("when")}
               onBlur={() => handleBlur("when")}
-              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors resize-none overflow-hidden"
+              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors resize-none overflow-hidden"
               placeholder={`Es. ${whenPlaceholder}`}
             />
           </div>
 
           <div className="px-2">
-            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove?
+            <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
+              <MapPin className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove?
               (Opz.)
             </label>
             <TextareaAutosize
@@ -167,27 +167,27 @@ export function ThemeCorkboard() {
               onChange={(e) => setForm({ ...form, where: e.target.value })}
               onFocus={() => handleFocus("where")}
               onBlur={() => handleBlur("where")}
-              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors resize-none overflow-hidden"
+              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors resize-none overflow-hidden"
               placeholder={`Es. ${wherePlaceholder}`}
             />
           </div>
 
-          <div className="p-2 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1 transition-colors">
-            <div className="flex items-center justify-between mb-0.5">
-              <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] uppercase transition-colors">
-                <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 3. Il
+          <div className="p-3 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1 transition-colors">
+            <div className="flex items-center justify-between mb-1">
+              <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] uppercase transition-colors">
+                <Instagram className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> 3. Il
                 tuo Instagram
               </label>
-              <span className="text-[8px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1 py-0.5 rounded transition-colors">
+              <span className="text-[10px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1.5 py-0.5 rounded transition-colors tracking-wider">
                 OPZ.
               </span>
             </div>
-            <p className="text-[9px] leading-tight text-[#000000]/60 mb-1 font-medium transition-colors">
+            <p className="text-[11px] leading-tight text-[#000000]/60 mb-2 font-medium transition-colors">
               Non sarà pubblico. Verrai avvisato in privato se qualcuno
               risponde, utilissimo per non perderti gli aggiornamenti!
             </p>
-            <div className="relative flex items-center border-b border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-0.5">
-              <span className="text-sm font-bold text-[#000000]/40 pointer-events-none mr-1.5 transition-colors">
+            <div className="relative flex items-center border-b border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-1">
+              <span className="text-base font-bold text-[#000000]/40 pointer-events-none mr-1.5 transition-colors">
                 @
               </span>
               <input
@@ -203,15 +203,15 @@ export function ThemeCorkboard() {
                       .replace(/[^a-z0-9._]/g, ""),
                   })
                 }
-                className="w-full bg-transparent outline-none text-sm sm:text-base font-bold placeholder:text-[#000000]/40 transition-colors"
+                className="w-full bg-transparent outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors"
                 placeholder="tuo.tag"
               />
             </div>
           </div>
 
-          <div className="px-2 relative">
-            <label className="flex items-center text-[10px] sm:text-xs font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" /> 4. Chi
+          <div className="px-2 relative mt-1 sm:mt-0">
+            <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
+              <Search className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> 4. Chi
               cerchi? *
             </label>
             <TextareaAutosize
@@ -221,18 +221,18 @@ export function ThemeCorkboard() {
               onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
               onFocus={() => handleFocus("lookingFor")}
               onBlur={() => handleBlur("lookingFor")}
-              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-sm sm:text-base placeholder:text-[#000000]/40 font-bold transition-colors overflow-hidden py-1"
+              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors overflow-hidden py-1"
               placeholder="Il tipo con lo zaino giallo..."
             />
           </div>
 
-          <div className="flex flex-col mt-2 sm:mt-6">
+          <div className="flex flex-col mt-4 sm:mt-6">
             <div className="flex justify-center">
               <button
                 disabled={
                   !form.lookingFor || isSubmitting || isSuccess || cooldown > 0
                 }
-                className="w-full max-w-[180px] sm:max-w-[200px] mt-1 py-2 sm:py-3 border-[3px] sm:border-4 border-[#000000] text-[#000000] font-black uppercase text-base sm:text-xl hover:bg-[#DC5F00]:bg-orange-600 hover:border-[#DC5F00]:border-orange-600 hover:text-[#F3ECE0]:text-white transition-colors disabled:opacity-50 relative z-10 bg-transparent"
+                className="w-full max-w-[220px] mt-1 py-3 sm:py-3 border-4 border-[#000000] text-[#000000] font-black uppercase text-lg sm:text-xl hover:bg-[#DC5F00]:bg-orange-600 hover:border-[#DC5F00]:border-orange-600 hover:text-[#F3ECE0]:text-white transition-colors disabled:opacity-50 relative z-10 bg-transparent"
               >
                 {isSubmitting
                   ? "Inviando..."
