@@ -127,7 +127,7 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
               {fallbackText}
             </h1>
             {agoraOnlyUrl ? (
-               <img src={agoraOnlyUrl} alt="Agorà" className="w-1/4 object-contain -mt-1 sm:-mt-2 dark:invert" />
+               <img src={agoraOnlyUrl} alt="Agorà" className="w-[40%] object-contain -mt-1 sm:-mt-2 dark:invert" />
             ) : (
                <h1 className="text-sm sm:text-lg md:text-xl font-black tracking-tighter text-black dark:text-white leading-none text-center -mt-1 sm:-mt-2">
                  <span className="text-[#DC5F00]">AGORÀ</span>
