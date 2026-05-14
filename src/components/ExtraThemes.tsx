@@ -124,26 +124,55 @@ export function ThemeCorkboard() {
   const [lastSubmit, setLastSubmit] = useState(0);
   const [localError, setLocalError] = useState("");
 
-  const whenPlaceholder = useTypewriter([
+  const isIt = (() => {
+    if (typeof navigator !== "undefined" && navigator.language) {
+      return navigator.language.toLowerCase().startsWith('it');
+    }
+    return true;
+  })();
+
+  const whenPlaceholderIt = [
     "9 Maggio alle 9:35",
     "12 Ottobre alle 14:15",
     "Lunedì 3 Aprile alle 11:30",
     "Giovedì 15 Novembre alle 18:20",
     "22 Dicembre verso le 16:45",
-  ]);
+  ];
+  const whenPlaceholderEn = [
+    "May 9th at 9:35 AM",
+    "October 12th at 2:15 PM",
+    "Monday, April 3rd at 11:30 AM",
+    "Thursday, Nov 15th at 6:20 PM",
+    "December 22nd around 4:45 PM",
+  ];
 
-  const wherePlaceholder = useTypewriter([
+  const wherePlaceholderIt = [
     "Davanti all'aula 4.0.1",
     "Alla fila per la spritzeria",
     "Sulle scale di piazza Leo",
     "Dalla panchina gigante",
     "In biblioteca",
-  ]);
+  ];
+  const wherePlaceholderEn = [
+    "In front of room 4.0.1",
+    "In line for drinks",
+    "On the stairs at the piazza",
+    "By the giant bench",
+    "At the library",
+  ];
 
-  const lookingForPlaceholder = useTypewriter([
+  const lookingForPlaceholderIt = [
     "Il ragazzo in piedi con il maglione rosso con i capelli biondi e un tatuaggio sul braccio",
     "La ragazza con la borsa a tracolla",
-  ]);
+  ];
+  const lookingForPlaceholderEn = [
+    "The guy standing in the red sweater with blonde hair and an arm tattoo",
+    "The girl with the shoulder bag",
+  ];
+
+  const whenPlaceholder = useTypewriter(isIt ? whenPlaceholderIt : whenPlaceholderEn);
+  const wherePlaceholder = useTypewriter(isIt ? wherePlaceholderIt : wherePlaceholderEn);
+  const lookingForPlaceholder = useTypewriter(isIt ? lookingForPlaceholderIt : lookingForPlaceholderEn);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -163,7 +192,7 @@ export function ThemeCorkboard() {
     if (form.type === "sondaggio") {
       const validOpts = form.pollOptions.filter((o) => o.trim());
       if (validOpts.length < 2) {
-        setLocalError("Devi inserire almeno 2 opzioni per il sondaggio.");
+        setLocalError(isIt ? "Devi inserire almeno 2 opzioni per il sondaggio." : "You must provide at least 2 options for the poll.");
         return;
       }
     }
@@ -171,7 +200,7 @@ export function ThemeCorkboard() {
     // Client-side rate limiting
     if (cooldown > 0) {
       setLocalError(
-        `Aspetta ${cooldown} secondi prima di inviare un altro form!`,
+        isIt ? `Aspetta ${cooldown} secondi prima di inviare un altro form!` : `Wait ${cooldown} seconds before submitting again!`
       );
       return;
     }
@@ -186,7 +215,7 @@ export function ThemeCorkboard() {
           setForm({ lookingFor: "", when: "", where: "", instagram: "", city: form.city, area: form.area, type: form.type, pollOptions: ["", ""] });
         }
       })
-      .catch((err) => setLocalError(err.message || "Errore sconosciuto"));
+      .catch((err) => setLocalError(err.message || (isIt ? "Errore sconosciuto" : "Unknown error")));
   };
 
   const displayError = localError || error;
@@ -228,7 +257,7 @@ export function ThemeCorkboard() {
               className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none transition-colors"
               style={{ fontFamily: "Impact, sans-serif" }}
             >
-              {form.type === "spotted" ? "WANTED!" : "SONDAGGIO"}
+              {form.type === "spotted" ? "WANTED!" : (isIt ? "SONDAGGIO" : "POLL")}
             </h2>
           </div>
         </div>
@@ -247,8 +276,7 @@ export function ThemeCorkboard() {
             <>
               <div className="px-2">
                 <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-                  <Clock className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> 1. Quando?
-                  (Opz.)
+                  <Clock className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> {isIt ? "1. Quando? (Opz.)" : "1. When? (Opt.)"}
                 </label>
                 <TextareaAutosize
                   minRows={1}
@@ -258,14 +286,13 @@ export function ThemeCorkboard() {
                   onFocus={() => handleFocus("when")}
                   onBlur={() => handleBlur("when")}
                   className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors resize-none overflow-y-auto"
-                  placeholder={`Es. ${whenPlaceholder}`}
+                  placeholder={isIt ? `Es. ${whenPlaceholder}` : `E.g. ${whenPlaceholder}`}
                 />
               </div>
 
               <div className="px-2">
                 <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-                  <MapPin className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> 2. Dove?
-                  (Opz.)
+                  <MapPin className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> {isIt ? "2. Dove? (Opz.)" : "2. Where? (Opt.)"}
                 </label>
                 <TextareaAutosize
                   minRows={1}
@@ -275,7 +302,7 @@ export function ThemeCorkboard() {
                   onFocus={() => handleFocus("where")}
                   onBlur={() => handleBlur("where")}
                   className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors resize-none overflow-y-auto"
-                  placeholder={`Es. ${wherePlaceholder}`}
+                  placeholder={isIt ? `Es. ${wherePlaceholder}` : `E.g. ${wherePlaceholder}`}
                 />
               </div>
             </>
@@ -284,16 +311,14 @@ export function ThemeCorkboard() {
           <div className="p-3 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1 transition-colors">
             <div className="flex items-center justify-between mb-1">
               <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] uppercase transition-colors">
-                <Instagram className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? "3" : "1"}. Il
-                tuo Instagram
+                <Instagram className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? "3" : "1"}. {isIt ? "Il tuo Instagram" : "Your Instagram"}
               </label>
               <span className="text-[10px] font-bold bg-[#DC5F00]/20 text-[#DC5F00] px-1.5 py-0.5 rounded transition-colors tracking-wider">
-                OPZ.
+                {isIt ? "OPZ." : "OPT."}
               </span>
             </div>
             <p className="text-[11px] leading-tight text-[#000000]/60 mb-2 font-medium transition-colors">
-              Non sarà pubblico. Verrai avvisato in privato se qualcuno
-              risponde, utilissimo per non perderti gli aggiornamenti!
+              {isIt ? "Non sarà pubblico. Verrai avvisato in privato se qualcuno risponde, utilissimo per non perderti gli aggiornamenti!" : "It won't be public. You will be notified in private if someone replies, very useful to not miss updates!"}
             </p>
             <div className="relative flex items-center border-b border-[#000000]/20 focus-within:border-[#DC5F00] transition-colors pb-1">
               <span className="text-base font-bold text-[#000000]/40 pointer-events-none mr-1.5 transition-colors">
@@ -313,14 +338,14 @@ export function ThemeCorkboard() {
                   })
                 }
                 className="w-full bg-transparent outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors"
-                placeholder="tuo.tag"
+                placeholder={isIt ? "tuo.tag" : "your.tag"}
               />
             </div>
           </div>
 
           <div className="px-2 relative mt-0">
             <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-              <Search className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? "4. Chi cerchi? *" : "2. Fai una domanda *"}
+              <Search className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? (isIt ? "4. Chi cerchi? *" : "4. Who are you looking for? *") : (isIt ? "2. Fai una domanda *" : "2. Ask a question *")}
             </label>
             <TextareaAutosize
               required
@@ -331,14 +356,14 @@ export function ThemeCorkboard() {
               onFocus={() => handleFocus("lookingFor")}
               onBlur={() => handleBlur("lookingFor")}
               className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors py-1 overflow-y-auto"
-              placeholder={form.type === "spotted" ? `Es. ${lookingForPlaceholder}` : "Es. Dove si mangia meglio in Bovisa?"}
+              placeholder={form.type === "spotted" ? (isIt ? `Es. ${lookingForPlaceholder}` : `E.g. ${lookingForPlaceholder}`) : (isIt ? "Es. Dove si mangia meglio in Bovisa?" : "E.g. What's the best food near campus?")}
             />
           </div>
 
           {form.type === "sondaggio" && (
             <div className="px-2">
               <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-2 uppercase transition-colors">
-                <List className="w-4 h-4 mr-1.5" /> 3. Opzioni (Min 2, Max 4)
+                <List className="w-4 h-4 mr-1.5" /> {isIt ? "3. Opzioni (Min 2, Max 4)" : "3. Options (Min 2, Max 4)"}
               </label>
               <div className="space-y-2">
                 {form.pollOptions.map((opt, i) => (
@@ -352,7 +377,7 @@ export function ThemeCorkboard() {
                         setForm({ ...form, pollOptions: newOpts });
                       }}
                       className="w-full bg-[#111111]/5 border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-sm font-bold placeholder:text-[#000000]/40 transition-colors px-2 py-1.5"
-                      placeholder={`Opzione ${i + 1}`}
+                      placeholder={isIt ? `Opzione ${i + 1}` : `Option ${i + 1}`}
                     />
                     {i >= 2 && (
                       <button
@@ -374,7 +399,7 @@ export function ThemeCorkboard() {
                     onClick={() => setForm({ ...form, pollOptions: [...form.pollOptions, ""] })}
                     className="text-xs font-bold text-[#DC5F00] uppercase mt-2 opacity-80 hover:opacity-100 transition-opacity"
                   >
-                    + Aggiungi opzione
+                    {isIt ? "+ Aggiungi opzione" : "+ Add option"}
                   </button>
                 )}
               </div>
@@ -390,12 +415,12 @@ export function ThemeCorkboard() {
                 className="w-full max-w-[220px] mt-1 py-3 border-4 border-[#000000] text-[#000000] font-black uppercase text-xl hover:bg-[#DC5F00]:bg-orange-600 hover:border-[#DC5F00]:border-orange-600 hover:text-[#F3ECE0]:text-white transition-colors disabled:opacity-50 relative z-10 bg-transparent"
               >
                 {isSubmitting
-                  ? "Inviando..."
+                  ? (isIt ? "Inviando..." : "Sending...")
                   : isSuccess
-                    ? "Inviato!"
+                    ? (isIt ? "Inviato!" : "Sent!")
                     : cooldown > 0
-                      ? `Attendi ${cooldown}s`
-                      : "Invia"}
+                      ? (isIt ? `Attendi ${cooldown}s` : `Wait ${cooldown}s`)
+                      : (isIt ? "Invia" : "Submit")}
               </button>
             </div>
             <div className="w-full text-left mt-3 pl-2">

@@ -39,21 +39,39 @@ function useInstagramEscape() {
 }
 
 function InstagramBlocker() {
+  const isIt = (() => {
+    if (typeof navigator !== "undefined" && navigator.language) {
+      return navigator.language.toLowerCase().startsWith('it');
+    }
+    return true;
+  })();
+
   return (
     <div className="fixed inset-0 bg-[#F3ECE0] z-[9999] p-8 flex flex-col items-center justify-center text-center transition-colors">
       <div className="w-20 h-20 bg-[#DC5F00] text-[#F3ECE0] rounded-2xl flex items-center justify-center mb-6 shadow-xl">
         <ExternalLink className="w-10 h-10" />
       </div>
       <h1 className="text-2xl font-black text-[#000000] mb-4 uppercase transition-colors">
-        Esci da Instagram
+        {isIt ? "Esci da Instagram" : "Exit Instagram"}
       </h1>
       <p className="text-[#000000] font-medium mb-8 max-w-sm transition-colors">
-        Il browser interno di Instagram blocca alcune funzionalità di sicurezza
-        necessarie per l'anonimato.
-        <br />
-        <br />
-        Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona{" "}
-        <b>"Apri nel browser del sistema"</b>.
+        {isIt ? (
+          <>
+            Il browser interno di Instagram blocca alcune funzionalità di sicurezza necessarie per l'anonimato.
+            <br />
+            <br />
+            Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona{" "}
+            <b>"Apri nel browser del sistema"</b>.
+          </>
+        ) : (
+          <>
+            Instagram's in-app browser blocks some security features needed for anonymity.
+            <br />
+            <br />
+            Tap the three dots in the top right <b>(⋮)</b> and select{" "}
+            <b>"Open in system browser"</b>.
+          </>
+        )}
       </p>
     </div>
   );
@@ -1100,7 +1118,14 @@ export function useSubmitSpotted() {
       ) {
         if (isMountedRef.current) {
           setError(
-            "Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.",
+            (() => {
+              if (typeof navigator !== "undefined" && navigator.language) {
+                if (!navigator.language.toLowerCase().startsWith('it')) {
+                  return "Don't rush! You must wait 30 seconds between messages to prevent spam.";
+                }
+              }
+              return "Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.";
+            })()
           );
           setCooldown(30);
         }
@@ -1108,7 +1133,14 @@ export function useSubmitSpotted() {
       } else {
         console.error(err);
         if (isMountedRef.current)
-          setError("Errore durante l'invio. Riprova più tardi.");
+          setError((() => {
+            if (typeof navigator !== "undefined" && navigator.language) {
+              if (!navigator.language.toLowerCase().startsWith('it')) {
+                return "Error while sending. Try again later.";
+              }
+            }
+            return "Errore durante l'invio. Riprova più tardi.";
+          })());
       }
       return false;
     } finally {

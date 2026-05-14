@@ -172,10 +172,21 @@ function WheelPicker({
   );
 }
 
+const useIsItalian = () => {
+  const [isIt, setIsIt] = useState(true);
+  useEffect(() => {
+    if (navigator.language) {
+      setIsIt(navigator.language.toLowerCase().startsWith('it'));
+    }
+  }, []);
+  return isIt;
+};
+
 export function HeaderVariations({ city, setCity, area, setArea, type, setType, hasInteracted = false }: Props) {
   const [isHovered10, setIsHovered10] = useState(false);
   const [forceRetract, setForceRetract] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isIt = useIsItalian();
 
   useEffect(() => {
     const handleClickOutside = (e: Event) => {
@@ -228,13 +239,18 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    itemHeight={26}
                    visibleItems={3}
                    itemClassName="text-[10px] sm:text-[11px] tracking-tight uppercase font-bold"
+                   renderItem={(opt, isActive) => {
+                     let display = opt;
+                     if (!isIt && opt === "sondaggio") display = "poll";
+                     return <span className="truncate w-full text-center">{display}</span>;
+                   }}
                  />
               </div>
            </div>
            
            <div className={`w-[140px] sm:w-[150px] bg-[#111111] text-[#E8DEC8] pr-4 pl-3 py-4 rounded-l-2xl shadow-xl border border-r-0 border-black/20 origin-right transform transition-all duration-500 ease-out pointer-events-auto flex flex-col relative ${shouldRetract ? 'translate-x-[60%] rotate-0 cursor-pointer shadow-md' : 'translate-x-0 rotate-1 hover:rotate-0'}`}>
               <div className={`transition-opacity duration-300 w-full flex flex-col items-end ${shouldRetract ? 'opacity-40' : 'opacity-100'}`}>
-                 <div className="font-mono text-[10px] uppercase opacity-80 mb-2 border-b border-white/10 pb-1 font-bold tracking-wider w-full text-right text-[#DC5F00] overflow-hidden text-ellipsis whitespace-nowrap">Città</div>
+                 <div className="font-mono text-[10px] uppercase opacity-80 mb-2 border-b border-white/10 pb-1 font-bold tracking-wider w-full text-right text-[#DC5F00] overflow-hidden text-ellipsis whitespace-nowrap">{isIt ? "Città" : "City"}</div>
                  <WheelPicker 
                    className="w-full"
                    options={CITIES}
@@ -255,10 +271,10 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
 
            <div className={`w-[140px] sm:w-[150px] bg-[#DC5F00] text-white pr-4 pl-3 py-4 rounded-l-2xl shadow-xl border border-r-0 border-black/20 origin-right transform transition-all duration-500 ease-out pointer-events-auto flex flex-col relative ${shouldRetract ? 'translate-x-[60%] -rotate-3 cursor-pointer shadow-md' : 'translate-x-0 -rotate-1 hover:rotate-0'}`}>
               <div className={`transition-opacity duration-300 w-full flex flex-col items-end ${shouldRetract ? 'opacity-40' : 'opacity-100'}`}>
-                 <div className="font-mono text-[10px] uppercase opacity-80 mb-2 border-b border-white/10 pb-1 font-bold tracking-wider w-full text-right text-black overflow-hidden text-ellipsis whitespace-nowrap">Ateneo / Zona</div>
+                 <div className="font-mono text-[10px] uppercase opacity-80 mb-2 border-b border-white/10 pb-1 font-bold tracking-wider w-full text-right text-black overflow-hidden text-ellipsis whitespace-nowrap">{isIt ? "Ateneo / Zona" : "Uni / Area"}</div>
                  <WheelPicker 
                    key={city}
-                   className="w-full w-full"
+                   className="w-full"
                    options={currentAreas}
                    value={currentAreas.includes(area) ? area : currentAreas[0]}
                    onChange={(v) => setArea(v)}
@@ -267,9 +283,10 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    itemClassName="text-[9px] sm:text-[10px] tracking-tight uppercase font-bold"
                    renderItem={(opt, isActive) => {
                      const isCity = CITIES.includes(opt);
+                     const label = isIt ? `TUTTA ${opt}` : `ALL ${opt}`;
                      return (
                        <span className={`flex items-center justify-center w-full truncate ${isCity ? 'bg-black/20 text-white px-2 py-0.5 rounded-md border border-white/20 shadow-sm font-black tracking-widest text-[9px]' : ''}`}>
-                         {isCity ? `TUTTA ${opt}` : opt}
+                         {isCity ? label : opt}
                        </span>
                      );
                    }}
