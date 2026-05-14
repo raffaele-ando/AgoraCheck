@@ -268,8 +268,8 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    renderItem={(opt, isActive) => {
                      const isCity = CITIES.includes(opt);
                      return (
-                       <span className={`flex items-center justify-center w-full truncate ${isCity ? 'bg-black/90 text-[#DC5F00] px-2 py-1 rounded-lg border-2 border-[#DC5F00] shadow-[0_0_8px_rgba(220,95,0,0.5)] tracking-widest text-[8px] sm:text-[9px]' : ''}`}>
-                         {isCity ? `🔸 ${opt} (TUTTA) 🔸` : opt}
+                       <span className={`flex items-center justify-center w-full truncate ${isCity ? 'bg-black/20 text-white px-2 py-0.5 rounded-md border border-white/20 shadow-sm font-black tracking-widest text-[9px]' : ''}`}>
+                         {isCity ? `TUTTA ${opt}` : opt}
                        </span>
                      );
                    }}

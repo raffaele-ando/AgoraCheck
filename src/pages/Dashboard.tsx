@@ -1498,7 +1498,7 @@ export default function Dashboard() {
           <StoryTemplateConfig />
         )}
         {activeTab === "settings" && (
-          <AppSettings />
+          <AppSettings isSuperAdmin={isSuperAdmin} />
         )}
         {activeTab === "messages" && (
           <>

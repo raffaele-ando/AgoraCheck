@@ -4,7 +4,7 @@ import { CheckCircle2, Clock, MapPin, Instagram, Search, List } from "lucide-rea
 import { useSubmitSpotted } from "../pages/Home";
 import { motion } from "motion/react";
 import { Logo } from "./Logo";
-import { Link } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { useVisitAnalytics } from "../hooks/useVisitAnalytics";
 import { HeaderVariations, LOCATIONS } from "./HeaderVariations";
 
@@ -67,24 +67,47 @@ export function ThemeCorkboard() {
     type: "spotted" | "sondaggio";
     pollOptions: string[];
   }>(() => {
+    let initCity = "MILANO";
+    let initArea = "";
+    let initMode: "spotted" | "sondaggio" = "spotted";
+
+    const pathSegments = window.location.pathname.split('/').filter(Boolean).map(s => decodeURIComponent(s).toUpperCase().replace(/-/g, ' '));
     const searchParams = new URLSearchParams(window.location.search);
+    
+    // Check parameters in path
+    for (const seg of pathSegments) {
+      if (seg === "SPOTTED" || seg === "SONDAGGIO") {
+         initMode = seg.toLowerCase() as "spotted" | "sondaggio";
+      } else if (Object.keys(LOCATIONS).includes(seg)) {
+         initCity = seg;
+      } else {
+         // check if it's an area
+         for (const [city, areas] of Object.entries(LOCATIONS)) {
+           if (areas.includes(seg)) {
+              initCity = city;
+              initArea = seg;
+              break;
+           }
+         }
+      }
+    }
+
+    // Fallbacks from search parameters (for backwards compatibility)
     const paramCity = searchParams.get('city')?.toUpperCase();
     const paramArea = searchParams.get('area')?.toUpperCase();
     const paramType = searchParams.get('type') || searchParams.get('mode');
 
-    let initCity = "MILANO";
-    if (paramCity && Object.keys(LOCATIONS).includes(paramCity)) {
-      initCity = paramCity;
-    }
-    
-    let initArea = initCity;
-    if (paramArea && LOCATIONS[initCity]?.includes(paramArea)) {
+    if (paramCity && Object.keys(LOCATIONS).includes(paramCity)) initCity = paramCity;
+    if (paramArea && Object.entries(LOCATIONS).some(([_, areas]) => areas.includes(paramArea))) {
       initArea = paramArea;
+      for (const [city, areas] of Object.entries(LOCATIONS)) {
+        if (areas.includes(paramArea)) { initCity = city; break; }
+      }
     }
+    if (paramType === "sondaggio" || paramType === "spotted") initMode = paramType as any;
 
-    let initMode: "spotted" | "sondaggio" = "spotted";
-    if (paramType === "sondaggio") {
-      initMode = "sondaggio";
+    if (!initArea || !LOCATIONS[initCity]?.includes(initArea)) {
+       initArea = LOCATIONS[initCity]?.[0] || initCity;
     }
 
     return {
@@ -124,9 +147,12 @@ export function ThemeCorkboard() {
 
   useEffect(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set("mode", form.type);
-    url.searchParams.set("city", form.city);
-    url.searchParams.set("area", form.area);
+    const areaSlug = form.area.toLowerCase().replace(/\s+/g, '-');
+    const citySlug = form.city.toLowerCase().replace(/\s+/g, '-');
+    url.pathname = `/${citySlug}/${areaSlug}${form.type === "sondaggio" ? "/sondaggio" : ""}`;
+    url.searchParams.delete("mode");
+    url.searchParams.delete("city");
+    url.searchParams.delete("area");
     window.history.replaceState({}, "", url.toString());
   }, [form.type, form.city, form.area]);
 

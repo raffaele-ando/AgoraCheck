@@ -17,6 +17,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/:param1" element={<Home />} />
+          <Route path="/:param1/:param2" element={<Home />} />
+          <Route path="/:param1/:param2/:param3" element={<Home />} />
           <Route
             path="/dashboard"
             element={

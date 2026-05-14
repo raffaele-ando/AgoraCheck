@@ -57,9 +57,9 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
   };
 
   const currentUrl = new URL("https://agora.theproject.world");
-  currentUrl.searchParams.set("mode", selectedMode);
-  currentUrl.searchParams.set("city", selectedCity);
-  currentUrl.searchParams.set("area", selectedArea);
+  const areaSlug = selectedArea.toLowerCase().replace(/\s+/g, '-');
+  const citySlug = selectedCity.toLowerCase().replace(/\s+/g, '-');
+  currentUrl.pathname = `/${citySlug}/${areaSlug}${selectedMode === "sondaggio" ? "/sondaggio" : ""}`;
   
   const generatedLink = currentUrl.toString();
 

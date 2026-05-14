@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { Save, Link as LinkIcon } from "lucide-react";
+import { Save, Link as LinkIcon, Users, Trash2, Plus, ShieldAlert } from "lucide-react";
 
 export interface LinkWidgetConfig {
   domain: string;
@@ -36,19 +36,38 @@ export const saveLinkConfigToDB = async (config: LinkWidgetConfig) => {
   }
 };
 
-export default function AppSettings() {
+export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }) {
   const [linkConfig, setLinkConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Admins state
+  const [admins, setAdmins] = useState<string[]>([]);
+  const [newAdmin, setNewAdmin] = useState("");
+  const [adminError, setAdminError] = useState("");
 
   useEffect(() => {
-    loadLinkConfigFromDB().then((config) => {
-      setLinkConfig(config);
-      setIsLoading(false);
-    });
-  }, []);
+    loadSettings();
+  }, [isSuperAdmin]);
 
-  const handleSave = async () => {
+  const loadSettings = async () => {
+    try {
+      const config = await loadLinkConfigFromDB();
+      setLinkConfig(config);
+      
+      if (isSuperAdmin) {
+        const adminsSnapshot = await getDocs(collection(db, "admins"));
+        const adminList = adminsSnapshot.docs.map(d => d.id);
+        setAdmins(adminList);
+      }
+    } catch (e) {
+      console.error("Error loading settings", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveLink = async () => {
     try {
       await saveLinkConfigToDB(linkConfig);
       setIsSaved(true);
@@ -58,59 +77,159 @@ export default function AppSettings() {
     }
   };
 
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError("");
+    const email = newAdmin.trim().toLowerCase();
+    
+    if (!email || !email.includes("@")) {
+      setAdminError("Inserisci un'email valida.");
+      return;
+    }
+    
+    if (admins.includes(email)) {
+      setAdminError("L'email è già un amministratore.");
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, "admins", email), { addedAt: new Date().toISOString() });
+      setAdmins([...admins, email]);
+      setNewAdmin("");
+    } catch (e: any) {
+      setAdminError("Errore durante l'aggiunta. Assicurati di avere i permessi.");
+    }
+  };
+
+  const handleRemoveAdmin = async (emailToRemove: string) => {
+    if (!confirm(`Sei sicuro di voler rimuovere l'accesso a ${emailToRemove}?`)) return;
+    try {
+      await deleteDoc(doc(db, "admins", emailToRemove));
+      setAdmins(admins.filter(a => a !== emailToRemove));
+    } catch (e) {
+      alert("Errore durante la rimozione dell'amministratore.");
+    }
+  };
+
   if (isLoading) {
     return <div className="p-8 text-center text-gray-500">Caricamento impostazioni...</div>;
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-8 px-4">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Impostazioni Generali</h2>
+    <div className="w-full max-w-3xl mx-auto py-8 text-left">
+      <h2 className="text-2xl font-black mb-6 text-gray-900 dark:text-white uppercase tracking-tight">Impostazioni Dashboard</h2>
       
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4 text-gray-800 dark:text-gray-200">
-          <LinkIcon className="w-5 h-5 text-indigo-500" />
-          Testo Widget Link Instagram
-        </h3>
-        <p className="text-sm text-gray-500 mb-6">
-          Imposta il testo di default che vuoi copiare per creare il widget link sulle storie di Instagram.
-        </p>
+      <div className="grid gap-6">
+        {/* Link config */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
+            <LinkIcon className="w-5 h-5 text-indigo-500" />
+            Widget Link di Instagram
+          </h3>
+          <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed">
+            Personalizza l'etichetta del link (sticker link) che verrà usata all'interno della dashboard quando copierai il link automatico per i post.
+          </p>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              Testo Url (Dominio)
-            </label>
-            <input
-              type="text"
-              value={linkConfig.domain}
-              onChange={(e) => setLinkConfig({ ...linkConfig, domain: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              Testo Sticker (Label)
-            </label>
-            <input
-              type="text"
-              value={linkConfig.tagline}
-              onChange={(e) => setLinkConfig({ ...linkConfig, tagline: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-sm"
-            />
-          </div>
-          
-          <div className="pt-4 flex justify-end">
-            <button
-              onClick={handleSave}
-              className={`flex items-center gap-2 px-4 py-2 font-bold rounded-lg transition-colors ${
-                isSaved ? "bg-green-500 hover:bg-green-600 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white"
-              }`}
-            >
-              <Save className="w-4 h-4" />
-              {isSaved ? "Salvato!" : "Salva Impostazioni"}
-            </button>
+          <div className="space-y-4 max-w-sm">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                Testo Sticker (Label)
+              </label>
+              <input
+                type="text"
+                value={linkConfig.tagline}
+                onChange={(e) => setLinkConfig({ ...linkConfig, tagline: e.target.value })}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-bold text-gray-800 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+            
+            <div className="pt-2">
+              <button
+                onClick={handleSaveLink}
+                className={`flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${
+                  isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20"
+                }`}
+              >
+                <Save className="w-4 h-4" />
+                {isSaved ? "Salvato!" : "Salva Testo"}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Admins Config */}
+        {isSuperAdmin ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-orange-100 dark:border-orange-900/30 p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 dark:bg-orange-500/10 rounded-bl-[100px] pointer-events-none"></div>
+            
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
+              <Users className="w-5 h-5 text-orange-500" />
+              Gestione Dashboard Limitata
+            </h3>
+            <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed max-w-lg">
+              Come <b>Super Admin</b>, puoi concedere ad altri l'accesso alla dashboard (visione dei messaggi base, nessuna visibilità di IP e telemetria, nessuna gestione degli admin). Aggiungi qui la loro email Gmail.
+            </p>
+
+            {adminError && (
+              <div className="mb-4 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-3 rounded-lg border border-red-100 dark:border-red-800 inline-block">
+                {adminError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddAdmin} className="flex flex-col sm:flex-row gap-2 mb-6">
+              <input
+                type="email"
+                placeholder="email@gmail.com"
+                value={newAdmin}
+                onChange={(e) => setNewAdmin(e.target.value)}
+                className="flex-1 max-w-sm px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-bold text-gray-800 dark:text-gray-200 focus:outline-none focus:border-orange-500 transition-colors"
+              />
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-500/20 text-white text-sm font-bold rounded-xl transition-all w-full sm:w-auto"
+              >
+                <Plus className="w-4 h-4" /> Aggiungi Admin
+              </button>
+            </form>
+
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3 border-b border-gray-100 dark:border-gray-700 pb-2">
+                Amministratori con Dashboard Limitata
+              </div>
+              
+              {admins.length === 0 ? (
+                <div className="text-sm font-medium text-gray-400 dark:text-gray-500 italic py-2">
+                  Nessun admin aggiunto.
+                </div>
+              ) : (
+                <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+                  {admins.map(adminEmail => (
+                    <div key={adminEmail} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700 group">
+                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300 truncate pr-2">
+                        {adminEmail}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveAdmin(adminEmail)}
+                        className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                        title="Rimuovi Accesso"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800/50 p-6 flex flex-col items-center justify-center text-center">
+            <ShieldAlert className="w-10 h-10 text-orange-400 mb-3" />
+            <h3 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-1">Accesso Limitato</h3>
+            <p className="text-[13px] text-gray-500 max-w-sm">
+              Non hai i permessi di Super Admin. Solo il Super Admin può aggiungere o rimuovere altri amministratori.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
