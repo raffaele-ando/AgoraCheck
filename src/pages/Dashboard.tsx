@@ -51,6 +51,7 @@ import {
   Moon,
   Sun,
   Image as ImageIcon,
+  BarChart3,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
@@ -63,6 +64,10 @@ interface Message {
   lookingFor: string;
   when?: string;
   where?: string;
+  city?: string;
+  area?: string;
+  type?: string;
+  pollOptions?: string[];
   instagram?: string;
   resolution?: string;
   createdAt: Timestamp | null;
@@ -196,6 +201,9 @@ export default function Dashboard() {
   const [isDarkMode, setIsDarkMode] = useState(
     () => localStorage.getItem("theme") === "dark",
   );
+  
+  const isSuperAdmin = auth.currentUser?.email === "andolinaraffaele70@gmail.com";
+  
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark-theme");
@@ -1226,34 +1234,38 @@ export default function Dashboard() {
 
                     Messaggi
                   </button>
-                  <button
-                    onClick={() => setActiveTab("profiles")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
-                  >
+                  {isSuperAdmin && (
+                    <>
+                      <button
+                        onClick={() => setActiveTab("profiles")}
+                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                      >
 
-                    Profili
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("analytics")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
-                  >
+                        Profili
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("analytics")}
+                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                      >
 
-                    Analytics
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("story_template")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "story_template" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
-                  >
+                        Analytics
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("story_template")}
+                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "story_template" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                      >
 
-                    Template Storie
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("settings")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "settings" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
-                  >
+                        Template Storie
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("settings")}
+                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "settings" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                      >
 
-                    Impostazioni
-                  </button>
+                        Impostazioni
+                      </button>
+                    </>
+                  )}
                 </div>
                 {/* Desktop Icons */}
                 <div className="hidden md:flex items-center gap-2 border-l border-gray-300 dark:border-gray-600 pl-2 ml-1">
@@ -1490,7 +1502,7 @@ export default function Dashboard() {
         )}
         {activeTab === "messages" && (
           <>
-            <LinkWidgetCard />
+            <LinkWidgetCard latestMessage={messages.find(m => !m.isArchived)} />
 
             {!isSelectMode && (
               <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8 pb-2 sm:pb-0">
@@ -1586,61 +1598,84 @@ export default function Dashboard() {
                               )}
                             </div>
                           )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!isSelectMode) {
-                                const target = macroProfiles.find((m) =>
-                                  m.profileIds.includes(profileId),
-                                );
-                                if (target) setViewingMacroId(target.id);
-                                else setEditingProfileId(profileId);
-                              }
-                            }}
-                            className={`flex items-center gap-2 text-left group/profile ${isSelectMode ? "pointer-events-none" : "cursor-pointer hover:opacity-80 transition-opacity"}`}
-                            title="Gestisci Profilo"
-                          >
+                          {isSuperAdmin ? (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!isSelectMode) {
+                                    const target = macroProfiles.find((m) =>
+                                      m.profileIds.includes(profileId),
+                                    );
+                                    if (target) setViewingMacroId(target.id);
+                                    else setEditingProfileId(profileId);
+                                  }
+                                }}
+                                className={`flex items-center gap-2 text-left group/profile ${isSelectMode ? "pointer-events-none" : "cursor-pointer hover:opacity-80 transition-opacity"}`}
+                                title="Gestisci Profilo"
+                              >
 
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0"
-                              style={{ backgroundColor: profileColor }}
-                            >
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0"
+                                  style={{ backgroundColor: profileColor }}
+                                >
 
-                              <UserIcon className="w-4 h-4" />
+                                  <UserIcon className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col">
+
+                                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
+
+                                    {profiles[profileId]?.name ||
+                                      (profileId.startsWith("AUTO-")
+                                        ? "Anonimo Auto"
+                                        : "Anonimo Manuale")}
+                                  </span>
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
+
+                                    <Clock className="w-3 h-3" />
+                                    {msg.createdAt
+                                      ? format(
+                                          msg.createdAt.toDate(),
+                                          "d MMM HH:mm",
+                                          { locale: it },
+                                        )
+                                      : "N/A"}
+                                  </span>
+                                </div>
+                              </button>
+                              {msg.profileGroupId && !isSelectMode && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUngroupDevice(msg.id);
+                                  }}
+                                  className="text-[10px] text-gray-400 dark:text-gray-500 hover:text-red-500 hover:underline mt-1 ml-1 self-start"
+                                >
+
+                                  (Rimuovi Gruppo)
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-2 text-left">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0 bg-gray-400">
+                                <UserIcon className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Anonimo</span>
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
+                                  <Clock className="w-3 h-3" />
+                                  {msg.createdAt
+                                    ? format(
+                                        msg.createdAt.toDate(),
+                                        "d MMM HH:mm",
+                                        { locale: it },
+                                      )
+                                    : "N/A"}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex flex-col">
-
-                              <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
-
-                                {profiles[profileId]?.name ||
-                                  (profileId.startsWith("AUTO-")
-                                    ? "Anonimo Auto"
-                                    : "Anonimo Manuale")}
-                              </span>
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
-
-                                <Clock className="w-3 h-3" />
-                                {msg.createdAt
-                                  ? format(
-                                      msg.createdAt.toDate(),
-                                      "d MMM HH:mm",
-                                      { locale: it },
-                                    )
-                                  : "N/A"}
-                              </span>
-                            </div>
-                          </button>
-                          {msg.profileGroupId && !isSelectMode && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUngroupDevice(msg.id);
-                              }}
-                              className="text-[10px] text-gray-400 dark:text-gray-500 hover:text-red-500 hover:underline mt-1 ml-1 self-start"
-                            >
-
-                              (Rimuovi Gruppo)
-                            </button>
                           )}
                         </div>
                         {!isSelectMode && (
@@ -1681,7 +1716,12 @@ export default function Dashboard() {
                       </div>
                       {/* Core Content */}
                       <div className="mb-4">
-
+                        {msg.type === "sondaggio" && (
+                          <div className="mb-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-700 dark:text-fuchsia-300 text-[10px] font-bold rounded-lg uppercase tracking-wider">
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            Sondaggio
+                          </div>
+                        )}
                         <p className="text-gray-800 dark:text-gray-200 font-medium whitespace-pre-wrap break-words text-lg sm:text-xl leading-relaxed">
 
                           <span className="text-gray-300 font-serif text-3xl leading-none italic mr-1 align-bottom">
@@ -1692,6 +1732,16 @@ export default function Dashboard() {
                             "
                           </span>
                         </p>
+                        {msg.type === "sondaggio" && msg.pollOptions && msg.pollOptions.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                             {msg.pollOptions.map((opt, i) => (
+                               <div key={i} className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 rounded-xl border border-gray-200 dark:border-gray-700 text-sm md:text-base text-gray-700 dark:text-gray-200 flex items-center gap-3 shadow-sm">
+                                  <div className="w-6 h-6 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/60 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center font-bold text-xs shrink-0">{i + 1}</div>
+                                  <span className="break-words min-w-0">{opt}</span>
+                               </div>
+                             ))}
+                          </div>
+                        )}
                       </div>
                       
                       <div className="mb-4">
@@ -1708,9 +1758,32 @@ export default function Dashboard() {
 
                       <div className="space-y-4 mb-5">
 
-                        {(msg.when || msg.where) && (
+                        {(msg.city || msg.area || msg.when || msg.where) && (
                           <div className="flex flex-wrap gap-2">
 
+                            {msg.city && (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 rounded-xl text-blue-800 text-xs font-bold shadow-sm">
+                                <Globe className="w-3.5 h-3.5 shrink-0" />
+                                <div className="max-w-full">
+                                  <span className="opacity-60 font-semibold mr-1">
+                                    Città:
+                                  </span>
+                                  {msg.city}
+                                </div>
+                              </div>
+                            )}
+                            {msg.area && (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 rounded-xl text-indigo-800 text-xs font-bold shadow-sm">
+
+                                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                <div className="max-w-full">
+                                  <span className="opacity-60 font-semibold mr-1">
+                                    Zona:
+                                  </span>
+                                  {msg.area}
+                                </div>
+                              </div>
+                            )}
                             {msg.when && (
                               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 rounded-xl text-orange-800 text-xs font-bold shadow-sm">
 
@@ -1740,7 +1813,7 @@ export default function Dashboard() {
                           </div>
                         )}
 
-                        {(() => {
+                        {isSuperAdmin ? (() => {
                           const { tags, hasMultiple } =
                             getProfileInstagrams(profileId);
                           if (tags.length === 0) return null;
@@ -1779,8 +1852,29 @@ export default function Dashboard() {
                               </div>
                             </div>
                           );
-                        })()}
-                        {profiles[profileId]?.suspects &&
+                        })() : (
+                          msg.instagram ? (
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/40 dark:to-pink-900/40 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-800 relative overflow-hidden shadow-sm flex flex-col gap-2">
+                              <div className={`flex items-center gap-2 text-purple-600`}>
+                                <Instagram className="w-4 h-4 shrink-0" />
+                                <span className="text-xs font-black uppercase tracking-wider">
+                                  Instagram Utente
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                <a
+                                  href={`https://instagram.com/${msg.instagram}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:scale-105 transition-transform text-white text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-500 dark:to-pink-400 shadow-indigo-200/50 dark:shadow-none shadow-md px-3 py-1.5 rounded-xl block max-w-full break-words whitespace-pre-wrap"
+                                >
+                                  @{msg.instagram}
+                                </a>
+                              </div>
+                            </div>
+                          ) : null
+                        )}
+                        {isSuperAdmin && profiles[profileId]?.suspects &&
                           profiles[profileId].suspects!.length > 0 && (
                             <div className="bg-red-50 dark:bg-red-900/40 p-3.5 rounded-2xl border border-red-100 dark:border-red-800 flex flex-col gap-2">
 
@@ -1883,77 +1977,78 @@ export default function Dashboard() {
                         </div>
                       </div>
                       {/* Telemetry Details */}
-                      <details className="group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none">
+                      {isSuperAdmin && (
+                        <details className="group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none">
 
-                        <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                          <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
 
-                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
 
-                            <Fingerprint className="w-4 h-4 text-indigo-400" />
-                            Fingerprint & Telemetria
-                          </div>
-                          <div className="flex items-center gap-2">
+                              <Fingerprint className="w-4 h-4 text-indigo-400" />
+                              Fingerprint & Telemetria
+                            </div>
+                            <div className="flex items-center gap-2">
 
-                            <span className="text-gray-300 font-mono lowercase">
-                              id: {msg.id.slice(0, 8)}
-                            </span>
-                            <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
-                          </div>
-                        </summary>
-                        <div className="pt-4 pb-1 space-y-4 opacity-0 group-open:opacity-100 transition-opacity duration-300">
+                              <span className="text-gray-300 font-mono lowercase">
+                                id: {msg.id.slice(0, 8)}
+                              </span>
+                              <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
+                            </div>
+                          </summary>
+                          <div className="pt-4 pb-1 space-y-4 opacity-0 group-open:opacity-100 transition-opacity duration-300">
 
-                          <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3">
 
-                            <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
+                              <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
 
-                              <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
-                              <div className="min-w-0">
+                                <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                                <div className="min-w-0">
 
-                                <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
-                                  Piattaforma
-                                </div>
-                                <div
-                                  className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap"
-                                  title={msg.deviceInfo?.platform}
-                                >
+                                  <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
+                                    Piattaforma
+                                  </div>
+                                  <div
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap"
+                                    title={msg.deviceInfo?.platform}
+                                  >
 
-                                  {msg.deviceInfo?.platform ||
-                                    "Sconosciuta"}
+                                    {msg.deviceInfo?.platform ||
+                                      "Sconosciuta"}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
+                              <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
 
-                              <Smartphone className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
-                              <div className="min-w-0">
+                                <Smartphone className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                                <div className="min-w-0">
 
-                                <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
-                                  Risoluzione
-                                </div>
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
+                                  <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
+                                    Risoluzione
+                                  </div>
+                                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
 
-                                  {msg.deviceInfo?.screenResolution ||
-                                    "Sconosciuta"}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 col-span-2 sm:col-span-1">
-
-                              <Globe className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
-                              <div className="min-w-0">
-
-                                <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
-                                  Lingua & Fuso
-                                </div>
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
-
-                                  {msg.deviceInfo?.language || "N/A"} •
-                                  {msg.deviceInfo?.timezone
-                                    ?.split("/")[1]
-                                    ?.replace("_", " ") || "N/A"}
+                                    {msg.deviceInfo?.screenResolution ||
+                                      "Sconosciuta"}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                              <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 col-span-2 sm:col-span-1">
+
+                                <Globe className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                                <div className="min-w-0">
+
+                                  <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
+                                    Lingua & Fuso
+                                  </div>
+                                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
+
+                                    {msg.deviceInfo?.language || "N/A"} •
+                                    {msg.deviceInfo?.timezone
+                                      ?.split("/")[1]
+                                      ?.replace("_", " ") || "N/A"}
+                                  </div>
+                                </div>
+                              </div>
                           </div>
                           <div className="text-[9px] text-gray-400 dark:text-gray-500 font-mono break-all leading-relaxed bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
@@ -2363,6 +2458,7 @@ export default function Dashboard() {
                             })()}
                         </div>
                       </details>
+                      )}
                     </motion.div>
                   );
                 })}
@@ -3307,9 +3403,27 @@ export default function Dashboard() {
 
                                       "{msg.lookingFor}"
                                     </div>
-                                    {(msg.where || msg.when) && (
+                                    {(msg.city || msg.area || msg.where || msg.when) && (
                                       <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-gray-700 dark:text-gray-300 mt-2 pl-2 sm:pl-3">
 
+                                        {msg.city && (
+                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
+                                            <Globe className="w-3 h-3 text-blue-500" />
+                                            <span className="font-bold">
+                                              Città:
+                                            </span>
+                                            {msg.city}
+                                          </span>
+                                        )}
+                                        {msg.area && (
+                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
+                                            <MapPin className="w-3 h-3 text-indigo-500" />
+                                            <span className="font-bold">
+                                              Zona:
+                                            </span>
+                                            {msg.area}
+                                          </span>
+                                        )}
                                         {msg.where && (
                                           <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
                                             <MapPin className="w-3 h-3 text-emerald-500" />

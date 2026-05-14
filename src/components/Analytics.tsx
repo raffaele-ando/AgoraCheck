@@ -151,7 +151,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     const totalViews = messages.length;
     const uniqueDevices = Object.keys(profiles).length;
     const identifiedUsers = macroProfiles.length;
-    const spottedMessages = messages.filter((m) => m.lookingFor).length;
+    const spottedMessages = messages.filter((m) => !m.type || m.type === "spotted").length;
+    const sondaggioMessages = messages.filter((m) => m.type === "sondaggio").length;
     const safeVisits = Array.isArray(visits) ? visits : [];
     const totalVisits = safeVisits.length;
     const submittedVisits = safeVisits.filter((v: any) => v.hasSubmitted).length;
@@ -214,6 +215,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       uniqueDevices,
       identifiedUsers,
       spottedMessages,
+      sondaggioMessages,
       totalVisits,
       conversionRate,
       abandoned,
@@ -250,7 +252,20 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         setDetailView({
           title: "Spotted Effettuati",
           type: "messages",
-          data: messages.filter((m) => m.lookingFor),
+          data: messages.filter((m) => !m.type || m.type === "spotted"),
+        }),
+    },
+    {
+      label: "Sondaggi Creati",
+      value: stats.sondaggioMessages,
+      bg: "bg-fuchsia-50 dark:bg-fuchsia-900/40 ",
+      text: "text-fuchsia-600",
+      border: "group-hover:border-fuchsia-200",
+      onClick: () =>
+        setDetailView({
+          title: "Sondaggi Creati",
+          type: "messages",
+          data: messages.filter((m) => m.type === "sondaggio"),
         }),
     },
     {
@@ -381,7 +396,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {kpis.filter(k => ["Totale Avvistamenti", "Spotted Effettuati"].includes(k.label)).map((kpi, i) => (
+            {kpis.filter(k => ["Totale Avvistamenti", "Spotted Effettuati", "Sondaggi Creati"].includes(k.label)).map((kpi, i) => (
               <motion.div
                 key={kpi.label}
                 initial={{ opacity: 0, y: 20 }}

@@ -829,9 +829,13 @@ export function useSubmitSpotted() {
     when: string;
     where: string;
     instagram?: string;
+    city?: string;
+    area?: string;
+    type?: "spotted" | "sondaggio";
+    pollOptions?: string[];
   }) => {
     if (!data.lookingFor.trim()) {
-      setError("Devi scrivere chi cerchi o un messaggio valido.");
+      setError("Devi compilare il campo obbligatorio.");
       return false;
     }
     if (cooldown > 0) {
@@ -1059,6 +1063,10 @@ export function useSubmitSpotted() {
 
       if (data.when) payload.when = String(data.when).slice(0, 200);
       if (data.where) payload.where = String(data.where).slice(0, 200);
+      if (data.city) payload.city = String(data.city).slice(0, 50);
+      if (data.area) payload.area = String(data.area).slice(0, 50);
+      if (data.type) payload.type = String(data.type).slice(0, 50);
+      if (data.pollOptions) payload.pollOptions = data.pollOptions.filter(Boolean).map(o => String(o).slice(0, 100));
       if (data.instagram)
         payload.instagram = String(data.instagram)
           .replace(/[@\s]/g, "")
@@ -1125,7 +1133,7 @@ export default function Home() {
   // if (isInstagram) return <InstagramBlocker />;
 
   return (
-    <div className="relative min-h-[100dvh] bg-[#F3ECE0] transition-colors duration-300">
+    <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[#111111] transition-colors duration-300">
       <ThemeCorkboard />
     </div>
   );

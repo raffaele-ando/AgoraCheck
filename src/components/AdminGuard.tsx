@@ -92,7 +92,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         error.code === "auth/popup-closed-by-user" ||
         error.message?.includes("popup")
       ) {
-        // Silently ignore or show a small alert
+        alert("Il popup di Google è stato bloccato dal browser. Prova ad aprire il link in una nuova scheda del browser o dal browser predefinito (non da Instagram).");
+      } else {
+        alert(`Errore durante il login: ${error.message || "Errore sconosciuto"}`);
       }
     } finally {
       setIsLoggingIn(false);
