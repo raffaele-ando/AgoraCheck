@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { Save, Link as LinkIcon, Users, Trash2, Plus, ShieldAlert } from "lucide-react";
+import { LogoSettings } from "./LogoSettings";
 
 export interface LinkWidgetConfig {
   domain: string;
@@ -154,6 +155,9 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
             </div>
           </div>
         </div>
+
+        {/* Logo Config */}
+        <LogoSettings />
 
         {/* Admins Config */}
         {isSuperAdmin ? (

@@ -49,7 +49,11 @@ service cloud.firestore {
              (!('abandonedAfter' in data) || data.abandonedAfter is string);
     }
 
-    match /settings/{doc} {
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /logos/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }

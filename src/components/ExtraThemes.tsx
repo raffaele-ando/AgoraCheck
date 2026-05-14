@@ -217,17 +217,11 @@ export function ThemeCorkboard() {
         ></div>
 
         <div className="shrink-0 mb-4 sm:mb-8 text-center space-y-2 sm:space-y-3 pt-1 sm:pt-2">
-          {form.area === "POLIMI" ? (
-            <Logo className="w-28 h-8 sm:w-32 sm:h-10 mx-auto mb-1 sm:mb-2" />
-          ) : (
-            <div className="w-full flex justify-center mb-1 sm:mb-2">
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tighter text-black leading-none text-center">
-                {form.area}
-                <br />
-                <span className="text-[#DC5F00]">AGORÀ</span>
-              </h1>
-            </div>
-          )}
+          <Logo 
+            logoName={`logo_${form.area}`} 
+            fallbackText={form.area} 
+            className="w-28 h-8 sm:w-32 sm:h-10 mx-auto mb-1 sm:mb-2" 
+          />
 
           <div>
             <h2

@@ -8,12 +8,39 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AdminGuard } from "./components/AdminGuard";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
+
+function DynamicBrand() {
+  useEffect(() => {
+    const loadFavicon = async () => {
+      try {
+        const logoDoc = await getDoc(doc(db, "logos", "favicon"));
+        if (logoDoc.exists() && logoDoc.data()?.dataUrl) {
+          const faviconDataUrl = logoDoc.data().dataUrl;
+          let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+          }
+          link.href = faviconDataUrl;
+        }
+      } catch (err) {
+        console.error("Error loading favicon", err);
+      }
+    };
+    loadFavicon();
+  }, []);
+  return null;
+}
 
 export default function App() {
   return (
     <ErrorBoundary>
+      <DynamicBrand />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
