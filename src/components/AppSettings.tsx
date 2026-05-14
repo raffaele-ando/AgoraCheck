@@ -16,8 +16,11 @@ export const DEFAULT_LINK_CONFIG: LinkWidgetConfig = {
 export const loadLinkConfigFromDB = async (): Promise<LinkWidgetConfig> => {
   try {
     const configDoc = doc(db, "settings", "link_widget_config");
-    const snapshot = await getDoc(configDoc);
-    if (snapshot.exists()) {
+    const docPromise = getDoc(configDoc);
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout load link config")), 4000));
+    
+    const snapshot = await Promise.race([docPromise, timeoutPromise]) as any;
+    if (snapshot && snapshot.exists()) {
       return snapshot.data() as LinkWidgetConfig;
     }
   } catch (error) {
@@ -56,9 +59,17 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
       setLinkConfig(config);
       
       if (isSuperAdmin) {
-        const adminsSnapshot = await getDocs(collection(db, "admins"));
-        const adminList = adminsSnapshot.docs.map(d => d.id);
-        setAdmins(adminList);
+        // Use a timeout to prevent indefinite hanging if Firestore is struggling
+        const adminsPromise = getDocs(collection(db, "admins"));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+        
+        try {
+          const adminsSnapshot = await Promise.race([adminsPromise, timeoutPromise]) as any;
+          const adminList = adminsSnapshot.docs.map((d: any) => d.id);
+          setAdmins(adminList);
+        } catch (adminErr) {
+          console.error("Error loading admins", adminErr);
+        }
       }
     } catch (e) {
       console.error("Error loading settings", e);
