@@ -15,11 +15,28 @@ interface StoryExportBetaProps {
     lookingFor: string;
     when?: string;
     where?: string;
+    type?: string;
+    area?: string;
+    city?: string;
+    pollOptions?: string[];
   };
   onClose: () => void;
 }
 
 export default function StoryExportBeta({ message, onClose }: StoryExportBetaProps) {
+  const defaultTarget = message.area || message.city || "DEFAULT";
+  const defaultMode = (message.type === "sondaggio" ? "sondaggio" : "spotted");
+  
+  const [selectedMode, setSelectedMode] = useState<"spotted" | "sondaggio" | "risultati" | "risultati_sondaggio">(defaultMode as any);
+  const [selectedTarget, setSelectedTarget] = useState<string>(defaultTarget);
+  
+  // Add manual override text for additional boxes
+  const [chiText, setChiText] = useState(message.lookingFor || "");
+  const [quandoText, setQuandoText] = useState(message.when || "");
+  const [doveText, setDoveText] = useState(message.where || "");
+  const [box4Text, setBox4Text] = useState((message.pollOptions && message.pollOptions.length > 0) ? message.pollOptions[0] : "");
+  const [box5Text, setBox5Text] = useState((message.pollOptions && message.pollOptions.length > 1) ? message.pollOptions[1] : "");
+
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [config, setConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
   const [isExporting, setIsExporting] = useState(false);
@@ -30,26 +47,27 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
   const captureRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadImageFromDB()
-      .then((img) => {
-        if (img) setBackgroundImage(img);
+    setIsDBReady(false);
+    setBackgroundImage(null);
+    const loadData = async () => {
+      try {
+        const img = await loadImageFromDB(selectedTarget, selectedMode);
+        setBackgroundImage(img || null);
+        
+        const savedConfig = await loadConfigFromDB(selectedMode);
+        if (savedConfig) {
+          setConfig(savedConfig);
+        } else {
+          setConfig(DEFAULT_CONFIG);
+        }
+      } catch (err) {
+        console.warn("Could not load data from DB", err);
+      } finally {
         setIsDBReady(true);
-      })
-      .catch((err) => {
-        console.warn("Could not load image from DB", err);
-        setIsDBReady(true);
-      });
-
-    loadConfigFromDB().then((savedConfig) => {
-      if (savedConfig) {
-        setConfig(savedConfig);
-      } else {
-        setConfig(DEFAULT_CONFIG);
       }
-    }).catch((e) => {
-      setConfig(DEFAULT_CONFIG);
-    });
-  }, []);
+    };
+    loadData();
+  }, [selectedMode, selectedTarget]);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -95,9 +113,9 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+        className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 shrink-0">
           <h2 className="text-lg font-black text-gray-900 dark:text-white">
             Esporta Storia
           </h2>
@@ -109,10 +127,62 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           </button>
         </div>
 
-        <div className="bg-gray-100 dark:bg-black/50 p-6 flex flex-col items-center justify-center relative overflow-hidden flex-1">
-          <div className="w-full mx-auto flex flex-col items-center justify-center">
-             <div className="relative w-full aspect-[9/16] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>
-                <div
+        <div className="flex-1 overflow-y-auto w-full flex flex-col">
+          <div className="bg-white dark:bg-gray-900 p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">Stile Esportazione</label>
+                <select 
+                  value={selectedMode} 
+                  onChange={e => setSelectedMode(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-sm font-bold"
+                >
+                  <option value="spotted">Spotted</option>
+                  <option value="sondaggio">Sondaggio</option>
+                  <option value="risultati">Risultati Spotted</option>
+                  <option value="risultati_sondaggio">Risultati Sondaggio</option>
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
+                  <textarea 
+                    value={chiText} 
+                    onChange={e => setChiText(e.target.value)} 
+                    rows={2}
+                    className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
+                  <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
+                  <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                </div>
+              </div>
+              
+              {(selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "risultati_sondaggio" ? "Esito Opz 3" : "Opzione 3"}</label>
+                    <input type="text" value={box4Text} onChange={e => setBox4Text(e.target.value)} placeholder="Opz 3..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "risultati_sondaggio" ? "Esito Opz 4" : "Opzione 4"}</label>
+                    <input type="text" value={box5Text} onChange={e => setBox5Text(e.target.value)} placeholder="Opz 4..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-gray-100 dark:bg-black/50 p-4 flex flex-col items-center justify-center relative flex-1 min-h-[300px]">
+            <div className="w-full max-w-[220px] mx-auto flex items-center justify-center">
+               <div className="relative w-full aspect-[9/16] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>
+                  <div
                   ref={captureRef}
                   style={{
                     width: 1080,
@@ -142,9 +212,11 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                     />
                   )}
                   <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
-                    <AutoScalingText text={message.lookingFor} config={config.chi} />
-                    <AutoScalingText text={message.when || ""} config={config.quando} />
-                    <AutoScalingText text={message.where || ""} config={config.dove} />
+                    {config.chi && <AutoScalingText text={chiText} config={config.chi} />}
+                    {config.quando && <AutoScalingText text={quandoText} config={config.quando} />}
+                    {config.dove && <AutoScalingText text={doveText} config={config.dove} />}
+                    {config.box4 && <AutoScalingText text={box4Text} config={config.box4} />}
+                    {config.box5 && <AutoScalingText text={box5Text} config={config.box5} />}
                   </div>
                 </div>
                 {!backgroundImage && isDBReady && (
@@ -157,8 +229,9 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
              </div>
           </div>
         </div>
+        </div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
           <button
             onClick={handleExport}
             disabled={isExporting || !backgroundImage}

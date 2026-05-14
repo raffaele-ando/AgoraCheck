@@ -16,10 +16,8 @@ export const DEFAULT_LINK_CONFIG: LinkWidgetConfig = {
 export const loadLinkConfigFromDB = async (): Promise<LinkWidgetConfig> => {
   try {
     const configDoc = doc(db, "settings", "link_widget_config");
-    const docPromise = getDoc(configDoc);
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout load link config")), 4000));
+    const snapshot = await getDoc(configDoc);
     
-    const snapshot = await Promise.race([docPromise, timeoutPromise]) as any;
     if (snapshot && snapshot.exists()) {
       return snapshot.data() as LinkWidgetConfig;
     }
@@ -42,7 +40,6 @@ export const saveLinkConfigToDB = async (config: LinkWidgetConfig) => {
 export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }) {
   const [linkConfig, setLinkConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
   const [isSaved, setIsSaved] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Admins state
   const [admins, setAdmins] = useState<string[]>([]);
@@ -59,12 +56,8 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
       setLinkConfig(config);
       
       if (isSuperAdmin) {
-        // Use a timeout to prevent indefinite hanging if Firestore is struggling
-        const adminsPromise = getDocs(collection(db, "admins"));
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
-        
         try {
-          const adminsSnapshot = await Promise.race([adminsPromise, timeoutPromise]) as any;
+          const adminsSnapshot = await getDocs(collection(db, "admins"));
           const adminList = adminsSnapshot.docs.map((d: any) => d.id);
           setAdmins(adminList);
         } catch (adminErr) {
@@ -73,8 +66,6 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
       }
     } catch (e) {
       console.error("Error loading settings", e);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -121,10 +112,6 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
       alert("Errore durante la rimozione dell'amministratore.");
     }
   };
-
-  if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Caricamento impostazioni...</div>;
-  }
 
   return (
     <div className="w-full max-w-3xl mx-auto py-8 text-left">

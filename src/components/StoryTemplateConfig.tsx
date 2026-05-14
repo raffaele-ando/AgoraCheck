@@ -19,20 +19,24 @@ export interface TemplateConfig {
   chi: BoxConfig;
   quando: BoxConfig;
   dove: BoxConfig;
+  box4?: BoxConfig;
+  box5?: BoxConfig;
 }
 
 export const DEFAULT_CONFIG: TemplateConfig = {
   chi: { top: 20, left: 10, width: 80, height: 25, fontSize: 60, color: "#000000", enabled: true, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
   quando: { top: 50, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
   dove: { top: 70, left: 10, width: 80, height: 15, fontSize: 40, color: "#000000", enabled: true, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
+  box4: { top: 85, left: 10, width: 80, height: 10, fontSize: 30, color: "#000000", enabled: false, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
+  box5: { top: 90, left: 10, width: 80, height: 10, fontSize: 30, color: "#000000", enabled: false, alignItems: "flex-start", justifyContent: "flex-start", textAlign: "left" },
 };
 
-import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
-export const saveImageToDB = async (dataUrl: string) => {
+export const saveImageToDB = async (dataUrl: string, target: string, mode: string) => {
   try {
-    const imgDoc = doc(db, "settings", "story_template_image");
+    const imgDoc = doc(db, "settings", `story_template_image_${target}_${mode}`);
     await setDoc(imgDoc, { bgImage: dataUrl });
   } catch (error) {
     console.error("Error saving image to Firestore", error);
@@ -40,13 +44,23 @@ export const saveImageToDB = async (dataUrl: string) => {
   }
 };
 
-export const loadImageFromDB = async () => {
+export const loadImageFromDB = async (target: string, mode: string) => {
   try {
-    const imgDoc = doc(db, "settings", "story_template_image");
+    const imgDoc = doc(db, "settings", `story_template_image_${target}_${mode}`);
     const snapshot = await getDoc(imgDoc);
     if (snapshot.exists()) {
       return snapshot.data().bgImage as string;
     }
+    
+    // Legacy fallback
+    if (target === "DEFAULT" && mode === "spotted") {
+      const oldDoc = doc(db, "settings", "story_template_image");
+      const oldSnap = await getDoc(oldDoc);
+      if (oldSnap.exists()) {
+        return oldSnap.data().bgImage as string;
+      }
+    }
+    
     return null;
   } catch (error) {
     console.error("Error loading image from Firestore", error);
@@ -54,9 +68,9 @@ export const loadImageFromDB = async () => {
   }
 };
 
-export const clearImageFromDB = async () => {
+export const clearImageFromDB = async (target: string, mode: string) => {
   try {
-    const imgDoc = doc(db, "settings", "story_template_image");
+    const imgDoc = doc(db, "settings", `story_template_image_${target}_${mode}`);
     await deleteDoc(imgDoc);
   } catch (error) {
     console.error("Error clearing image from Firestore", error);
@@ -64,9 +78,9 @@ export const clearImageFromDB = async () => {
   }
 };
 
-export const saveConfigToDB = async (config: TemplateConfig) => {
+export const saveConfigToDB = async (config: TemplateConfig, mode: string) => {
   try {
-    const configDoc = doc(db, "settings", "story_template_config");
+    const configDoc = doc(db, "settings", `story_template_config_${mode}`);
     await setDoc(configDoc, { config });
   } catch (error) {
     console.error("Error saving config to Firestore", error);
@@ -74,12 +88,21 @@ export const saveConfigToDB = async (config: TemplateConfig) => {
   }
 };
 
-export const loadConfigFromDB = async () => {
+export const loadConfigFromDB = async (mode: string) => {
   try {
-    const configDoc = doc(db, "settings", "story_template_config");
+    const configDoc = doc(db, "settings", `story_template_config_${mode}`);
     const snapshot = await getDoc(configDoc);
     if (snapshot.exists() && snapshot.data().config) {
       return snapshot.data().config as TemplateConfig;
+    }
+
+    // Legacy fallback
+    if (mode === "spotted") {
+      const oldDoc = doc(db, "settings", "story_template_config");
+      const oldSnap = await getDoc(oldDoc);
+      if (oldSnap.exists() && oldSnap.data().config) {
+        return oldSnap.data().config as TemplateConfig;
+      }
     }
   } catch (error) {
     console.error("Error loading config from Firestore", error);
@@ -158,6 +181,8 @@ export const AutoScalingText = ({ text, config, showBorders, isActive, label }: 
   );
 };
 
+import { LOCATIONS } from "./HeaderVariations";
+
 export default function StoryTemplateConfig() {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [config, setConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
@@ -165,28 +190,37 @@ export default function StoryTemplateConfig() {
   const [activeTab, setActiveTab] = useState<keyof TemplateConfig>("chi");
   const [isDBReady, setIsDBReady] = useState(false);
   const [savedStatus, setSavedStatus] = useState(false);
+  
+  const [selectedMode, setSelectedMode] = useState<"spotted" | "sondaggio" | "risultati" | "risultati_sondaggio">("spotted");
+  const [selectedTarget, setSelectedTarget] = useState<string>("DEFAULT");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadImageFromDB().then(img => {
-      if (img) setBackgroundImage(img);
-      setIsDBReady(true);
-    }).catch(err => {
-      console.warn("Could not load image from DB", err);
-      setIsDBReady(true);
-    });
+    setIsDBReady(false);
+    setBackgroundImage(null);
+    setConfig(DEFAULT_CONFIG);
+    setActiveTab("chi");
 
-    loadConfigFromDB().then((savedConfig) => {
-      if (savedConfig) {
-        setConfig(savedConfig);
-      } else {
-        setConfig(DEFAULT_CONFIG);
+    const loadData = async () => {
+      try {
+        const img = await loadImageFromDB(selectedTarget, selectedMode);
+        setBackgroundImage(img || null);
+        
+        const savedConfig = await loadConfigFromDB(selectedMode);
+        if (savedConfig) {
+          setConfig(savedConfig);
+        } else {
+          setConfig(DEFAULT_CONFIG);
+        }
+      } catch (err) {
+        console.warn("Could not load data from DB", err);
+      } finally {
+        setIsDBReady(true);
       }
-    }).catch((e) => {
-      setConfig(DEFAULT_CONFIG);
-    });
-  }, []);
+    };
+    loadData();
+  }, [selectedMode, selectedTarget]);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -203,12 +237,13 @@ export default function StoryTemplateConfig() {
   }, []);
 
   const handleConfigChange = (key: keyof BoxConfig, value: any) => {
+    const activeConfig = config[activeTab] || DEFAULT_CONFIG[activeTab];
     const newConfig = { 
       ...config, 
-      [activeTab]: { ...config[activeTab], [key]: value } 
+      [activeTab]: { ...activeConfig, [key]: value } 
     };
     setConfig(newConfig);
-    saveConfigToDB(newConfig).then(() => {
+    saveConfigToDB(newConfig, selectedMode).then(() => {
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 2000);
     });
@@ -242,7 +277,7 @@ export default function StoryTemplateConfig() {
             const compressedUrl = canvas.toDataURL("image/jpeg", 0.7);
             setBackgroundImage(compressedUrl);
             try {
-              await saveImageToDB(compressedUrl);
+              await saveImageToDB(compressedUrl, selectedTarget, selectedMode);
               setSavedStatus(true);
               setTimeout(() => setSavedStatus(false), 2000);
             } catch (err) {
@@ -259,16 +294,181 @@ export default function StoryTemplateConfig() {
 
   const clearTemplate = async () => {
     setBackgroundImage(null);
-    await clearImageFromDB();
+    await clearImageFromDB(selectedTarget, selectedMode);
     setSavedStatus(true);
     setTimeout(() => setSavedStatus(false), 2000);
   };
 
-  const activeBox = config[activeTab];
+  const activeBox = config[activeTab] || DEFAULT_CONFIG[activeTab];
+
+  // Flattiamo le options per il target: DEFAULT + tutte le aree e città
+  const targetOptions = ["DEFAULT", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
+
+  const getTabsForMode = () => {
+    if (selectedMode === "spotted") return ["chi", "quando", "dove"] as const;
+    if (selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") return ["chi", "quando", "dove", "box4", "box5"] as const;
+    return ["chi", "quando", "dove"] as const; // risultati
+  };
+  
+  const getLabelForModeAndTab = (tab: keyof TemplateConfig) => {
+    if (selectedMode === "spotted") {
+      if (tab === "chi") return "Cosa/Chi";
+      if (tab === "quando") return "Quando";
+      if (tab === "dove") return "Dove";
+    }
+    if (selectedMode === "sondaggio") {
+      if (tab === "chi") return "Domanda";
+      if (tab === "quando") return "Opzione 1";
+      if (tab === "dove") return "Opzione 2";
+      if (tab === "box4") return "Opzione 3";
+      if (tab === "box5") return "Opzione 4";
+    }
+    if (selectedMode === "risultati") {
+      if (tab === "chi") return "Testo Spotted";
+      if (tab === "quando") return "Esito (Trovato/a)";
+      if (tab === "dove") return "Extra / Dettagli";
+    }
+    if (selectedMode === "risultati_sondaggio") {
+      if (tab === "chi") return "Domanda";
+      if (tab === "quando") return "Esito Opzione 1";
+      if (tab === "dove") return "Esito Opzione 2";
+      if (tab === "box4") return "Esito Opzione 3";
+      if (tab === "box5") return "Esito Opzione 4";
+    }
+    return tab;
+  };
+
+  const [viewMode, setViewMode] = useState<"editor" | "gallery">("editor");
+  const [galleryData, setGalleryData] = useState<{ target: string, mode: string, hasImage: boolean, imgUrl?: string, config?: TemplateConfig }[]>([]);
+
+  const loadGallery = async () => {
+    try {
+      const snap = await getDocs(collection(db, "settings"));
+      const savedDocs = snap.docs.filter(d => d.id.startsWith("story_template_image_"));
+      const docMap = new Map(savedDocs.map(d => [d.id, d.data().bgImage]));
+      
+      const configMap = new Map<string, TemplateConfig>();
+      for (const mode of ["spotted", "sondaggio", "risultati", "risultati_sondaggio"]) {
+          const configDoc = snap.docs.find(d => d.id === `story_template_config_${mode}`);
+          if (configDoc && configDoc.data().config) {
+             configMap.set(mode, configDoc.data().config);
+          } else if (mode === "spotted") {
+             const legacyConfig = snap.docs.find(d => d.id === `story_template_config`);
+             if (legacyConfig && legacyConfig.data().config) {
+                 configMap.set(mode, legacyConfig.data().config);
+             }
+          }
+      }
+      
+      const allCombinations: { target: string, mode: string, hasImage: boolean, imgUrl?: string, config?: TemplateConfig }[] = [];
+      for (const target of targetOptions) {
+        for (const mode of ["spotted", "sondaggio", "risultati", "risultati_sondaggio"]) {
+          const docId = `story_template_image_${target}_${mode}`;
+          const bgImage = docMap.get(docId) || null;
+          
+          let hasImage = !!bgImage;
+          let imgUrl = bgImage;
+          
+          if (!hasImage && target === "DEFAULT" && mode === "spotted") {
+             const legacyDoc = snap.docs.find(d => d.id === "story_template_image");
+             if (legacyDoc) {
+                hasImage = true;
+                imgUrl = legacyDoc.data().bgImage;
+             }
+          }
+          
+          const config = configMap.get(mode) || DEFAULT_CONFIG;
+          
+          allCombinations.push({ target, mode, hasImage, imgUrl, config });
+        }
+      }
+      setGalleryData(allCombinations);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  
+  useEffect(() => {
+    if (viewMode === "gallery") {
+      loadGallery();
+    }
+  }, [viewMode]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
-      <motion.div
+    <div className="w-full max-w-7xl mx-auto space-y-4">
+      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+        <button
+          onClick={() => setViewMode("editor")}
+          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${viewMode === "editor" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        >
+          Editor Template
+        </button>
+        <button
+          onClick={() => setViewMode("gallery")}
+          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${viewMode === "gallery" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        >
+          Riepilogo Template
+        </button>
+      </div>
+
+      {viewMode === "gallery" && (
+        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+           <h2 className="text-lg font-black mb-4 dark:text-white">Stato Template Salvati</h2>
+           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+             {galleryData.map(item => (
+                <div key={`${item.target}-${item.mode}`} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-800/50 hover:border-indigo-300 hover:shadow-md transition-all">
+                   <div className="p-2 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
+                     <div className="flex-1 truncate">
+                       <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest truncate">{item.target}</div>
+                       <div className="text-[11px] sm:text-sm font-black capitalize truncate">{item.mode}</div>
+                     </div>
+                     {item.hasImage ? (
+                       <CheckCircle2 className="w-4 h-4 text-green-500 ml-1 shrink-0" />
+                     ) : (
+                       <div className="w-4 h-4 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 ml-1 shrink-0" />
+                     )}
+                   </div>
+                   <div className="p-3 flex items-center justify-center flex-1" onClick={() => {
+                      setSelectedTarget(item.target);
+                      setSelectedMode(item.mode as any);
+                      setViewMode("editor");
+                   }}>
+                      {item.hasImage && item.imgUrl ? (
+                         <div className="relative w-full aspect-[9/16] bg-black/5 rounded flex-shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer" title="Clicca per modificare">
+                            <img src={item.imgUrl} className="w-full h-full object-cover" alt="" />
+                            <div className="absolute inset-0 pointer-events-none">
+                              {item.config && (item.mode === "sondaggio" || item.mode === "risultati_sondaggio" ? ["chi", "quando", "dove", "box4", "box5"] : ["chi", "quando", "dove"]).map((key) => {
+                                const boxCnf = (item.config as any)[key];
+                                if (!boxCnf || !boxCnf.enabled) return null;
+                                return (
+                                  <div key={key} style={{
+                                    position: 'absolute',
+                                    top: `${boxCnf.top}%`,
+                                    left: `${boxCnf.left}%`,
+                                    width: `${boxCnf.width}%`,
+                                    height: `${boxCnf.height}%`,
+                                    border: '1px dashed rgba(79, 70, 229, 0.4)',
+                                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                  }} />
+                                )
+                              })}
+                            </div>
+                         </div>
+                      ) : (
+                         <div className="flex flex-col items-center justify-center h-full text-gray-400 aspect-[9/16] w-full border border-dashed border-gray-300 dark:border-gray-700 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                           <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                           <span className="text-[10px] font-bold text-center">Aggiungi</span>
+                         </div>
+                      )}
+                   </div>
+                </div>
+             ))}
+           </div>
+        </div>
+      )}
+
+      {viewMode === "editor" && (
+        <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row"
@@ -306,9 +506,19 @@ export default function StoryTemplateConfig() {
                     />
                   )}
                   <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
-                    <AutoScalingText text="Nuova posizione rilevata (Es: Roma, Italia). L'utente cerca questo." config={config.chi} showBorders={true} isActive={activeTab === 'chi'} label="Cosa/Chi" />
-                    <AutoScalingText text="Oggi, 14:30" config={config.quando} showBorders={true} isActive={activeTab === 'quando'} label="Quando" />
-                    <AutoScalingText text="Roma, Italia" config={config.dove} showBorders={true} isActive={activeTab === 'dove'} label="Dove" />
+                    {getTabsForMode().map(tab => {
+                      const boxCnf = config[tab] || DEFAULT_CONFIG[tab];
+                      return (
+                        <AutoScalingText 
+                          key={tab}
+                          text={getLabelForModeAndTab(tab)} 
+                          config={boxCnf} 
+                          showBorders={true} 
+                          isActive={activeTab === tab} 
+                          label={getLabelForModeAndTab(tab)} 
+                        />
+                      );
+                    })}
                   </div>
                 </div>
                 {!backgroundImage && isDBReady && (
@@ -329,7 +539,7 @@ export default function StoryTemplateConfig() {
                 <Settings className="w-6 h-6 text-indigo-500" />
                 Impostazioni Template
               </h2>
-              <p className="text-sm text-gray-500">Configura la posizione e lo stile dei box di testo per le storie.</p>
+              <p className="text-sm text-gray-500">Sfondi per Target e Configurazioni per Modalità</p>
             </div>
             {savedStatus && (
               <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
@@ -338,17 +548,49 @@ export default function StoryTemplateConfig() {
             )}
           </div>
 
-          <div className="p-6 space-y-6 flex-1">
+          <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+          
+            {/* Mode and Target Selectors */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Modalità (Stile Testi)</label>
+                <select
+                  value={selectedMode}
+                  onChange={(e) => setSelectedMode(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
+                >
+                  <option value="spotted">Spotted</option>
+                  <option value="sondaggio">Sondaggio</option>
+                  <option value="risultati">Risultati Spotted</option>
+                  <option value="risultati_sondaggio">Risultati Sondaggio</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Ateneo/Zona (Sfondo)</label>
+                <select
+                  value={selectedTarget}
+                  onChange={(e) => setSelectedTarget(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
+                >
+                  {targetOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt === "DEFAULT" ? "Generico (Default)" : opt}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <hr className="border-gray-100 dark:border-gray-800" />
+
             {/* Background Template */}
             <div className="space-y-3">
               <label className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" /> Sfondo (1080x1920 raccomandato)
+                <ImageIcon className="w-4 h-4" /> Sfondo ({selectedTarget} - {selectedMode})
               </label>
               
               <div className="flex items-center gap-3">
                 <label className="flex-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/40 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-medium px-4 py-3 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2">
                   <Upload className="w-5 h-5" />
-                  <span>Carica Template (PNG/JPG)</span>
+                  <span>Carica Sfondo PNG/JPG</span>
                   <input
                     type="file"
                     accept="image/png, image/jpeg"
@@ -373,21 +615,21 @@ export default function StoryTemplateConfig() {
             {/* Box Selector */}
             <div className="space-y-4">
               <label className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                <Type className="w-4 h-4" /> Selezione Riquadro
+                <Type className="w-4 h-4" /> Selezione Riquadro Testo
               </label>
 
-              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
-                {(['chi', 'quando', 'dove'] as const).map((tab) => (
+              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl overflow-x-auto">
+                {getTabsForMode().map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 text-sm font-bold capitalize py-2 px-3 rounded-lg transition-colors ${
+                    className={`flex-1 min-w-[80px] text-xs sm:text-sm font-bold capitalize py-2 px-2 sm:px-3 rounded-lg transition-colors whitespace-nowrap ${
                       activeTab === tab
                         ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400'
                         : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
-                    {tab === 'chi' ? 'Cosa/Chi' : tab}
+                    {getLabelForModeAndTab(tab)}
                   </button>
                 ))}
               </div>
@@ -395,7 +637,7 @@ export default function StoryTemplateConfig() {
               {/* Box Settings */}
               <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl space-y-4 border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200 capitalize">Box: {activeTab === 'chi' ? 'Cosa/Chi' : activeTab}</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200 capitalize">Box: {getLabelForModeAndTab(activeTab)}</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input 
                       type="checkbox"
@@ -523,6 +765,7 @@ export default function StoryTemplateConfig() {
           </div>
         </div>
       </motion.div>
+      )}
     </div>
   );
 }
