@@ -5,136 +5,162 @@ import { db } from "../firebase";
 
 const logoCache: Record<string, string | null> = {};
 const pendingPromises: Record<string, Promise<string | null>> = {};
+const listeners: Record<string, Set<(url: string | null) => void>> = {};
 
 export const clearLogoCache = () => {
-  for (const key in logoCache) delete logoCache[key];
-  for (const key in pendingPromises) delete pendingPromises[key];
+  for (const key in logoCache) {
+    logoCache[key] = null;
+    if (listeners[key]) {
+      listeners[key].forEach(cb => cb(null));
+    }
+    delete logoCache[key];
+  }
+  for (const key in pendingPromises) {
+    delete pendingPromises[key];
+  }
 };
 
-const fetchLogoCached = async (name: string): Promise<string | null> => {
+const fetchLogo = async (name: string): Promise<string | null> => {
   if (name in logoCache) return logoCache[name];
   if (pendingPromises[name]) return pendingPromises[name];
 
-  const promise = getDoc(doc(db, "logos", name)).then(docSnap => {
-    const url = docSnap.exists() && docSnap.data()?.dataUrl ? docSnap.data().dataUrl : null;
-    logoCache[name] = url;
-    return url;
-  }).catch(() => {
-    logoCache[name] = null;
-    return null;
-  });
+  const promise = (async () => {
+    try {
+      const snap = await getDoc(doc(db, "logos", name));
+      const url = snap.exists() && snap.data()?.dataUrl ? snap.data().dataUrl : null;
+      logoCache[name] = url;
+      if (listeners[name]) {
+        listeners[name].forEach(cb => cb(url));
+      }
+      return url;
+    } catch {
+      delete pendingPromises[name];
+      return null;
+    }
+  })();
   
   pendingPromises[name] = promise;
   return promise;
 };
 
 export function Logo({ className, logoName = "default", fallbackText, forceTextFallback = false }: { className?: string; logoName?: string; fallbackText?: string, forceTextFallback?: boolean }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(logoCache[logoName] || null);
-  const [agoraOnlyUrl, setAgoraOnlyUrl] = useState<string | null>(logoCache["agora_soltanto"] || null);
+  const [url, setUrl] = useState<string | null>(logoCache[logoName] || null);
+  const [defaultUrl, setDefaultUrl] = useState<string | null>(logoCache["default"] || null);
+  const [agoraUrl, setAgoraUrl] = useState<string | null>(logoCache["agora_soltanto"] || null);
   
-  // If we already have it in cache, we don't need to show loading
-  const isImmediatelyAvailable = (logoName in logoCache) && (fallbackText ? ("agora_soltanto" in logoCache) : true);
-  const [loading, setLoading] = useState(!isImmediatelyAvailable);
-  
-  useEffect(() => {
-    let isMounted = true;
-    const fetchLogo = async () => {
-      setLoading(true);
-      try {
-        const logoUrl = await fetchLogoCached(logoName);
-        let mainLogoExists = false;
-        
-        if (logoUrl) {
-          if (isMounted) {
-            setCustomLogoUrl(logoUrl);
-            setImgFailed(false);
-            mainLogoExists = true;
-          }
-        } 
-        
-        if (!mainLogoExists) {
-          if (logoName !== "default" && !forceTextFallback && !fallbackText) {
-            const defaultUrl = await fetchLogoCached("default");
-            if (defaultUrl && isMounted) {
-               setCustomLogoUrl(defaultUrl);
-               setImgFailed(false);
-            } else if (isMounted) {
-               setImgFailed(true);
-            }
-          } else if (isMounted) {
-            setImgFailed(true);
-          }
-        }
+  const isImmediate = (logoName in logoCache);
+  const [loading, setLoading] = useState(!isImmediate);
+  const [failed, setFailed] = useState(isImmediate && !logoCache[logoName]);
+  const [timeoutText, setTimeoutText] = useState(false);
 
-        if (fallbackText || forceTextFallback) {
-           const agoraUrl = await fetchLogoCached("agora_soltanto");
-           if (agoraUrl && isMounted) {
-              setAgoraOnlyUrl(agoraUrl);
-           } else {
-              const defUrl = await fetchLogoCached("default");
-              if (defUrl && isMounted) {
-                 setAgoraOnlyUrl(defUrl);
-              }
-           }
-        }
-      } catch (err) {
-        console.error("Error fetching custom logo", err);
-        if (isMounted) setImgFailed(true);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+  useEffect(() => {
+    let mounted = true;
     
-    // Always call fetchLogo to ensure promises are handled, but if cached it will be fast
-    fetchLogo();
+    // reset state
+    setUrl(logoCache[logoName] || null);
+    setFailed(false);
+    setTimeoutText(false);
+
+    if (!(logoName in logoCache)) {
+      setLoading(true);
+      
+      const t = setTimeout(() => {
+         if (mounted && !(logoName in logoCache)) setTimeoutText(true);
+      }, 1000); // 1s fast text fallback if slow network
+      
+      const cb = (newUrl: string | null) => {
+        if (!mounted) return;
+        setUrl(newUrl);
+        setLoading(false);
+        if (!newUrl) setFailed(true);
+        else { setFailed(false); setTimeoutText(false); }
+      };
+      
+      if (!listeners[logoName]) listeners[logoName] = new Set();
+      listeners[logoName].add(cb);
+      
+      fetchLogo(logoName);
+      
+      return () => {
+        mounted = false;
+        clearTimeout(t);
+        listeners[logoName]?.delete(cb);
+      };
+    } else {
+       setLoading(false);
+       if (!logoCache[logoName]) setFailed(true);
+    }
+  }, [logoName]);
+
+  useEffect(() => {
+    let mounted = true;
+    const cbDef = (u: string|null) => { if (mounted) setDefaultUrl(u); };
+    const cbAgo = (u: string|null) => { if (mounted) setAgoraUrl(u); };
     
-    return () => { isMounted = false; };
-  }, [logoName, forceTextFallback, fallbackText]);
+    if (!listeners["default"]) listeners["default"] = new Set();
+    if (!listeners["agora_soltanto"]) listeners["agora_soltanto"] = new Set();
+    listeners["default"].add(cbDef);
+    listeners["agora_soltanto"].add(cbAgo);
+
+    fetchLogo("default");
+    fetchLogo("agora_soltanto");
+
+    return () => {
+      mounted = false;
+      listeners["default"]?.delete(cbDef);
+      listeners["agora_soltanto"]?.delete(cbAgo);
+    }
+  }, []);
 
   const hasSizing = className && (className.includes("w-") || className.includes("h-"));
+  
+  const showTextFallback = forceTextFallback || (!url && fallbackText && (failed || timeoutText));
+  
+  let finalSrc = url;
+  if (!url && failed && !fallbackText) {
+      finalSrc = defaultUrl;
+  }
+  
+  const isActuallyFailing = !finalSrc && !showTextFallback;
 
-  if (loading && !customLogoUrl && !imgFailed) {
-    return (
-      <div className={cn("flex items-center justify-center select-none animate-pulse bg-gray-200/50 dark:bg-gray-800/50 rounded-lg", className, hasSizing ? "" : "w-56 h-20 md:w-64 md:h-24")} />
-    );
+  if (loading && !finalSrc && !showTextFallback) {
+    return <div className={cn("flex items-center justify-center animate-pulse bg-gray-200/50 dark:bg-gray-800/50 rounded-lg", className, hasSizing ? "" : "w-56 h-20 md:w-64 md:h-24")} />
   }
 
-  const shouldShowText = imgFailed && fallbackText;
-
   return (
-    <div
-      className={cn("flex items-center justify-center select-none", className)}
-    >
-      <div
-        className={cn(
-          "flex items-center justify-center relative",
-          hasSizing ? "w-full h-full" : "w-56 h-20 md:w-64 md:h-24",
-        )}
-      >
-        {(!imgFailed || !shouldShowText) && (
-          <img
-            src={customLogoUrl || "https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true"}
-            alt="Agorà Logo"
-            className={cn("w-full h-full object-contain z-10 block dark:invert", shouldShowText ? "hidden" : "")}
-            onError={() => setImgFailed(true)}
-          />
-        )}
-        
-        {(imgFailed || forceTextFallback) && fallbackText && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <h1 style={{ fontFamily: 'var(--font-spartan)' }} className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter text-black dark:text-white leading-none text-center z-10 mb-0">
-              {fallbackText}
-            </h1>
-            {agoraOnlyUrl ? (
-               <img src={agoraOnlyUrl} alt="Agorà" className="w-[40%] object-contain -mt-1 sm:-mt-2 dark:invert" />
-            ) : (
-               <h1 className="text-sm sm:text-lg md:text-xl font-black tracking-tighter text-black dark:text-white leading-none text-center -mt-1 sm:-mt-2">
-                 <span className="text-[#DC5F00]">AGORÀ</span>
-               </h1>
-            )}
-          </div>
-        )}
+    <div className={cn("flex items-center justify-center select-none", className)}>
+      <div className={cn("relative flex items-center justify-center", hasSizing ? "w-full h-full" : "w-56 h-20 md:w-64 md:h-24")}>
+         {(!showTextFallback || url || finalSrc) && finalSrc && (
+            <img 
+               src={finalSrc}
+               alt="Logo"
+               className={cn("w-full h-full object-contain z-10 dark:invert", showTextFallback ? "hidden" : "block")}
+               onError={() => setFailed(true)}
+            />
+         )}
+         
+         {isActuallyFailing && (
+            <img 
+               src="https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true"
+               alt="Fallback Logo"
+               className="w-full h-full object-contain z-10 dark:invert opacity-70"
+            />
+         )}
+         
+         {showTextFallback && !url && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <h1 style={{ fontFamily: 'var(--font-spartan)' }} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-black dark:text-white leading-none text-center z-10 mb-0">
+                {fallbackText}
+              </h1>
+              {agoraUrl || defaultUrl ? (
+                 <img src={agoraUrl || defaultUrl!} alt="Agorà" className="h-2 sm:h-2.5 md:h-3 object-contain mt-1 dark:invert opacity-80" />
+              ) : (
+                 <h1 className="text-[9px] sm:text-[10px] md:text-[11px] font-black tracking-widest text-[#DC5F00] leading-none text-center mt-1">
+                   AGORÀ
+                 </h1>
+              )}
+            </div>
+         )}
       </div>
     </div>
   );

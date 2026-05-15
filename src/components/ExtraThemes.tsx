@@ -249,7 +249,7 @@ export function ThemeCorkboard() {
           <Logo 
             logoName={`logo_${form.area}`} 
             fallbackText={form.area} 
-            className="w-28 h-8 sm:w-32 sm:h-10 mx-auto mb-1 sm:mb-2" 
+            className="w-48 h-14 sm:w-64 sm:h-20 mx-auto mb-1 sm:mb-2" 
           />
 
           <div>
