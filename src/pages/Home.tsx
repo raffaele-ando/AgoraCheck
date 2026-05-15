@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   writeBatch,
   doc,
+  increment
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Logo } from "../components/Logo";
@@ -1138,6 +1139,9 @@ export function useSubmitSpotted() {
       const batch = writeBatch(db);
       const newMsgRef = doc(collection(db, "messages"));
       batch.set(newMsgRef, payload);
+
+      const statsRef = doc(db, "stats", "totali");
+      batch.set(statsRef, { totalMessages: increment(1) }, { merge: true });
 
       if (currentUser) {
         const rateLimitRef = doc(db, "rate_limits", currentUser.uid);

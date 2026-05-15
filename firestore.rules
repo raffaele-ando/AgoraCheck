@@ -89,5 +89,10 @@ service cloud.firestore {
     match /profiles/{document=**} {
       allow read, write: if isAdmin();
     }
+    match /stats/{statId} {
+      allow read: if isAdmin();
+      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalMessages']) && request.resource.data.totalMessages == resource.data.totalMessages + 1;
+      allow create: if isAuthenticated();
+    }
   }
 }

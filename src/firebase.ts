@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 
 // Carica opzionalmente il config locale se presente (es. in AI Studio) senza bloccare la build
 const configModules = import.meta.glob("../firebase-applet-config.json", {
@@ -31,6 +31,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
-  localCache: memoryLocalCache(),
+  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}),
 }, firebaseConfig.firestoreDatabaseId);
 export const googleProvider = new GoogleAuthProvider();

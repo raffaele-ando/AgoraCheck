@@ -17,6 +17,7 @@ import {
   startAfter,
   writeBatch,
   getDocs,
+  getDoc,
   deleteField,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -181,6 +182,7 @@ export default function Dashboard() {
   const [profiles, setProfiles] = useState<Record<string, ProfileRecord>>({});
   const [loading, setLoading] = useState(true);
   const [profilesLoaded, setProfilesLoaded] = useState(false);
+  const [totalGlobalMessages, setTotalGlobalMessages] = useState<number | null>(null);
   const [isStuckLoading, setIsStuckLoading] = useState(false);
   const [snapshotsError, setSnapshotsError] = useState<string | null>(null);
 
@@ -758,157 +760,103 @@ export default function Dashboard() {
     return result;
   };
   useEffect(() => {
-    const q = query(
-      collection(db, "messages"),
-      orderBy("createdAt", "desc"),
-      limit(200),
-    );
-    setLoading(true);
-    let unsubscribeMsgs: any = null;
-    try {
-      unsubscribeMsgs = onSnapshot(
-        q,
-        (snapshot) => {
-          const msgs = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            let parsedAdv = null;
-            if (data.advancedInfo) {
-              try {
-                let decodedStr =
-                  typeof data.advancedInfo === "string"
-                    ? data.advancedInfo
-                    : JSON.stringify(data.advancedInfo);
-                if (
-                  typeof data.advancedInfo === "string" &&
-                  !data.advancedInfo.startsWith("{")
-                ) {
-                  try {
-                    const base64Decoded = atob(data.advancedInfo);
-                    decodedStr = decodeURIComponent(base64Decoded);
-                  } catch (e) {
-                    console.error(
-                      "Error decoding base64 advancedInfo for message " + doc.id,
-                      e,
-                    );
-                  }
-                }
-                parsedAdv = JSON.parse(decodedStr);
-              } catch (e: any) {
-                console.error(
-                  `Failed to parse advancedInfo for message ${doc.id}: ${e.message}`,
-                );
-              }
-            }
-            let profileId = data.profileGroupId;
-            if (!profileId) {
-              profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
-            }
-            const profileColor = computeDeviceProfileColor(profileId);
-            return {
-              id: doc.id,
-              ...data,
-              parsedAdvanced: parsedAdv,
-              computedProfileId: profileId,
-              computedProfileColor: profileColor,
-            };
-          }) as (Message & {
-            parsedAdvanced?: any;
-            computedProfileId: string;
-            computedProfileColor: string;
-          })[];
-          setMessages(msgs);
-          setLoading(false);
-          setSnapshotsError(null);
-        },
-        async (error: any) => {
-          console.error("Firestore messages error:", error);
-          
-          try {
-            console.log("Tentativo di getDocs al posto di onSnapshot...");
-            const snapshot = await getDocs(q);
-            const msgs = snapshot.docs.map((doc) => {
-              const data = doc.data();
-              let parsedAdv = null;
-              if (data.advancedInfo) {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const statsDoc = await getDoc(doc(db, "stats", "totali"));
+        if (statsDoc.exists()) {
+          setTotalGlobalMessages(statsDoc.data().totalMessages || null);
+        }
+      } catch(err) {
+        console.error("error stats", err);
+      }
+      try {
+        const q = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200));
+        const msgsSnap = await getDocs(q);
+        const msgs = msgsSnap.docs.map((doc) => {
+          const data = doc.data();
+          let parsedAdv = null;
+          if (data.advancedInfo) {
+            try {
+              let decodedStr =
+                typeof data.advancedInfo === "string"
+                  ? data.advancedInfo
+                  : JSON.stringify(data.advancedInfo);
+              if (
+                typeof data.advancedInfo === "string" &&
+                !data.advancedInfo.startsWith("{")
+              ) {
                 try {
-                  let decodedStr =
-                    typeof data.advancedInfo === "string"
-                      ? data.advancedInfo
-                      : JSON.stringify(data.advancedInfo);
-                  if (
-                    typeof data.advancedInfo === "string" &&
-                    !data.advancedInfo.startsWith("{")
-                  ) {
-                    try {
-                      const base64Decoded = atob(data.advancedInfo);
-                      decodedStr = decodeURIComponent(base64Decoded);
-                    } catch (e) {}
-                  }
-                  parsedAdv = JSON.parse(decodedStr);
-                } catch (e) {}
+                  const base64Decoded = atob(data.advancedInfo);
+                  decodedStr = decodeURIComponent(base64Decoded);
+                } catch (e) {
+                  console.error(
+                    "Error decoding base64 advancedInfo for message " + doc.id,
+                    e,
+                  );
+                }
               }
-              let profileId = data.profileGroupId;
-              if (!profileId) {
-                profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
-              }
-              const profileColor = computeDeviceProfileColor(profileId);
-              return {
-                id: doc.id,
-                ...data,
-                parsedAdvanced: parsedAdv,
-                computedProfileId: profileId,
-                computedProfileColor: profileColor,
-              };
-            }) as any[];
-            setMessages(msgs);
-            setLoading(false);
-            setSnapshotsError((err) => (err ? err + " | " : "") + "onSnapshot ha fallito, ma i dati sono stati caricati tramite fallback");
-          } catch (fallbackError: any) {
-            console.error(error.stack);
-            setSnapshotsError((err) => (err ? err + " | " : "") + "Messages error: " + error.message + " (" + error.code + ")");
-            setLoading(false);
+              parsedAdv = JSON.parse(decodedStr);
+            } catch (e: any) {
+              console.error(
+                `Failed to parse advancedInfo for message ${doc.id}: ${e.message}`,
+              );
+            }
           }
-        },
-      );
-    } catch(err: any) {
-       console.error("Fatal snapshot error", err);
-       setLoading(false);
-    }
-    const unsubscribeProfiles = onSnapshot(
-      collection(db, "profiles"),
-      (snapshot) => {
+          let profileId = data.profileGroupId;
+          if (!profileId) {
+            profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+          }
+          const profileColor = computeDeviceProfileColor(profileId);
+          return {
+            id: doc.id,
+            ...data,
+            parsedAdvanced: parsedAdv,
+            computedProfileId: profileId,
+            computedProfileColor: profileColor,
+          };
+        }) as (Message & {
+          parsedAdvanced?: any;
+          computedProfileId: string;
+          computedProfileColor: string;
+        })[];
+        setMessages(msgs);
+        setSnapshotsError(null);
+      } catch (error: any) {
+        console.error("Firestore messages error:", error);
+        setSnapshotsError((err) => (err ? err + " | " : "") + "Messages error: " + error.message);
+      } finally {
+        setLoading(false);
+      }
+
+      try {
+        const profilesSnap = await getDocs(collection(db, "profiles"));
         const pmap: Record<string, ProfileRecord> = {};
-        snapshot.docs.forEach((doc) => {
+        profilesSnap.docs.forEach((doc) => {
           pmap[doc.id] = { id: doc.id, ...doc.data() } as ProfileRecord;
         });
         setProfiles(pmap);
-        setProfilesLoaded(true);
-      },
-      (error) => {
+      } catch (error: any) {
         console.error("Firestore profiles error:", error);
         setSnapshotsError((err) => (err ? err + " | " : "") + "Profiles error: " + error.message);
+      } finally {
         setProfilesLoaded(true);
-      },
-    );
-    const unsubscribeVisits = onSnapshot(
-      collection(db, "analytics_visits"),
-      (snapshot) => {
+      }
+
+      try {
+        const visitsSnap = await getDocs(collection(db, "analytics_visits"));
         const v: any[] = [];
-        snapshot.docs.forEach((doc) => {
+        visitsSnap.docs.forEach((doc) => {
           v.push({ id: doc.id, ...doc.data() });
         });
         setVisits(v);
-      },
-      (error) => {
+      } catch (error: any) {
         console.error("Firestore visits error:", error);
         setSnapshotsError((err) => (err ? err + " | " : "") + "Visits error: " + error.message);
       }
-    );
-    return () => {
-      unsubscribeMsgs();
-      unsubscribeProfiles();
-      unsubscribeVisits();
     };
+
+    fetchAllData();
   }, []);
   /* Reset pagination when view filter or active tab changes */ useEffect(() => {
     setCurrentPage(1);
@@ -1211,6 +1159,11 @@ export default function Dashboard() {
                   <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 shrink-0 hidden md:block"></div>
                   <h1 className="text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden xl:block shrink-0">
                     Dashboard
+                    {totalGlobalMessages !== null && (
+                      <span className="ml-3 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-400 px-2 py-1 rounded-md align-middle">
+                        Totali: {totalGlobalMessages} messaggi
+                      </span>
+                    )}
                   </h1>
                 </div>
                 {/* Mobile Icons */}
