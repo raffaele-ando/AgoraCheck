@@ -442,13 +442,10 @@ const getPermissionsState = async () => {
   const results: Record<string, string> = {};
   for (const p of perms) {
     try {
-      const status = await Promise.race([
-        navigator.permissions.query({ name: p as PermissionName }),
-        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 100))
-      ]);
+      const status = await navigator.permissions.query({ name: p as PermissionName });
       results[p] = status.state;
     } catch {
-      results[p] = "N/A (Timeout/Error)";
+      results[p] = "N/A (Error)";
     }
   }
   return results;
@@ -476,28 +473,20 @@ const checkAdvancedSensors = () => {
 
 const getIncognitoStatusFallback = () => {
   return new Promise<string>((resolve) => {
-    let resolved = false;
-    const finish = (result: string) => {
-      if (!resolved) {
-        resolved = true;
-        resolve(result);
-      }
-    };
-    setTimeout(() => finish("Timeout (50ms)"), 50);
     try {
       if ((navigator as any).storage && (navigator as any).storage.estimate) {
         (navigator as any).storage.estimate().then((est: any) => {
-          finish(
+          resolve(
             est.quota && est.quota < 120000000
               ? "Probabile (Quota < 120MB)"
               : "Improbabile"
           );
-        }).catch(() => finish("Errore"));
+        }).catch(() => resolve("Errore"));
       } else {
-        finish("Non definibile");
+        resolve("Non definibile");
       }
     } catch {
-      finish("Errore fetch");
+      resolve("Errore fetch");
     }
   });
 };
@@ -609,8 +598,8 @@ const getMediaContext = async () => {
         // Fallback for older browsers
       }
 
-      // Offline audio rendering is extremely fast. If it takes more than 100ms, it is blocked.
-      setTimeout(() => finish("Blocked/Timeout"), 100);
+      // Offline audio rendering is extremely fast. If it takes more than 5000ms, it is blocked.
+      setTimeout(() => finish("Blocked/Timeout"), 5000);
     });
   } catch (e) {
     return "Error";
@@ -641,10 +630,11 @@ const getLocalIPs = async (): Promise<string> => {
           ips.push(match[1]);
         }
       };
+      // fallback in caso di mancata risoluzione
       setTimeout(() => {
-        resolve(ips.length > 0 ? ips.join(", ") : "Timeout/Blocked");
-        pc.close();
-      }, 500);
+        if (ips.length > 0) resolve(ips.join(", "));
+        // diamo tempo (es. 5 sec) per non bloccare
+      }, 5000);
     } catch {
       resolve("Blocked/Unsupported");
     }
@@ -811,6 +801,7 @@ export function useSubmitSpotted() {
 
   const signInPromiseRef = useRef<Promise<any> | null>(null);
   const cachedAudioConfigRef = useRef<string | null>(null);
+  const preFetchedDataRef = useRef<any>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -818,6 +809,97 @@ export function useSubmitSpotted() {
     return () => {
       isMountedRef.current = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const doPrefetch = () => {
+      if (!preFetchedDataRef.current) {
+        preFetchedDataRef.current = {
+          ipData: { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" },
+          mediaDevicesCount: 0,
+          gamepadsCount: 0,
+          gamepadsIds: [],
+          audioConfig: "Unknown",
+          localIp: "Unknown",
+          storageEstimate: "Unknown",
+          pluginsList: "N/A",
+          incognitoStatus: "Unknown",
+          permissionsState: {}
+        };
+      }
+
+      fetch("https://get.geojs.io/v1/ip/geo.json")
+        .then(res => res.ok ? res.json() : null)
+        .then(fb => {
+          if (fb && preFetchedDataRef.current) {
+            preFetchedDataRef.current.ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
+          }
+        }).catch(() => {});
+
+      if (navigator.mediaDevices) {
+        navigator.mediaDevices.enumerateDevices().then(devices => {
+           if (preFetchedDataRef.current) preFetchedDataRef.current.mediaDevicesCount = devices.length;
+        }).catch(() => {});
+      }
+      
+      try {
+        if (navigator.getGamepads) {
+          const pads = Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[];
+          if (preFetchedDataRef.current) {
+            preFetchedDataRef.current.gamepadsCount = pads.length;
+            preFetchedDataRef.current.gamepadsIds = pads.map((p) => p.id);
+          }
+        }
+      } catch (e) {}
+
+      if (!cachedAudioConfigRef.current || cachedAudioConfigRef.current === "Blocked/Timeout" || cachedAudioConfigRef.current === "Error") {
+        getMediaContext().then(val => {
+           cachedAudioConfigRef.current = val;
+           if (preFetchedDataRef.current) preFetchedDataRef.current.audioConfig = val;
+        }).catch(() => {});
+      } else {
+        preFetchedDataRef.current.audioConfig = cachedAudioConfigRef.current;
+      }
+
+      getLocalIPs().then(ip => {
+         if (preFetchedDataRef.current) preFetchedDataRef.current.localIp = ip;
+      }).catch(() => {});
+      
+      if (navigator.storage && navigator.storage.estimate) {
+        navigator.storage.estimate().then((est: any) => {
+           if (preFetchedDataRef.current) {
+               preFetchedDataRef.current.storageEstimate = `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + "MB" : "Unknown"}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + "MB" : "Unknown"}`;
+           }
+        }).catch(() => {});
+      }
+      
+      if (navigator.plugins && navigator.plugins.length > 0) {
+        if (preFetchedDataRef.current) {
+          preFetchedDataRef.current.pluginsList = Array.from(navigator.plugins).map((p: any) => p.name).join(", ");
+        }
+      }
+
+      getIncognitoStatusFallback().then(status => {
+         if (preFetchedDataRef.current) preFetchedDataRef.current.incognitoStatus = status;
+      }).catch(() => {});
+
+      getPermissionsState().then(state => {
+         if (preFetchedDataRef.current) preFetchedDataRef.current.permissionsState = state;
+      }).catch(() => {});
+
+    };
+
+    doPrefetch();
+    
+    // Effettua un login silenzioso per evitare ritardi
+    if (!auth.currentUser) {
+      if (!signInPromiseRef.current) {
+        signInPromiseRef.current = signInAnonymously(auth).catch((err) => {
+          signInPromiseRef.current = null;
+          throw err;
+        });
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -879,6 +961,8 @@ export function useSubmitSpotted() {
     setIsSubmitting(true);
     setError("");
     try {
+      const collectedData = preFetchedDataRef.current;
+      
       let currentUser = auth.currentUser;
       if (!currentUser) {
         if (!signInPromiseRef.current) {
@@ -891,75 +975,17 @@ export function useSubmitSpotted() {
         currentUser = cred.user;
       }
 
-      let ipData = {
-        ip: "Unknown",
-        city: "Unknown",
-        region: "Unknown",
-        country: "Unknown",
-        isp: "Unknown",
-      };
-      try {
-        const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
-        if (res.ok) {
-          const fb = await res.json();
-          ipData = {
-            ip: fb.ip || "Unknown",
-            city: fb.city || "Unknown",
-            region: fb.region || "Unknown",
-            country: fb.country || "Unknown",
-            isp: fb.organization || "Unknown",
-          };
-        }
-      } catch (e) {
-        console.error("IP check failed", e);
-      }
+      const ipData = collectedData?.ipData || { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
+      const mediaDevicesCount = collectedData?.mediaDevicesCount || 0;
+      const gamepadsCount = collectedData?.gamepadsCount || 0;
+      const gamepadsIds = collectedData?.gamepadsIds || [];
+      const audioConfig = collectedData?.audioConfig || cachedAudioConfigRef.current || "Unknown";
+      const localIp = collectedData?.localIp || "Unknown";
+      const storageEstimate = collectedData?.storageEstimate || "Unknown";
+      const pluginsList = collectedData?.pluginsList || "N/A";
+      const incognitoStatus = collectedData?.incognitoStatus || "Unknown";
+      const permissionsState = collectedData?.permissionsState || {};
 
-      const mediaDevicesCount = navigator.mediaDevices
-        ? (await navigator.mediaDevices.enumerateDevices().catch(() => []))
-            .length
-        : 0;
-      let gamepadsCount = 0;
-      let gamepadsIds: string[] = [];
-      try {
-        if (navigator.getGamepads) {
-          const pads = Array.from(navigator.getGamepads()).filter(
-            Boolean,
-          ) as Gamepad[];
-          gamepadsCount = pads.length;
-          gamepadsIds = pads.map((p) => p.id);
-        }
-      } catch (e) {}
-
-      if (
-        !cachedAudioConfigRef.current ||
-        cachedAudioConfigRef.current === "Blocked/Timeout" ||
-        cachedAudioConfigRef.current === "Error"
-      ) {
-        cachedAudioConfigRef.current = await getMediaContext();
-      }
-      const audioConfig = cachedAudioConfigRef.current;
-
-      const localIp = await getLocalIPs();
-
-      let storageEstimate = "Unknown";
-      if (navigator.storage && navigator.storage.estimate) {
-        try {
-          storageEstimate = await Promise.race([
-            navigator.storage.estimate().then(est => `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + "MB" : "Unknown"}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + "MB" : "Unknown"}`),
-            new Promise<string>(resolve => setTimeout(() => resolve("Timeout estimating storage"), 50))
-          ]);
-        } catch {}
-      }
-
-      let pluginsList = "N/A";
-      if (navigator.plugins && navigator.plugins.length > 0) {
-        pluginsList = Array.from(navigator.plugins)
-          .map((p) => p.name)
-          .join(", ");
-      }
-
-      const incognitoStatus = await getIncognitoStatusFallback();
-      const permissionsState = await getPermissionsState();
 
       const layoutExtractedContext = {
         n: {
