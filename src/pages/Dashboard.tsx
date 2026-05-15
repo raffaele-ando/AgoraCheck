@@ -107,8 +107,7 @@ const computeDeviceProfileColor = (profileId: string) => {
 };
 const computeDeviceProfileId = (
   parsedAdv: any,
-  deviceInfo: any,
-  vTokenMap?: Map<string, string>,
+  deviceInfo: any
 ): string => {
   if (!parsedAdv) return "UNKNOWN";
   try {
@@ -128,15 +127,26 @@ const computeDeviceProfileId = (
       parsedAdv.hardware?.screen || parsedAdv.h?.screen || parsedAdv.h?.s || "";
     const cores =
       parsedAdv.hardware?.cores || parsedAdv.h?.cores || parsedAdv.h?.c || "";
-    let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+    
+    const rectsRaw = parsedAdv.software?.clientRectsFingerprint || parsedAdv.s?.clientRectsFingerprint || "";
+    const mathRaw = parsedAdv.software?.mathFingerprint || parsedAdv.s?.mathFingerprint || "";
+    
+    const rects = typeof rectsRaw === "object" ? JSON.stringify(rectsRaw) : String(rectsRaw);
+    const math = typeof mathRaw === "object" ? JSON.stringify(mathRaw) : String(mathRaw);
+    
     const vToken =
       parsedAdv.behavior?.ttv || parsedAdv.b?.ttv || parsedAdv.b?.vToken || "";
-    if (vTokenMap && vToken && vTokenMap.has(vToken)) {
-      seed = vTokenMap.get(vToken)!;
-    } else if (seed === "----" && deviceInfo) {
+
+    let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}-${rects}-${math}`;
+    
+    if (vToken) {
+      // If vToken is present, it is the most reliable unique identifier
+      seed = `${seed}-${vToken}`;
+    } else if (seed === "-------" && deviceInfo) {
       const ip = deviceInfo.userAgent || "";
       seed = ip;
     }
+
     let h1 = 0xdeadbeef,
       h2 = 0x41c6ce57;
     for (let i = 0, ch; i < seed.length; i++) {
@@ -171,6 +181,17 @@ export default function Dashboard() {
   const [profiles, setProfiles] = useState<Record<string, ProfileRecord>>({});
   const [loading, setLoading] = useState(true);
   const [profilesLoaded, setProfilesLoaded] = useState(false);
+  const [isStuckLoading, setIsStuckLoading] = useState(false);
+  const [snapshotsError, setSnapshotsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let timeout = setTimeout(() => {
+      if (loading || !profilesLoaded) {
+        setIsStuckLoading(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [loading, profilesLoaded]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -440,76 +461,36 @@ export default function Dashboard() {
   const parseAdvancedInfo = (msg: any) => {
     return msg.parsedAdvanced || null;
   };
-  const vTokenMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i];
-      if (!msg.advancedInfo) continue;
-      const adv = parseAdvancedInfo(msg);
-      if (!adv) continue;
-      const vToken = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken || "";
-      if (vToken) {
-        const canvas =
-          adv.software?.canvasFingerprint ||
-          adv.s?.canvasFingerprint ||
-          adv.s?.c ||
-          "";
-        const audio =
-          adv.software?.audioFingerprint ||
-          adv.s?.audioFingerprint ||
-          adv.s?.a ||
-          "";
-        const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
-        const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
-        const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
-        const seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
-        if (!map.has(vToken)) {
-          map.set(vToken, seed);
-        }
-      }
-    }
-    return map;
-  }, [messages]);
   const getDeviceProfileCacheRef = useRef(
     new Map<
       string,
       {
-        resolvedSeed: string | undefined;
-        groupId: string | undefined;
         result: string;
       }
     >(),
   );
+
   const getDeviceProfile = useCallback(
     (msg: Message) => {
       if (msg.profileGroupId) return msg.profileGroupId;
       const cacheKey = msg.id;
       const cache = getDeviceProfileCacheRef.current.get(cacheKey);
-      const adv = msg.parsedAdvanced;
-      const vToken = adv
-        ? adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken || ""
-        : "";
-      const currentResolvedSeed = vToken ? vTokenMap.get(vToken) : undefined;
-      if (
-        cache &&
-        cache.resolvedSeed === currentResolvedSeed &&
-        cache.groupId === msg.profileGroupId
-      ) {
+
+      if (cache) {
         return cache.result;
       }
+
       const result = computeDeviceProfileId(
         msg.parsedAdvanced,
-        msg.deviceInfo,
-        vTokenMap,
+        msg.deviceInfo
       );
+
       getDeviceProfileCacheRef.current.set(cacheKey, {
-        resolvedSeed: currentResolvedSeed,
-        groupId: msg.profileGroupId,
         result,
       });
       return result;
     },
-    [vTokenMap],
+    [],
   );
   const profileInstagramsMap = useMemo(() => {
     const tagsByProfile = new Map<string, string[]>();
@@ -780,67 +761,119 @@ export default function Dashboard() {
     const q = query(
       collection(db, "messages"),
       orderBy("createdAt", "desc"),
-      limit(2000),
+      limit(200),
     );
     setLoading(true);
-    const unsubscribeMsgs = onSnapshot(
-      q,
-      (snapshot) => {
-        const msgs = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          let parsedAdv = null;
-          if (data.advancedInfo) {
-            try {
-              let decodedStr =
-                typeof data.advancedInfo === "string"
-                  ? data.advancedInfo
-                  : JSON.stringify(data.advancedInfo);
-              if (
-                typeof data.advancedInfo === "string" &&
-                !data.advancedInfo.startsWith("{")
-              ) {
-                try {
-                  const base64Decoded = atob(data.advancedInfo);
-                  decodedStr = decodeURIComponent(base64Decoded);
-                } catch (e) {
-                  console.error(
-                    "Error decoding base64 advancedInfo for message " + doc.id,
-                    e,
-                  );
+    let unsubscribeMsgs: any = null;
+    try {
+      unsubscribeMsgs = onSnapshot(
+        q,
+        (snapshot) => {
+          const msgs = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            let parsedAdv = null;
+            if (data.advancedInfo) {
+              try {
+                let decodedStr =
+                  typeof data.advancedInfo === "string"
+                    ? data.advancedInfo
+                    : JSON.stringify(data.advancedInfo);
+                if (
+                  typeof data.advancedInfo === "string" &&
+                  !data.advancedInfo.startsWith("{")
+                ) {
+                  try {
+                    const base64Decoded = atob(data.advancedInfo);
+                    decodedStr = decodeURIComponent(base64Decoded);
+                  } catch (e) {
+                    console.error(
+                      "Error decoding base64 advancedInfo for message " + doc.id,
+                      e,
+                    );
+                  }
                 }
+                parsedAdv = JSON.parse(decodedStr);
+              } catch (e: any) {
+                console.error(
+                  `Failed to parse advancedInfo for message ${doc.id}: ${e.message}`,
+                );
               }
-              parsedAdv = JSON.parse(decodedStr);
-            } catch (e: any) {
-              console.error(
-                `Failed to parse advancedInfo for message ${doc.id}: ${e.message}`,
-              );
             }
+            let profileId = data.profileGroupId;
+            if (!profileId) {
+              profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+            }
+            const profileColor = computeDeviceProfileColor(profileId);
+            return {
+              id: doc.id,
+              ...data,
+              parsedAdvanced: parsedAdv,
+              computedProfileId: profileId,
+              computedProfileColor: profileColor,
+            };
+          }) as (Message & {
+            parsedAdvanced?: any;
+            computedProfileId: string;
+            computedProfileColor: string;
+          })[];
+          setMessages(msgs);
+          setLoading(false);
+          setSnapshotsError(null);
+        },
+        async (error: any) => {
+          console.error("Firestore messages error:", error);
+          
+          try {
+            console.log("Tentativo di getDocs al posto di onSnapshot...");
+            const snapshot = await getDocs(q);
+            const msgs = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              let parsedAdv = null;
+              if (data.advancedInfo) {
+                try {
+                  let decodedStr =
+                    typeof data.advancedInfo === "string"
+                      ? data.advancedInfo
+                      : JSON.stringify(data.advancedInfo);
+                  if (
+                    typeof data.advancedInfo === "string" &&
+                    !data.advancedInfo.startsWith("{")
+                  ) {
+                    try {
+                      const base64Decoded = atob(data.advancedInfo);
+                      decodedStr = decodeURIComponent(base64Decoded);
+                    } catch (e) {}
+                  }
+                  parsedAdv = JSON.parse(decodedStr);
+                } catch (e) {}
+              }
+              let profileId = data.profileGroupId;
+              if (!profileId) {
+                profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+              }
+              const profileColor = computeDeviceProfileColor(profileId);
+              return {
+                id: doc.id,
+                ...data,
+                parsedAdvanced: parsedAdv,
+                computedProfileId: profileId,
+                computedProfileColor: profileColor,
+              };
+            }) as any[];
+            setMessages(msgs);
+            setLoading(false);
+            setSnapshotsError((err) => (err ? err + " | " : "") + "onSnapshot ha fallito, ma i dati sono stati caricati tramite fallback");
+          } catch (fallbackError: any) {
+            console.error(error.stack);
+            setSnapshotsError((err) => (err ? err + " | " : "") + "Messages error: " + error.message + " (" + error.code + ")");
+            setLoading(false);
           }
-          let profileId = data.profileGroupId;
-          if (!profileId) {
-            profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
-          }
-          const profileColor = computeDeviceProfileColor(profileId);
-          return {
-            id: doc.id,
-            ...data,
-            parsedAdvanced: parsedAdv,
-            computedProfileId: profileId,
-            computedProfileColor: profileColor,
-          };
-        }) as (Message & {
-          parsedAdvanced?: any;
-          computedProfileId: string;
-          computedProfileColor: string;
-        })[];
-        setMessages(msgs);
-        setLoading(false);
-      },
-      (error) => {
-        console.error(error);
-        setLoading(false);
-      },
-    );
+        },
+      );
+    } catch(err: any) {
+       console.error("Fatal snapshot error", err);
+       setLoading(false);
+    }
     const unsubscribeProfiles = onSnapshot(
       collection(db, "profiles"),
       (snapshot) => {
@@ -852,6 +885,8 @@ export default function Dashboard() {
         setProfilesLoaded(true);
       },
       (error) => {
+        console.error("Firestore profiles error:", error);
+        setSnapshotsError((err) => (err ? err + " | " : "") + "Profiles error: " + error.message);
         setProfilesLoaded(true);
       },
     );
@@ -865,7 +900,8 @@ export default function Dashboard() {
         setVisits(v);
       },
       (error) => {
-        console.error(error);
+        console.error("Firestore visits error:", error);
+        setSnapshotsError((err) => (err ? err + " | " : "") + "Visits error: " + error.message);
       }
     );
     return () => {
@@ -1549,9 +1585,17 @@ export default function Dashboard() {
               </div>
             )}
             {loading || !profilesLoaded ? (
-              <div className="flex justify-center py-20">
-
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                {(isStuckLoading || snapshotsError) && (
+                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2">
+                    {snapshotsError ? (
+                      <span className="text-red-500">Errore di connessione a Firebase: {snapshotsError}</span>
+                    ) : (
+                      "Se il caricamento è infinito, la connessione al database potrebbe essere bloccata dall'iframe di AI Studio. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra."
+                    )}
+                  </div>
+                )}
               </div>
             ) : filteredMessages.length === 0 ? (
               <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-white/20">
@@ -2375,7 +2419,7 @@ export default function Dashboard() {
                                           MATH_ID:
                                         </span>
                                         <span
-                                          className="font-bold text-gray-800 dark:text-gray-200 "
+                                          className="font-bold text-gray-800 dark:text-gray-200 truncate inline-block max-w-[150px] align-bottom"
                                           title={
                                             adv.software?.mathFingerprint
                                               ? JSON.stringify(
@@ -2384,8 +2428,8 @@ export default function Dashboard() {
                                               : ""
                                           }
                                         >
-                                          {adv.software?.mathFingerprint?.pi
-                                            ? "Presente"
+                                          {adv.software?.mathFingerprint
+                                            ? JSON.stringify(adv.software.mathFingerprint)
                                             : "N/A"}
                                         </span>
                                       </div>
@@ -2470,9 +2514,17 @@ export default function Dashboard() {
           <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
 
             {loading || !profilesLoaded ? (
-              <div className="flex justify-center py-20">
-
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                {(isStuckLoading || snapshotsError) && (
+                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2">
+                    {snapshotsError ? (
+                      <span className="text-red-500">Errore di connessione: {snapshotsError}</span>
+                    ) : (
+                      "Se il caricamento è infinito, la connessione al database potrebbe essere bloccata dall'iframe di AI Studio. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra."
+                    )}
+                  </div>
+                )}
               </div>
             ) : Object.keys(profiles).length === 0 ? (
               <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-white/20">

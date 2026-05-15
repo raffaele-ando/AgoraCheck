@@ -24,6 +24,16 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [isStuck, setIsStuck] = useState(false);
+
+  useEffect(() => {
+    let timeout = setTimeout(() => {
+      if (authLoading || verifying) {
+        setIsStuck(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [authLoading, verifying]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -35,6 +45,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         setAuthLoading(false);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -107,8 +118,13 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (authLoading || verifying) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center transition-colors">
+      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex flex-col gap-4 items-center justify-center transition-colors">
         <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
+        {isStuck && (
+          <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-4">
+            Se il caricamento è infinito, l'accesso di Google potrebbe essere bloccato dall'iframe. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra, oppure abilita i cookie di terze parti.
+          </div>
+        )}
       </div>
     );
   }

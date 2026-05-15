@@ -7,11 +7,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isSuperAdmin() {
+      return isAuthenticated() && ('email' in request.auth.token && request.auth.token.email == 'andolinaraffaele70@gmail.com');
+    }
+
     function isAdmin() {
-      return isAuthenticated() && (
+      return isSuperAdmin() || (isAuthenticated() && (
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
         ('email' in request.auth.token && exists(/databases/$(database)/documents/admins/$(request.auth.token.email)))
-      );
+      ));
     }
 
     function hasRequiredFields(fields) {
@@ -56,9 +60,6 @@ service cloud.firestore {
     match /logos/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
-    }
-    function isSuperAdmin() {
-      return isAuthenticated() && ('email' in request.auth.token && request.auth.token.email == 'andolinaraffaele70@gmail.com');
     }
 
     match /admins/{userId} {

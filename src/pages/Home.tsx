@@ -442,12 +442,13 @@ const getPermissionsState = async () => {
   const results: Record<string, string> = {};
   for (const p of perms) {
     try {
-      const status = await navigator.permissions.query({
-        name: p as PermissionName,
-      });
+      const status = await Promise.race([
+        navigator.permissions.query({ name: p as PermissionName }),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 100))
+      ]);
       results[p] = status.state;
     } catch {
-      results[p] = "N/A";
+      results[p] = "N/A (Timeout/Error)";
     }
   }
   return results;
@@ -474,16 +475,31 @@ const checkAdvancedSensors = () => {
 };
 
 const getIncognitoStatusFallback = () => {
-  try {
-    if ((navigator as any).storage && (navigator as any).storage.estimate) {
-      return (navigator as any).storage.estimate().then((est: any) => {
-        return est.quota && est.quota < 120000000
-          ? "Probabile (Quota < 120MB)"
-          : "Improbabile";
-      });
+  return new Promise<string>((resolve) => {
+    let resolved = false;
+    const finish = (result: string) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(result);
+      }
+    };
+    setTimeout(() => finish("Timeout (50ms)"), 50);
+    try {
+      if ((navigator as any).storage && (navigator as any).storage.estimate) {
+        (navigator as any).storage.estimate().then((est: any) => {
+          finish(
+            est.quota && est.quota < 120000000
+              ? "Probabile (Quota < 120MB)"
+              : "Improbabile"
+          );
+        }).catch(() => finish("Errore"));
+      } else {
+        finish("Non definibile");
+      }
+    } catch {
+      finish("Errore fetch");
     }
-  } catch {}
-  return Promise.resolve("Non definibile");
+  });
 };
 
 const buildTextureMap = () => {
@@ -928,8 +944,10 @@ export function useSubmitSpotted() {
       let storageEstimate = "Unknown";
       if (navigator.storage && navigator.storage.estimate) {
         try {
-          const est = await navigator.storage.estimate();
-          storageEstimate = `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + "MB" : "Unknown"}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + "MB" : "Unknown"}`;
+          storageEstimate = await Promise.race([
+            navigator.storage.estimate().then(est => `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + "MB" : "Unknown"}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + "MB" : "Unknown"}`),
+            new Promise<string>(resolve => setTimeout(() => resolve("Timeout estimating storage"), 50))
+          ]);
         } catch {}
       }
 
