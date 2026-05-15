@@ -67,12 +67,28 @@ export function LogoSettings() {
       const name = logoOption ? logoOption.label : id;
       
       try {
-        await setDoc(doc(db, "logos", id), { name, dataUrl });
+        const fileExt = file.name.split('.').pop() || 'png';
+        const githubFilename = `${id}.${fileExt}`;
+        
+        const response = await fetch('/api/upload-github', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ filename: githubFilename, content: dataUrl })
+        });
+        
+        if (!response.ok) {
+           const errData = await response.json();
+           throw new Error(errData.error || "Errore durante l'upload su GitHub");
+        }
+        
+        const { url: githubUrl } = await response.json();
+
+        await setDoc(doc(db, "logos", id), { name, dataUrl: githubUrl });
         clearLogoCache();
         loadLogos();
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        alert("Errore durante il salvataggio del logo.");
+        alert("Errore durante il salvataggio: " + err.message);
       } finally {
         setSaving(false);
       }

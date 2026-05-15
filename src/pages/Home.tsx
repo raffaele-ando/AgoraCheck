@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
-import { ThemeCorkboard } from "../components/ExtraThemes";
+const ThemeCorkboard = React.lazy(() => import("../components/ExtraThemes").then(m => ({ default: m.ThemeCorkboard })));
 
 // --- INSTAGRAM BLOCKER ---
 function useInstagramEscape() {
@@ -1166,7 +1166,9 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[#111111] transition-colors duration-300">
-      <ThemeCorkboard />
+      <React.Suspense fallback={null}>
+        <ThemeCorkboard />
+      </React.Suspense>
     </div>
   );
 }

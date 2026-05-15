@@ -35,6 +35,9 @@ const fetchLogo = async (name: string): Promise<string | null> => {
       return url;
     } catch {
       delete pendingPromises[name];
+      if (listeners[name]) {
+        listeners[name].forEach(cb => cb(null));
+      }
       return null;
     }
   })();
