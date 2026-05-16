@@ -220,6 +220,18 @@ export function ThemeCorkboard() {
   };
 
   const displayError = localError || error;
+  
+  const [headerInteracting, setHeaderInteracting] = useState(false);
+  const [safeArea, setSafeArea] = useState(form.area);
+  const [safeCity, setSafeCity] = useState(form.city);
+
+  // Sync safeArea/safeCity only when NOT interacting
+  useEffect(() => {
+    if (!headerInteracting) {
+      setSafeArea(form.area);
+      setSafeCity(form.city);
+    }
+  }, [headerInteracting, form.area, form.city]);
 
   return (
     <div className="fixed inset-0 w-full h-[100dvh] flex flex-col items-center p-2 sm:p-10 bg-[#111111] bg-[radial-gradient(rgba(243,236,224,0.1)_2px,transparent_2px)] [background-size:20px_20px] pt-4 sm:pt-8 overflow-x-hidden overflow-y-auto z-0">
@@ -233,9 +245,10 @@ export function ThemeCorkboard() {
         type={form.type}
         setType={(type) => setForm(prev => ({ ...prev, type }))}
         hasInteracted={form.lookingFor.length > 0 || form.when.length > 0 || form.where.length > 0 || form.instagram.length > 0 || form.pollOptions.some(opt => opt.length > 0)}
+        onInteractionStateChange={setHeaderInteracting}
       />
 
-      <WhatsappWidget city={form.city} area={form.area} />
+      <WhatsappWidget city={safeCity} area={safeArea} />
 
       <motion.div
         initial={{ rotate: -2, scale: 0.95 }}

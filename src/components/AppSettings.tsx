@@ -67,6 +67,7 @@ export const saveWhatsappLinksToDB = async (config: Record<string, string>) => {
 function WhatsappSettings() {
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
+  const [newZone, setNewZone] = useState("");
 
   useEffect(() => {
     loadWhatsappLinksFromDB().then(setLinks);
@@ -74,8 +75,8 @@ function WhatsappSettings() {
 
   const handleSave = async () => {
     try {
-      // Puliamo i link vuoti
-      const cleaned = Object.fromEntries(Object.entries(links).filter(([_, v]) => v && v.trim() !== ""));
+      // Puliamo i link vuoti (tranne _title e _subtitle)
+      const cleaned = Object.fromEntries(Object.entries(links).filter(([k, v]) => (k.startsWith("_") ? true : v && v.trim() !== "")));
       await saveWhatsappLinksToDB(cleaned);
       setLinks(cleaned);
       setIsSaved(true);
@@ -85,7 +86,17 @@ function WhatsappSettings() {
     }
   };
 
-  const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
+  const handleAddZone = () => {
+     if (newZone.trim() && !links[newZone.trim().toUpperCase()]) {
+        setLinks({ ...links, [newZone.trim().toUpperCase()]: "" });
+        setNewZone("");
+     }
+  };
+
+  const predefinedLocations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
+  // Aggiungiamo anche le zone custom che sono state salvate in precedenza (che non sono predefinite e non iniziano per _)
+  const customLocations = Object.keys(links).filter(k => !k.startsWith("_") && !predefinedLocations.includes(k));
+  const allLocations = [...predefinedLocations, ...customLocations];
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
@@ -109,8 +120,20 @@ function WhatsappSettings() {
         Puoi usare "default" se non c'è una zona specifica.
       </p>
 
+      <div className="mb-6 space-y-3 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div>
+           <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Titolo Widget</label>
+           <input type="text" value={links["_title"] || ""} placeholder="Unisciti alla nostra Community" onChange={e => setLinks({...links, _title: e.target.value})} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors" />
+        </div>
+        <div>
+           <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Sottotitolo Widget</label>
+           <input type="text" value={links["_subtitle"] || ""} placeholder="Entra nel Gruppo WhatsApp {zona}" onChange={e => setLinks({...links, _subtitle: e.target.value})} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors" />
+           <p className="text-[10px] text-gray-400 mt-1">Usa <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded">{'{zona}'}</code> per inserire dinamicamente il nome della zona o toglilo per lasciarlo fisso.</p>
+        </div>
+      </div>
+
       <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-        {locations.map((loc) => {
+        {allLocations.map((loc) => {
           const val = links[loc] || "";
           return (
             <div key={loc} className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -124,9 +147,32 @@ function WhatsappSettings() {
                 onChange={(e) => setLinks({ ...links, [loc]: e.target.value })}
                 className="flex-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors"
               />
+              {customLocations.includes(loc) && (
+                 <button onClick={() => {
+                   const newLinks = {...links};
+                   delete newLinks[loc];
+                   setLinks(newLinks);
+                 }} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+              )}
             </div>
           );
         })}
+        
+        <div className="flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+            <input 
+              type="text" 
+              placeholder="Aggiungi nome Nuova Zona (es. NAPOLI CENTRO)" 
+              value={newZone}
+              onChange={(e) => setNewZone(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddZone()}
+              className="flex-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors"
+            />
+            <button onClick={handleAddZone} className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold text-sm rounded-lg flex items-center justify-center">
+              <Plus className="w-4 h-4" />
+            </button>
+        </div>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ const logoCache: Record<string, string | null> = {};
 const pendingPromises: Record<string, Promise<string | null>> = {};
 const listeners: Record<string, Set<(url: string | null) => void>> = {};
 
-let scalesCache: { zoneScale: number, agoraScale: number, customLogoScale: number } | null = null;
+let scalesCache: { zoneScale: number, agoraScale: number, customLogoScale: number, spacing: number } | null = null;
 const scalesListeners = new Set<(scales: any) => void>();
 
 export const fetchLogoScales = async () => {
@@ -18,13 +18,14 @@ export const fetchLogoScales = async () => {
       scalesCache = {
         zoneScale: snap.data().zoneScale ?? 1,
         agoraScale: snap.data().agoraScale ?? 1,
-        customLogoScale: snap.data().customLogoScale ?? 1
+        customLogoScale: snap.data().customLogoScale ?? 1,
+        spacing: snap.data().spacing ?? 8
       };
     } else {
-      scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1 };
+      scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 };
     }
   } catch (e) {
-    scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1 };
+    scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 };
   }
   scalesListeners.forEach(cb => cb(scalesCache));
   return scalesCache;
@@ -84,7 +85,7 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
   const [loading, setLoading] = useState(!isImmediate);
   const [failed, setFailed] = useState(isImmediate && !logoCache[logoName]);
   const [timeoutText, setTimeoutText] = useState(false);
-  const [scales, setScales] = useState<{ zoneScale: number, agoraScale: number, customLogoScale: number }>(scalesCache || { zoneScale: 1, agoraScale: 1, customLogoScale: 1 });
+  const [scales, setScales] = useState<{ zoneScale: number, agoraScale: number, customLogoScale: number, spacing: number }>(scalesCache || { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 });
 
   useEffect(() => {
     let mounted = true;
@@ -174,7 +175,7 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
   return (
     <div className={cn("flex items-center justify-center select-none", className)}>
       <div className={cn("relative flex items-center justify-center", hasSizing ? "w-full h-full" : "w-56 h-20 md:w-64 md:h-24")}>
-         {(!showTextFallback || url || finalSrc) && finalSrc && (
+         {(!showTextFallback || (!forceTextFallback && (url || finalSrc))) && finalSrc && !forceTextFallback && (
             <img 
                src={finalSrc}
                alt="Logo"
@@ -184,7 +185,7 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
             />
          )}
          
-         {isActuallyFailing && (
+         {isActuallyFailing && !forceTextFallback && (
             <img 
                src="https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true"
                alt="Fallback Logo"
@@ -193,12 +194,12 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
             />
          )}
          
-         {showTextFallback && !url && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h1 style={{ fontFamily: 'var(--font-spartan)', transform: `scale(${scales.zoneScale})`, transformOrigin: "center bottom", marginBottom: "4px" }} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-black dark:text-white leading-none text-center z-10">
+         {(showTextFallback && (!url || forceTextFallback)) && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ gap: `${scales.spacing ?? 8}px` }}>
+              <h1 style={{ fontFamily: 'var(--font-spartan)', transform: `scale(${scales.zoneScale})`, transformOrigin: "center bottom" }} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-black dark:text-white leading-none text-center z-10 m-0">
                 {fallbackText}
                </h1>
-               <div style={{ transform: `scale(${scales.agoraScale})`, transformOrigin: "center top", marginTop: "4px", display: "flex", justifyContent: "center" }}>
+               <div style={{ transform: `scale(${scales.agoraScale})`, transformOrigin: "center top", display: "flex", justifyContent: "center" }}>
                  {agoraUrl || defaultUrl ? (
                     <img src={agoraUrl || defaultUrl!} alt="Agorà" className="h-2 sm:h-2.5 md:h-3 object-contain dark:invert opacity-80" />
                  ) : (

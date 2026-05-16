@@ -36,6 +36,17 @@ export function WhatsappWidget({ city, area }: WhatsappWidgetProps) {
 
   if (!linkToUse) return null;
 
+  const titleText = links["_title"] || "Unisciti alla nostra Community";
+  let subtitleText = links["_subtitle"] || "Entra nel Gruppo WhatsApp {zona}";
+  
+  if (subtitleText.includes("{zona}")) {
+    if (matchedName) {
+      subtitleText = subtitleText.replace("{zona}", `di ${matchedName}`);
+    } else {
+      subtitleText = subtitleText.replace("{zona}", "").trim();
+    }
+  }
+
   return (
     <a
       href={linkToUse}
@@ -57,11 +68,11 @@ export function WhatsappWidget({ city, area }: WhatsappWidgetProps) {
         </svg>
       </div>
       <div className="flex flex-col items-center md:items-start leading-tight">
-        <span className="font-bold text-sm uppercase tracking-wide">
-          Unisciti alla nostra Community
+        <span className="font-bold text-sm uppercase tracking-wide flex-1 text-left w-full">
+          {titleText}
         </span>
         <span className="text-[11px] font-medium text-white/90">
-          Entra nel Gruppo WhatsApp {matchedName ? `di ${matchedName}` : ""}
+          {subtitleText}
         </span>
       </div>
     </a>

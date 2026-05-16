@@ -16,6 +16,7 @@ interface Props {
   type: "spotted" | "sondaggio";
   setType: (v: "spotted" | "sondaggio") => void;
   hasInteracted?: boolean;
+  onInteractionStateChange?: (interacting: boolean) => void;
 }
 
 function WheelPicker({ 
@@ -27,7 +28,8 @@ function WheelPicker({
   className = "",
   itemClassName = "",
   loop = false,
-  renderItem
+  renderItem,
+  onInteractionChange
 }: {
   options: string[],
   value: string,
@@ -37,13 +39,19 @@ function WheelPicker({
   className?: string,
   itemClassName?: string,
   loop?: boolean,
-  renderItem?: (opt: string, isActive: boolean) => React.ReactNode
+  renderItem?: (opt: string, isActive: boolean) => React.ReactNode,
+  onInteractionChange?: (interacting: boolean) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
+  const isUserTouchingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const displayOptions = React.useMemo(() => loop ? Array(100).fill(options).flat() : options, [loop, options]);
+
+  const updateInteraction = (isInteracting: boolean) => {
+    if (onInteractionChange) onInteractionChange(isInteracting);
+  };
 
   const getInitIndex = () => {
     const baseIdx = options.indexOf(value);
@@ -66,7 +74,7 @@ function WheelPicker({
   // Sync external value changes (only if we aren't currently scrolling)
   useEffect(() => {
     const baseIdx = options.indexOf(value);
-    if (!isScrollingRef.current && baseIdx !== -1) {
+    if (!isScrollingRef.current && !isUserTouchingRef.current && baseIdx !== -1) {
       let nextIdx;
       if (loop) {
          const rem = activeIndex % options.length;
@@ -103,11 +111,14 @@ function WheelPicker({
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     scrollTimeoutRef.current = setTimeout(() => {
       isScrollingRef.current = false;
-      if (displayOptions[index] && displayOptions[index] !== value) {
-        // Redundant but safe
-        onChange(displayOptions[index]);
+      if (!isUserTouchingRef.current) {
+        updateInteraction(false);
       }
-    }, 50);
+    }, 150);
+  };
+
+  const fireOnChangeIfSettled = () => {
+    updateInteraction(false);
   };
 
   const height = itemHeight * visibleItems;
@@ -129,7 +140,12 @@ function WheelPicker({
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        onTouchStart={() => { isScrollingRef.current = true; }}
+        onTouchStart={() => { isScrollingRef.current = true; isUserTouchingRef.current = true; updateInteraction(true); }}
+        onTouchEnd={() => { isUserTouchingRef.current = false; fireOnChangeIfSettled(); }}
+        onTouchCancel={() => { isUserTouchingRef.current = false; fireOnChangeIfSettled(); }}
+        onMouseDown={() => { isScrollingRef.current = true; isUserTouchingRef.current = true; updateInteraction(true); }}
+        onMouseUp={() => { isUserTouchingRef.current = false; fireOnChangeIfSettled(); }}
+        onMouseLeave={() => { if(isUserTouchingRef.current) { isUserTouchingRef.current=false; fireOnChangeIfSettled(); } }}
         className="h-full w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory flex flex-col items-center relative z-10"
         style={{ overscrollBehaviorY: 'none', overscrollBehaviorX: 'none', scrollbarWidth: 'none', msOverflowStyle: 'none', transformStyle: 'preserve-3d', touchAction: 'pan-y' }}
       >
@@ -182,11 +198,21 @@ const useIsItalian = () => {
   return isIt;
 };
 
-export function HeaderVariations({ city, setCity, area, setArea, type, setType, hasInteracted = false }: Props) {
+export function HeaderVariations({ city, setCity, area, setArea, type, setType, hasInteracted = false, onInteractionStateChange }: Props) {
   const [isHovered10, setIsHovered10] = useState(false);
   const [forceRetract, setForceRetract] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isGlobalTouchingRef = useRef(false);
   const isIt = useIsItalian();
+
+  const [wheelsInteracting, setWheelsInteracting] = useState({ city: false, area: false, mode: false });
+
+  useEffect(() => {
+    const isAnyInteracting = wheelsInteracting.city || wheelsInteracting.area || wheelsInteracting.mode || isGlobalTouchingRef.current;
+    if (onInteractionStateChange) {
+      onInteractionStateChange(isAnyInteracting);
+    }
+  }, [wheelsInteracting, isGlobalTouchingRef.current, onInteractionStateChange]);
 
   useEffect(() => {
     const handleClickOutside = (e: Event) => {
@@ -196,8 +222,11 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
       }
     };
     const handleScroll = () => {
-      setIsHovered10(false);
-      setForceRetract(true);
+      // Do not retract if user is actively touching the menu
+      if (!isGlobalTouchingRef.current) {
+        setIsHovered10(false);
+        setForceRetract(true);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside, { passive: true });
@@ -225,7 +254,9 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
        className={`fixed bottom-safe mb-4 sm:mb-0 sm:absolute sm:top-1/4 sm:bottom-auto right-0 z-[60] flex flex-col items-end gap-3 sm:gap-4 pointer-events-none scale-[0.85] sm:scale-100 origin-bottom-right sm:origin-right`}
        onMouseEnter={() => { setIsHovered10(true); setForceRetract(false); }}
        onMouseLeave={() => setIsHovered10(false)}
-       onTouchStart={() => { setIsHovered10(true); setForceRetract(false); }}
+       onTouchStart={() => { isGlobalTouchingRef.current = true; setIsHovered10(true); setForceRetract(false); }}
+       onTouchEnd={() => { isGlobalTouchingRef.current = false; }}
+       onTouchCancel={() => { isGlobalTouchingRef.current = false; }}
     >
            {/* Right hung tabs */}
            <div className={`w-[140px] sm:w-[150px] bg-[#E8DEC8] text-black pr-4 pl-3 py-4 rounded-l-2xl shadow-xl border border-r-0 border-black/20 origin-right transform transition-all duration-500 ease-out pointer-events-auto flex flex-col relative ${shouldRetract ? 'translate-x-[60%] rotate-3 cursor-pointer shadow-md' : 'translate-x-0 rotate-2 hover:rotate-0'}`}>
@@ -239,6 +270,7 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    itemHeight={26}
                    visibleItems={3}
                    itemClassName="text-[10px] sm:text-[11px] tracking-tight uppercase font-bold"
+                   onInteractionChange={(v) => setWheelsInteracting(prev => ({ ...prev, mode: v }))}
                    renderItem={(opt, isActive) => {
                      let display = opt;
                      if (!isIt && opt === "sondaggio") display = "poll";
@@ -265,6 +297,7 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    visibleItems={3}
                    itemClassName="text-[10px] sm:text-[11px] uppercase font-bold"
                    loop={true}
+                   onInteractionChange={(v) => setWheelsInteracting(prev => ({ ...prev, city: v }))}
                  />
               </div>
            </div>
@@ -281,6 +314,7 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    itemHeight={26}
                    visibleItems={3}
                    itemClassName="text-[9px] sm:text-[10px] tracking-tight uppercase font-bold"
+                   onInteractionChange={(v) => setWheelsInteracting(prev => ({ ...prev, area: v }))}
                    renderItem={(opt, isActive) => {
                      const isCity = CITIES.includes(opt);
                      const label = isIt ? `TUTTA ${opt}` : `ALL ${opt}`;
