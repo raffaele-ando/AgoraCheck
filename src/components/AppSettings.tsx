@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { Save, Link as LinkIcon, Users, Trash2, Plus, ShieldAlert } from "lucide-react";
+import { Save, Link as LinkIcon, Users, Trash2, Plus, ShieldAlert, MessageCircle } from "lucide-react";
 import { LogoSettings } from "./LogoSettings";
+import { LOCATIONS } from "./HeaderVariations";
 
 export interface LinkWidgetConfig {
   domain: string;
@@ -37,6 +38,99 @@ export const saveLinkConfigToDB = async (config: LinkWidgetConfig) => {
     throw error;
   }
 };
+
+// ======= WHATSAPP SETTINGS ======= //
+export const loadWhatsappLinksFromDB = async (): Promise<Record<string, string>> => {
+  try {
+    const configDoc = doc(db, "settings", "whatsapp_links");
+    const snapshot = await getDoc(configDoc);
+    
+    if (snapshot && snapshot.exists()) {
+      return snapshot.data() || {};
+    }
+  } catch (error) {
+    console.error("Error loading whatsapp links from Firestore", error);
+  }
+  return {};
+};
+
+export const saveWhatsappLinksToDB = async (config: Record<string, string>) => {
+  try {
+    const configDoc = doc(db, "settings", "whatsapp_links");
+    await setDoc(configDoc, config);
+  } catch (error) {
+    console.error("Error saving whatsapp links to Firestore", error);
+    throw error;
+  }
+};
+
+function WhatsappSettings() {
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    loadWhatsappLinksFromDB().then(setLinks);
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      // Puliamo i link vuoti
+      const cleaned = Object.fromEntries(Object.entries(links).filter(([_, v]) => v && v.trim() !== ""));
+      await saveWhatsappLinksToDB(cleaned);
+      setLinks(cleaned);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (e) {
+      alert("Errore durante il salvataggio.");
+    }
+  };
+
+  const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+          <MessageCircle className="w-5 h-5 text-green-500" />
+          Gruppi WhatsApp per Zona
+        </h3>
+        <button
+          onClick={handleSave}
+          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${
+            isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20"
+          }`}
+        >
+          <Save className="w-4 h-4" />
+          {isSaved ? "Salvato!" : "Salva Link"}
+        </button>
+      </div>
+      <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed">
+        Associa il link di un gruppo WhatsApp a ciascuna zona (città o sotto-zona).
+        Puoi usare "default" se non c'è una zona specifica.
+      </p>
+
+      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+        {locations.map((loc) => {
+          const val = links[loc] || "";
+          return (
+            <div key={loc} className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 w-32 shrink-0">
+                {loc}
+              </span>
+              <input
+                type="text"
+                placeholder="https://chat.whatsapp.com/..."
+                value={val}
+                onChange={(e) => setLinks({ ...links, [loc]: e.target.value })}
+                className="flex-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors"
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }) {
   const [linkConfig, setLinkConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
@@ -158,6 +252,9 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
 
         {/* Logo Config */}
         <LogoSettings />
+
+        {/* WhatsApp Config */}
+        <WhatsappSettings />
 
         {/* Admins Config */}
         {isSuperAdmin ? (

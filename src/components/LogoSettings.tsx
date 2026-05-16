@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, Trash2, Plus, RefreshCw } from "lucide-react";
-import { doc, getDocs, collection, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 export interface CustomLogo {
@@ -10,7 +10,7 @@ export interface CustomLogo {
 }
 
 import { LOCATIONS } from "./HeaderVariations";
-import { clearLogoCache } from "./Logo";
+import { clearLogoCache, updateLogoScalesCache } from "./Logo";
 
 const getPredefinedLogos = () => {
   const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
@@ -28,6 +28,9 @@ export function LogoSettings() {
   const [loading, setLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState(PREDEFINED_LOGOS[0].id);
   const [saving, setSaving] = useState(false);
+  
+  const [scales, setScales] = useState({ zoneScale: 1, agoraScale: 1, customLogoScale: 1 });
+  const [savingScales, setSavingScales] = useState(false);
 
   const loadLogos = async () => {
     setLoading(true);
@@ -38,6 +41,16 @@ export function LogoSettings() {
         loaded.push({ id: d.id, name: d.data().name, dataUrl: d.data().dataUrl });
       });
       setLogos(loaded);
+      
+      const scalesSnap = await getDoc(doc(db, "settings", "logo_scales"));
+      if (scalesSnap.exists()) {
+        const sc = scalesSnap.data();
+        setScales({
+           zoneScale: sc.zoneScale ?? 1,
+           agoraScale: sc.agoraScale ?? 1,
+           customLogoScale: sc.customLogoScale ?? 1
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -48,6 +61,19 @@ export function LogoSettings() {
   useEffect(() => {
     loadLogos();
   }, []);
+
+  const saveScales = async () => {
+    setSavingScales(true);
+    try {
+      await setDoc(doc(db, "settings", "logo_scales"), scales);
+      updateLogoScalesCache(scales);
+      setSavingScales(false);
+    } catch(err) {
+      console.error(err);
+      setSavingScales(false);
+      alert("Errore nel salvataggio delle grandezze");
+    }
+  };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -122,6 +148,33 @@ export function LogoSettings() {
       <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed">
         Seleziona quale logo o icona vuoi caricare. Le modifiche verranno applicate automaticamente su tutta la piattaforma (es. aggiornamento favicon).
       </p>
+
+      {/* Impostazioni scala loghi */}
+      <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/30 rounded-xl space-y-4">
+        <div className="flex items-center justify-between">
+            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Grandezze Loghi/Scritte (Bacheca)</h4>
+            <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors">
+               {savingScales ? "Salvataggio..." : "Salva Grandezze"}
+            </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+           <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Scritta Automatica Zona</label>
+              <input type="range" min="0.5" max="2" step="0.05" value={scales.zoneScale} onChange={(e) => setScales({...scales, zoneScale: parseFloat(e.target.value)})} className="w-full accent-orange-500" />
+              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
+           </div>
+           <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Scritta/Logo Agorà (Sotto)</label>
+              <input type="range" min="0.5" max="2" step="0.05" value={scales.agoraScale} onChange={(e) => setScales({...scales, agoraScale: parseFloat(e.target.value)})} className="w-full accent-orange-500" />
+              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
+           </div>
+           <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Immagine Logo Personalizzato</label>
+              <input type="range" min="0.5" max="2" step="0.05" value={scales.customLogoScale} onChange={(e) => setScales({...scales, customLogoScale: parseFloat(e.target.value)})} className="w-full accent-orange-500" />
+              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.customLogoScale * 100)}%</div>
+           </div>
+        </div>
+      </div>
 
       {/* Upload nuovo logo */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">

@@ -7,6 +7,7 @@ import { Logo } from "./Logo";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useVisitAnalytics } from "../hooks/useVisitAnalytics";
 import { HeaderVariations, LOCATIONS } from "./HeaderVariations";
+import { WhatsappWidget } from "./WhatsappWidget";
 
 // TYPEWRITER HOOK
 function useTypewriter(words: string[], speed = 60, waitTime = 2000) {
@@ -234,10 +235,12 @@ export function ThemeCorkboard() {
         hasInteracted={form.lookingFor.length > 0 || form.when.length > 0 || form.where.length > 0 || form.instagram.length > 0 || form.pollOptions.some(opt => opt.length > 0)}
       />
 
+      <WhatsappWidget city={form.city} area={form.area} />
+
       <motion.div
         initial={{ rotate: -2, scale: 0.95 }}
         animate={{ rotate: 1, scale: 1 }}
-        className={`relative w-[92%] sm:w-full mx-auto max-w-md shrink-0 flex flex-col bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-5 sm:p-8 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mt-8 sm:mt-12 mb-16 sm:mb-20 transition-all duration-300`}
+        className={`relative w-[92%] sm:w-full mx-auto max-w-md shrink-0 flex flex-col bg-gradient-to-br from-[#F3ECE0] to-[#E8DEC8] p-5 sm:p-8 shadow-[8px_16px_40px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(243,236,224,0.5)] border border-[#000000]/20 mt-2 sm:mt-4 mb-16 sm:mb-20 transition-all duration-300`}
       >
         {/* Fix per il pezzo di scotch in alto: metto un bello z-index e levo il mix blend che bugga con il backdrop-blur su mobile e safari */}
         <div

@@ -7,6 +7,35 @@ const logoCache: Record<string, string | null> = {};
 const pendingPromises: Record<string, Promise<string | null>> = {};
 const listeners: Record<string, Set<(url: string | null) => void>> = {};
 
+let scalesCache: { zoneScale: number, agoraScale: number, customLogoScale: number } | null = null;
+const scalesListeners = new Set<(scales: any) => void>();
+
+export const fetchLogoScales = async () => {
+  if (scalesCache) return scalesCache;
+  try {
+    const snap = await getDoc(doc(db, "settings", "logo_scales"));
+    if (snap.exists()) {
+      scalesCache = {
+        zoneScale: snap.data().zoneScale ?? 1,
+        agoraScale: snap.data().agoraScale ?? 1,
+        customLogoScale: snap.data().customLogoScale ?? 1
+      };
+    } else {
+      scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1 };
+    }
+  } catch (e) {
+    scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1 };
+  }
+  scalesListeners.forEach(cb => cb(scalesCache));
+  return scalesCache;
+};
+
+export const updateLogoScalesCache = (newScales: any) => {
+  scalesCache = newScales;
+  scalesListeners.forEach(cb => cb(scalesCache));
+};
+
+
 export const clearLogoCache = () => {
   for (const key in logoCache) {
     logoCache[key] = null;
@@ -55,6 +84,18 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
   const [loading, setLoading] = useState(!isImmediate);
   const [failed, setFailed] = useState(isImmediate && !logoCache[logoName]);
   const [timeoutText, setTimeoutText] = useState(false);
+  const [scales, setScales] = useState<{ zoneScale: number, agoraScale: number, customLogoScale: number }>(scalesCache || { zoneScale: 1, agoraScale: 1, customLogoScale: 1 });
+
+  useEffect(() => {
+    let mounted = true;
+    const updateScales = (newScales: any) => { if (mounted) setScales(newScales); };
+    scalesListeners.add(updateScales);
+    fetchLogoScales();
+    return () => {
+      mounted = false;
+      scalesListeners.delete(updateScales);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -138,6 +179,7 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
                src={finalSrc}
                alt="Logo"
                className={cn("w-full h-full object-contain z-10 dark:invert", showTextFallback ? "hidden" : "block")}
+               style={{ transform: `scale(${scales.customLogoScale})`, transformOrigin: "center" }}
                onError={() => setFailed(true)}
             />
          )}
@@ -147,21 +189,24 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
                src="https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true"
                alt="Fallback Logo"
                className="w-full h-full object-contain z-10 dark:invert opacity-70"
+               style={{ transform: `scale(${scales.customLogoScale})`, transformOrigin: "center" }}
             />
          )}
          
          {showTextFallback && !url && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h1 style={{ fontFamily: 'var(--font-spartan)' }} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-black dark:text-white leading-none text-center z-10 mb-0">
+              <h1 style={{ fontFamily: 'var(--font-spartan)', transform: `scale(${scales.zoneScale})`, transformOrigin: "center bottom", marginBottom: "4px" }} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-black dark:text-white leading-none text-center z-10">
                 {fallbackText}
-              </h1>
-              {agoraUrl || defaultUrl ? (
-                 <img src={agoraUrl || defaultUrl!} alt="Agorà" className="h-2 sm:h-2.5 md:h-3 object-contain mt-1 dark:invert opacity-80" />
-              ) : (
-                 <h1 className="text-[9px] sm:text-[10px] md:text-[11px] font-black tracking-widest text-[#DC5F00] leading-none text-center mt-1">
-                   AGORÀ
-                 </h1>
-              )}
+               </h1>
+               <div style={{ transform: `scale(${scales.agoraScale})`, transformOrigin: "center top", marginTop: "4px", display: "flex", justifyContent: "center" }}>
+                 {agoraUrl || defaultUrl ? (
+                    <img src={agoraUrl || defaultUrl!} alt="Agorà" className="h-2 sm:h-2.5 md:h-3 object-contain dark:invert opacity-80" />
+                 ) : (
+                    <h1 className="text-[9px] sm:text-[10px] md:text-[11px] font-black tracking-widest text-[#DC5F00] leading-none text-center m-0 p-0">
+                      AGORÀ
+                    </h1>
+                 )}
+               </div>
             </div>
          )}
       </div>
