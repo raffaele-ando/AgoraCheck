@@ -13,8 +13,8 @@ interface Props {
   setCity: (v: string) => void;
   area: string;
   setArea: (v: string) => void;
-  type: "spotted" | "sondaggio";
-  setType: (v: "spotted" | "sondaggio") => void;
+  type: "spotted" | "sondaggio" | "ricerca";
+  setType: (v: "spotted" | "sondaggio" | "ricerca") => void;
   hasInteracted?: boolean;
   onInteractionStateChange?: (interacting: boolean) => void;
 }
@@ -264,7 +264,7 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                  <div className="font-mono text-[10px] uppercase opacity-60 mb-2 border-b border-black/10 pb-1 font-bold tracking-wider w-full text-right overflow-hidden text-ellipsis whitespace-nowrap">Mode</div>
                  <WheelPicker 
                    className="w-full"
-                   options={["spotted", "sondaggio"]}
+                   options={["spotted", "sondaggio", "ricerca"]}
                    value={type}
                    onChange={(v) => setType(v as any)}
                    itemHeight={26}
@@ -274,6 +274,7 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
                    renderItem={(opt, isActive) => {
                      let display = opt;
                      if (!isIt && opt === "sondaggio") display = "poll";
+                     if (!isIt && opt === "ricerca") display = "search";
                      return <span className="truncate w-full text-center">{display}</span>;
                    }}
                  />

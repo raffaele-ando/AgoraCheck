@@ -25,9 +25,9 @@ interface StoryExportBetaProps {
 
 export default function StoryExportBeta({ message, onClose }: StoryExportBetaProps) {
   const defaultTarget = message.area || message.city || "DEFAULT";
-  const defaultMode = (message.type === "sondaggio" ? "sondaggio" : "spotted");
+  const defaultMode = (message.type === "sondaggio" ? "sondaggio" : message.type === "ricerca" ? "ricerca" : (!message.when && !message.where && message.type !== "sondaggio" ? "ricerca" : "spotted"));
   
-  const [selectedMode, setSelectedMode] = useState<"spotted" | "sondaggio" | "risultati" | "risultati_sondaggio">(defaultMode as any);
+  const [selectedMode, setSelectedMode] = useState<"spotted" | "sondaggio" | "risultati" | "risultati_sondaggio" | "ricerca">(defaultMode as any);
   const [selectedTarget, setSelectedTarget] = useState<string>(defaultTarget);
   
   // Add manual override text for additional boxes
@@ -138,6 +138,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-sm font-bold"
                 >
                   <option value="spotted">Spotted</option>
+                  <option value="ricerca">Ricerca</option>
                   <option value="sondaggio">Sondaggio</option>
                   <option value="risultati">Risultati Spotted</option>
                   <option value="risultati_sondaggio">Risultati Sondaggio</option>
@@ -146,7 +147,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
               
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "ricerca" ? "Testo Ricerca" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
                   <textarea 
                     value={chiText} 
                     onChange={e => setChiText(e.target.value)} 
@@ -154,14 +155,18 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                     className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm resize-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
-                  <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
-                  <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
-                </div>
+                {selectedMode !== "ricerca" && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
+                      <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
+                      <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                    </div>
+                  </>
+                )}
               </div>
               
               {(selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") && (
@@ -213,10 +218,10 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                   )}
                   <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
                     {config.chi && <AutoScalingText text={chiText} config={config.chi} />}
-                    {config.quando && <AutoScalingText text={quandoText} config={config.quando} />}
-                    {config.dove && <AutoScalingText text={doveText} config={config.dove} />}
-                    {config.box4 && <AutoScalingText text={box4Text} config={config.box4} />}
-                    {config.box5 && <AutoScalingText text={box5Text} config={config.box5} />}
+                    {selectedMode !== "ricerca" && config.quando && <AutoScalingText text={quandoText} config={config.quando} />}
+                    {selectedMode !== "ricerca" && config.dove && <AutoScalingText text={doveText} config={config.dove} />}
+                    {(selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") && config.box4 && <AutoScalingText text={box4Text} config={config.box4} />}
+                    {(selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") && config.box5 && <AutoScalingText text={box5Text} config={config.box5} />}
                   </div>
                 </div>
                 {!backgroundImage && isDBReady && (

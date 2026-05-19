@@ -191,7 +191,7 @@ export default function StoryTemplateConfig() {
   const [isDBReady, setIsDBReady] = useState(false);
   const [savedStatus, setSavedStatus] = useState(false);
   
-  const [selectedMode, setSelectedMode] = useState<"spotted" | "sondaggio" | "risultati" | "risultati_sondaggio">("spotted");
+  const [selectedMode, setSelectedMode] = useState<"spotted" | "sondaggio" | "risultati" | "risultati_sondaggio" | "ricerca">("spotted");
   const [selectedTarget, setSelectedTarget] = useState<string>("DEFAULT");
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -306,11 +306,15 @@ export default function StoryTemplateConfig() {
 
   const getTabsForMode = () => {
     if (selectedMode === "spotted") return ["chi", "quando", "dove"] as const;
+    if (selectedMode === "ricerca") return ["chi"] as const;
     if (selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") return ["chi", "quando", "dove", "box4", "box5"] as const;
     return ["chi", "quando", "dove"] as const; // risultati
   };
   
   const getLabelForModeAndTab = (tab: keyof TemplateConfig) => {
+    if (selectedMode === "ricerca") {
+      if (tab === "chi") return "Testo Ricerca";
+    }
     if (selectedMode === "spotted") {
       if (tab === "chi") return "Cosa/Chi";
       if (tab === "quando") return "Quando";
@@ -348,7 +352,7 @@ export default function StoryTemplateConfig() {
       const docMap = new Map(savedDocs.map(d => [d.id, d.data().bgImage]));
       
       const configMap = new Map<string, TemplateConfig>();
-      for (const mode of ["spotted", "sondaggio", "risultati", "risultati_sondaggio"]) {
+      for (const mode of ["spotted", "sondaggio", "risultati", "risultati_sondaggio", "ricerca"]) {
           const configDoc = snap.docs.find(d => d.id === `story_template_config_${mode}`);
           if (configDoc && configDoc.data().config) {
              configMap.set(mode, configDoc.data().config);
@@ -362,7 +366,7 @@ export default function StoryTemplateConfig() {
       
       const allCombinations: { target: string, mode: string, hasImage: boolean, imgUrl?: string, config?: TemplateConfig }[] = [];
       for (const target of targetOptions) {
-        for (const mode of ["spotted", "sondaggio", "risultati", "risultati_sondaggio"]) {
+        for (const mode of ["spotted", "sondaggio", "risultati", "risultati_sondaggio", "ricerca"]) {
           const docId = `story_template_image_${target}_${mode}`;
           const bgImage = docMap.get(docId) || null;
           
@@ -437,7 +441,7 @@ export default function StoryTemplateConfig() {
                          <div className="relative w-full aspect-[9/16] bg-black/5 rounded flex-shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer" title="Clicca per modificare">
                             <img src={item.imgUrl} className="w-full h-full object-cover" alt="" />
                             <div className="absolute inset-0 pointer-events-none">
-                              {item.config && (item.mode === "sondaggio" || item.mode === "risultati_sondaggio" ? ["chi", "quando", "dove", "box4", "box5"] : ["chi", "quando", "dove"]).map((key) => {
+                              {item.config && (item.mode === "sondaggio" || item.mode === "risultati_sondaggio" ? ["chi", "quando", "dove", "box4", "box5"] : item.mode === "ricerca" ? ["chi"] : ["chi", "quando", "dove"]).map((key) => {
                                 const boxCnf = (item.config as any)[key];
                                 if (!boxCnf || !boxCnf.enabled) return null;
                                 return (
@@ -560,6 +564,7 @@ export default function StoryTemplateConfig() {
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
                 >
                   <option value="spotted">Spotted</option>
+                  <option value="ricerca">Ricerca (Solo testo)</option>
                   <option value="sondaggio">Sondaggio</option>
                   <option value="risultati">Risultati Spotted</option>
                   <option value="risultati_sondaggio">Risultati Sondaggio</option>

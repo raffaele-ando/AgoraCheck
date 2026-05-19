@@ -153,6 +153,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     const identifiedUsers = macroProfiles.length;
     const spottedMessages = messages.filter((m) => !m.type || m.type === "spotted").length;
     const sondaggioMessages = messages.filter((m) => m.type === "sondaggio").length;
+    const ricercaMessages = messages.filter((m) => m.type === "ricerca").length;
     const safeVisits = Array.isArray(visits) ? visits : [];
     const totalVisits = safeVisits.length;
     const submittedVisits = safeVisits.filter((v: any) => v.hasSubmitted).length;
@@ -216,6 +217,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       identifiedUsers,
       spottedMessages,
       sondaggioMessages,
+      ricercaMessages,
       totalVisits,
       conversionRate,
       abandoned,
@@ -266,6 +268,19 @@ export const Analytics: React.FC<AnalyticsProps> = ({
           title: "Sondaggi Creati",
           type: "messages",
           data: messages.filter((m) => m.type === "sondaggio"),
+        }),
+    },
+    {
+      label: "Ricerche Create",
+      value: stats.ricercaMessages,
+      bg: "bg-blue-50 dark:bg-blue-900/40 ",
+      text: "text-blue-600",
+      border: "group-hover:border-blue-200",
+      onClick: () =>
+        setDetailView({
+          title: "Ricerche Create",
+          type: "messages",
+          data: messages.filter((m) => m.type === "ricerca"),
         }),
     },
     {
@@ -396,7 +411,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {kpis.filter(k => ["Totale Avvistamenti", "Spotted Effettuati", "Sondaggi Creati"].includes(k.label)).map((kpi, i) => (
+            {kpis.filter(k => ["Totale Avvistamenti", "Spotted Effettuati", "Sondaggi Creati", "Ricerche Create"].includes(k.label)).map((kpi, i) => (
               <motion.div
                 key={kpi.label}
                 initial={{ opacity: 0, y: 20 }}

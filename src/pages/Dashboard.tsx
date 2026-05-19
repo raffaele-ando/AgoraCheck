@@ -1719,6 +1719,12 @@ export default function Dashboard() {
                             Sondaggio
                           </div>
                         )}
+                        {msg.type === "ricerca" && (
+                          <div className="mb-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg uppercase tracking-wider">
+                            <Search className="w-3.5 h-3.5" />
+                            Ricerca
+                          </div>
+                        )}
                         <p className="text-gray-800 dark:text-gray-200 font-medium whitespace-pre-wrap break-words text-lg sm:text-xl leading-relaxed">
 
                           <span className="text-gray-300 font-serif text-3xl leading-none italic mr-1 align-bottom">

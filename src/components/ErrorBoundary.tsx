@@ -20,6 +20,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    if (
+      error.message.includes("Failed to fetch dynamically imported module") ||
+      error.name === "ChunkLoadError" ||
+      error.message.includes("dynamically imported module") ||
+      error.message.includes("Importing a module script failed")
+    ) {
+      window.location.reload();
+      return;
+    }
     console.error("Uncaught error:", error, errorInfo);
   }
 
