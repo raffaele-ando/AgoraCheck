@@ -79,7 +79,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
            <select 
               value={selectedMode} 
               onChange={e => setSelectedMode(e.target.value)}
-              className="px-2 py-1.5 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg outline-none font-medium flex-1 sm:flex-none min-w-[100px]"
+              className="px-2 py-1.5 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg outline-none font-medium flex-1 sm:flex-none min-w-[100px] text-gray-900 dark:text-white"
            >
              <option value="spotted">Spotted</option>
              <option value="sondaggio">Sondaggio</option>
@@ -94,7 +94,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
                    setSelectedArea(LOCATIONS[newCity][0]);
                 }
               }}
-              className="px-2 py-1.5 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg outline-none font-medium flex-1 sm:flex-none min-w-[100px]"
+              className="px-2 py-1.5 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg outline-none font-medium flex-1 sm:flex-none min-w-[100px] text-gray-900 dark:text-white"
            >
              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
            </select>
@@ -102,7 +102,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
            <select 
               value={selectedArea} 
               onChange={e => setSelectedArea(e.target.value)}
-              className="px-2 py-1.5 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg outline-none font-medium flex-1 sm:flex-none min-w-[100px]"
+              className="px-2 py-1.5 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg outline-none font-medium flex-1 sm:flex-none min-w-[100px] text-gray-900 dark:text-white"
            >
              {(LOCATIONS[selectedCity] || []).map(a => <option key={a} value={a}>{a}</option>)}
            </select>

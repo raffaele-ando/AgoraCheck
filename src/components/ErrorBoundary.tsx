@@ -36,11 +36,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-4 transition-colors">
-          <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
+          <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center dark:bg-gray-900">
             <h1 className="text-2xl font-bold mb-4">
               Ops! Qualcosa è andato storto.
             </h1>
-            <p className="text-gray-500 mb-6 text-sm">
+            <p className="text-gray-500 mb-6 text-sm dark:text-gray-400">
               {this.state.error?.message || "Errore imprevisto"}
             </p>
             <button

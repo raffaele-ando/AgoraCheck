@@ -53,6 +53,9 @@ import {
   Sun,
   Image as ImageIcon,
   BarChart3,
+  MessageSquare,
+  LayoutTemplate,
+  Settings,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
@@ -760,104 +763,117 @@ export default function Dashboard() {
     return result;
   };
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        const statsDoc = await getDoc(doc(db, "stats", "totali"));
-        if (statsDoc.exists()) {
-          setTotalGlobalMessages(statsDoc.data().totalMessages || null);
-        }
-      } catch(err) {
-        console.error("error stats", err);
+    // 1. STATS
+    getDoc(doc(db, "stats", "totali")).then((statsDoc) => {
+      if (statsDoc.exists()) {
+        setTotalGlobalMessages(statsDoc.data().totalMessages || null);
       }
-      try {
-        const q = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200));
-        const msgsSnap = await getDocs(q);
-        const msgs = msgsSnap.docs.map((doc) => {
-          const data = doc.data();
-          let parsedAdv = null;
-          if (data.advancedInfo) {
-            try {
-              let decodedStr =
-                typeof data.advancedInfo === "string"
-                  ? data.advancedInfo
-                  : JSON.stringify(data.advancedInfo);
-              if (
-                typeof data.advancedInfo === "string" &&
-                !data.advancedInfo.startsWith("{")
-              ) {
-                try {
-                  const base64Decoded = atob(data.advancedInfo);
-                  decodedStr = decodeURIComponent(base64Decoded);
-                } catch (e) {
-                  console.error(
-                    "Error decoding base64 advancedInfo for message " + doc.id,
-                    e,
-                  );
-                }
+    }).catch(err => console.error("error stats", err));
+  }, []);
+
+  useEffect(() => {
+    // 2. PROFILES
+    const unsubscribeProfiles = onSnapshot(collection(db, "profiles"), (profilesSnap) => {
+      const pmap: Record<string, ProfileRecord> = {};
+      profilesSnap.docs.forEach((doc) => {
+        pmap[doc.id] = { id: doc.id, ...doc.data() } as ProfileRecord;
+      });
+      setProfiles(pmap);
+      setProfilesLoaded(true);
+    }, (error) => {
+      console.error("Firestore profiles error:", error);
+      setSnapshotsError((err) => (err ? err + " | " : "") + "Profiles error: " + error.message);
+      setProfilesLoaded(true);
+    });
+
+    return () => unsubscribeProfiles();
+  }, []);
+
+  useEffect(() => {
+    // 3. MESSAGES (Dynamic based on pagination)
+    setLoading(true);
+    // Increase limit linearly based on pagesize and current page.
+    // If the active tab is somehow unrelated, it still needs messages for macros.
+    const q = query(
+      collection(db, "messages"), 
+      orderBy("createdAt", "desc"), 
+      limit(pageSize * currentPage)
+    );
+
+    const unsubscribeMessages = onSnapshot(q, (msgsSnap) => {
+      const msgs = msgsSnap.docs.map((doc) => {
+        const data = doc.data();
+        let parsedAdv = null;
+        if (data.advancedInfo) {
+          try {
+            let decodedStr =
+              typeof data.advancedInfo === "string"
+                ? data.advancedInfo
+                : JSON.stringify(data.advancedInfo);
+            if (
+              typeof data.advancedInfo === "string" &&
+              !data.advancedInfo.startsWith("{")
+            ) {
+              try {
+                const base64Decoded = atob(data.advancedInfo);
+                decodedStr = decodeURIComponent(base64Decoded);
+              } catch (e) {
+                console.error(
+                  "Error decoding base64 advancedInfo for message " + doc.id,
+                  e,
+                );
               }
-              parsedAdv = JSON.parse(decodedStr);
-            } catch (e: any) {
-              console.error(
-                `Failed to parse advancedInfo for message ${doc.id}: ${e.message}`,
-              );
             }
+            parsedAdv = JSON.parse(decodedStr);
+          } catch (e: any) {
+            console.error(
+              `Failed to parse advancedInfo for message ${doc.id}: ${e.message}`,
+            );
           }
-          let profileId = data.profileGroupId;
-          if (!profileId) {
-            profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
-          }
-          const profileColor = computeDeviceProfileColor(profileId);
-          return {
-            id: doc.id,
-            ...data,
-            parsedAdvanced: parsedAdv,
-            computedProfileId: profileId,
-            computedProfileColor: profileColor,
-          };
-        }) as (Message & {
-          parsedAdvanced?: any;
-          computedProfileId: string;
-          computedProfileColor: string;
-        })[];
-        setMessages(msgs);
-        setSnapshotsError(null);
-      } catch (error: any) {
-        console.error("Firestore messages error:", error);
-        setSnapshotsError((err) => (err ? err + " | " : "") + "Messages error: " + error.message);
-      } finally {
-        setLoading(false);
-      }
+        }
+        let profileId = data.profileGroupId;
+        if (!profileId) {
+          profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+        }
+        const profileColor = computeDeviceProfileColor(profileId);
+        return {
+          id: doc.id,
+          ...data,
+          parsedAdvanced: parsedAdv,
+          computedProfileId: profileId,
+          computedProfileColor: profileColor,
+        };
+      }) as (Message & {
+        parsedAdvanced?: any;
+        computedProfileId: string;
+        computedProfileColor: string;
+      })[];
+      setMessages(msgs);
+      setLoading(false);
+      setSnapshotsError(null);
+    }, (error) => {
+      console.error("Firestore messages error:", error);
+      setSnapshotsError((err) => (err ? err + " | " : "") + "Messages error: " + error.message);
+      setLoading(false);
+    });
 
-      try {
-        const profilesSnap = await getDocs(collection(db, "profiles"));
-        const pmap: Record<string, ProfileRecord> = {};
-        profilesSnap.docs.forEach((doc) => {
-          pmap[doc.id] = { id: doc.id, ...doc.data() } as ProfileRecord;
-        });
-        setProfiles(pmap);
-      } catch (error: any) {
-        console.error("Firestore profiles error:", error);
-        setSnapshotsError((err) => (err ? err + " | " : "") + "Profiles error: " + error.message);
-      } finally {
-        setProfilesLoaded(true);
-      }
+    return () => unsubscribeMessages();
+  }, [pageSize, currentPage]);
 
-      try {
-        const visitsSnap = await getDocs(collection(db, "analytics_visits"));
+  useEffect(() => {
+    // 4. VISITS (Only when analytics is requested)
+    if (activeTab === "analytics" && visits.length === 0) {
+      getDocs(collection(db, "analytics_visits")).then((visitsSnap) => {
         const v: any[] = [];
         visitsSnap.docs.forEach((doc) => {
           v.push({ id: doc.id, ...doc.data() });
         });
         setVisits(v);
-      } catch (error: any) {
+      }).catch(error => {
         console.error("Firestore visits error:", error);
-        setSnapshotsError((err) => (err ? err + " | " : "") + "Visits error: " + error.message);
-      }
-    };
-
-    fetchAllData();
-  }, []);
+      });
+    }
+  }, [activeTab, visits.length]);
   /* Reset pagination when view filter or active tab changes */ useEffect(() => {
     setCurrentPage(1);
   }, [viewFilter, pageSize, activeTab]);
@@ -1134,155 +1150,115 @@ export default function Dashboard() {
 
   return (
     <div
-      className={`min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 ${isAnySelectMode ? "bg-slate-100/60" : "bg-gray-50 dark:bg-gray-800/50 "}`}
+      className="min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 bg-gray-50 dark:bg-gray-900"
     >
 
       <div className="max-w-7xl mx-auto">
 
         <header
-          className={`sticky top-2 sm:top-4 z-40 mb-4 sm:mb-6 p-3 sm:p-4 rounded-3xl border shadow-sm transition-all duration-500 ${isAnySelectMode ? "bg-indigo-900/95 backdrop-blur-xl border-indigo-800 shadow-indigo-900/20 text-white shadow-lg scale-[1.01]" : "bg-white dark:bg-gray-800 backdrop-blur-xl border-gray-200 dark:border-gray-600 shadow-sm"}`}
+          className={`sticky top-2 sm:top-4 z-40 mb-4 sm:mb-6 p-3 sm:p-4 rounded-3xl border shadow-sm transition-all duration-500 ${isAnySelectMode ? "bg-indigo-600 dark:bg-indigo-900 backdrop-blur-xl border-indigo-500 dark:border-indigo-800 shadow-indigo-500/20 dark:shadow-indigo-900/40 text-white shadow-lg scale-[1.01]" : "bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-700 shadow-sm"}`}
         >
 
           {/* NOT SELECT MODE */}
           {!isAnySelectMode && (
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 w-full">
-
-              {/* Top Row on Mobile, Left Side on Desktop */}
-              <div className="flex items-center justify-between w-full md:w-auto">
-
+            <div className="flex flex-col gap-3 sm:gap-4 w-full">
+              {/* Top Row: Logo & Actions */}
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-3">
-
                   <Link to="/" className="shrink-0 flex items-center">
-
-                    <Logo className="h-8 w-[100px] sm:h-10 sm:w-[130px] hover:opacity-80 transition-all duration-300" />
+                    <Logo className="h-7 w-[90px] sm:h-9 sm:w-[120px] hover:opacity-80 transition-all duration-300" />
                   </Link>
-                  <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 shrink-0 hidden md:block"></div>
-                  <h1 className="text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden xl:block shrink-0">
+                  <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 shrink-0 hidden md:block"></div>
+                  <h1 className="text-base sm:text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden md:flex items-center shrink-0">
                     Dashboard
-                    {totalGlobalMessages !== null && (
-                      <span className="ml-3 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-400 px-2 py-1 rounded-md align-middle">
-                        Totali: {totalGlobalMessages} messaggi
-                      </span>
-                    )}
                   </h1>
                 </div>
-                {/* Mobile Icons */}
-                <div className="flex items-center gap-1 md:hidden">
 
-                  <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 rounded-xl transition-all"
-                    title="Toggle Theme"
-                  >
-
-                    {isDarkMode ? (
-                      <Sun className="w-5 h-5" />
-                    ) : (
-                      <Moon className="w-5 h-5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
-                    title="Disconnetti"
-                  >
-
-                    <LogOut className="w-5 h-5" />
-                  </button>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {(activeTab === "messages" || activeTab === "profiles") && (
+                    <button
+                      onClick={() => {
+                        if (activeTab === "messages") {
+                          setIsSelectMode(true);
+                          setSelectedMessages([]);
+                        } else {
+                          setIsProfileSelectMode(true);
+                          setSelectedProfiles([]);
+                        }
+                      }}
+                      className="flex items-center justify-center gap-1.5 px-2.5 py-2 sm:px-4 sm:py-2 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-xl hover:shadow-md hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all active:scale-95 shrink-0"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                      <span className="hidden sm:inline-block whitespace-nowrap">
+                        Selezione
+                      </span>
+                    </button>
+                  )}
+                  <div className="flex items-center gap-1 sm:gap-2 border-l border-gray-300 dark:border-gray-600 pl-1.5 sm:pl-2">
+                    <button
+                      onClick={() => setIsDarkMode(!isDarkMode)}
+                      className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 rounded-xl transition-all"
+                      title="Toggle Theme"
+                    >
+                      {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    </button>
+                    <div className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hidden lg:block overflow-hidden text-ellipsis max-w-[150px]">
+                      {auth.currentUser?.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
+                      title="Disconnetti"
+                    >
+                      <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
-              {/* Bottom Row on Mobile, Right Side on Desktop */}
-              <div className="flex items-center gap-2 w-full md:w-auto">
 
-                {activeTab !== "analytics" && (
-                  <button
-                    onClick={() => {
-                      if (activeTab === "messages") {
-                        setIsSelectMode(true);
-                        setSelectedMessages([]);
-                      } else {
-                        setIsProfileSelectMode(true);
-                        setSelectedProfiles([]);
-                      }
-                    }}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-2 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-xl hover:shadow-md hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all active:scale-95 shrink-0"
-                  >
-
-                    <CheckCircle2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                    <span className="hidden sm:inline-block whitespace-nowrap">
-                      Selezione
-                    </span>
-                  </button>
-                )}
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 backdrop-blur-sm p-1 rounded-xl border border-gray-200 dark:border-gray-600 flex-1 md:flex-none overflow-x-auto hide-scrollbar">
-
+              {/* Bottom Row: Navigation Tabs */}
+              <div className="w-full overflow-x-auto hide-scrollbar -mx-1 px-1">
+                <div className="flex items-center justify-start sm:justify-center gap-1.5 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl border border-gray-200/50 dark:border-gray-700 min-w-max md:min-w-0">
                   <button
                     onClick={() => setActiveTab("messages")}
-                    className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "messages" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                    className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "messages" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
                   >
-
+                    <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Messaggi
                   </button>
                   {isSuperAdmin && (
                     <>
+                      <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
                       <button
                         onClick={() => setActiveTab("profiles")}
-                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "profiles" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "profiles" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
                       >
-
+                        <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         Profili
                       </button>
                       <button
                         onClick={() => setActiveTab("analytics")}
-                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "analytics" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
                       >
-
+                        <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         Analytics
                       </button>
                       <button
                         onClick={() => setActiveTab("story_template")}
-                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "story_template" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "story_template" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
                       >
-
-                        Template Storie
+                        <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        Template
                       </button>
                       <button
                         onClick={() => setActiveTab("settings")}
-                        className={`flex-1 md:flex-none px-3 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === "settings" ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-600 " : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "settings" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
                       >
-
+                        <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         Impostazioni
                       </button>
                     </>
                   )}
-                </div>
-                {/* Desktop Icons */}
-                <div className="hidden md:flex items-center gap-2 border-l border-gray-300 dark:border-gray-600 pl-2 ml-1">
-
-                  <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 rounded-xl transition-all"
-                    title="Toggle Theme"
-                  >
-
-                    {isDarkMode ? (
-                      <Sun className="w-5 h-5" />
-                    ) : (
-                      <Moon className="w-5 h-5" />
-                    )}
-                  </button>
-                  <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700 break-words whitespace-pre-wrap max-w-[150px] xl:max-w-[200px] shrink-0 hidden lg:block">
-
-                    {auth.currentUser?.email}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
-                    title="Disconnetti"
-                  >
-
-                    <LogOut className="w-5 h-5" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -1306,24 +1282,24 @@ export default function Dashboard() {
                         setSelectedProfiles([]);
                       }
                     }}
-                    className="p-2 sm:p-2 bg-white dark:bg-gray-800 hover:bg-red-500/80 rounded-full transition-colors flex items-center justify-center shrink-0 border border-white/10"
+                    className="p-2 sm:p-2 bg-white/10 hover:bg-red-500/80 rounded-full text-white transition-colors flex items-center justify-center shrink-0 border border-white/10 dark:bg-gray-900"
                     title="Annulla Selezione"
                   >
 
                     <X className="w-5 h-5 sm:w-4 sm:h-4 text-white" />
                   </button>
-                  <span className="text-sm font-black text-indigo-50 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-white/10">
+                  <span className="text-sm font-black text-white bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 dark:bg-gray-900">
 
                     {activeTab === "messages"
                       ? selectedMessages.length
                       : selectedProfiles.length}
-                    <span className="opacity-80 font-semibold hidden sm:inline-block">
+                    <span className="opacity-80 font-semibold hidden sm:inline-block ml-2">
                       selezionati
                     </span>
                   </span>
                 </div>
                 {/* Tutti / Nessuno on Mobile Top Right */}
-                <div className="flex md:hidden items-center gap-1 bg-white dark:bg-gray-800 rounded-xl p-1 border border-white/10 shadow-inner">
+                <div className="flex md:hidden items-center gap-1 bg-white/10 rounded-xl p-1 border border-white/10 shadow-inner dark:bg-gray-900">
 
                   <button
                     onClick={() => {
@@ -1332,18 +1308,18 @@ export default function Dashboard() {
                       else
                         setSelectedProfiles(paginatedProfiles.map((p) => p.id));
                     }}
-                    className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white dark:hover:bg-gray-800 text-indigo-50 hover:text-white rounded-lg transition-all active:scale-95"
+                    className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
                     Tutti
                   </button>
-                  <div className="w-px h-4 bg-white dark:bg-gray-800 mx-0.5"></div>
+                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
                   <button
                     onClick={() => {
                       if (activeTab === "messages") setSelectedMessages([]);
                       else setSelectedProfiles([]);
                     }}
-                    className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white dark:hover:bg-gray-800 text-indigo-50 hover:text-white rounded-lg transition-all active:scale-95"
+                    className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
                     Nessuno
@@ -1354,7 +1330,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto">
 
                 {/* Tutti / Nessuno on Desktop */}
-                <div className="hidden md:flex items-center gap-1 bg-white dark:bg-gray-800 rounded-xl p-1 border border-white/10 shadow-inner mr-2">
+                <div className="hidden md:flex items-center gap-1 bg-white/10 rounded-xl p-1 border border-white/10 shadow-inner mr-2 dark:bg-gray-900">
 
                   <button
                     onClick={() => {
@@ -1363,18 +1339,18 @@ export default function Dashboard() {
                       else
                         setSelectedProfiles(paginatedProfiles.map((p) => p.id));
                     }}
-                    className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white dark:hover:bg-gray-800 text-indigo-50 hover:text-white rounded-lg transition-all active:scale-95"
+                    className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
                     Tutti
                   </button>
-                  <div className="w-px h-4 bg-white dark:bg-gray-800 mx-0.5"></div>
+                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
                   <button
                     onClick={() => {
                       if (activeTab === "messages") setSelectedMessages([]);
                       else setSelectedProfiles([]);
                     }}
-                    className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white dark:hover:bg-gray-800 text-indigo-50 hover:text-white rounded-lg transition-all active:scale-95"
+                    className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
                     Nessuno
@@ -1462,34 +1438,34 @@ export default function Dashboard() {
             </div>
           )}
         </header>
-        {activeTab === "analytics" && (
+        <div className={activeTab === "analytics" ? "block" : "hidden"}>
           <Analytics
-            messages={messages.filter((m) => {
+            messages={useMemo(() => messages.filter((m) => {
               const pid = getDeviceProfile(m);
               if (profiles[pid]?.ignoredFromAnalytics) return false;
               const macro = macroProfiles.find((mac) => mac.profileIds.includes(pid));
               if (macro && macro.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics)) return false;
               return true;
-            })}
-            profiles={Object.fromEntries(
+            }), [messages, profiles, macroProfiles])}
+            profiles={useMemo(() => Object.fromEntries(
               Object.entries(profiles).filter(([pid, _]) => {
                 if (profiles[pid]?.ignoredFromAnalytics) return false;
                 const macro = macroProfiles.find((mac) => mac.profileIds.includes(pid));
                 if (macro && macro.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics)) return false;
                 return true;
               })
-            )}
-            macroProfiles={macroProfiles.filter((m) => !m.profileIds.some((pid) => profiles[pid]?.ignoredFromAnalytics))}
+            ), [profiles, macroProfiles])}
+            macroProfiles={useMemo(() => macroProfiles.filter((m) => !m.profileIds.some((pid) => profiles[pid]?.ignoredFromAnalytics)), [macroProfiles, profiles])}
             visits={visits}
           />
-        )}
-        {activeTab === "story_template" && (
+        </div>
+        <div className={activeTab === "story_template" ? "block" : "hidden"}>
           <StoryTemplateConfig />
-        )}
-        {activeTab === "settings" && (
+        </div>
+        <div className={activeTab === "settings" ? "block" : "hidden"}>
           <AppSettings isSuperAdmin={isSuperAdmin} />
-        )}
-        {activeTab === "messages" && (
+        </div>
+        <div className={activeTab === "messages" ? "block" : "hidden"}>
           <>
             <LinkWidgetCard latestMessage={messages.find(m => !m.isArchived)} />
 
@@ -1541,7 +1517,7 @@ export default function Dashboard() {
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
                 {(isStuckLoading || snapshotsError) && (
-                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2">
+                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2 dark:text-gray-400">
                     {snapshotsError ? (
                       <span className="text-red-500">Errore di connessione a Firebase: {snapshotsError}</span>
                     ) : (
@@ -1574,7 +1550,7 @@ export default function Dashboard() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
-                      className={`bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-5 md:p-6 shadow-sm border break-inside-avoid inline-block w-full mb-6 ${isSelected ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-100" : isSelectMode ? "border-gray-300 dark:border-gray-500 hover:border-indigo-400 opacity-80 hover:opacity-100" : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 "} transition-colors duration-300 relative group cursor-default z-0 hover:z-10`}
+                      className={`bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-5 md:p-6 shadow-sm border break-inside-avoid inline-block w-full mb-6 ${isSelected ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20" : isSelectMode ? "border-gray-200 dark:border-gray-600 hover:border-indigo-400" : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 "} transition-colors duration-300 relative group cursor-default z-0 hover:z-10`}
                       onClick={() =>
                         isSelectMode ? toggleSelection(msg.id) : undefined
                       }
@@ -1719,7 +1695,7 @@ export default function Dashboard() {
                             Sondaggio
                           </div>
                         )}
-                        {msg.type === "ricerca" && (
+                        {(msg.type === "ricerca" || ((!msg.type || msg.type === "spotted") && !msg.when && !msg.where)) && (
                           <div className="mb-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg uppercase tracking-wider">
                             <Search className="w-3.5 h-3.5" />
                             Ricerca
@@ -1825,7 +1801,7 @@ export default function Dashboard() {
 
 
                               <div
-                                className={`flex items-center gap-2 text-purple-600 ${!msg.instagram ? "pr-16" : ""}`}
+                                className={`flex items-center gap-2 text-purple-600 dark:text-purple-400 ${!msg.instagram ? "pr-16" : ""}`}
                               >
 
                                 <Instagram className="w-4 h-4 shrink-0" />
@@ -1858,7 +1834,7 @@ export default function Dashboard() {
                         })() : (
                           msg.instagram ? (
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/40 dark:to-pink-900/40 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-800 relative overflow-hidden shadow-sm flex flex-col gap-2">
-                              <div className={`flex items-center gap-2 text-purple-600`}>
+                              <div className={`flex items-center gap-2 text-purple-600 dark:text-purple-400`}>
                                 <Instagram className="w-4 h-4 shrink-0" />
                                 <span className="text-xs font-black uppercase tracking-wider">
                                   Instagram Utente
@@ -2468,15 +2444,14 @@ export default function Dashboard() {
               </div>
             )}
           </>
-        )}
-        {activeTab === "profiles" && (
-          <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+        </div>
+        <div className={`flex flex-col gap-6 w-full max-w-7xl mx-auto ${activeTab === "profiles" ? "flex" : "hidden"}`}>
 
             {loading || !profilesLoaded ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
                 {(isStuckLoading || snapshotsError) && (
-                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2">
+                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2 dark:text-gray-400">
                     {snapshotsError ? (
                       <span className="text-red-500">Errore di connessione: {snapshotsError}</span>
                     ) : (
@@ -2505,7 +2480,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={macro.id}
-                      className={`bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col group transition-colors duration-300 ${isProfileSelected ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-100" : isProfileSelectMode ? "border-gray-300 dark:border-gray-500 hover:border-indigo-400 opacity-80 hover:opacity-100 cursor-pointer" : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md"}`}
+                      className={`bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col group transition-colors duration-300 ${isProfileSelected ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20" : isProfileSelectMode ? "border-gray-200 dark:border-gray-600 hover:border-indigo-400 cursor-pointer" : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md"}`}
                       onClick={() => {
                         if (isProfileSelectMode) {
                           setSelectedProfiles((prev) =>
@@ -2874,10 +2849,9 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        )}
         {/* Global Pagination */}
         {!loading &&
-          activeTab !== "analytics" &&
+          (activeTab === "messages" || activeTab === "profiles") &&
           (activeTab === "messages"
             ? filteredMessages.length > 0
             : macroProfiles.length > 0) && (
@@ -3188,7 +3162,7 @@ export default function Dashboard() {
                   value={profileNameInput}
                   onChange={(e) => setProfileNameInput(e.target.value)}
                   placeholder="Es. Il ragazzo coi capelli ricci"
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-black transition-colors"
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
@@ -3201,7 +3175,7 @@ export default function Dashboard() {
                   value={profileSuspectsInput}
                   onChange={(e) => setProfileSuspectsInput(e.target.value)}
                   placeholder="Es. Mario Rossi, Luigi Bianchi"
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-black transition-colors"
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
@@ -3216,7 +3190,7 @@ export default function Dashboard() {
                     setProfileCustomInstagramsInput(e.target.value)
                   }
                   placeholder="Es. mario.rossi, luigi99"
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-black transition-colors"
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div className="pt-4 flex gap-3 flex-col-reverse sm:flex-row">

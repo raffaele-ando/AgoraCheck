@@ -121,7 +121,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex flex-col gap-4 items-center justify-center transition-colors">
         <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
         {isStuck && (
-          <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-4">
+          <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-4 dark:text-gray-400">
             Se il caricamento è infinito, l'accesso di Google potrebbe essere bloccato dall'iframe. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra, oppure abilita i cookie di terze parti.
           </div>
         )}
@@ -134,7 +134,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center p-4 relative transition-colors">
         <Link
           to="/"
-          className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500"
+          className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500 dark:text-gray-400"
         >
           &larr; Torna alla Home
         </Link>
@@ -190,7 +190,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center p-4 relative transition-colors">
         <Link
           to="/"
-          className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500"
+          className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500 dark:text-gray-400"
         >
           &larr; Torna alla Home
         </Link>

@@ -151,9 +151,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     const totalViews = messages.length;
     const uniqueDevices = Object.keys(profiles).length;
     const identifiedUsers = macroProfiles.length;
-    const spottedMessages = messages.filter((m) => !m.type || m.type === "spotted").length;
+    const spottedMessages = messages.filter((m) => (!m.type || m.type === "spotted") && (m.when || m.where)).length;
     const sondaggioMessages = messages.filter((m) => m.type === "sondaggio").length;
-    const ricercaMessages = messages.filter((m) => m.type === "ricerca").length;
+    const ricercaMessages = messages.filter((m) => m.type === "ricerca" || ((!m.type || m.type === "spotted") && !m.when && !m.where)).length;
     const safeVisits = Array.isArray(visits) ? visits : [];
     const totalVisits = safeVisits.length;
     const submittedVisits = safeVisits.filter((v: any) => v.hasSubmitted).length;
@@ -254,7 +254,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         setDetailView({
           title: "Spotted Effettuati",
           type: "messages",
-          data: messages.filter((m) => !m.type || m.type === "spotted"),
+          data: messages.filter((m) => (!m.type || m.type === "spotted") && (m.when || m.where)),
         }),
     },
     {
@@ -280,7 +280,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         setDetailView({
           title: "Ricerche Create",
           type: "messages",
-          data: messages.filter((m) => m.type === "ricerca"),
+          data: messages.filter((m) => m.type === "ricerca" || ((!m.type || m.type === "spotted") && !m.when && !m.where)),
         }),
     },
     {
@@ -362,7 +362,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${trackAllBrowsers ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
               <span className="sr-only">Raccogli da tutti i browser</span>
-              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${trackAllBrowsers ? 'translate-x-5' : 'translate-x-0'}`}></span>
+              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${trackAllBrowsers ? 'translate-x-5' : 'translate-x-0'}`}></span>
             </button>
             <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Tutti i browser</span>
           </div>
@@ -388,7 +388,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 ${isAdminTrackingIgnored ? 'bg-orange-600' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
               <span className="sr-only">Ignora Admin</span>
-              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAdminTrackingIgnored ? 'translate-x-5' : 'translate-x-0'}`}></span>
+              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${isAdminTrackingIgnored ? 'translate-x-5' : 'translate-x-0'}`}></span>
             </button>
             <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Ignora Statistiche</span>
           </div>
@@ -443,7 +443,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                 <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-3">
                   Andamento Traffico
                 </h3>
-                <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 px-3 py-1.5 rounded-xl">
+                <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 px-3 py-1.5 rounded-xl">
                   Ultimi 14 Giorni
                 </span>
               </div>
@@ -685,13 +685,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {detailView.data.length}
                     </span>
                   </h2>
-                  <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 font-semibold tracking-wide uppercase">
+                  <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 font-semibold tracking-wide uppercase">
                     Dettaglio statistica per la voce selezionata
                   </p>
                 </div>
                 <button
                   onClick={() => setDetailView(null)}
-                  className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 transition-all active:scale-95 shrink-0 ml-4"
+                  className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 dark:text-gray-500 transition-all active:scale-95 shrink-0 ml-4"
                 >
 
                   <X className="w-5 h-5" />
@@ -709,7 +709,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
 
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 border-collapse">
 
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
 
@@ -750,7 +750,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                       <div className="font-black text-gray-800 dark:text-gray-200 mb-1 leading-relaxed">
                                         "{m.lookingFor}"
                                       </div>
-                                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 flex gap-3">
+                                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 flex gap-3">
 
                                         {m.where && (
                                           <span className="flex items-center gap-1">
@@ -766,7 +766,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         )}
                                       </div>
                                       {m.instagram && (
-                                        <div className="text-xs text-pink-600 font-bold mt-2 pt-2 border-t border-gray-50 flex items-center gap-1.5">
+                                        <div className="text-xs text-pink-600 font-bold mt-2 pt-2 border-t border-gray-50 dark:border-gray-800 flex items-center gap-1.5">
                                           <Instagram className="w-3 h-3" /> @
                                           {m.instagram}
                                         </div>
@@ -834,7 +834,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                             <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
 
-                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 " />
+                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 dark:text-gray-500 " />
                               {m.createdAt
                                 ? format(
                                     m.createdAt.toDate(),
@@ -860,7 +860,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 <div className="font-black text-gray-900 dark:text-gray-100 text-sm leading-relaxed mb-3">
                                   "{m.lookingFor}"
                                 </div>
-                                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 flex flex-wrap gap-x-4 gap-y-2">
+                                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 flex flex-wrap gap-x-4 gap-y-2">
 
                                   {m.where && (
                                     <span className="flex items-center gap-1.5">
@@ -927,7 +927,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
 
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 border-collapse">
 
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
 
@@ -977,7 +977,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         <div className="font-black text-gray-900 dark:text-gray-100 text-base">
                                           {p.name || "Senza Nome"}
                                         </div>
-                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
+                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
                                           {p.id}
                                         </div>
                                       </div>
@@ -1041,7 +1041,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
                           >
 
-                            <div className="flex items-center gap-4 pb-4 border-b border-gray-50">
+                            <div className="flex items-center gap-4 pb-4 border-b border-gray-50 dark:border-gray-800">
 
                               <div
                                 className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-inner"
@@ -1057,14 +1057,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 <div className="font-black text-gray-900 dark:text-gray-100 text-base truncate">
                                   {p.name || "Senza Nome"}
                                 </div>
-                                <div className="text-[10px] font-bold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
+                                <div className="text-[10px] font-bold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-500 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
                                   {p.id}
                                 </div>
                               </div>
                             </div>
                             <div className="flex flex-col bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 gap-3 text-center">
 
-                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest">
+                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                 Accessi Registrati
                               </span>
                               <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 block">
@@ -1114,7 +1114,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
 
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 border-collapse">
 
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
 
@@ -1186,7 +1186,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         {m.profileIds.map((pid: string) => (
                                           <span
                                             key={pid}
-                                            className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 dark:dark:text-gray-500 flex items-center gap-1.5"
+                                            className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 flex items-center gap-1.5"
                                           >
 
                                             <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />
@@ -1260,7 +1260,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
                           >
 
-                            <div className="flex flex-col border-b border-gray-50 pb-4">
+                            <div className="flex flex-col border-b border-gray-50 dark:border-gray-800 pb-4">
 
                               <div className="font-black text-gray-900 dark:text-gray-100 text-xl">
                                 {m.name || "Identità Nascosta"}
@@ -1273,7 +1273,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-gray-700 ">
 
-                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
                                 <Cpu className="w-3.5 h-3.5" /> Dispositivi
                                 Collegati
                               </span>
@@ -1313,7 +1313,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </div>
                             <div className="flex items-center justify-between pt-2">
 
-                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:dark:text-gray-500 uppercase tracking-widest">
+                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                 Ultima acquisizione
                               </span>
                               <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm px-3 py-1.5 rounded-xl flex items-center gap-1.5">
@@ -1342,16 +1342,16 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                         <table className="min-w-full text-left border-collapse">
                           <thead>
                             <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
-                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest dark:text-gray-400">
                                 Date / Time
                               </th>
-                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest dark:text-gray-400">
                                 Status
                               </th>
-                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest dark:text-gray-400">
                                 Timings
                               </th>
-                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                              <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest dark:text-gray-400">
                                 Platform / Browser
                               </th>
                             </tr>
@@ -1373,7 +1373,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                   ) : (
                                     <div className="flex flex-col gap-1">
                                       <span className="px-2 py-1 text-xs font-bold bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg inline-block w-fit">Abbandonato</span>
-                                      {v.abandonedAfter && v.abandonedAfter !== 'none' && <span className="text-xs text-gray-500">dopo {v.abandonedAfter.replace('timeSpent', '')}</span>}
+                                      {v.abandonedAfter && v.abandonedAfter !== 'none' && <span className="text-xs text-gray-500 dark:text-gray-400">dopo {v.abandonedAfter.replace('timeSpent', '')}</span>}
                                     </div>
                                   )}
                                 </td>
@@ -1392,7 +1392,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                       {(v.platform === "Mac OS" || v.platform === "Windows") && <Monitor className="inline w-4 h-4 text-blue-500"/>}
                                       <span>{v.platform || "-"}</span>
                                     </span>
-                                    <span className="text-xs text-gray-500">{v.browser || "-"}</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">{v.browser || "-"}</span>
                                   </div>
                                 </td>
                               </tr>
@@ -1405,7 +1405,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {detailView.data.map((v) => (
                         <div key={v.id} className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4">
                           <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-                            <span className="text-xs font-bold text-gray-500 flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-500 flex items-center gap-2 dark:text-gray-400">
                               <Clock className="w-4 h-4" />
                               {v.createdAt ? format(v.createdAt.toDate ? v.createdAt.toDate() : new Date(v.createdAt), "dd/MM/yyyy HH:mm") : "-"}
                             </span>
@@ -1416,7 +1416,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             )}
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-gray-500 mb-1 block">Timings (s)</span>
+                            <span className="text-xs font-bold text-gray-500 mb-1 block dark:text-gray-400">Timings (s)</span>
                             <div className="flex gap-2">
                               <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">When: {v.timeSpentWhen || 0}</span>
                               <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Where: {v.timeSpentWhere || 0}</span>

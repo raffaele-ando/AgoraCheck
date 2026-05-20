@@ -107,26 +107,24 @@ function WhatsappSettings() {
         </h3>
         <button
           onClick={handleSave}
-          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${
-            isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20"
-          }`}
+          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20" }`}
         >
           <Save className="w-4 h-4" />
           {isSaved ? "Salvato!" : "Salva Link"}
         </button>
       </div>
-      <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed">
+      <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed dark:text-gray-400">
         Associa il link di un gruppo WhatsApp a ciascuna zona (città o sotto-zona).
         Puoi usare "default" se non c'è una zona specifica.
       </p>
 
       <div className="mb-6 space-y-3 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
         <div>
-           <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Titolo Widget</label>
+           <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Titolo Widget</label>
            <input type="text" value={links["_title"] || ""} placeholder="Unisciti alla nostra Community" onChange={e => setLinks({...links, _title: e.target.value})} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors" />
         </div>
         <div>
-           <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Sottotitolo Widget</label>
+           <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Sottotitolo Widget</label>
            <input type="text" value={links["_subtitle"] || ""} placeholder="Entra nel Gruppo WhatsApp {zona}" onChange={e => setLinks({...links, _subtitle: e.target.value})} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-green-500 transition-colors" />
            <p className="text-[10px] text-gray-400 mt-1">Usa <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded">{'{zona}'}</code> per inserire dinamicamente il nome della zona o toglilo per lasciarlo fisso.</p>
         </div>
@@ -265,7 +263,7 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
             <LinkIcon className="w-5 h-5 text-indigo-500" />
             Widget Link di Instagram
           </h3>
-          <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed">
+          <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed dark:text-gray-400">
             Personalizza l'etichetta del link (sticker link) che verrà usata all'interno della dashboard quando copierai il link automatico per i post.
           </p>
 
@@ -285,9 +283,7 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
             <div className="pt-2">
               <button
                 onClick={handleSaveLink}
-                className={`flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${
-                  isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20"
-                }`}
+                className={`flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20" }`}
               >
                 <Save className="w-4 h-4" />
                 {isSaved ? "Salvato!" : "Salva Testo"}
@@ -311,7 +307,7 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
               <Users className="w-5 h-5 text-orange-500" />
               Gestione Dashboard Limitata
             </h3>
-            <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed max-w-lg">
+            <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed max-w-lg dark:text-gray-400">
               Come <b>Super Admin</b>, puoi concedere ad altri l'accesso alla dashboard (visione dei messaggi base, nessuna visibilità di IP e telemetria, nessuna gestione degli admin). Aggiungi qui la loro email Gmail.
             </p>
 
@@ -370,7 +366,7 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
           <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800/50 p-6 flex flex-col items-center justify-center text-center">
             <ShieldAlert className="w-10 h-10 text-orange-400 mb-3" />
             <h3 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-1">Accesso Limitato</h3>
-            <p className="text-[13px] text-gray-500 max-w-sm">
+            <p className="text-[13px] text-gray-500 max-w-sm dark:text-gray-400">
               Non hai i permessi di Super Admin. Solo il Super Admin può aggiungere o rimuovere altri amministratori.
             </p>
           </div>

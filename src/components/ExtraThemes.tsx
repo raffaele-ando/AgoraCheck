@@ -65,20 +65,20 @@ export function ThemeCorkboard() {
     instagram: string;
     city: string;
     area: string;
-    type: "spotted" | "sondaggio" | "ricerca";
+    type: "spotted" | "sondaggio";
     pollOptions: string[];
   }>(() => {
     let initCity = "MILANO";
     let initArea = "";
-    let initMode: "spotted" | "sondaggio" | "ricerca" = "spotted";
+    let initMode: "spotted" | "sondaggio" = "spotted";
 
     const pathSegments = window.location.pathname.split('/').filter(Boolean).map(s => decodeURIComponent(s).toUpperCase().replace(/-/g, ' '));
     const searchParams = new URLSearchParams(window.location.search);
     
     // Check parameters in path
     for (const seg of pathSegments) {
-      if (seg === "SPOTTED" || seg === "SONDAGGIO" || seg === "RICERCA") {
-         initMode = seg.toLowerCase() as "spotted" | "sondaggio" | "ricerca";
+      if (seg === "SPOTTED" || seg === "SONDAGGIO") {
+         initMode = seg.toLowerCase() as "spotted" | "sondaggio";
       } else if (Object.keys(LOCATIONS).includes(seg)) {
          initCity = seg;
       } else {
@@ -105,7 +105,7 @@ export function ThemeCorkboard() {
         if (areas.includes(paramArea)) { initCity = city; break; }
       }
     }
-    if (paramType === "sondaggio" || paramType === "spotted" || paramType === "ricerca") initMode = paramType as any;
+    if (paramType === "sondaggio" || paramType === "spotted") initMode = paramType as any;
 
     if (!initArea || !LOCATIONS[initCity]?.includes(initArea)) {
        initArea = LOCATIONS[initCity]?.[0] || initCity;
@@ -179,7 +179,7 @@ export function ThemeCorkboard() {
     const url = new URL(window.location.href);
     const areaSlug = form.area.toLowerCase().replace(/\s+/g, '-');
     const citySlug = form.city.toLowerCase().replace(/\s+/g, '-');
-    url.pathname = `/${citySlug}/${areaSlug}${form.type === "sondaggio" ? "/sondaggio" : (form.type === "ricerca" ? "/ricerca" : "")}`;
+    url.pathname = `/${citySlug}/${areaSlug}${form.type === "sondaggio" ? "/sondaggio" : ""}`;
     url.searchParams.delete("mode");
     url.searchParams.delete("city");
     url.searchParams.delete("area");
@@ -273,7 +273,7 @@ export function ThemeCorkboard() {
               className="text-2xl sm:text-4xl font-black text-[#000000] uppercase tracking-tighter leading-none transition-colors"
               style={{ fontFamily: "Impact, sans-serif" }}
             >
-              {form.type === "spotted" ? "WANTED!" : form.type === "ricerca" ? (isIt ? "RICERCA" : "SEARCH") : (isIt ? "SONDAGGIO" : "POLL")}
+              {form.type === "spotted" ? "WANTED!" : (isIt ? "SONDAGGIO" : "POLL")}
             </h2>
           </div>
         </div>
@@ -361,18 +361,18 @@ export function ThemeCorkboard() {
 
           <div className="px-2 relative mt-0">
             <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
-              <Search className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? (isIt ? "4. Chi cerchi? *" : "4. Who are you looking for? *") : form.type === "ricerca" ? (isIt ? "2. Chi/Cosa cerchi? *" : "2. Who/What are you looking for? *") : (isIt ? "2. Fai una domanda *" : "2. Ask a question *")}
+              <Search className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? (isIt ? "4. Chi cerchi? *" : "4. Who are you looking for? *") : (isIt ? "2. Fai una domanda *" : "2. Ask a question *")}
             </label>
             <TextareaAutosize
               required
-              minRows={form.type === "spotted" ? 2 : form.type === "ricerca" ? 3 : 1}
+              minRows={form.type === "spotted" ? 2 : 1}
               maxRows={4}
               value={form.lookingFor}
               onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
               onFocus={() => handleFocus("lookingFor")}
               onBlur={() => handleBlur("lookingFor")}
               className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors py-1 overflow-y-auto"
-              placeholder={form.type === "spotted" || form.type === "ricerca" ? (isIt ? `Es. ${lookingForPlaceholder}` : `E.g. ${lookingForPlaceholder}`) : (isIt ? "Es. Dove si mangia meglio in Bovisa?" : "E.g. What's the best food near campus?")}
+              placeholder={form.type === "spotted" ? (isIt ? `Es. ${lookingForPlaceholder}` : `E.g. ${lookingForPlaceholder}`) : (isIt ? "Es. Dove si mangia meglio in Bovisa?" : "E.g. What's the best food near campus?")}
             />
           </div>
 

@@ -161,7 +161,7 @@ export function LogoSettings() {
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
-      <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed">
+      <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed dark:text-gray-400">
         Seleziona quale logo o icona vuoi caricare. Le modifiche verranno applicate automaticamente su tutta la piattaforma (es. aggiornamento favicon).
       </p>
 
@@ -175,14 +175,23 @@ export function LogoSettings() {
         </div>
         
         {/* Anteprima in tempo reale */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center justify-center my-4 overflow-hidden relative" style={{ minHeight: "140px" }}>
-           <div className="absolute top-2 left-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Anteprima</div>
-           <Logo forceTextFallback={true} fallbackText="ANTEPRIMA" className="w-56 h-20" />
+        <div 
+           className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center justify-center my-4 overflow-hidden relative" 
+           style={{ 
+             minHeight: "140px",
+             backgroundColor: "transparent",
+             backgroundImage: "linear-gradient(45deg, rgba(128,128,128,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(128,128,128,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.1) 75%)",
+             backgroundSize: "20px 20px",
+             backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px"
+           }}
+        >
+           <div className="absolute top-2 left-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-white/80 dark:bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm">Anteprima</div>
+           <Logo forceTextFallback={true} fallbackText="ANTEPRIMA" className="w-56 h-20 drop-shadow-sm" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Scritta Automatica Zona</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Scritta Automatica Zona</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.zoneScale} onChange={(e) => {
                   const newScales = {...scales, zoneScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -191,7 +200,7 @@ export function LogoSettings() {
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Scritta/Logo Agorà (Sotto)</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Scritta/Logo Agorà (Sotto)</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.agoraScale} onChange={(e) => {
                   const newScales = {...scales, agoraScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -200,7 +209,7 @@ export function LogoSettings() {
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Distanza Verticale</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Distanza Verticale</label>
               <input type="range" min="-20" max="40" step="1" value={scales.spacing} onChange={(e) => {
                   const newScales = {...scales, spacing: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -209,7 +218,7 @@ export function LogoSettings() {
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{scales.spacing}px</div>
            </div>
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Immagine Logo Personalizzato</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Immagine Logo Personalizzato</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.customLogoScale} onChange={(e) => {
                   const newScales = {...scales, customLogoScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -223,11 +232,11 @@ export function LogoSettings() {
       {/* Upload nuovo logo */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
         <div className="flex-1">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Tipo Logo</label>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Tipo Logo</label>
           <select
             value={selectedSlot}
             onChange={(e) => setSelectedSlot(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold focus:outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-white"
           >
             {predefinedLogos.map((opt) => (
               <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -256,8 +265,16 @@ export function LogoSettings() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {logos.map(logo => (
             <div key={logo.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-900 flex flex-col group">
-              <div className="p-3 bg-gray-50 dark:bg-gray-800/80 aspect-video flex-1 flex items-center justify-center relative">
-                <img src={logo.dataUrl} alt={logo.name} className="max-w-full max-h-full object-contain" />
+              <div 
+                className="p-3 aspect-video flex-1 flex items-center justify-center relative rounded-t-xl"
+                style={{
+                  backgroundColor: "transparent",
+                  backgroundImage: "linear-gradient(45deg, rgba(128,128,128,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(128,128,128,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.1) 75%)",
+                  backgroundSize: "16px 16px",
+                  backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px"
+                }}
+              >
+                <img src={logo.dataUrl} alt={logo.name} className="max-w-full max-h-full object-contain drop-shadow-sm" />
               </div>
               <div className="p-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate pr-2" title={logo.name}>{logo.name}</span>

@@ -52,7 +52,7 @@ export const clearLogoCache = () => {
 
 const fetchLogo = async (name: string): Promise<string | null> => {
   if (name in logoCache) return logoCache[name];
-  if (pendingPromises[name]) return pendingPromises[name];
+  if (name in pendingPromises) return pendingPromises[name];
 
   const promise = (async () => {
     try {

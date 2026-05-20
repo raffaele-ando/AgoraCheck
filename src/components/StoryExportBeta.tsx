@@ -121,7 +121,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 dark:text-gray-400"
           >
             <X className="w-5 h-5" />
           </button>
@@ -131,11 +131,11 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           <div className="bg-white dark:bg-gray-900 p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">Stile Esportazione</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">Stile Esportazione</label>
                 <select 
                   value={selectedMode} 
                   onChange={e => setSelectedMode(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-sm font-bold"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-sm font-bold text-gray-900 dark:text-white"
                 >
                   <option value="spotted">Spotted</option>
                   <option value="ricerca">Ricerca</option>
@@ -147,23 +147,23 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
               
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "ricerca" ? "Testo Ricerca" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "ricerca" ? "Testo Ricerca" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
                   <textarea 
                     value={chiText} 
                     onChange={e => setChiText(e.target.value)} 
                     rows={2}
-                    className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm resize-none"
+                    className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm resize-none text-gray-900 dark:text-white"
                   />
                 </div>
                 {selectedMode !== "ricerca" && (
                   <>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
-                      <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                      <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
+                      <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
-                      <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                      <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
+                      <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
                     </div>
                   </>
                 )}
@@ -172,12 +172,12 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
               {(selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") && (
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "risultati_sondaggio" ? "Esito Opz 3" : "Opzione 3"}</label>
-                    <input type="text" value={box4Text} onChange={e => setBox4Text(e.target.value)} placeholder="Opz 3..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "risultati_sondaggio" ? "Esito Opz 3" : "Opzione 3"}</label>
+                    <input type="text" value={box4Text} onChange={e => setBox4Text(e.target.value)} placeholder="Opz 3..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">{selectedMode === "risultati_sondaggio" ? "Esito Opz 4" : "Opzione 4"}</label>
-                    <input type="text" value={box5Text} onChange={e => setBox5Text(e.target.value)} placeholder="Opz 4..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm"/>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "risultati_sondaggio" ? "Esito Opz 4" : "Opzione 4"}</label>
+                    <input type="text" value={box5Text} onChange={e => setBox5Text(e.target.value)} placeholder="Opz 4..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
                   </div>
                 </div>
               )}
@@ -186,7 +186,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
 
           <div className="bg-gray-100 dark:bg-black/50 p-4 flex flex-col items-center justify-center relative flex-1 min-h-[300px]">
             <div className="w-full max-w-[220px] mx-auto flex items-center justify-center">
-               <div className="relative w-full aspect-[9/16] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={containerRef}>
+               <div className="relative w-full aspect-[9/16] bg-white rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden dark:bg-gray-900" ref={containerRef}>
                   <div
                   ref={captureRef}
                   style={{
@@ -225,7 +225,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                   </div>
                 </div>
                 {!backgroundImage && isDBReady && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center bg-gray-50">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center bg-gray-50 dark:bg-gray-800/50">
                     <ImageIcon className="w-12 h-12 mb-2 opacity-30" />
                     <span className="text-sm font-medium mb-2">Nessun template configurato</span>
                     <span className="text-xs">Vai nella sezione "Template Storie" della Dashboard per impostarlo!</span>

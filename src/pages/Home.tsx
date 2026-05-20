@@ -948,7 +948,7 @@ export function useSubmitSpotted() {
     instagram?: string;
     city?: string;
     area?: string;
-    type?: "spotted" | "sondaggio" | "ricerca";
+    type?: "spotted" | "sondaggio";
     pollOptions?: string[];
   }) => {
     if (!data.lookingFor.trim()) {
