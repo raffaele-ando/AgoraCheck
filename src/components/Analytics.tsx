@@ -164,7 +164,35 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     let countWhen = 0, countWhere = 0, countLookingFor = 0;
     const abandoned: Record<string, number> = { when: 0, where: 0, lookingFor: 0, instagram: 0, none: 0 };
     
+    /* Traffic by Date */ 
+    const last14Days = Array.from(
+      { length: 14 },
+      (_, i) => {
+        const d = startOfDay(subDays(new Date(), 13 - i));
+        return { _date: d, date: format(d, "dd/MM"), views: 0, actions: 0 };
+      },
+    );
+
     safeVisits.forEach((v: any) => {
+      if (v.createdAt) {
+        let vDate = v.createdAt;
+        if (vDate.toDate) {
+          vDate = vDate.toDate();
+        } else if (typeof vDate === 'number') {
+           vDate = new Date(vDate);
+        } else if (typeof vDate === 'string') {
+           vDate = new Date(vDate);
+        }
+        
+        if (vDate instanceof Date) {
+          const d = startOfDay(vDate).getTime();
+          const dayStat = last14Days.find((day) => day._date.getTime() === d);
+          if (dayStat) {
+            dayStat.views += 1;
+          }
+        }
+      }
+
       if (v.timeSpentWhen > 0) { totalTimeWhen += v.timeSpentWhen; countWhen++; }
       if (v.timeSpentWhere > 0) { totalTimeWhere += v.timeSpentWhere; countWhere++; }
       if (v.timeSpentLookingFor > 0) { totalTimeLookingFor += v.timeSpentLookingFor; countLookingFor++; }
@@ -182,13 +210,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     const avgTimeWhere = countWhere > 0 ? (totalTimeWhere / countWhere).toFixed(1) : "0";
     const avgTimeLookingFor = countLookingFor > 0 ? (totalTimeLookingFor / countLookingFor).toFixed(1) : "0";
 
-    /* Traffic by Date */ const last14Days = Array.from(
-      { length: 14 },
-      (_, i) => {
-        const d = startOfDay(subDays(new Date(), 13 - i));
-        return { _date: d, date: format(d, "dd/MM"), views: 0, actions: 0 };
-      },
-    );
     /* Browser/Platform */ const platforms: Record<string, number> = {};
     const browsers: Record<string, number> = {};
     messages.forEach((m) => {
@@ -196,8 +217,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         const d = startOfDay(m.createdAt.toDate()).getTime();
         const dayStat = last14Days.find((day) => day._date.getTime() === d);
         if (dayStat) {
-          dayStat.views += 1;
-          if (m.lookingFor) dayStat.actions += 1;
+          if (m.lookingFor || m.type === 'sondaggio') dayStat.actions += 1;
         }
       }
       const pKey = getPlatform(m);

@@ -1152,15 +1152,20 @@ export default function Dashboard() {
     const matchesArchive = viewFilter === "archived" ? !!m.isArchived : !m.isArchived;
     if (!matchesArchive) return false;
 
-    // 2. Only Spotted filter (must have non-empty lookingFor)
+    // 2. Only Spotted filter
     if (onlySpottedFilter) {
-      const isSpotted = m.lookingFor && m.lookingFor.trim() !== "";
+      const isSpotted = !m.type || m.type === "spotted";
       if (!isSpotted) return false;
     }
 
     // 3. Zone filter
     if (selectedZoneFilter) {
-      if (!m.where || m.where.trim().toLowerCase() !== selectedZoneFilter.trim().toLowerCase()) {
+      const filterLower = selectedZoneFilter.trim().toLowerCase();
+      const matchCity = m.city && m.city.trim().toLowerCase() === filterLower;
+      const matchArea = m.area && m.area.trim().toLowerCase() === filterLower;
+      const matchWhere = m.where && m.where.trim().toLowerCase() === filterLower;
+      
+      if (!matchCity && !matchArea && !matchWhere) {
         return false;
       }
     }
