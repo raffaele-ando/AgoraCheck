@@ -302,7 +302,7 @@ export default function StoryTemplateConfig() {
   const activeBox = (config[activeTab] || DEFAULT_CONFIG[activeTab]) as BoxConfig;
 
   // Flattiamo le options per il target: DEFAULT + tutte le aree e città
-  const targetOptions = ["DEFAULT", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
+  const targetOptions = ["DEFAULT", "Milano generale", "polimi", "unige", "Torino generale"];
 
   const getTabsForMode = () => {
     if (selectedMode === "spotted") return ["chi", "quando", "dove"] as const;

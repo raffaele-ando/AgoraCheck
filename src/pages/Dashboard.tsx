@@ -56,13 +56,18 @@ import {
   MessageSquare,
   LayoutTemplate,
   Settings,
+  Sparkles,
+  Check,
+  Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
 import StoryExportBeta from "../components/StoryExportBeta";
 import StoryTemplateConfig from "../components/StoryTemplateConfig";
+import CarouselTemplateConfig from "../components/CarouselTemplateConfig";
 import AppSettings, { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../components/AppSettings";
 import { LinkWidgetCard } from "../components/LinkWidgetCard";
+import { LOCATIONS } from "../components/HeaderVariations";
 interface Message {
   id: string;
   lookingFor: string;
@@ -75,6 +80,7 @@ interface Message {
   instagram?: string;
   resolution?: string;
   createdAt: Timestamp | null;
+  isValidatedForCarousel?: boolean;
   deviceInfo: {
     userAgent: string;
     language: string;
@@ -198,6 +204,7 @@ export default function Dashboard() {
     return () => clearTimeout(timeout);
   }, [loading, profilesLoaded]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [carouselValidatedMessages, setCarouselValidatedMessages] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -222,7 +229,7 @@ export default function Dashboard() {
     useState("");
   const [viewFilter, setViewFilter] = useState<"new" | "archived">("new");
   const [activeTab, setActiveTab] = useState<
-    "messages" | "profiles" | "analytics" | "story_template" | "settings"
+    "messages" | "profiles" | "analytics" | "story_template" | "settings" | "carousel"
   >("messages");
   const [isDarkMode, setIsDarkMode] = useState(
     () => localStorage.getItem("theme") === "dark",
@@ -240,6 +247,8 @@ export default function Dashboard() {
     }
   }, [isDarkMode]);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [onlySpottedFilter, setOnlySpottedFilter] = useState(false);
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
   const [resolutionInput, setResolutionInput] = useState("");
   const [macroModalTab, setMacroModalTab] = useState<
     "timeline" | "dettagli" | "identita"
@@ -790,15 +799,46 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // 3. MESSAGES (Dynamic based on pagination)
+    // 2.5 CAROUSEL APPROVED MESSAGES (background, zero composite indexes)
+    const unsubscribeCarousel = onSnapshot(collection(db, "messages"), (snapshot) => {
+      const msgs: any[] = [];
+      snapshot.docs.forEach(doc => {
+        const d = doc.data();
+        if (d.isValidatedForCarousel) {
+          msgs.push({ id: doc.id, ...d });
+        }
+      });
+      // Sort in-memory to prioritize the pinned first slide (cover), then newest first
+      msgs.sort((a, b) => {
+        if (a.isFirstSlideOfCarousel && !b.isFirstSlideOfCarousel) return -1;
+        if (!a.isFirstSlideOfCarousel && b.isFirstSlideOfCarousel) return 1;
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
+        return timeB - timeA;
+      });
+      setCarouselValidatedMessages(msgs);
+    }, (err) => {
+      console.error("Error loading carousel approved messages:", err);
+    });
+
+    return () => unsubscribeCarousel();
+  }, []);
+
+  useEffect(() => {
+    // 3. MESSAGES (Dynamic based on pagination / filters)
     setLoading(true);
     // Increase limit linearly based on pagesize and current page.
-    // If the active tab is somehow unrelated, it still needs messages for macros.
-    const q = query(
-      collection(db, "messages"), 
-      orderBy("createdAt", "desc"), 
-      limit(pageSize * currentPage)
-    );
+    // If the active tab is somehow unrelated or selective filters are active, retrieve all documents.
+    let q;
+    if (activeTab === "analytics" || viewingMacroId !== null || onlySpottedFilter || selectedZoneFilter !== "") {
+      q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+    } else {
+      q = query(
+        collection(db, "messages"), 
+        orderBy("createdAt", "desc"), 
+        limit(pageSize * currentPage)
+      );
+    }
 
     const unsubscribeMessages = onSnapshot(q, (msgsSnap) => {
       const msgs = msgsSnap.docs.map((doc) => {
@@ -858,7 +898,7 @@ export default function Dashboard() {
     });
 
     return () => unsubscribeMessages();
-  }, [pageSize, currentPage]);
+  }, [pageSize, currentPage, activeTab, viewingMacroId, onlySpottedFilter, selectedZoneFilter]);
 
   useEffect(() => {
     // 4. VISITS (Only when analytics is requested)
@@ -1107,9 +1147,26 @@ export default function Dashboard() {
   const handleUngroupDevice = (messageId: string) => {
     setConfirmModalState({ isOpen: true, messageId, type: "ungroup" });
   };
-  const filteredMessages = messages.filter((m) =>
-    viewFilter === "archived" ? !!m.isArchived : !m.isArchived,
-  );
+  const filteredMessages = messages.filter((m) => {
+    // 1. Archive status filter
+    const matchesArchive = viewFilter === "archived" ? !!m.isArchived : !m.isArchived;
+    if (!matchesArchive) return false;
+
+    // 2. Only Spotted filter (must have non-empty lookingFor)
+    if (onlySpottedFilter) {
+      const isSpotted = m.lookingFor && m.lookingFor.trim() !== "";
+      if (!isSpotted) return false;
+    }
+
+    // 3. Zone filter
+    if (selectedZoneFilter) {
+      if (!m.where || m.where.trim().toLowerCase() !== selectedZoneFilter.trim().toLowerCase()) {
+        return false;
+      }
+    }
+
+    return true;
+  });
   const totalPagesMsg = Math.ceil(filteredMessages.length / pageSize) || 1;
   const paginatedMessages = filteredMessages.slice(
     (currentPage - 1) * pageSize,
@@ -1249,6 +1306,13 @@ export default function Dashboard() {
                       >
                         <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         Template
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("carousel")}
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "carousel" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        Carosello IG
                       </button>
                       <button
                         onClick={() => setActiveTab("settings")}
@@ -1465,46 +1529,134 @@ export default function Dashboard() {
         <div className={activeTab === "settings" ? "block" : "hidden"}>
           <AppSettings isSuperAdmin={isSuperAdmin} />
         </div>
+        <div className={activeTab === "carousel" ? "block" : "hidden"}>
+          {activeTab === "carousel" && (
+            <CarouselTemplateConfig 
+              validatedMessages={carouselValidatedMessages}
+              onUnvalidateMessage={async (msgId) => {
+                const docRef = doc(db, "messages", msgId);
+                await updateDoc(docRef, { isValidatedForCarousel: false });
+              }}
+            />
+          )}
+        </div>
         <div className={activeTab === "messages" ? "block" : "hidden"}>
           <>
-            <LinkWidgetCard latestMessage={messages.find(m => !m.isArchived)} />
+            {/* Global Tools Section */}
+            <div className="flex flex-col md:flex-row items-stretch gap-4 mb-6">
+              {/* Link Widget */}
+              <LinkWidgetCard latestMessage={messages.find(m => !m.isArchived)} />
 
+              {/* Carousel Tools */}
+              {isSuperAdmin && (
+                <div className="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-4 shadow-sm flex flex-col justify-between gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
+                         <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                       </div>
+                       <div className="flex flex-col">
+                         <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-none">Carosello IG</h3>
+                         <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold mt-1">
+                           Esporta ({carouselValidatedMessages.length}/20)
+                         </p>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mt-auto">
+                    <button
+                      onClick={() => {
+                        setOnlySpottedFilter(!onlySpottedFilter);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border whitespace-nowrap uppercase flex-1 sm:flex-none justify-center ${
+                        onlySpottedFilter 
+                          ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300" 
+                          : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${onlySpottedFilter ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`} />
+                      Solo Spotted
+                    </button>
+
+                    <select
+                      value={selectedZoneFilter}
+                      onChange={(e) => {
+                        setSelectedZoneFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className={`bg-gray-50 dark:bg-gray-800/50 text-[10px] uppercase font-bold rounded-lg px-2 py-1.5 border transition-all outline-none flex-1 sm:flex-none ${selectedZoneFilter !== "" ? "border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30" : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400"}`}
+                    >
+                      <option value="">Tutte le Zone</option>
+                      {Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)]).map(zone => (
+                        <option key={zone} value={zone}>{zone}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveTab("carousel")}
+                      className={`w-full px-3 py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm ${carouselValidatedMessages.length >= 20 ? "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 text-white" : "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white"}`}
+                    >
+                      {carouselValidatedMessages.length >= 20 ? (
+                        <>Esporta <Download className="w-3.5 h-3.5 shrink-0" /></>
+                      ) : (
+                        <>Apri Editor <Settings className="w-3.5 h-3.5 shrink-0" /></>
+                      )}
+                    </button>
+                    {(onlySpottedFilter || selectedZoneFilter !== "") && (
+                       <button
+                         onClick={() => {
+                           setOnlySpottedFilter(false);
+                           setSelectedZoneFilter("");
+                           setCurrentPage(1);
+                         }}
+                         className="px-3 py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                         title="Rimuovi Filtri"
+                       >
+                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                       </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* List Filters */}
             {!isSelectMode && (
-              <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8 pb-2 sm:pb-0">
-
-                <button
-                  onClick={() => {
-                    setViewFilter("new");
-                    setSelectedMessages([]);
-                  }}
-                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"}`}
-                >
-
-                  <InboxIcon className="w-4 h-4 shrink-0" /> Spotted Nuovi
-                </button>
-                <button
-                  onClick={() => {
-                    setViewFilter("archived");
-                    setSelectedMessages([]);
-                  }}
-                  className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-gray-800 dark:bg-gray-700 text-white shadow-md shadow-gray-300 dark:shadow-none" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"}`}
-                >
-
-                  <Archive className="w-4 h-4 shrink-0" /> Letti /
-                  Archiviati
-                </button>
-                <div className="h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2 hidden sm:block"></div>
-                <div className="flex flex-1 sm:flex-none justify-end items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-
-                  <span className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                    Per Pagina:
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
+                  <button
+                    onClick={() => {
+                      setViewFilter("new");
+                      setSelectedMessages([]);
+                    }}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                  >
+                    <InboxIcon className="w-4 h-4" /> Spotted Nuovi
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewFilter("archived");
+                      setSelectedMessages([]);
+                    }}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                  >
+                    <Archive className="w-4 h-4" /> Letti / Archiviati
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Mostra / Pagina
                   </span>
                   <select
                     value={pageSize}
                     onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="bg-white dark:bg-gray-800 border text-xs sm:text-sm border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                    className="bg-gray-100 dark:bg-gray-800 border-none text-xs text-gray-600 dark:text-gray-300 font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
                   >
-
                     <option value={20}>20</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
@@ -1723,69 +1875,71 @@ export default function Dashboard() {
                         )}
                       </div>
                       
-                      <div className="mb-4">
+                      <div className="mb-5 flex flex-col sm:flex-row gap-2.5">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             setExportingMessage(msg);
                           }}
-                          className="text-xs bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 dark:hover:bg-indigo-800/60 text-indigo-600 dark:text-indigo-400 font-bold px-3 py-1.5 rounded-xl transition-colors border border-indigo-100 dark:border-indigo-800 flex items-center gap-1.5 w-fit shadow-sm"
+                          className="flex-1 sm:flex-none text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 dark:shadow-none font-bold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group"
                         >
-                           <ImageIcon className="w-3.5 h-3.5" /> Esporta Storia (Beta)
+                           <ImageIcon className="w-4 h-4 group-hover:scale-110 transition-transform" /> Esporta Storia
                         </button>
+
+                        {isSuperAdmin && (
+                          <button 
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const docRef = doc(db, "messages", msg.id);
+                              await updateDoc(docRef, {
+                                isValidatedForCarousel: !msg.isValidatedForCarousel
+                              });
+                            }}
+                            className={`flex-1 sm:flex-none text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm ${msg.isValidatedForCarousel ? "bg-emerald-500 hover:bg-emerald-600 border border-transparent text-white shadow-emerald-200 dark:shadow-none" : "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"}`}
+                          >
+                            {msg.isValidatedForCarousel ? <Check className="w-4 h-4" /> : <LayoutTemplate className="w-4 h-4 opacity-70" />}
+                            {msg.isValidatedForCarousel ? "Già nel Carosello" : "Aggiungi al Carosello"}
+                          </button>
+                        )}
                       </div>
 
-                      <div className="space-y-4 mb-5">
+                      <div className="space-y-4 mb-4">
 
                         {(msg.city || msg.area || msg.when || msg.where) && (
-                          <div className="flex flex-wrap gap-2">
-
+                          <div className="flex flex-wrap gap-x-5 gap-y-2.5 py-3 px-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-gray-100 dark:border-gray-700/50">
                             {msg.city && (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 rounded-xl text-blue-800 text-xs font-bold shadow-sm">
-                                <Globe className="w-3.5 h-3.5 shrink-0" />
-                                <div className="max-w-full">
-                                  <span className="opacity-60 font-semibold mr-1">
-                                    Città:
-                                  </span>
-                                  {msg.city}
+                              <div className="flex items-center gap-1.5">
+                                <Globe className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" />
+                                <div className="text-xs text-gray-700 dark:text-gray-300">
+                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Città</span>
+                                  <span className="font-semibold">{msg.city}</span>
                                 </div>
                               </div>
                             )}
                             {msg.area && (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 rounded-xl text-indigo-800 text-xs font-bold shadow-sm">
-
-                                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                <div className="max-w-full">
-                                  <span className="opacity-60 font-semibold mr-1">
-                                    Zona:
-                                  </span>
-                                  {msg.area}
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                <div className="text-xs text-gray-700 dark:text-gray-300">
+                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Zona</span>
+                                  <span className="font-semibold">{msg.area}</span>
                                 </div>
                               </div>
                             )}
                             {msg.when && (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 rounded-xl text-orange-800 text-xs font-bold shadow-sm">
-
-                                <Calendar className="w-3.5 h-3.5 shrink-0" />
-                                <div className="max-w-full">
-
-                                  <span className="opacity-60 font-semibold mr-1">
-                                    Quando:
-                                  </span>
-                                  {msg.when}
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 shrink-0" />
+                                <div className="text-xs text-gray-700 dark:text-gray-300">
+                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Quando</span>
+                                  <span className="font-semibold">{msg.when}</span>
                                 </div>
                               </div>
                             )}
                             {msg.where && (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-100 dark:border-emerald-800 rounded-xl text-emerald-800 text-xs font-bold shadow-sm">
-
-                                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                <div className="max-w-full">
-
-                                  <span className="opacity-60 font-semibold mr-1">
-                                    Dove:
-                                  </span>
-                                  {msg.where}
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                                <div className="text-xs text-gray-700 dark:text-gray-300">
+                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Dove</span>
+                                  <span className="font-semibold">{msg.where}</span>
                                 </div>
                               </div>
                             )}

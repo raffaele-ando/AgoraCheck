@@ -179,11 +179,15 @@ export function ThemeCorkboard() {
     const url = new URL(window.location.href);
     const areaSlug = form.area.toLowerCase().replace(/\s+/g, '-');
     const citySlug = form.city.toLowerCase().replace(/\s+/g, '-');
-    url.pathname = `/${citySlug}/${areaSlug}${form.type === "sondaggio" ? "/sondaggio" : ""}`;
-    url.searchParams.delete("mode");
-    url.searchParams.delete("city");
-    url.searchParams.delete("area");
-    window.history.replaceState({}, "", url.toString());
+    const newPath = `/${citySlug}/${areaSlug}${form.type === "sondaggio" ? "/sondaggio" : ""}`;
+    
+    if (url.pathname !== newPath || url.searchParams.has("mode") || url.searchParams.has("city") || url.searchParams.has("area")) {
+       url.pathname = newPath;
+       url.searchParams.delete("mode");
+       url.searchParams.delete("city");
+       url.searchParams.delete("area");
+       window.history.replaceState({}, "", url.toString());
+    }
   }, [form.type, form.city, form.area]);
 
   const handleSubmit = (e: React.FormEvent) => {

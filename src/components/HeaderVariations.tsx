@@ -90,7 +90,7 @@ function WheelPicker({
       if (nextIdx !== activeIndex) {
         setActiveIndex(nextIdx);
         if (containerRef.current) {
-          containerRef.current.scrollTo({ top: nextIdx * itemHeight, behavior: 'smooth' });
+          containerRef.current.scrollTop = nextIdx * itemHeight;
         }
       }
     }
