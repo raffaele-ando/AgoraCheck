@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { 
   Upload, 
   Settings, 
@@ -19,7 +19,8 @@ import {
   Minus,
   LayoutTemplate,
   MessageSquare,
-  MonitorSmartphone
+  MonitorSmartphone,
+  MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toPng } from "html-to-image";
@@ -33,6 +34,7 @@ import {
   updateDoc 
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { LOCATIONS } from "./HeaderVariations";
 
 export interface BoxConfig {
   top: number;
@@ -161,6 +163,18 @@ export default function CarouselTemplateConfig({
   const [savedStatus, setSavedStatus] = useState(false);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [targetZone, setTargetZone] = useState<string>("");
+
+  const localValidatedMessages = useMemo(() => {
+    if (!targetZone) return validatedMessages;
+    return validatedMessages.filter(m => {
+      const filterLower = targetZone.trim().toLowerCase();
+      const matchCity = m.city && m.city.trim().toLowerCase() === filterLower;
+      const matchArea = m.area && m.area.trim().toLowerCase() === filterLower;
+      const matchWhere = m.where && m.where.trim().toLowerCase() === filterLower;
+      return matchCity || matchArea || matchWhere;
+    });
+  }, [validatedMessages, targetZone]);
 
   // States for Batch Export
   const [exportProgress, setExportProgress] = useState<{
@@ -191,18 +205,24 @@ export default function CarouselTemplateConfig({
         
         // Populate backgrounds
         const bgs = Array(20).fill(null);
+        const bgPrefix = targetZone ? `carousel_bg_${targetZone}_` : "carousel_bg_";
+        
         snap.docs.forEach(doc => {
-          if (doc.id.startsWith("carousel_bg_")) {
-            const idx = parseInt(doc.id.replace("carousel_bg_", ""), 10);
-            if (idx >= 0 && idx < 20) {
-              bgs[idx] = doc.data().bgImage;
+          if (doc.id.startsWith(bgPrefix)) {
+            const numPart = doc.id.replace(bgPrefix, "");
+            if (/^\d+$/.test(numPart)) {
+               const idx = parseInt(numPart, 10);
+               if (idx >= 0 && idx < 20) {
+                 bgs[idx] = doc.data().bgImage;
+               }
             }
           }
         });
         setCarouselBgs(bgs);
 
         // Populate text config
-        const configDoc = snap.docs.find(d => d.id === "carousel_config");
+        const configId = targetZone ? `carousel_config_${targetZone}` : "carousel_config";
+        const configDoc = snap.docs.find(d => d.id === configId);
         if (configDoc && configDoc.data().config) {
           setConfig(configDoc.data().config);
         } else {
@@ -216,7 +236,7 @@ export default function CarouselTemplateConfig({
       }
     };
     loadAllData();
-  }, []);
+  }, [targetZone]);
 
   // Resize listener to scale preview correctly
   useEffect(() => {
@@ -242,7 +262,8 @@ export default function CarouselTemplateConfig({
     };
     setConfig(newConfig);
     try {
-      const configDoc = doc(db, "settings", "carousel_config");
+      const configId = targetZone ? `carousel_config_${targetZone}` : "carousel_config";
+      const configDoc = doc(db, "settings", configId);
       await setDoc(configDoc, { config: newConfig });
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 1500);
@@ -254,7 +275,7 @@ export default function CarouselTemplateConfig({
   // Set message as the first / cover slide of the carousel
   const handleSetFirstSlide = async (msgId: string) => {
     try {
-      for (const m of validatedMessages) {
+      for (const m of localValidatedMessages) {
         const isFirst = m.id === msgId;
         if (m.isFirstSlideOfCarousel !== isFirst) {
           await updateDoc(doc(db, "messages", m.id), { isFirstSlideOfCarousel: isFirst });
@@ -302,7 +323,8 @@ export default function CarouselTemplateConfig({
             setCarouselBgs(targetBgs);
 
             try {
-              const bgDoc = doc(db, "settings", `carousel_bg_${index}`);
+              const bgId = targetZone ? `carousel_bg_${targetZone}_${index}` : `carousel_bg_${index}`;
+              const bgDoc = doc(db, "settings", bgId);
               await setDoc(bgDoc, { bgImage: compressedUrl });
               setSavedStatus(true);
               setTimeout(() => setSavedStatus(false), 1500);
@@ -326,7 +348,8 @@ export default function CarouselTemplateConfig({
       targetBgs[index] = null;
       setCarouselBgs(targetBgs);
 
-      const bgDoc = doc(db, "settings", `carousel_bg_${index}`);
+      const bgId = targetZone ? `carousel_bg_${targetZone}_${index}` : `carousel_bg_${index}`;
+      const bgDoc = doc(db, "settings", bgId);
       await deleteDoc(bgDoc);
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 1500);
@@ -337,10 +360,10 @@ export default function CarouselTemplateConfig({
 
   // Sequential batch exporter
   const handleBatchExport = async () => {
-    if (validatedMessages.length === 0) return;
+    if (localValidatedMessages.length === 0) return;
     
     // Warn user about browser settings if downloading up to 20 files
-    const countToExport = Math.min(20, validatedMessages.length);
+    const countToExport = Math.min(20, localValidatedMessages.length);
     if (!window.confirm(`Inizierai lo scaricamento sequenziale di ${countToExport} immagini per il carosello. Se richiesto dal browser, acconsenti al download di file multipli.`)) return;
 
     setExportProgress({
@@ -353,7 +376,7 @@ export default function CarouselTemplateConfig({
     try {
       // Loop with delay to let layout redraw
       for (let i = 0; i < countToExport; i++) {
-        const msg = validatedMessages[i];
+        const msg = localValidatedMessages[i];
         const bg = carouselBgs[i]; // Corresponding slide background template
         
         setExportProgress(prev => ({
@@ -410,8 +433,8 @@ export default function CarouselTemplateConfig({
 
   // Dummy preview text that corresponds to the active tab or defaults
   const previewTextForField = (field: keyof CarouselConfig) => {
-    if (validatedMessages.length > 0) {
-      const firstMsg = validatedMessages[0];
+    if (localValidatedMessages.length > 0) {
+      const firstMsg = localValidatedMessages[0];
       if (field === "cerco") return firstMsg.lookingFor || "Cerco esempio...";
       if (field === "quando") return firstMsg.when || "Oggi pomeriggio alle 16";
       if (field === "dove") return firstMsg.where || "In biblioteca centrale";
@@ -520,29 +543,48 @@ export default function CarouselTemplateConfig({
           <h2 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-3">
             Carosello Instagram
           </h2>
-          <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+          <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 font-medium leading-relaxed mb-6">
             Personalizza il layout, carica gli sfondi e genera il carosello pronto per i social con un clic.
           </p>
+          
+          <div className="max-w-xs">
+            <label className="block text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-2">
+              Seleziona la Zona del Carosello
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                value={targetZone}
+                onChange={(e) => setTargetZone(e.target.value)}
+                className="w-full pl-9 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+              >
+                <option value="">Tutte le Zone</option>
+                {Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)]).map((zone) => (
+                  <option key={zone} value={zone}>{zone}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
         
         <div className="relative z-10 flex flex-col items-center sm:items-end gap-4 shrink-0">
           <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-3xl flex items-center justify-between gap-6 shadow-sm min-w-[240px]">
             <div>
-              <div className="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-0.5">Post Pronti</div>
+              <div className="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-0.5">Post Pronti per zona</div>
               <div className="text-sm font-bold text-gray-900 dark:text-white">Max. 20 post</div>
             </div>
             <div className="w-14 h-14 bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center justify-center font-black text-2xl text-indigo-600 dark:text-indigo-400 shadow-sm">
-              {validatedMessages.length}
+              {localValidatedMessages.length}
             </div>
           </div>
 
           <button
             onClick={handleBatchExport}
-            disabled={validatedMessages.length === 0}
+            disabled={localValidatedMessages.length === 0}
             className="w-full px-8 py-4 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed font-black rounded-3xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3 text-sm uppercase tracking-wider"
           >
             <Download className="w-5 h-5" />
-            <span>Esporta Tutto ({Math.min(20, validatedMessages.length)})</span>
+            <span>Esporta Tutto ({Math.min(20, localValidatedMessages.length)})</span>
           </button>
         </div>
       </div>
@@ -937,16 +979,16 @@ export default function CarouselTemplateConfig({
                 </div>
               </div>
 
-              {validatedMessages.length === 0 ? (
+              {localValidatedMessages.length === 0 ? (
                 <div className="py-16 border-2 border-dashed border-gray-200 dark:border-gray-800/80 rounded-[2rem] flex flex-col items-center justify-center text-center p-6 bg-gray-50/50 dark:bg-gray-900/30">
                   <CheckCircle2 className="w-10 h-10 text-gray-300 dark:text-gray-700 mb-4" />
-                  <span className="text-base font-bold text-gray-900 dark:text-white">Nessun post convalidato</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-sm">Per popolare il carosello, vai nella scheda "Messaggi" e clicca su "Includi nel Carosello".</span>
+                  <span className="text-base font-bold text-gray-900 dark:text-white">Nessun post convalidato{targetZone ? ` per ${targetZone}` : ''}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-sm">Per popolare il carosello, vai nella scheda "Messaggi" e clicca su "Aggiungi al Carosello".</span>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <AnimatePresence>
-                    {validatedMessages.slice(0, 20).map((msg, idx) => (
+                    {localValidatedMessages.slice(0, 20).map((msg, idx) => (
                       <motion.div 
                         key={msg.id}
                         initial={{ opacity: 0, y: 10 }}
