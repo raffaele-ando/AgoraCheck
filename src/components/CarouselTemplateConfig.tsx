@@ -275,8 +275,14 @@ export default function CarouselTemplateConfig({
   // Set message as the first / cover slide of the carousel
   const handleSetFirstSlide = async (msgId: string) => {
     try {
+      const targetMsg = localValidatedMessages.find(m => m.id === msgId);
+      const isCurrentlyFirst = targetMsg?.isFirstSlideOfCarousel;
+
       for (const m of localValidatedMessages) {
-        const isFirst = m.id === msgId;
+        let isFirst = false;
+        if (m.id === msgId && !isCurrentlyFirst) {
+          isFirst = true;
+        }
         if (m.isFirstSlideOfCarousel !== isFirst) {
           await updateDoc(doc(db, "messages", m.id), { isFirstSlideOfCarousel: isFirst });
         }
@@ -1013,9 +1019,14 @@ export default function CarouselTemplateConfig({
 
                         <div className="flex items-center gap-2 shrink-0 sm:ml-auto w-full sm:w-auto mt-2 sm:mt-0">
                           {msg.isFirstSlideOfCarousel ? (
-                            <span className="flex-1 sm:flex-none justify-center text-xs font-black bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-4 py-2 rounded-xl flex items-center gap-2">
-                              <Sparkles className="w-3.5 h-3.5" /> Cover
-                            </span>
+                            <button
+                              onClick={() => handleSetFirstSlide(msg.id)}
+                              className="flex-1 sm:flex-none justify-center text-xs font-black bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-red-50 hover:text-red-700 hover:border-red-200 dark:hover:bg-red-900/40 dark:hover:text-red-400 dark:hover:border-red-800 transition-all px-4 py-2 rounded-xl flex items-center gap-2 group"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 group-hover:hidden" />
+                              <span className="group-hover:hidden">Cover</span>
+                              <span className="hidden group-hover:block">Rimuovi</span>
+                            </button>
                           ) : (
                             <button
                               onClick={() => handleSetFirstSlide(msg.id)}
