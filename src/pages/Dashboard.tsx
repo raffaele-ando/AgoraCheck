@@ -254,6 +254,20 @@ export default function Dashboard() {
     "timeline" | "dettagli" | "identita"
   >("timeline");
   const editingProfileInitializedRef = useRef<string | null>(null);
+  const [locationInputCity, setLocationInputCity] = useState("");
+  const [locationInputArea, setLocationInputArea] = useState("");
+  const saveMessageLocation = async (msgId: string) => {
+    try {
+      await updateDoc(doc(db, "messages", msgId), {
+        city: locationInputCity.trim() || deleteField(),
+        area: locationInputArea.trim() || deleteField(),
+      });
+      setEditingMessageId(null);
+    } catch (e: any) {
+      console.error(e);
+      alert("Errore durante il salvataggio della zona: " + e.message);
+    }
+  };
   const saveMessageResolution = async (msgId: string) => {
     try {
       await updateDoc(doc(db, "messages", msgId), {
@@ -2038,6 +2052,86 @@ export default function Dashboard() {
                               </div>
                             </div>
                           )}
+                        {/* Location / Zone Edit Section */}
+                        <div
+                          className={`p-3.5 rounded-2xl border ${(msg.city || msg.area) ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-100 dark:border-indigo-800 text-indigo-900 shadow-sm" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 border-dashed"}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div
+                              className={`flex items-center gap-2 ${(msg.city || msg.area) ? "text-indigo-600" : "text-gray-500 dark:text-gray-400 "}`}
+                            >
+                              <MapPin className="w-4 h-4 shrink-0" />
+                              <span className="text-xs font-black uppercase tracking-wider">
+                                Zona Selezionata
+                              </span>
+                            </div>
+                            {!isSelectMode && editingMessageId !== `loc-${msg.id}` && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingMessageId(`loc-${msg.id}`);
+                                  setLocationInputCity(msg.city || "");
+                                  setLocationInputArea(msg.area || "");
+                                }}
+                                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 ${(msg.city || msg.area) ? "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 shadow-sm" : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-300"}`}
+                              >
+                                {(msg.city || msg.area) ? "Modifica Zona" : "Aggiungi Zona"}
+                              </button>
+                            )}
+                          </div>
+                          {editingMessageId === `loc-${msg.id}` ? (
+                            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                              <div className="space-y-2">
+                                <select
+                                  value={locationInputCity}
+                                  onChange={(e) => {
+                                    setLocationInputCity(e.target.value);
+                                    setLocationInputArea("");
+                                  }}
+                                  className="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                >
+                                  <option value="">Nessuna Città</option>
+                                  {Object.keys(LOCATIONS).map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))}
+                                </select>
+                                {locationInputCity && LOCATIONS[locationInputCity] && (
+                                  <select
+                                    value={locationInputArea}
+                                    onChange={(e) => setLocationInputArea(e.target.value)}
+                                    className="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                  >
+                                    <option value="">Nessuna Zona</option>
+                                    {LOCATIONS[locationInputCity].map((a) => (
+                                      <option key={a} value={a}>{a}</option>
+                                    ))}
+                                  </select>
+                                )}
+                              </div>
+                              <div className="flex justify-end gap-2 mt-3">
+                                <button
+                                  onClick={() => setEditingMessageId(null)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                >
+                                  Annulla
+                                </button>
+                                <button
+                                  onClick={() => saveMessageLocation(msg.id)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                >
+                                  Salva
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            (msg.city || msg.area) && (
+                              <div className="font-semibold text-sm break-words flex flex-wrap gap-2 mt-2">
+                                {msg.city && <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-md text-xs">{msg.city}</span>}
+                                {msg.area && <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-xs">{msg.area}</span>}
+                              </div>
+                            )
+                          )}
+                        </div>
                         {/* Resolution Section */}
                         <div
                           className={`p-3.5 rounded-2xl border ${msg.resolution ? "bg-sky-50 dark:bg-sky-900/40 border-sky-100 dark:border-sky-800 text-sky-900 shadow-sm" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 border-dashed"}`}
