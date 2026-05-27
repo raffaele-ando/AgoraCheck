@@ -156,6 +156,20 @@ export default function CarouselTemplateConfig({
   onUnvalidateMessage 
 }: CarouselTemplateConfigProps) {
   const [carouselBgs, setCarouselBgs] = useState<(string | null)[]>(Array(20).fill(null));
+  const [slideDimensions, setSlideDimensions] = useState<Record<number, { width: number, height: number }>>({});
+  
+  useEffect(() => {
+    carouselBgs.forEach((bg, idx) => {
+      if (bg && !slideDimensions[idx]) {
+        const img = new Image();
+        img.onload = () => {
+          setSlideDimensions(prev => ({ ...prev, [idx]: { width: img.width, height: img.height } }));
+        };
+        img.src = bg;
+      }
+    });
+  }, [carouselBgs]);
+
   const [config, setConfig] = useState<CarouselConfig>(DEFAULT_CAROUSEL_CONFIG);
   const [previewScale, setPreviewScale] = useState(0.25);
   const [activeTab, setActiveTab] = useState<keyof CarouselConfig>("cerco");
@@ -192,6 +206,7 @@ export default function CarouselTemplateConfig({
   // State for rendering hidden content during export
   const [activeExportMessage, setActiveExportMessage] = useState<any>(null);
   const [activeExportBg, setActiveExportBg] = useState<string | null>(null);
+  const [activeExportIndex, setActiveExportIndex] = useState<number>(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const captureBatchRef = useRef<HTMLDivElement>(null);
@@ -243,7 +258,8 @@ export default function CarouselTemplateConfig({
     const observer = new ResizeObserver((entries) => {
       if (entries[0]) {
         const { width } = entries[0].contentRect;
-        setPreviewScale(width / 1080);
+        const targetWidth = slideDimensions[selectedSlideIndex]?.width || 1080;
+        setPreviewScale(width / targetWidth);
       }
     });
 
@@ -251,7 +267,7 @@ export default function CarouselTemplateConfig({
       observer.observe(containerRef.current);
     }
     return () => observer.disconnect();
-  }, []);
+  }, [slideDimensions, selectedSlideIndex]);
 
   // Save Config changes
   const handleConfigChange = async (key: keyof BoxConfig, value: any) => {
@@ -392,6 +408,7 @@ export default function CarouselTemplateConfig({
         }));
 
         // Render this combination in our hidden capture zone
+        setActiveExportIndex(i);
         setActiveExportMessage(msg);
         setActiveExportBg(bg);
 
@@ -497,8 +514,8 @@ export default function CarouselTemplateConfig({
           <div
             ref={captureBatchRef}
             style={{
-              width: 1080,
-              height: 1440,
+              width: slideDimensions[activeExportIndex]?.width || 1080,
+              height: slideDimensions[activeExportIndex]?.height || 1440,
               position: "relative",
               backgroundColor: "#ffffff",
               overflow: "hidden"
@@ -633,11 +650,11 @@ export default function CarouselTemplateConfig({
                    {/* Device Frame decoration */}
                    <div className="absolute -inset-4 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-xl border border-gray-200/80 dark:border-gray-800 z-0"></div>
                    
-                   <div className="relative w-full aspect-[3/4] bg-white rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 z-10 dark:bg-black" ref={containerRef}>
+                   <div className="relative w-full bg-white rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 z-10 dark:bg-black" style={{ aspectRatio: (slideDimensions[selectedSlideIndex]?.width || 1080) / (slideDimensions[selectedSlideIndex]?.height || 1440) }} ref={containerRef}>
                       <div
                         style={{
-                          width: 1080,
-                          height: 1440,
+                          width: slideDimensions[selectedSlideIndex]?.width || 1080,
+                          height: slideDimensions[selectedSlideIndex]?.height || 1440,
                           transform: `scale(${previewScale})`,
                           transformOrigin: "top left",
                           position: "absolute",
