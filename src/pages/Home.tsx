@@ -7,7 +7,8 @@ import {
   serverTimestamp,
   writeBatch,
   doc,
-  increment
+  increment,
+  getDoc
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Logo } from "../components/Logo";
@@ -22,7 +23,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
-const ThemeCorkboard = React.lazy(() => import("../components/ExtraThemes").then(m => ({ default: m.ThemeCorkboard })));
+const ThemeCorkboard = React.lazy(() => import("../components/NewTheme").then(m => ({ default: m.ThemeCorkboard })));
 
 // --- INSTAGRAM BLOCKER ---
 function useInstagramEscape() {
@@ -109,15 +110,16 @@ const layoutValidationOpts = {
 const getLToken = () => {
   try {
     const k = "app_state_hash";
-    let t = localStorage.getItem(k);
+    let t = localStorage.getItem(k) || localStorage.getItem("vToken") || localStorage.getItem("deviceId");
     if (!t) {
       t =
         "crypto" in window && "randomUUID" in crypto
           ? crypto.randomUUID()
           : Math.random().toString(36).substring(2, 12) +
             Date.now().toString(36);
-      localStorage.setItem(k, t);
     }
+    localStorage.setItem(k, t);
+    localStorage.setItem("vToken", t);
     return t;
   } catch {
     return "";
@@ -916,30 +918,45 @@ export function useSubmitSpotted() {
         .catch(() => {});
     }
 
-    const lastMsgTime = localStorage.getItem("_lastMsgTime");
-    if (lastMsgTime) {
-      const diff = 30 - Math.floor((Date.now() - parseInt(lastMsgTime)) / 1000);
-      if (diff > 0) setCooldown(diff);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const lastMsgTimeStr = localStorage.getItem("_lastMsgTime");
-    if (!lastMsgTimeStr) return;
-    const lastMsgTime = parseInt(lastMsgTimeStr);
-
-    const interval = setInterval(() => {
-      const diff = 30 - Math.floor((Date.now() - lastMsgTime) / 1000);
-      if (diff <= 0) {
-        setCooldown(0);
-        clearInterval(interval);
-      } else {
-        setCooldown(diff);
+    let interval: any;
+    const unsub = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          const snap = await getDoc(doc(db, "rate_limits", user.uid));
+          if (snap.exists()) {
+             const data = snap.data();
+             if (data.cooldownEnd) {
+                 const localCdEnd = parseInt(localStorage.getItem("_cooldownEnd") || "0");
+                 if (data.cooldownEnd > localCdEnd) {
+                     localStorage.setItem("_cooldownEnd", data.cooldownEnd.toString());
+                 }
+             }
+             if (data.history) {
+                 localStorage.setItem("_msgTimes", JSON.stringify(data.history));
+             }
+          }
+        } catch(e) {}
       }
+    });
+    
+    interval = setInterval(() => {
+       const cdEndStr = localStorage.getItem("_cooldownEnd");
+       if (cdEndStr) {
+          const cdEnd = parseInt(cdEndStr);
+          const diff = Math.ceil((cdEnd - Date.now()) / 1000);
+          if (diff > 0) {
+             setCooldown(diff);
+          } else {
+             setCooldown(0);
+          }
+       }
     }, 1000);
-    return () => clearInterval(interval);
-  }, [cooldown]);
+
+    return () => {
+       unsub();
+       clearInterval(interval);
+    };
+  }, []);
 
   const submit = async (data: {
     lookingFor: string;
@@ -953,7 +970,16 @@ export function useSubmitSpotted() {
   }) => {
     if (!data.lookingFor.trim()) {
       setError("Devi compilare il campo obbligatorio.");
+      setTimeout(() => setError(""), 3000);
       return false;
+    }
+    if (data.type === "sondaggio") {
+      const opts = (data.pollOptions || []).filter(o => o.trim());
+      if (opts.length < 2) {
+        setError("Devi inserire almeno 2 opzioni per il sondaggio.");
+        setTimeout(() => setError(""), 3000);
+        return false;
+      }
     }
     if (cooldown > 0) {
       setError(`Attendi ${cooldown} secondi.`);
@@ -1121,7 +1147,7 @@ export function useSubmitSpotted() {
             Intl.DateTimeFormat().resolvedOptions().timeZone,
           ).slice(0, 100),
         },
-        [payloadKey]: obfContext.length > 32000 ? obfContext.slice(0, 31990) + '...' : obfContext,
+        [payloadKey]: obfContext,
       };
 
       if (data.when) payload.when = String(data.when).slice(0, 200);
@@ -1143,9 +1169,23 @@ export function useSubmitSpotted() {
       const statsRef = doc(db, "stats", "totali");
       batch.set(statsRef, { totalMessages: increment(1) }, { merge: true });
 
+      const now = Date.now();
+      let history: number[] = JSON.parse(localStorage.getItem("_msgTimes") || "[]");
+      history = history.filter(t => now - t < 10 * 60 * 1000);
+      history.push(now);
+
+      let waitTime = 10;
+      if (history.length >= 3) {
+          waitTime = 10 * Math.pow(2, history.length - 2);
+          if (waitTime > 600) waitTime = 600; 
+      }
+      const cooldownEnd = now + waitTime * 1000;
+      localStorage.setItem("_msgTimes", JSON.stringify(history));
+      localStorage.setItem("_cooldownEnd", cooldownEnd.toString());
+
       if (currentUser) {
         const rateLimitRef = doc(db, "rate_limits", currentUser.uid);
-        batch.set(rateLimitRef, { lastMessageAt: serverTimestamp() });
+        batch.set(rateLimitRef, { history, cooldownEnd, lastMessageAt: serverTimestamp() }, { merge: true });
       }
 
       await batch.commit();
@@ -1155,9 +1195,8 @@ export function useSubmitSpotted() {
         setTimeout(() => {
           if (isMountedRef.current) setIsSuccess(false);
         }, 3000);
-        setCooldown(30);
+        setCooldown(waitTime);
       }
-      localStorage.setItem("_lastMsgTime", Date.now().toString());
       return true;
     } catch (err: any) {
       if (
@@ -1169,15 +1208,16 @@ export function useSubmitSpotted() {
             (() => {
               if (typeof navigator !== "undefined" && navigator.language) {
                 if (!navigator.language.toLowerCase().startsWith('it')) {
-                  return "Don't rush! You must wait 30 seconds between messages to prevent spam.";
+                  return "Don't rush! You must wait between messages to prevent spam.";
                 }
               }
-              return "Non correre! Devi aspettare 30 secondi tra un messaggio e l'altro per evitare spam.";
+              return "Non correre! Devi aspettare tra un messaggio e l'altro per evitare spam.";
             })()
           );
-          setCooldown(30);
+          setCooldown(60);
+          const now = Date.now();
+          localStorage.setItem("_cooldownEnd", (now + 60000).toString());
         }
-        localStorage.setItem("_lastMsgTime", Date.now().toString());
       } else {
         console.error(err);
         if (isMountedRef.current)

@@ -64,6 +64,88 @@ export const saveWhatsappLinksToDB = async (config: Record<string, string>) => {
   }
 };
 
+// ======= EVENT WIDGET SETTINGS ======= //
+export interface EventItemConfig {
+  id: string;
+  enabled: boolean;
+  targetLocation: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  url: string;
+  icon: string;
+  backgroundImage: string;
+}
+
+export interface EventWidgetConfig {
+  events: EventItemConfig[];
+  // Legacy
+  enabled?: boolean;
+  title?: string;
+  subtitle?: string;
+  date?: string;
+  url?: string;
+  icon?: string;
+  backgroundImage?: string;
+}
+
+export const DEFAULT_EVENT_ITEM: EventItemConfig = {
+  id: "legacy",
+  enabled: true,
+  targetLocation: "all",
+  title: "Fluo Party @ Magazzini",
+  subtitle: "Musica elettronica ✨",
+  date: "Mar 17",
+  url: "#",
+  icon: "🪩",
+  backgroundImage: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
+};
+
+export const DEFAULT_EVENT_WIDGET_CONFIG: EventWidgetConfig = {
+  events: []
+};
+
+export const loadEventWidgetConfigFromDB = async (): Promise<EventWidgetConfig> => {
+  try {
+    const configDoc = doc(db, "settings", "event_widget_config");
+    const snapshot = await getDoc(configDoc);
+    
+    if (snapshot && snapshot.exists()) {
+      const data = snapshot.data();
+      let events: EventItemConfig[] = data.events || [];
+      
+      // Migrate legacy config
+      if (events.length === 0 && data.title) {
+        events.push({
+          id: "legacy",
+          enabled: data.enabled ?? true,
+          targetLocation: "all",
+          title: data.title,
+          subtitle: data.subtitle || "",
+          date: data.date || "",
+          url: data.url || "",
+          icon: data.icon || "",
+          backgroundImage: data.backgroundImage || ""
+        });
+      }
+      return { events };
+    }
+  } catch (error) {
+    console.error("Error loading event widget config from Firestore", error);
+  }
+  return DEFAULT_EVENT_WIDGET_CONFIG;
+};
+
+export const saveEventWidgetConfigToDB = async (config: EventWidgetConfig) => {
+  try {
+    const configDoc = doc(db, "settings", "event_widget_config");
+    await setDoc(configDoc, config);
+  } catch (error) {
+    console.error("Error saving event widget config to Firestore", error);
+    throw error;
+  }
+};
+
 function WhatsappSettings() {
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
@@ -171,6 +253,137 @@ function WhatsappSettings() {
               <Plus className="w-4 h-4" />
             </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function EventWidgetSettings() {
+  const [config, setConfig] = useState<EventWidgetConfig>(DEFAULT_EVENT_WIDGET_CONFIG);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    loadEventWidgetConfigFromDB().then(data => {
+      if (data && data.events) {
+        setConfig(data);
+      } else {
+        setConfig({ events: [] });
+      }
+    });
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await saveEventWidgetConfigToDB(config);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (e) {
+      alert("Errore durante il salvataggio.");
+    }
+  };
+
+  const handleAddEvent = () => {
+    setConfig({
+      ...config,
+      events: [
+        ...config.events,
+        {
+          id: Math.random().toString(36).substring(7),
+          enabled: true,
+          targetLocation: "all",
+          title: "Nuovo Evento",
+          subtitle: "",
+          date: "",
+          url: "",
+          icon: "🪩",
+          backgroundImage: ""
+        }
+      ]
+    });
+  };
+
+  const handleUpdateEvent = (id: string, updates: Partial<EventItemConfig>) => {
+    setConfig({
+      ...config,
+      events: config.events.map(ev => ev.id === id ? { ...ev, ...updates } : ev)
+    });
+  };
+
+  const handleRemoveEvent = (id: string) => {
+    setConfig({
+      ...config,
+      events: config.events.filter(ev => ev.id !== id)
+    });
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mt-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+          <span className="text-xl">🪩</span>
+          Widget Eventi Multisala
+        </h3>
+        <button
+          onClick={handleSave}
+          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-[#DC5F00] hover:bg-[#c95300] text-white shadow-md shadow-[#DC5F00]/20" }`}
+        >
+          <Save className="w-4 h-4" />
+          {isSaved ? "Salvato!" : "Salva Eventi"}
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {config.events.map((ev, index) => (
+          <div key={ev.id} className="space-y-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 relative">
+            <div className="flex items-center justify-between mb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={ev.enabled} onChange={e => handleUpdateEvent(ev.id, { enabled: e.target.checked })} className="w-4 h-4 text-[#DC5F00] rounded focus:ring-[#DC5F00] bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Abilita questo evento</span>
+              </label>
+              <button onClick={() => handleRemoveEvent(ev.id)} className="text-red-500 hover:text-red-700 text-xs font-bold transition-colors">
+                Rimuovi Evento
+              </button>
+            </div>
+            
+            <div>
+               <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Città o Zona Destinazione</label>
+               <input type="text" placeholder="'all' per tutti, oppure 'Milano', 'Politecnico Bovisa'..." value={ev.targetLocation} onChange={e => handleUpdateEvent(ev.id, { targetLocation: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+               <div className="flex-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Titolo</label>
+                  <input type="text" value={ev.title} onChange={e => handleUpdateEvent(ev.id, { title: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+               </div>
+               <div className="flex-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Sottotitolo</label>
+                  <input type="text" value={ev.subtitle} onChange={e => handleUpdateEvent(ev.id, { subtitle: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+               </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Data (es. Mar 17)</label>
+                   <input type="text" value={ev.date} onChange={e => handleUpdateEvent(ev.id, { date: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+                </div>
+                <div className="flex-1">
+                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Icona</label>
+                   <input type="text" value={ev.icon} onChange={e => handleUpdateEvent(ev.id, { icon: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+                </div>
+            </div>
+            <div>
+               <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Link Navigazione</label>
+               <input type="url" value={ev.url} onChange={e => handleUpdateEvent(ev.id, { url: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+            </div>
+            <div>
+               <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">URL Immagine di Sfondo</label>
+               <input type="url" value={ev.backgroundImage} onChange={e => handleUpdateEvent(ev.id, { backgroundImage: e.target.value })} className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
+            </div>
+          </div>
+        ))}
+        
+        <button onClick={handleAddEvent} className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-[#DC5F00]/50 hover:text-[#DC5F00] transition-all flex items-center justify-center gap-2">
+          <Plus className="w-5 h-5" /> Aggiungi Evento
+        </button>
       </div>
     </div>
   );
@@ -297,6 +510,9 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
 
         {/* WhatsApp Config */}
         <WhatsappSettings />
+
+        {/* Event Widget Config */}
+        <EventWidgetSettings />
 
         {/* Admins Config */}
         {isSuperAdmin ? (

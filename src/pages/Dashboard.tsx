@@ -115,9 +115,11 @@ const computeDeviceProfileColor = (profileId: string) => {
   const cColor = (hash & 0x00ffffff).toString(16).toUpperCase();
   return "#" + "00000".substring(0, 6 - cColor.length) + cColor;
 };
+
 const computeDeviceProfileId = (
   parsedAdv: any,
-  deviceInfo: any
+  deviceInfo: any,
+  instagram: string = ""
 ): string => {
   if (!parsedAdv) return "UNKNOWN";
   try {
@@ -138,24 +140,18 @@ const computeDeviceProfileId = (
     const cores =
       parsedAdv.hardware?.cores || parsedAdv.h?.cores || parsedAdv.h?.c || "";
     
-    const rectsRaw = parsedAdv.software?.clientRectsFingerprint || parsedAdv.s?.clientRectsFingerprint || "";
-    const mathRaw = parsedAdv.software?.mathFingerprint || parsedAdv.s?.mathFingerprint || "";
+    // Old base seed didn't contain rects and math
+    let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
     
-    const rects = typeof rectsRaw === "object" ? JSON.stringify(rectsRaw) : String(rectsRaw);
-    const math = typeof mathRaw === "object" ? JSON.stringify(mathRaw) : String(mathRaw);
-    
-    const vToken =
-      parsedAdv.behavior?.ttv || parsedAdv.b?.ttv || parsedAdv.b?.vToken || "";
-
-    let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}-${rects}-${math}`;
-    
-    if (vToken) {
-      // If vToken is present, it is the most reliable unique identifier
-      seed = `${seed}-${vToken}`;
-    } else if (seed === "-------" && deviceInfo) {
+    // Backward compatibility: always prioritize instagram for fingerprint identity
+    if (instagram) {
+      seed = `ig-${instagram.toLowerCase().trim()}`;
+    } else if (seed === "----" && deviceInfo) {
       const ip = deviceInfo.userAgent || "";
       seed = ip;
     }
+
+    if (seed === "----") return "UNKNOWN";
 
     let h1 = 0xdeadbeef,
       h2 = 0x41c6ce57;
@@ -510,7 +506,8 @@ export default function Dashboard() {
 
       const result = computeDeviceProfileId(
         msg.parsedAdvanced,
-        msg.deviceInfo
+        msg.deviceInfo,
+        msg.instagram
       );
 
       getDeviceProfileCacheRef.current.set(cacheKey, {
@@ -559,6 +556,7 @@ export default function Dashboard() {
     }
     return result;
   }, [messages, profiles, getDeviceProfile]);
+
   const getProfileInstagrams = useCallback(
     (profileId: string): { tags: string[]; hasMultiple: boolean } => {
       return (
@@ -568,13 +566,54 @@ export default function Dashboard() {
     [profileInstagramsMap],
   );
   const allProfileIds = useMemo(() => {
-    return Array.from(profileInstagramsMap.keys());
-  }, [profileInstagramsMap]);
+    const ids = new Set<string>();
+    for (const m of messages) {
+      ids.add(getDeviceProfile(m));
+    }
+    for (const id of profileInstagramsMap.keys()) {
+      ids.add(id);
+    }
+    return Array.from(ids);
+  }, [messages, getDeviceProfile, profileInstagramsMap]);
   const macroProfiles = useMemo(() => {
     const nodes = allProfileIds;
     const adj = new Map<string, Set<string>>();
     for (const n of nodes) adj.set(n, new Set());
     const tagGroups = new Map<string, string[]>();
+    
+    // We group by identical hardware footprints that provide high confidence:
+    const hwGroups = new Map<string, Set<string>>();
+    const relaxedHwGroups = new Map<string, Set<string>>();
+    for (const m of messages) {
+       const pid = getDeviceProfile(m);
+       if (profiles[pid]?.isolateFromAutoGrouping) continue;
+       const adv = m.parsedAdvanced || null;
+       if (adv) {
+         const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
+         const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
+         const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
+         const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
+         const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
+         // Include math and rects for better precision, especially on Android devices.
+         const rects = adv.software?.clientRectsFingerprint || adv.s?.clientRectsFingerprint || "";
+         const math = adv.software?.mathFingerprint ? JSON.stringify(adv.software.mathFingerprint) : (adv.s?.mathFingerprint ? JSON.stringify(adv.s.mathFingerprint) : "");
+         
+         const seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}-${rects}-${math}`;
+         const relaxedSeed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+         // Ensure we don't group devices missing the core hardware metrics entirely.
+         // A completely blank signature contains exactly 6 hyphens.
+         if (seed !== "------") {
+            if (!hwGroups.has(seed)) hwGroups.set(seed, new Set());
+            hwGroups.get(seed)!.add(pid);
+         }
+         
+         if (relaxedSeed !== "----") {
+            if (!relaxedHwGroups.has(relaxedSeed)) relaxedHwGroups.set(relaxedSeed, new Set());
+            relaxedHwGroups.get(relaxedSeed)!.add(pid);
+         }
+       }
+    }
+
     for (const n of nodes) {
       const prof = profiles[n];
       if (prof?.isolateFromAutoGrouping) continue;
@@ -589,6 +628,28 @@ export default function Dashboard() {
         for (let j = i + 1; j < pids.length; j++) {
           adj.get(pids[i])!.add(pids[j]);
           adj.get(pids[j])!.add(pids[i]);
+        }
+      }
+    }
+    for (const pidsSet of hwGroups.values()) {
+      const pids = Array.from(pidsSet);
+      for (let i = 0; i < pids.length; i++) {
+        for (let j = i + 1; j < pids.length; j++) {
+          if (adj.has(pids[i]) && adj.has(pids[j])) {
+            adj.get(pids[i])!.add(pids[j]);
+            adj.get(pids[j])!.add(pids[i]);
+          }
+        }
+      }
+    }
+    for (const pidsSet of relaxedHwGroups.values()) {
+      const pids = Array.from(pidsSet);
+      for (let i = 0; i < pids.length; i++) {
+        for (let j = i + 1; j < pids.length; j++) {
+          if (adj.has(pids[i]) && adj.has(pids[j])) {
+            adj.get(pids[i])!.add(pids[j]);
+            adj.get(pids[j])!.add(pids[i]);
+          }
         }
       }
     }
@@ -680,6 +741,16 @@ export default function Dashboard() {
     messages,
     getDeviceProfile,
   ]);
+  const profileToMacroMap = useMemo(() => {
+    const map = new Map<string, typeof macroProfiles[0]>();
+    for (const macro of macroProfiles) {
+      for (const pid of macro.profileIds) {
+        map.set(pid, macro);
+      }
+    }
+    return map;
+  }, [macroProfiles]);
+
   const viewingMacro = useMemo(() => {
     if (!viewingMacroId) return null;
     return macroProfiles.find((m) => m.id === viewingMacroId) || null;
@@ -728,6 +799,9 @@ export default function Dashboard() {
         const mathFp = adv.software?.mathFingerprint?.pi ? "Supportato" : "";
         const advancedSensors =
           adv.hardware?.advancedSensors || adv.h?.advancedSensors || "";
+        const rectsId =
+          adv.software?.clientRectsFingerprint || adv.s?.clientRectsFingerprint || "";
+          
         if (gpu) hardwareFingerprints.add(`GPU: ${gpu}`);
         if (screen) hardwareFingerprints.add(`Schermo: ${screen}`);
         if (cpu) hardwareFingerprints.add(`CPU: ${cpu} core`);
@@ -735,6 +809,7 @@ export default function Dashboard() {
         if (canvas) hardwareFingerprints.add(`Canvas ID: ${canvas}`);
         if (audio) hardwareFingerprints.add(`Audio ID: ${audio}`);
         if (mathFp) hardwareFingerprints.add(`Math Fp: ${mathFp}`);
+        if (rectsId) hardwareFingerprints.add(`Rects ID: ${rectsId}`);
         if (advancedSensors)
           hardwareFingerprints.add(`Sensori: ${advancedSensors}`);
         const sessionTime = adv.behavior?.sessionTimeSeconds;
@@ -887,7 +962,7 @@ export default function Dashboard() {
         }
         let profileId = data.profileGroupId;
         if (!profileId) {
-          profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo);
+          profileId = computeDeviceProfileId(parsedAdv, data.deviceInfo, data.instagram);
         }
         const profileColor = computeDeviceProfileColor(profileId);
         return {
@@ -1769,11 +1844,13 @@ export default function Dashboard() {
                                 <div className="flex flex-col">
 
                                   <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
-
-                                    {profiles[profileId]?.name ||
-                                      (profileId.startsWith("AUTO-")
-                                        ? "Anonimo Auto"
-                                        : "Anonimo Manuale")}
+                                    {(() => {
+                                      const msgMacro = profileToMacroMap.get(profileId);
+                                      if (msgMacro && msgMacro.name && msgMacro.name !== "Sconosciuto" && msgMacro.name !== "Profilo" && msgMacro.name !== "Profilo Aggregato") {
+                                        return msgMacro.name;
+                                      }
+                                      return profiles[profileId]?.name || (profileId.startsWith("AUTO-") ? "Anonimo Auto" : "Anonimo Manuale");
+                                    })()}
                                   </span>
                                   <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
 
@@ -1966,8 +2043,9 @@ export default function Dashboard() {
                         )}
 
                         {isSuperAdmin ? (() => {
-                          const { tags, hasMultiple } =
-                            getProfileInstagrams(profileId);
+                          const msgMacro = profileToMacroMap.get(profileId);
+                          const tags = msgMacro ? msgMacro.instagrams : getProfileInstagrams(profileId).tags;
+                          const hasMultiple = tags.length > 1;
                           if (tags.length === 0) return null;
                           return (
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/40 dark:to-pink-900/40 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-800 relative overflow-hidden shadow-sm flex flex-col gap-2">

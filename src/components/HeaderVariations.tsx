@@ -8,6 +8,23 @@ export const LOCATIONS: Record<string, string[]> = {
 
 export const CITIES = Object.keys(LOCATIONS);
 
+export const formatCity = (city: string) => city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+
+export const formatArea = (area: string, city: string) => {
+  if (area === city) return "Tutta la città";
+  if (area === "POLIMI") return "PoliMi";
+  if (area === "UNIMI") return "UniMi";
+  if (area === "POLITO") return "PoliTo";
+  if (area === "UNITO") return "UniTo";
+  if (area === "UNIGE") return "UniGe";
+  if (area === "BICOCCA") return "Bicocca";
+  if (area === "BOCCONI") return "Bocconi";
+  if (area === "CATTOLICA") return "Cattolica";
+  if (area === "HUNIMED") return "Hunimed";
+  if (area === "UNISR") return "UniSR";
+  return area;
+};
+
 interface Props {
   city: string;
   setCity: (v: string) => void;

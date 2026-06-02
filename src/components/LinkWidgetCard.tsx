@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Copy, Check, Link } from "lucide-react";
 import { LinkWidgetConfig, loadLinkConfigFromDB, DEFAULT_LINK_CONFIG } from "./AppSettings";
-import { LOCATIONS, CITIES } from "./HeaderVariations";
+import { LOCATIONS, CITIES, formatCity, formatArea } from "./HeaderVariations";
 
 export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
   const [config, setConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
@@ -56,10 +56,19 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
     }
   };
 
-  const currentUrl = new URL("https://agora.theproject.world");
-  const areaSlug = selectedArea.toLowerCase().replace(/\s+/g, '-');
-  const citySlug = selectedCity.toLowerCase().replace(/\s+/g, '-');
-  currentUrl.pathname = `/${citySlug}/${areaSlug}${selectedMode === "sondaggio" ? "/sondaggio" : ""}`;
+  const domainToUse = config.domain ? config.domain.replace(/^https?:\/\//, '') : "agora.theproject.world";
+  const currentUrl = new URL(`https://${domainToUse}`);
+  
+  const fCity = formatCity(selectedCity);
+  const fArea = formatArea(selectedArea, selectedCity);
+  
+  const citySlug = fCity.toLowerCase().replace(/\s+/g, '-');
+  const areaSlug = fArea.toLowerCase().replace(/\s+/g, '-');
+  const isTuttaLaCitta = fArea === "Tutta la città";
+  
+  currentUrl.pathname = isTuttaLaCitta 
+    ? `/${citySlug}/${selectedMode}`
+    : `/${citySlug}/${areaSlug}/${selectedMode}`;
   
   const generatedLink = currentUrl.toString();
 

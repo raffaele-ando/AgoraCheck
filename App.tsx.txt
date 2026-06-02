@@ -1,0 +1,227 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { MapPin, ChevronDown, Send, Instagram } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import { Squircle } from './Squircle';
+
+const MODES = [
+  { id: 'spotted', label: 'Spotted', icon: '📍', active: true },
+  { id: 'sondaggio', label: 'Sondaggio', icon: '✨', active: true },
+  { id: 'eventi', label: 'Eventi', icon: '🎉', active: false },
+  { id: 'appunti', label: 'Appunti', icon: '📖', active: false },
+  { id: 'mercatino', label: 'Mercatino', icon: '📦', active: false },
+  { id: 'gruppi', label: 'Persone', icon: '🤝', active: false }
+];
+
+const locations: Record<string, string[]> = {
+  "Milano": ["Tutta la città", "PoliMi", "UniMi", "Bocconi", "Cattolica", "IULM", "NABA", "Bicocca"],
+  "Torino": ["Tutta la città", "PoliTo", "UniTo"],
+  "Genova": ["Tutta la città", "UniGe"]
+};
+
+
+
+export default function App() {
+  const [mode, setMode] = useState<string>('spotted');
+  const [city, setCity] = useState("Milano");
+  const [zone, setZone] = useState(locations["Milano"][0]);
+  const [options, setOptions] = useState(['', '']);
+  const [instagram, setInstagram] = useState('');
+
+  const handleModeSwitch = (newMode: string) => {
+    setMode(newMode);
+    if (newMode === 'sondaggio' && options.length < 2) setOptions(['', '']);
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCity = e.target.value;
+    setCity(newCity);
+    setZone(locations[newCity][0]);
+  };
+
+  const addOption = () => {
+    if (options.length < 4) setOptions([...options, '']);
+  };
+
+  const activeModes = MODES.filter(m => m.active);
+  const activeModeIndex = activeModes.findIndex(m => m.id === mode);
+
+  return (
+    <div className="h-[100dvh] w-full bg-[#F3ECE0] text-[#000000] flex justify-center items-center font-sans selection:bg-[#DC5F00] selection:text-white pb-safe">
+      <div className="flex flex-col p-2.5 gap-2.5 relative w-full h-full max-w-md mx-auto">
+        
+        {/* HEADER LOGO */}
+        <div className="flex justify-center shrink-0 pt-1 pb-1">
+          <img src="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/refs/heads/main/logo%205.png" alt="App Logo" className="h-[2.5rem] object-contain drop-shadow-md" />
+        </div>
+
+        {/* TOP TABS - Bento Toggle */}
+        <Squircle cornerRadius={24} className="flex bg-[#EAE0D0] p-1.5 shrink-0 drop-shadow-sm relative z-10 w-full h-14">
+          <Squircle cornerRadius={18}
+            className="absolute top-1.5 bottom-1.5 bg-[#DC5F00] transition-all duration-300 ease-out drop-shadow-md"
+            style={{ 
+              width: `calc(${100 / activeModes.length}% - ${12 / activeModes.length}px)`, 
+              left: `calc(6px + ${activeModeIndex * (100 / activeModes.length)}% - ${activeModeIndex * (12 / activeModes.length)}px)` 
+            }}
+          />
+          {activeModes.map((m) => (
+            <button 
+              key={m.id}
+              onClick={() => handleModeSwitch(m.id)}
+              className={`flex-1 flex items-center justify-center gap-2 h-full text-[15px] font-bold z-10 transition-colors ${mode === m.id ? 'text-white' : 'text-gray-500 hover:text-black'}`}
+            >
+              <span className="text-[22px]" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))" }}>{m.icon}</span> {m.label}
+            </button>
+          ))}
+        </Squircle>
+
+        {/* COMMUNITY & LOCATION BLOCK */}
+        <Squircle cornerRadius={32} className="bg-[#EAE0D0] p-3 flex flex-col gap-2.5 shrink-0 drop-shadow-sm relative z-10">
+           {/* Top Row: Location Selectors */}
+           <div className="flex w-full gap-2.5 min-w-0 h-[3.25rem]">
+              <Squircle cornerRadius={20} className="relative flex-1 bg-[#F3ECE0] flex items-center h-full min-w-0 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                 <MapPin className="w-4 h-4 text-[#DC5F00] absolute left-3 pointer-events-none" />
+                 <select 
+                   value={city} onChange={handleCityChange} 
+                   className="w-full h-full bg-transparent pl-9 pr-8 text-[13px] font-bold appearance-none outline-none focus:ring-2 focus:ring-[#DC5F00] focus:ring-inset truncate cursor-pointer"
+                 >
+                    {Object.keys(locations).map(c => <option key={c} value={c}>{c}</option>)}
+                 </select>
+                 <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
+              </Squircle>
+              <Squircle cornerRadius={20} className="relative flex-[1.2] bg-[#F3ECE0] flex items-center h-full min-w-0 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                 <select 
+                   value={zone} onChange={(e)=>setZone(e.target.value)} 
+                   className="w-full h-full bg-transparent pl-4 pr-8 text-[13px] font-bold appearance-none outline-none focus:ring-2 focus:ring-[#DC5F00] focus:ring-inset truncate cursor-pointer text-[#DC5F00]"
+                 >
+                    {locations[city].map(z => <option key={z} value={z}>{z}</option>)}
+                 </select>
+                 <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
+              </Squircle>
+           </div>
+           
+           {/* Bottom Row: WhatsApp Smart Banner */}
+           <Squircle 
+             as="a"
+             cornerRadius={20}
+             href={`https://wa.me/?text=Voglio+entrare+nel+gruppo+di+${encodeURIComponent(zone)}`}
+             target="_blank" rel="noreferrer"
+             className="w-full h-14 bg-[#25D366] flex flex-row items-center justify-between px-3 text-white drop-shadow-[0_4px_12px_rgba(37,211,102,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-transform relative overflow-hidden group shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]"
+             title={`Entra nel gruppo WhatsApp di ${zone}`}
+           >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 ease-in-out" />
+              
+              <div className="flex items-center gap-3 z-10 pl-1">
+                <div className="w-8 h-8 bg-white text-[#25D366] rounded-full flex items-center justify-center text-lg shadow-sm">
+                  <FaWhatsapp />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-extrabold text-[13px] leading-tight drop-shadow-sm">
+                    Gruppo {zone}
+                  </span>
+                  <span className="font-semibold text-[10px] text-[#E0F8E6] leading-tight flex items-center">
+                    <span className="w-1.5 h-1.5 bg-white rounded-full inline-block mr-1.5 animate-pulse" />
+                    +1.2k studenti si scambiano info
+                  </span>
+                </div>
+              </div>
+              
+              <Squircle cornerRadius={12} className="bg-white/20 px-3 py-1.5 text-[11px] font-bold backdrop-blur-md shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)]">
+                Entra
+              </Squircle>
+           </Squircle>
+        </Squircle>
+
+        {/* SPONSOR EVENT CARD */}
+        <Squircle as="a" cornerRadius={24} href="#" className="bg-gradient-to-tr from-[#1A1A1A] to-[#2C2C2C] p-2 flex items-center gap-3 shrink-0 drop-shadow-lg relative overflow-hidden group hover:scale-[1.01] active:scale-[0.99] transition-transform border border-white/5">
+          <div className="absolute -right-8 -top-8 w-24 h-24 bg-[#DC5F00] rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
+          <Squircle cornerRadius={20} className="w-[3.5rem] h-[3.5rem] shrink-0 bg-[#000000] flex items-center justify-center text-[28px] shadow-[inset_0_2px_4px_rgba(255,255,255,0.1)] border border-white/10 relative overflow-hidden">
+             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1566737236500-c8ac43014a67?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')] bg-cover bg-center opacity-60 mix-blend-luminosity" />
+             <span className="relative z-10 drop-shadow-md">🪩</span>
+          </Squircle>
+          <div className="flex flex-col min-w-0 flex-1 justify-center py-0.5">
+             <div className="flex items-center gap-1.5 mb-0.5">
+               <span className="text-[9px] font-black text-[#DC5F00] uppercase tracking-wider bg-[#DC5F00]/10 px-1.5 py-0.5 rounded-sm">Sponsor</span>
+               <span className="text-[10px] font-bold text-gray-400">Mar 17 Giu</span>
+             </div>
+             <span className="text-[15px] font-extrabold text-white truncate leading-tight tracking-tight">Fluo Party @ Magazzini</span>
+          </div>
+          <Squircle cornerRadius={14} className="bg-[#DC5F00] text-white text-[12px] font-bold px-3.5 py-2 shrink-0 group-hover:bg-[#ff6e00] transition-colors shadow-[0_2px_8px_rgba(220,95,0,0.4)] mr-1">
+            Scopri
+          </Squircle>
+        </Squircle>
+
+        {/* MAIN CONTEXT FORM */}
+        <Squircle cornerRadius={32} className="bg-[#EAE0D0] p-4 flex flex-col gap-3 flex-1 drop-shadow-sm relative transition-all duration-300">
+           {mode === 'spotted' && (
+              <div key="spotted" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
+                 <div className="flex items-center gap-2 mb-1 shrink-0">
+                   <h2 className="font-bold text-xl tracking-tight">Nuovo Spotted</h2>
+                 </div>
+                 <Squircle cornerRadius={20} className="bg-[#F3ECE0] flex items-center overflow-hidden shrink-0 h-[3.25rem] focus-within:ring-2 focus-within:ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                    <div className="pl-4 pr-1 text-xl" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📍</div>
+                    <input className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal px-2" placeholder="Dove? (es. Aule Nord) [Opzionale]" />
+                 </Squircle>
+                 <Squircle cornerRadius={20} className="bg-[#F3ECE0] flex items-center overflow-hidden shrink-0 h-[3.25rem] focus-within:ring-2 focus-within:ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                    <div className="pl-4 pr-1 text-xl" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🕒</div>
+                    <input className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal px-2" placeholder="Quando? (es. Ieri alle 14:30) [Opzionale]" />
+                 </Squircle>
+                 <Squircle cornerRadius={24} className="bg-[#F3ECE0] flex overflow-hidden flex-1 focus-within:ring-2 focus-within:ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
+                    <div className="pl-4 pr-1 text-xl" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>👤</div>
+                    <textarea className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal resize-none px-2 pb-3" placeholder="Chi/Cosa cerchi? Descrivi la persona o l'oggetto smarrito... *" required />
+                 </Squircle>
+              </div>
+           )}
+
+           {mode === 'sondaggio' && (
+              <div key="sondaggio" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
+                 <div className="flex items-center gap-2 shrink-0">
+                   <h2 className="font-bold text-xl tracking-tight">Crea Sondaggio</h2>
+                 </div>
+                 <Squircle cornerRadius={24} className="bg-[#F3ECE0] flex overflow-hidden shrink-0 h-20 focus-within:ring-2 focus-within:ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                    <div className="pl-4 pr-1 text-xl" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>✨</div>
+                    <textarea className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal resize-none px-2 pr-4 pb-2" placeholder="Fai una domanda alla community... *" required />
+                 </Squircle>
+                 <div className="flex flex-col gap-2.5 flex-1 min-h-0 justify-start overflow-y-auto pr-1 pb-1">
+                    {options.map((opt, i) => (
+                      <Squircle key={i} cornerRadius={18} className="bg-[#F3ECE0] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:ring-2 focus-within:ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
+                         <div className="w-[3rem] text-center font-bold text-gray-400 text-[10px] flex flex-col justify-center items-center h-full border-r border-[#EAE0D0] bg-white/20 group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
+                           OPZ<br/>{i+1}
+                         </div>
+                         <input 
+                           className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal px-3" 
+                           placeholder={i < 2 ? "Risposta obbligatoria *" : "Risposta opzionale"} value={opt} onChange={(e) => { const newOpts = [...options]; newOpts[i] = e.target.value; setOptions(newOpts); }}
+                         />
+                      </Squircle>
+                    ))}
+                    {options.length < 4 && (
+                      <button onClick={addOption} className="text-[#DC5F00] text-[13px] font-bold py-2 px-3 self-center rounded-full hover:bg-[#F3ECE0] active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0 mt-1">
+                        <span className="text-[16px] leading-none pb-[1px]">+</span> Aggiungi opzione
+                      </button>
+                    )}
+                 </div>
+              </div>
+           )}
+        </Squircle>
+
+        {/* FOOTER ACTION AREA */}
+        <div className="flex gap-2.5 shrink-0 h-[3.5rem] relative z-10">
+          <Squircle cornerRadius={24} className="flex-1 bg-[#EAE0D0] flex items-center pl-1.5 drop-shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-[#DC5F00]">
+             <Squircle cornerRadius={20} className="w-[2.75rem] h-[2.75rem] shrink-0 bg-[#F3ECE0] flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.05)]">
+                <Instagram className="w-[20px] h-[20px] text-pink-600" />
+             </Squircle>
+             <input className="bg-transparent flex-1 h-full pl-3 pr-4 text-[14px] font-bold outline-none placeholder:text-gray-500 placeholder:font-normal" placeholder="Il tuo IG (opzionale)" value={instagram} onChange={e => setInstagram(e.target.value)} />
+          </Squircle>
+          <Squircle 
+             as="button"
+             cornerRadius={24}
+             onClick={() => alert(`✅ Modulo ${mode.toUpperCase()} inviato con successo!`)}
+             className="bg-[#DC5F00] text-white px-7 font-bold flex items-center justify-center drop-shadow-[0_4px_14px_rgba(220,95,0,0.35)] hover:bg-[#c95300] active:scale-95 transition-all shrink-0 group"
+          >
+            Invia <Send className="w-[18px] h-[18px] ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+          </Squircle>
+        </div>
+
+      </div>
+    </div>
+  );
+}

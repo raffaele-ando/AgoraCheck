@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import TextareaAutosize from "react-textarea-autosize";
+import TextareaAutosize, { TextareaAutosizeProps } from "react-textarea-autosize";
 import { CheckCircle2, Clock, MapPin, Instagram, Search, List } from "lucide-react";
 import { useSubmitSpotted } from "../pages/Home";
 import { motion } from "motion/react";
@@ -50,6 +50,12 @@ function useTypewriter(words: string[], speed = 60, waitTime = 2000) {
   }, [text, isDeleting, loopNum, words, speed, waitTime]);
 
   return text;
+}
+
+function TypewriterTextareaAutosize({ words, prefix = "", ...props }: TextareaAutosizeProps & { words: string[], prefix?: string }) {
+  const placeholderText = useTypewriter(words);
+  const { ref, ...rest } = props as any;
+  return <TextareaAutosize placeholder={`${prefix}${placeholderText}`} {...rest} />;
 }
 
 // THEME 11: CORKBOARD (Old Theme 4 adapted to brand colors)
@@ -124,6 +130,20 @@ export function ThemeCorkboard() {
   });
   const [lastSubmit, setLastSubmit] = useState(0);
   const [localError, setLocalError] = useState("");
+  const [igShake, setIgShake] = useState(false);
+
+  const handleIgChange = (val: string) => {
+    val = val.replace(/^@/, '');
+    
+    if (val.length > 30 || /[^a-zA-Z0-9._]/.test(val) || val.includes('..') || val.startsWith('.')) {
+      setIgShake(false);
+      setTimeout(() => setIgShake(true), 10);
+      setTimeout(() => setIgShake(false), 400);
+      return;
+    }
+    
+    setForm({ ...form, instagram: val });
+  };
 
   const isIt = (() => {
     if (typeof navigator !== "undefined" && navigator.language) {
@@ -171,9 +191,9 @@ export function ThemeCorkboard() {
     "The girl with the shoulder bag",
   ];
 
-  const whenPlaceholder = useTypewriter(isIt ? whenPlaceholderIt : whenPlaceholderEn);
-  const wherePlaceholder = useTypewriter(isIt ? wherePlaceholderIt : wherePlaceholderEn);
-  const lookingForPlaceholder = useTypewriter(isIt ? lookingForPlaceholderIt : lookingForPlaceholderEn);
+  const whenWords = isIt ? whenPlaceholderIt : whenPlaceholderEn;
+  const whereWords = isIt ? wherePlaceholderIt : wherePlaceholderEn;
+  const lookingForWords = isIt ? lookingForPlaceholderIt : lookingForPlaceholderEn;
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -298,7 +318,9 @@ export function ThemeCorkboard() {
                 <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
                   <Clock className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> {isIt ? "1. Quando? (Opz.)" : "1. When? (Opt.)"}
                 </label>
-                <TextareaAutosize
+                <TypewriterTextareaAutosize
+                  words={whenWords}
+                  prefix={isIt ? "Es. " : "E.g. "}
                   minRows={1}
                   maxRows={2}
                   value={form.when}
@@ -306,7 +328,6 @@ export function ThemeCorkboard() {
                   onFocus={() => handleFocus("when")}
                   onBlur={() => handleBlur("when")}
                   className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors resize-none overflow-y-auto"
-                  placeholder={isIt ? `Es. ${whenPlaceholder}` : `E.g. ${whenPlaceholder}`}
                 />
               </div>
 
@@ -314,7 +335,9 @@ export function ThemeCorkboard() {
                 <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
                   <MapPin className="w-4 h-4 sm:w-4 sm:h-4 mr-1.5" /> {isIt ? "2. Dove? (Opz.)" : "2. Where? (Opt.)"}
                 </label>
-                <TextareaAutosize
+                <TypewriterTextareaAutosize
+                  words={whereWords}
+                  prefix={isIt ? "Es. " : "E.g. "}
                   minRows={1}
                   maxRows={2}
                   value={form.where}
@@ -322,13 +345,12 @@ export function ThemeCorkboard() {
                   onFocus={() => handleFocus("where")}
                   onBlur={() => handleBlur("where")}
                   className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors resize-none overflow-y-auto"
-                  placeholder={isIt ? `Es. ${wherePlaceholder}` : `E.g. ${wherePlaceholder}`}
                 />
               </div>
             </>
           )}
 
-          <div className="p-3 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1 transition-colors">
+          <motion.div animate={{ x: igShake ? [-5, 5, -5, 5, 0] : 0 }} transition={{ duration: 0.4 }} className="p-3 bg-[#DC5F00]/5 rounded border border-[#DC5F00]/20 mx-1 transition-colors">
             <div className="flex items-center justify-between mb-1">
               <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] uppercase transition-colors">
                 <Instagram className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? "3" : "1"}. {isIt ? "Il tuo Instagram" : "Your Instagram"}
@@ -349,35 +371,47 @@ export function ThemeCorkboard() {
                 value={form.instagram}
                 onFocus={() => handleFocus("instagram")}
                 onBlur={() => handleBlur("instagram")}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    instagram: e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9._]/g, ""),
-                  })
-                }
+                onChange={(e) => handleIgChange(e.target.value)}
                 className="w-full bg-transparent outline-none text-base font-bold placeholder:text-[#000000]/40 transition-colors"
                 placeholder={isIt ? "tuo.tag" : "your.tag"}
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
               />
             </div>
-          </div>
+          </motion.div>
 
           <div className="px-2 relative mt-0">
             <label className="flex items-center text-xs sm:text-sm font-bold text-[#000000] mb-0.5 uppercase transition-colors">
               <Search className="w-4 h-4 mr-1.5" /> {form.type === "spotted" ? (isIt ? "4. Chi cerchi? *" : "4. Who are you looking for? *") : (isIt ? "2. Fai una domanda *" : "2. Ask a question *")}
             </label>
-            <TextareaAutosize
-              required
-              minRows={form.type === "spotted" ? 2 : 1}
-              maxRows={4}
-              value={form.lookingFor}
-              onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
-              onFocus={() => handleFocus("lookingFor")}
-              onBlur={() => handleBlur("lookingFor")}
-              className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors py-1 overflow-y-auto"
-              placeholder={form.type === "spotted" ? (isIt ? `Es. ${lookingForPlaceholder}` : `E.g. ${lookingForPlaceholder}`) : (isIt ? "Es. Dove si mangia meglio in Bovisa?" : "E.g. What's the best food near campus?")}
-            />
+            {form.type === "spotted" ? (
+              <TypewriterTextareaAutosize
+                words={lookingForWords}
+                prefix={isIt ? "Es. " : "E.g. "}
+                required
+                minRows={2}
+                maxRows={4}
+                value={form.lookingFor}
+                onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
+                onFocus={() => handleFocus("lookingFor")}
+                onBlur={() => handleBlur("lookingFor")}
+                className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors py-1 overflow-y-auto"
+              />
+            ) : (
+              <TextareaAutosize
+                required
+                minRows={1}
+                maxRows={4}
+                value={form.lookingFor}
+                onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
+                onFocus={() => handleFocus("lookingFor")}
+                onBlur={() => handleBlur("lookingFor")}
+                className="w-full bg-transparent border-b border-[#000000]/20 focus:border-[#DC5F00] outline-none resize-none text-base font-bold placeholder:text-[#000000]/40 transition-colors py-1 overflow-y-auto"
+                placeholder={isIt ? "Es. Dove si mangia meglio in Bovisa?" : "E.g. What's the best food near campus?"}
+              />
+            )}
           </div>
 
           {form.type === "sondaggio" && (
@@ -430,9 +464,11 @@ export function ThemeCorkboard() {
             <div className="flex justify-center">
               <button
                 disabled={
-                  !form.lookingFor || isSubmitting || isSuccess || cooldown > 0
+                  isSubmitting || isSuccess || cooldown > 0
                 }
-                className="w-full max-w-[220px] mt-1 py-3 border-4 border-[#000000] text-[#000000] font-black uppercase text-xl hover:bg-[#DC5F00]:bg-orange-600 hover:border-[#DC5F00]:border-orange-600 hover:text-[#F3ECE0]:text-white transition-colors disabled:opacity-50 relative z-10 bg-transparent"
+                className={`w-full max-w-[220px] mt-1 py-3 border-4 font-black uppercase text-xl relative z-10 bg-transparent transition-colors ${
+                   isSubmitting || cooldown > 0 ? "opacity-50 border-[#000000] text-[#000000]" : "border-[#000000] text-[#000000] hover:bg-[#DC5F00] hover:border-[#DC5F00] hover:text-[#F3ECE0]"
+                } ${!form.lookingFor || (form.type === "sondaggio" && form.pollOptions.filter(o => o.trim()).length < 2) ? "opacity-70" : ""}`}
               >
                 {isSubmitting
                   ? (isIt ? "Inviando..." : "Sending...")
