@@ -37,12 +37,20 @@ export function WhatsappWidget({ city, area }: WhatsappWidgetProps) {
 
   if (!linkToUse) return null;
 
-  const titleText = links["_title"] || "Unisciti alla nostra Community";
-  let subtitleText = links["_subtitle"] || "Entra nel Gruppo WhatsApp {zona}";
+  let titleText = links["_title"] || "Unisciti alla nostra Community";
+  let subtitleText = links["_subtitle"] || "Entra nel Gruppo WhatsApp di {zona}";
   
+  if (titleText.includes("{zona}")) {
+    if (matchedName) {
+      titleText = titleText.replace("{zona}", matchedName);
+    } else {
+      titleText = titleText.replace("{zona}", "").trim();
+    }
+  }
+
   if (subtitleText.includes("{zona}")) {
     if (matchedName) {
-      subtitleText = subtitleText.replace("{zona}", `di ${matchedName}`);
+      subtitleText = subtitleText.replace("{zona}", matchedName);
     } else {
       subtitleText = subtitleText.replace("{zona}", "").trim();
     }

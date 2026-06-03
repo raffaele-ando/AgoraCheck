@@ -1,13 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { doc, setDoc, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { signInAnonymously } from "firebase/auth";
 
 function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  return crypto.randomUUID();
 }
 
 export function useVisitAnalytics() {
@@ -86,16 +83,16 @@ export function useVisitAnalytics() {
     }
   }, [sessionId]);
 
-  const saveToSession = () => {
+  const saveToSession = useCallback(() => {
     sessionStorage.setItem(`visit_state_${sessionId}`, JSON.stringify({
       timeSpent: timeSpentRef.current,
       lastActiveField: lastActiveFieldRef.current,
       hasSubmitted: hasSubmittedRef.current,
       docCreated: docCreatedRef.current,
     }));
-  };
+  }, [sessionId]);
 
-  const createDocOnce = async () => {
+  const createDocOnce = useCallback(async () => {
     if (docCreatedRef.current || !settingsLoadedRef.current || !shouldTrackRef.current) return;
     docCreatedRef.current = true;
     saveToSession();
@@ -114,7 +111,36 @@ export function useVisitAnalytics() {
       console.error(e);
       docCreatedRef.current = false;
     }
-  };
+  }, [sessionId, saveToSession]);
+
+  const flushCurrentFocus = useCallback(() => {
+    if (lastActiveFieldRef.current && activeFocusStartRef.current) {
+      const field = lastActiveFieldRef.current as keyof typeof timeSpentRef.current;
+      const duration = Date.now() - activeFocusStartRef.current;
+      if (timeSpentRef.current[field] !== undefined) {
+          timeSpentRef.current[field] += duration;
+      }
+      activeFocusStartRef.current = Date.now();
+      saveToSession();
+    }
+  }, [saveToSession]);
+
+  const updateFirebase = useCallback(() => {
+    if (!docCreatedRef.current) return;
+    saveToSession();
+    
+    // Convert ms to seconds
+    const dataToUpdate = {
+      hasSubmitted: hasSubmittedRef.current,
+      timeSpentWhen: Math.round(timeSpentRef.current.timeSpentWhen / 1000),
+      timeSpentWhere: Math.round(timeSpentRef.current.timeSpentWhere / 1000),
+      timeSpentLookingFor: Math.round(timeSpentRef.current.timeSpentLookingFor / 1000),
+      timeSpentInstagram: Math.round(timeSpentRef.current.timeSpentInstagram / 1000),
+      abandonedAfter: hasSubmittedRef.current ? "submitted" : (lastActiveFieldRef.current || "none"),
+    };
+
+    updateDoc(doc(db, "analytics_visits", sessionId), dataToUpdate).catch(() => {});
+  }, [sessionId, saveToSession]);
 
   useEffect(() => {
     createDocOnce();
@@ -139,36 +165,7 @@ export function useVisitAnalytics() {
       flushCurrentFocus();
       updateFirebase();
     };
-  }, []);
-
-  const flushCurrentFocus = () => {
-    if (lastActiveFieldRef.current && activeFocusStartRef.current) {
-      const field = lastActiveFieldRef.current as keyof typeof timeSpentRef.current;
-      const duration = Date.now() - activeFocusStartRef.current;
-      if (timeSpentRef.current[field] !== undefined) {
-          timeSpentRef.current[field] += duration;
-      }
-      activeFocusStartRef.current = Date.now();
-      saveToSession();
-    }
-  };
-
-  const updateFirebase = () => {
-    if (!docCreatedRef.current) return;
-    saveToSession();
-    
-    // Convert ms to seconds
-    const dataToUpdate = {
-      hasSubmitted: hasSubmittedRef.current,
-      timeSpentWhen: Math.round(timeSpentRef.current.timeSpentWhen / 1000),
-      timeSpentWhere: Math.round(timeSpentRef.current.timeSpentWhere / 1000),
-      timeSpentLookingFor: Math.round(timeSpentRef.current.timeSpentLookingFor / 1000),
-      timeSpentInstagram: Math.round(timeSpentRef.current.timeSpentInstagram / 1000),
-      abandonedAfter: hasSubmittedRef.current ? "submitted" : (lastActiveFieldRef.current || "none"),
-    };
-
-    updateDoc(doc(db, "analytics_visits", sessionId), dataToUpdate).catch(() => {});
-  };
+  }, [createDocOnce, flushCurrentFocus, updateFirebase]);
 
   const handleFocus = (field: string) => {
     createDocOnce();

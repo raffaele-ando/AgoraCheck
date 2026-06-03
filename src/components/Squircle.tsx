@@ -91,7 +91,7 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
       onBlur={handleBlur}
       style={{ 
         ...style,
-        visibility: isReady ? undefined : 'hidden',
+        borderRadius: !isReady && typeof cornerRadius === 'number' ? `${cornerRadius}px` : (cornerRadius === 'full' ? '9999px' : undefined),
         WebkitMaskImage: isReady ? svgParams.mask : undefined,
         maskImage: isReady ? svgParams.mask : undefined,
         WebkitMaskPosition: "center",

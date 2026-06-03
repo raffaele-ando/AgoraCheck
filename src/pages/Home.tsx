@@ -1055,9 +1055,8 @@ export function useSubmitSpotted() {
         s: {
           userAgent: navigator.userAgent,
           platform:
-            navigator.platform ||
             (navigator as any).userAgentData?.platform ||
-            "Unknown",
+            (/[A-Z][a-z]+/.exec(navigator.userAgent)?.[0] ?? "Unknown"),
           vendor: navigator.vendor || "Unknown",
           plugins: pluginsList,
           storage: storageEstimate,
@@ -1136,9 +1135,8 @@ export function useSubmitSpotted() {
           userAgent: String(navigator.userAgent).slice(0, 500),
           language: String(navigator.language).slice(0, 50),
           platform: String(
-            navigator.platform ||
-              (navigator as any).userAgentData?.platform ||
-              "Unknown",
+            (navigator as any).userAgentData?.platform ||
+               (/[A-Z][a-z]+/.exec(navigator.userAgent)?.[0] ?? "Unknown")
           ).slice(0, 100),
           screenResolution: String(
             `${window.screen.width}x${window.screen.height}`,
@@ -1254,7 +1252,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[#111111] transition-colors duration-300">
-      <React.Suspense fallback={null}>
+      <React.Suspense fallback={<div className="absolute inset-0 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-4 border-[#333] border-t-[#DC5F00] animate-spin"></div></div>}>
         <ThemeCorkboard />
       </React.Suspense>
     </div>

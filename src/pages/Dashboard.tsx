@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { parseUserAgent } from "../utils/uaParser";
+import { computeDeviceProfileId } from "../utils/profiling";
 import { motion } from "motion/react";
 import {
   collection,
@@ -116,62 +117,6 @@ const computeDeviceProfileColor = (profileId: string) => {
   return "#" + "00000".substring(0, 6 - cColor.length) + cColor;
 };
 
-const computeDeviceProfileId = (
-  parsedAdv: any,
-  deviceInfo: any,
-  instagram: string = ""
-): string => {
-  if (!parsedAdv) return "UNKNOWN";
-  try {
-    const canvas =
-      parsedAdv.software?.canvasFingerprint ||
-      parsedAdv.s?.canvasFingerprint ||
-      parsedAdv.s?.c ||
-      "";
-    const audio =
-      parsedAdv.software?.audioFingerprint ||
-      parsedAdv.s?.audioFingerprint ||
-      parsedAdv.s?.a ||
-      "";
-    const gpu =
-      parsedAdv.hardware?.gpu || parsedAdv.h?.gpu || parsedAdv.h?.g || "";
-    const screen =
-      parsedAdv.hardware?.screen || parsedAdv.h?.screen || parsedAdv.h?.s || "";
-    const cores =
-      parsedAdv.hardware?.cores || parsedAdv.h?.cores || parsedAdv.h?.c || "";
-    
-    // Old base seed didn't contain rects and math
-    let seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
-    
-    // Backward compatibility: always prioritize instagram for fingerprint identity
-    if (instagram) {
-      seed = `ig-${instagram.toLowerCase().trim()}`;
-    } else if (seed === "----" && deviceInfo) {
-      const ip = deviceInfo.userAgent || "";
-      seed = ip;
-    }
-
-    if (seed === "----") return "UNKNOWN";
-
-    let h1 = 0xdeadbeef,
-      h2 = 0x41c6ce57;
-    for (let i = 0, ch; i < seed.length; i++) {
-      ch = seed.charCodeAt(i);
-      h1 = Math.imul(h1 ^ ch, 2654435761);
-      h2 = Math.imul(h2 ^ ch, 1597334677);
-    }
-    h1 =
-      Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^
-      Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 =
-      Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^
-      Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    const hash = 4294967296 * (2097151 & h2) + (h1 >>> 0);
-    return `AUTO-${hash.toString(16).toUpperCase().padStart(12, "0").slice(0, 8)}`;
-  } catch {
-    return "UNKNOWN";
-  }
-};
 export default function Dashboard() {
   const [isAdminTrackingIgnored, setIsAdminTrackingIgnored] = useState(
     localStorage.getItem("IGNORE_ANALYTICS") !== "false" // default true
@@ -888,14 +833,12 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // 2.5 CAROUSEL APPROVED MESSAGES (background, zero composite indexes)
-    const unsubscribeCarousel = onSnapshot(collection(db, "messages"), (snapshot) => {
+    // 2.5 CAROUSEL APPROVED MESSAGES (background)
+    const qCarousel = query(collection(db, "messages"), where("isValidatedForCarousel", "==", true), limit(50));
+    const unsubscribeCarousel = onSnapshot(qCarousel, (snapshot) => {
       const msgs: any[] = [];
       snapshot.docs.forEach(doc => {
-        const d = doc.data();
-        if (d.isValidatedForCarousel) {
-          msgs.push({ id: doc.id, ...d });
-        }
+        msgs.push({ id: doc.id, ...doc.data() });
       });
       // Sort in-memory to prioritize the pinned first slide (cover), then newest first
       msgs.sort((a, b) => {
@@ -919,7 +862,7 @@ export default function Dashboard() {
     // Increase limit linearly based on pagesize and current page.
     // If the active tab is somehow unrelated or selective filters are active, retrieve all documents.
     let q;
-    if (activeTab === "analytics" || viewingMacroId !== null || onlySpottedFilter || selectedZoneFilter !== "") {
+    if (activeTab === "analytics" || activeTab === "profiles" || viewFilter === "archived" || viewingMacroId !== null || onlySpottedFilter || selectedZoneFilter !== "") {
       q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
     } else {
       q = query(
@@ -987,7 +930,7 @@ export default function Dashboard() {
     });
 
     return () => unsubscribeMessages();
-  }, [pageSize, currentPage, activeTab, viewingMacroId, onlySpottedFilter, selectedZoneFilter]);
+  }, [pageSize, currentPage, activeTab, viewingMacroId, onlySpottedFilter, selectedZoneFilter, viewFilter]);
 
   useEffect(() => {
     // 4. VISITS (Only when analytics is requested)

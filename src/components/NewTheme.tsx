@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ChevronDown, Send, Instagram, ChevronRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -64,10 +65,12 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
 export function ThemeCorkboard() {
   const { handleFocus, handleBlur, markSubmitted } = useVisitAnalytics();
   const { submit, isSubmitting, isSuccess, error, cooldown } = useSubmitSpotted();
+  const navigate = useNavigate();
   
   const [mode, setMode] = useState<string>('spotted');
-  const [city, setCity] = useState("Milano");
-  const [zone, setZone] = useState(locations["Milano"][0]);
+  const defaultCity = Object.keys(locations)[0] || "Milano";
+  const [city, setCity] = useState(defaultCity);
+  const [zone, setZone] = useState(locations[defaultCity]?.[0] || "");
   const [waLinks, setWaLinks] = useState<Record<string, string>>({});
   const [waLinksLoaded, setWaLinksLoaded] = useState(false);
   const [eventWidget, setEventWidget] = useState<EventWidgetConfig>(DEFAULT_EVENT_WIDGET_CONFIG);
@@ -128,7 +131,7 @@ export function ThemeCorkboard() {
 
 
   useEffect(() => {
-    let initCity = "MILANO";
+    let initCity = Object.keys(locations)[0] || "Milano";
     let initArea = "";
     let initMode = "spotted";
 
@@ -169,18 +172,19 @@ export function ThemeCorkboard() {
     const newPath = isTuttaLaCitta ? `/${citySlug}/${mode}` : `/${citySlug}/${areaSlug}/${mode}`;
     
     if (url.pathname !== newPath) {
-       url.pathname = newPath;
        url.searchParams.delete("mode");
        url.searchParams.delete("city");
        url.searchParams.delete("area");
-       window.history.replaceState({}, "", url.toString());
+       const newSearch = url.searchParams.toString();
+       navigate(`${newPath}${newSearch ? '?' + newSearch : ''}`, { replace: true });
     }
-  }, [mode, city, zone]);
+  }, [mode, city, zone, navigate]);
   
   const [lookingFor, setLookingFor] = useState('');
   const [when, setWhen] = useState('');
   const [where, setWhere] = useState('');
-  const [options, setOptions] = useState(['', '']);
+  const generateId = () => Math.random().toString(36).substring(2, 9);
+  const [options, setOptions] = useState([{id: generateId(), value: ''}, {id: generateId(), value: ''}]);
   const [instagram, setInstagram] = useState('');
   const [igShake, setIgShake] = useState(false);
 
@@ -248,7 +252,7 @@ export function ThemeCorkboard() {
 
   const handleModeSwitch = (newMode: string) => {
     setMode(newMode);
-    if (newMode === 'sondaggio' && options.length < 2) setOptions(['', '']);
+    if (newMode === 'sondaggio' && options.length < 2) setOptions([{id: generateId(), value: ''}, {id: generateId(), value: ''}]);
   };
 
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -258,7 +262,7 @@ export function ThemeCorkboard() {
   };
 
   const addOption = () => {
-    if (options.length < 4) setOptions([...options, '']);
+    if (options.length < 4) setOptions([...options, {id: generateId(), value: ''}]);
   };
 
   const activeModes = MODES.filter(m => m.active);
@@ -275,7 +279,7 @@ export function ThemeCorkboard() {
       lookingFor,
       when,
       where,
-      pollOptions: options,
+      pollOptions: options.map(o => o.value),
       instagram
     }).then(ok => {
       if (ok) {
@@ -390,7 +394,7 @@ export function ThemeCorkboard() {
                            value={zone} onChange={(e)=>setZone(e.target.value)} 
                            className="w-full h-full bg-transparent pl-4 pr-8 text-[13px] font-bold appearance-none outline-none truncate cursor-pointer text-[#DC5F00] focus:outline-none"
                          >
-                            {locations[city].map(z => <option key={z} value={z}>{z}</option>)}
+                            {(locations[city] || []).map(z => <option key={z} value={z}>{z}</option>)}
                          </select>
                          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
                       </Squircle>
@@ -490,11 +494,11 @@ export function ThemeCorkboard() {
                       <TypewriterTextarea words={whereWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={where} onChange={(e) => setWhere(e.target.value)} onFocus={() => handleInputFocus("where")} onBlur={() => handleInputBlur("where")} />
                    </Squircle>
                    <Squircle cornerRadius={20} className="bg-[#F3ECE0] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
-                      <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🕒</div>
+                      <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🗓️</div>
                       <TypewriterTextarea words={whenWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={when} onChange={(e) => setWhen(e.target.value)} onFocus={() => handleInputFocus("when")} onBlur={() => handleInputBlur("when")}/>
                    </Squircle>
                    <Squircle cornerRadius={24} className="bg-[#F3ECE0] flex overflow-hidden flex-1 focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
-                      <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>👤</div>
+                      <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🔍</div>
                       <TypewriterTextarea words={lookingForWordsSpotted} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                 </div>
@@ -508,14 +512,14 @@ export function ThemeCorkboard() {
                    </Squircle>
                    <div className="flex flex-col gap-2.5 flex-1 min-h-0 justify-start overflow-y-auto pr-1 pb-1">
                       {options.map((opt, i) => (
-                        <Squircle key={i} cornerRadius={18} className="bg-[#F3ECE0] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
+                        <Squircle key={opt.id} cornerRadius={18} className="bg-[#F3ECE0] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
                          <div className="w-[3rem] text-center font-bold text-gray-400 text-[10px] flex flex-col justify-center items-center h-full border-r border-[#EAE0D0] bg-white/20 group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
                            OPZ<br/>{i+1}
                          </div>
                          <input 
                            className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal px-3" 
-                           placeholder={i < 2 ? "Risposta obbligatoria *" : "Risposta opzionale"} value={opt} onChange={(e) => { const newOpts = [...options]; newOpts[i] = e.target.value; setOptions(newOpts); }}
-                           onFocus={() => handleInputFocus(`option_${i}`)} onBlur={() => handleInputBlur(`option_${i}`)}
+                           placeholder={i < 2 ? "Risposta obbligatoria *" : "Risposta opzionale"} value={opt.value} onChange={(e) => { const newOpts = [...options]; newOpts[i] = {...newOpts[i], value: e.target.value}; setOptions(newOpts); }}
+                           onFocus={() => handleInputFocus(`option_${opt.id}`)} onBlur={() => handleInputBlur(`option_${opt.id}`)}
                          />
                       </Squircle>
                     ))}
@@ -565,7 +569,7 @@ export function ThemeCorkboard() {
                onClick={handleSubmit}
                className={`text-white px-7 font-bold flex items-center justify-center h-full w-full transition-colors ${
                  isSubmitting || cooldown > 0 ? "bg-[#d09165]" : "bg-[#DC5F00] hover:bg-[#c95300] active:scale-95"
-               } ${!lookingFor || (mode === "sondaggio" && options.filter(o => o.trim()).length < 2) ? "opacity-70" : ""}`}
+               } ${!lookingFor || (mode === "sondaggio" && options.filter(o => o.value.trim()).length < 2) ? "opacity-70" : ""}`}
             >
               {isSubmitting ? "Invio..." : isSuccess ? "Inviato!" : cooldown > 0 ? `Attendi ${cooldown}s` : <>Invia <Send className="w-[18px] h-[18px] ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></>}
             </Squircle>
