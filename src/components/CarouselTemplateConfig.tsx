@@ -152,8 +152,8 @@ interface CarouselTemplateConfigProps {
 }
 
 export default function CarouselTemplateConfig({ 
-  validatedMessages, 
-  onUnvalidateMessage 
+  validatedMessages = [], 
+  onUnvalidateMessage = async () => {} 
 }: CarouselTemplateConfigProps) {
   const [carouselBgs, setCarouselBgs] = useState<(string | null)[]>(Array(20).fill(null));
   const [slideDimensions, setSlideDimensions] = useState<Record<number, { width: number, height: number }>>({});
@@ -180,8 +180,9 @@ export default function CarouselTemplateConfig({
   const [targetZone, setTargetZone] = useState<string>("");
 
   const localValidatedMessages = useMemo(() => {
-    if (!targetZone) return validatedMessages;
-    return validatedMessages.filter(m => {
+    const safeMsgs = validatedMessages || [];
+    if (!targetZone) return safeMsgs;
+    return safeMsgs.filter(m => {
       const filterLower = targetZone.trim().toLowerCase();
       const matchCity = m.city && m.city.trim().toLowerCase() === filterLower;
       const matchArea = m.area && m.area.trim().toLowerCase() === filterLower;
@@ -244,7 +245,7 @@ export default function CarouselTemplateConfig({
           setConfig(DEFAULT_CAROUSEL_CONFIG);
         }
       } catch (err) {
-        console.error("Could not load carousel settings from DB", err);
+        console.warn("Could not load carousel settings from DB", err);
       } finally {
         setIsLoading(false);
         setIsDBReady(true);
@@ -284,7 +285,7 @@ export default function CarouselTemplateConfig({
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 1500);
     } catch (e) {
-      console.error("Error saving carousel config", e);
+      console.warn("Error saving carousel config", e);
     }
   };
 
@@ -306,7 +307,7 @@ export default function CarouselTemplateConfig({
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 1500);
     } catch (e) {
-      console.error("Error setting first slide:", e);
+      console.warn("Error setting first slide:", e);
       alert("Errore nell'impostare la prima slide.");
     }
   };
@@ -351,7 +352,7 @@ export default function CarouselTemplateConfig({
               setSavedStatus(true);
               setTimeout(() => setSavedStatus(false), 1500);
             } catch (err) {
-              console.error("Could not save image to Firestore", err);
+              console.warn("Could not save image to Firestore", err);
               alert("Errore durante il salvataggio. L'immagine è troppo grande.");
             }
           }
@@ -376,7 +377,7 @@ export default function CarouselTemplateConfig({
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 1500);
     } catch (err) {
-      console.error("Error deleting document", err);
+      console.warn("Error deleting document", err);
     }
   };
 
@@ -442,7 +443,7 @@ export default function CarouselTemplateConfig({
       }, 2500);
 
     } catch (err) {
-      console.error("Batch Export failed", err);
+      console.warn("Batch Export failed", err);
       alert("Esportazione interrotta per un errore. Riprova.");
       setExportProgress(prev => ({ ...prev, isOpen: false }));
     } finally {

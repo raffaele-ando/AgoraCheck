@@ -288,7 +288,7 @@ export function ThemeCorkboard() {
         setWhen('');
         setWhere('');
         setInstagram('');
-        if (mode === 'sondaggio') setOptions(['', '']);
+        if (mode === 'sondaggio') setOptions([{ id: "1", value: "" }, { id: "2", value: "" }]);
       }
     });
   };

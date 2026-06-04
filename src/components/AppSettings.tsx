@@ -389,7 +389,7 @@ function EventWidgetSettings() {
   );
 }
 
-export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }) {
+export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSuperAdmin?: boolean; mockMode?: boolean }) {
   const [linkConfig, setLinkConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
   const [isSaved, setIsSaved] = useState(false);
   
@@ -400,9 +400,14 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
 
   useEffect(() => {
     loadSettings();
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, mockMode]);
 
   const loadSettings = async () => {
+    if (mockMode) {
+      setAdmins(["admin@example.com", "moderator@example.com"]);
+      return;
+    }
+    
     try {
       const config = await loadLinkConfigFromDB();
       setLinkConfig(config);
@@ -413,11 +418,11 @@ export default function AppSettings({ isSuperAdmin }: { isSuperAdmin?: boolean }
           const adminList = adminsSnapshot.docs.map((d: any) => d.id);
           setAdmins(adminList);
         } catch (adminErr) {
-          console.error("Error loading admins", adminErr);
+          console.warn("Could not load admins", adminErr);
         }
       }
     } catch (e) {
-      console.error("Error loading settings", e);
+      console.warn("Could not load settings", e);
     }
   };
 

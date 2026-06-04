@@ -89,10 +89,10 @@ type DetailView = {
   data: any[];
 } | null;
 export const Analytics: React.FC<AnalyticsProps> = ({
-  messages,
-  profiles,
-  macroProfiles,
-  visits,
+  messages = [],
+  profiles = {},
+  macroProfiles = [],
+  visits = [],
 }) => {
   const [detailView, setDetailView] = useState<DetailView>(null);
   const [isReady, setIsReady] = useState(false);
@@ -121,7 +121,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       }
       setLoadingSettings(false);
     }).catch((e) => {
-      console.error(e);
+      console.warn("Could not load analytics settings", e);
       setLoadingSettings(false);
     });
   }, []);

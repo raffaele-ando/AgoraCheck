@@ -39,7 +39,7 @@ export const saveImageToDB = async (dataUrl: string, target: string, mode: strin
     const imgDoc = doc(db, "settings", `story_template_image_${target}_${mode}`);
     await setDoc(imgDoc, { bgImage: dataUrl });
   } catch (error) {
-    console.error("Error saving image to Firestore", error);
+    console.warn("Error saving image to Firestore", error);
     throw error;
   }
 };
@@ -63,7 +63,7 @@ export const loadImageFromDB = async (target: string, mode: string) => {
     
     return null;
   } catch (error) {
-    console.error("Error loading image from Firestore", error);
+    console.warn("Error loading image from Firestore", error);
     return null;
   }
 };
@@ -73,7 +73,7 @@ export const clearImageFromDB = async (target: string, mode: string) => {
     const imgDoc = doc(db, "settings", `story_template_image_${target}_${mode}`);
     await deleteDoc(imgDoc);
   } catch (error) {
-    console.error("Error clearing image from Firestore", error);
+    console.warn("Error clearing image from Firestore", error);
     throw error;
   }
 };
@@ -83,7 +83,7 @@ export const saveConfigToDB = async (config: TemplateConfig, mode: string) => {
     const configDoc = doc(db, "settings", `story_template_config_${mode}`);
     await setDoc(configDoc, { config });
   } catch (error) {
-    console.error("Error saving config to Firestore", error);
+    console.warn("Error saving config to Firestore", error);
     throw error;
   }
 };
@@ -105,7 +105,7 @@ export const loadConfigFromDB = async (mode: string) => {
       }
     }
   } catch (error) {
-    console.error("Error loading config from Firestore", error);
+    console.warn("Error loading config from Firestore", error);
   }
   return null;
 };
@@ -392,7 +392,7 @@ export default function StoryTemplateConfig() {
       }
       setGalleryData(allCombinations);
     } catch (e) {
-      console.error(e);
+      console.warn("Could not load gallery items", e);
     }
   };
   
