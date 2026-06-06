@@ -862,13 +862,15 @@ export default function Dashboard() {
     // Increase limit linearly based on pagesize and current page.
     // If the active tab is somehow unrelated or selective filters are active, retrieve all documents.
     let q;
-    if (activeTab === "analytics" || activeTab === "profiles" || viewFilter === "archived" || viewingMacroId !== null || onlySpottedFilter || selectedZoneFilter !== "") {
+    if (activeTab === "analytics" || activeTab === "profiles" || viewingMacroId !== null) {
       q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
     } else {
+      // retrieve a generous buffer to account for client-side filtering
+      const bufferLimit = Math.max(500, pageSize * currentPage * 10);
       q = query(
         collection(db, "messages"), 
         orderBy("createdAt", "desc"), 
-        limit(pageSize * currentPage)
+        limit(bufferLimit)
       );
     }
 
