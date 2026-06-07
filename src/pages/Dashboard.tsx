@@ -60,6 +60,8 @@ import {
   Sparkles,
   Check,
   Download,
+  FileText,
+  Copy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Analytics } from "../components/Analytics";
@@ -192,7 +194,7 @@ export default function Dashboard() {
   const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
   const [resolutionInput, setResolutionInput] = useState("");
   const [macroModalTab, setMacroModalTab] = useState<
-    "timeline" | "dettagli" | "identita"
+    "timeline" | "dettagli" | "identita" | "log"
   >("timeline");
   const editingProfileInitializedRef = useRef<string | null>(null);
   const [locationInputCity, setLocationInputCity] = useState("");
@@ -523,17 +525,28 @@ export default function Dashboard() {
   const macroProfiles = useMemo(() => {
     const nodes = allProfileIds;
     const adj = new Map<string, Set<string>>();
+    const edgeReasons = new Map<string, string[]>();
     for (const n of nodes) adj.set(n, new Set());
     const tagGroups = new Map<string, string[]>();
     
+    // Tracking device footprints for debugging
+    const deviceFootprints = new Map<string, any>();
+    
     // We group by identical hardware footprints that provide high confidence:
     const hwGroups = new Map<string, Set<string>>();
-    const relaxedHwGroups = new Map<string, Set<string>>();
+    const vTokenGroups = new Map<string, Set<string>>();
+
     for (const m of messages) {
        const pid = getDeviceProfile(m);
        if (profiles[pid]?.isolateFromAutoGrouping) continue;
        const adv = m.parsedAdvanced || null;
        if (adv) {
+         const tt = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken;
+         if (tt) {
+           if (!vTokenGroups.has(tt)) vTokenGroups.set(tt, new Set());
+           vTokenGroups.get(tt)!.add(pid);
+         }
+
          const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
          const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
          const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
@@ -544,20 +557,36 @@ export default function Dashboard() {
          const math = adv.software?.mathFingerprint ? JSON.stringify(adv.software.mathFingerprint) : (adv.s?.mathFingerprint ? JSON.stringify(adv.s.mathFingerprint) : "");
          
          const seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}-${rects}-${math}`;
-         const relaxedSeed = `${canvas}-${audio}-${gpu}-${screen}-${cores}`;
+         
+         const ua = adv.browser?.userAgent || adv.network?.userAgent || adv.n?.ua || m.deviceInfo?.userAgent || "";
+         if (!deviceFootprints.has(pid)) {
+           deviceFootprints.set(pid, {
+             canvas, audio, gpu, screen, cores, rects, math, seed,
+             userAgent: ua,
+             vToken: tt || ""
+           });
+         }
+         
+         // Only group by hardware seed if it's NOT an Apple device.
+         // Apple devices heavily restrict fingerprinting and returns identical seeds
+         // for thousands of users with the same model, causing massive false positives.
+         // iOS tracking will instead heavily rely on vToken (LocalStorage TTV) and Instagram Tags.
+         const isAppleDevice = gpu.includes("Apple") || gpu.includes("Mac") || ua.includes("iPhone") || ua.includes("Mac OS") || ua.includes("iPad");
+         
          // Ensure we don't group devices missing the core hardware metrics entirely.
          // A completely blank signature contains exactly 6 hyphens.
-         if (seed !== "------") {
+         if (seed !== "------" && !isAppleDevice) {
             if (!hwGroups.has(seed)) hwGroups.set(seed, new Set());
             hwGroups.get(seed)!.add(pid);
          }
-         
-         if (relaxedSeed !== "----") {
-            if (!relaxedHwGroups.has(relaxedSeed)) relaxedHwGroups.set(relaxedSeed, new Set());
-            relaxedHwGroups.get(relaxedSeed)!.add(pid);
-         }
        }
     }
+
+    const addEdgeReason = (u: string, v: string, reason: string) => {
+      const key = [u, v].sort().join("|");
+      if (!edgeReasons.has(key)) edgeReasons.set(key, []);
+      if (!edgeReasons.get(key)!.includes(reason)) edgeReasons.get(key)!.push(reason);
+    };
 
     for (const n of nodes) {
       const prof = profiles[n];
@@ -568,32 +597,35 @@ export default function Dashboard() {
         tagGroups.get(tag)!.push(n);
       }
     }
-    for (const pids of tagGroups.values()) {
+    for (const [tag, pids] of tagGroups.entries()) {
       for (let i = 0; i < pids.length; i++) {
         for (let j = i + 1; j < pids.length; j++) {
           adj.get(pids[i])!.add(pids[j]);
           adj.get(pids[j])!.add(pids[i]);
+          addEdgeReason(pids[i], pids[j], `Stesso tag Instagram (${tag})`);
         }
       }
     }
-    for (const pidsSet of hwGroups.values()) {
+    for (const [vToken, pidsSet] of vTokenGroups.entries()) {
       const pids = Array.from(pidsSet);
       for (let i = 0; i < pids.length; i++) {
         for (let j = i + 1; j < pids.length; j++) {
           if (adj.has(pids[i]) && adj.has(pids[j])) {
             adj.get(pids[i])!.add(pids[j]);
             adj.get(pids[j])!.add(pids[i]);
+            addEdgeReason(pids[i], pids[j], `Stesso token di sessione (vToken)`);
           }
         }
       }
     }
-    for (const pidsSet of relaxedHwGroups.values()) {
+    for (const [seed, pidsSet] of hwGroups.entries()) {
       const pids = Array.from(pidsSet);
       for (let i = 0; i < pids.length; i++) {
         for (let j = i + 1; j < pids.length; j++) {
           if (adj.has(pids[i]) && adj.has(pids[j])) {
             adj.get(pids[i])!.add(pids[j]);
             adj.get(pids[j])!.add(pids[i]);
+            addEdgeReason(pids[i], pids[j], `Seed HW identico`);
           }
         }
       }
@@ -666,6 +698,25 @@ export default function Dashboard() {
             mostRecentMsg.parsedAdvanced?.n?.ip ||
             "Sconosciuto"
           : "Sconosciuto";
+        const compEdgeReasons: Record<string, string[]> = {};
+        comp.forEach(p1 => {
+          comp.forEach(p2 => {
+            if (p1 !== p2) {
+              const key = [p1, p2].sort().join("|");
+              if (edgeReasons.has(key)) {
+                compEdgeReasons[key] = edgeReasons.get(key)!;
+              }
+            }
+          });
+        });
+        
+        const compFootprints: Record<string, any> = {};
+        comp.forEach(p => {
+          if (deviceFootprints.has(p)) {
+            compFootprints[p] = deviceFootprints.get(p);
+          }
+        });
+
         return {
           id,
           profileIds: comp,
@@ -676,6 +727,8 @@ export default function Dashboard() {
           totalTime,
           lastIp,
           mostRecentMsg,
+          compEdgeReasons,
+          compFootprints,
         };
       })
       .sort((a, b) => b.msgCount - a.msgCount);
@@ -866,7 +919,7 @@ export default function Dashboard() {
       q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
     } else {
       // retrieve a generous buffer to account for client-side filtering
-      const bufferLimit = Math.max(500, pageSize * currentPage * 10);
+      const bufferLimit = Math.max(5000, pageSize * currentPage * 10);
       q = query(
         collection(db, "messages"), 
         orderBy("createdAt", "desc"), 
@@ -1181,6 +1234,76 @@ export default function Dashboard() {
   const handleUngroupDevice = (messageId: string) => {
     setConfirmModalState({ isOpen: true, messageId, type: "ungroup" });
   };
+
+  const generateMacroLogReport = (macro: any) => {
+    let report = `Report di Raggruppamento Dispositivi (Macro ID: ${macro.id})\n`;
+    report += `Generato il: ${new Date().toLocaleString()}\n`;
+    report += `Numero Dispositivi: ${macro.profileIds.length}\n\n`;
+
+    report += `--- REGOLE DI MATCH ATTIVATE ---\n`;
+    const edgeKeys = Object.keys(macro.compEdgeReasons || {});
+    if (edgeKeys.length === 0) {
+      report += `Nessun match esplicito salvato (profilo singolo o generato in fallback).\n`;
+    } else {
+      for (const [edgeKey, reasons] of Object.entries(macro.compEdgeReasons || {})) {
+        const [pid1, pid2] = edgeKey.split("|");
+        const prof1 = profiles[pid1]?.name || pid1;
+        const prof2 = profiles[pid2]?.name || pid2;
+        report += `Relazione: ${prof1} <-> ${prof2}\n`;
+        (reasons as string[]).forEach((r) => {
+          report += `  - ${r}\n`;
+        });
+        report += `\n`;
+      }
+    }
+
+    report += `\n--- DATI HARDWARE GREZZI ---\n`;
+    macro.profileIds.forEach((pid: string) => {
+      const fp = (macro.compFootprints as any)?.[pid];
+      const pname = profiles[pid]?.name || pid;
+      report += `Dispositivo: ${pname} (ID: ${pid})\n`;
+      if (fp) {
+        report += `  vToken:      ${fp.vToken || "-"}\n`;
+        report += `  Canvas:      ${fp.canvas || "-"}\n`;
+        report += `  Audio:       ${fp.audio || "-"}\n`;
+        report += `  GPU:         ${fp.gpu || "-"}\n`;
+        report += `  Screen:      ${fp.screen || "-"}\n`;
+        report += `  Cores:       ${fp.cores || "-"}\n`;
+        report += `  Rects:       ${fp.rects || "-"}\n`;
+        report += `  Math:        ${fp.math || "-"}\n`;
+        report += `  UserAgent:   ${fp.userAgent || "-"}\n`;
+        report += `  SEED EXACT:  ${fp.seed}\n`;
+      } else {
+        report += `  (Impronta non calcolata / vecchi dati)\n`;
+      }
+      report += `\n`;
+    });
+
+    return report;
+  };
+
+  const handleCopyMacroLog = async (macro: any) => {
+    try {
+      await navigator.clipboard.writeText(generateMacroLogReport(macro));
+      alert("Log copiato negli appunti!");
+    } catch (err) {
+      console.error("Failed to copy log", err);
+      alert("Errore durante la copia del log.");
+    }
+  };
+
+  const handleDownloadMacroLog = (macro: any) => {
+    const blob = new Blob([generateMacroLogReport(macro)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `report_gruppo_${macro.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const filteredMessages = messages.filter((m) => {
     // 1. Archive status filter
     const matchesArchive = viewFilter === "archived" ? !!m.isArchived : !m.isArchived;
@@ -3566,6 +3689,13 @@ export default function Dashboard() {
 
                   <Cpu className="w-4 h-4 shrink-0" /> Info Tecniche
                 </button>
+                <button
+                  onClick={() => setMacroModalTab("log")}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "log" ? "bg-orange-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                >
+
+                  <FileText className="w-4 h-4 shrink-0" /> Log Raggruppamento
+                </button>
               </div>
               <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
 
@@ -3743,6 +3873,118 @@ export default function Dashboard() {
                           );
                         })
                       )}
+                    </div>
+                  </div>
+                )}
+                {macroModalTab === "log" && (
+                  <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" /> Report di Analisi Gruppo
+                        </h4>
+                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
+                          Analisi sulle metriche hardware ed edges del grafo che ha determinato il raggruppamento di questi dispositivi come singola persona.
+                        </p>
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={() => handleCopyMacroLog(viewingMacro)}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-bold transition-all shadow-sm"
+                        >
+                          <Copy className="w-4 h-4" /> Copia
+                        </button>
+                        <button
+                          onClick={() => handleDownloadMacroLog(viewingMacro)}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white border border-transparent rounded-xl text-xs font-bold transition-all shadow-sm"
+                        >
+                          <Download className="w-4 h-4" /> Scarica
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Regole di Match Attivate</h5>
+                        {Object.entries(viewingMacro.compEdgeReasons || {}).map(([edgeKey, reasons]) => {
+                          const [pid1, pid2] = edgeKey.split("|");
+                          const prof1 = profiles[pid1]?.name || pid1;
+                          const prof2 = profiles[pid2]?.name || pid2;
+                          return (
+                            <div key={edgeKey} className="mb-4 last:mb-0 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                              <div className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">Relazione Rilevata: <span className="text-indigo-600 dark:text-indigo-400">{prof1}</span> <span className="mx-1 text-gray-400">↔</span> <span className="text-indigo-600 dark:text-indigo-400">{prof2}</span></div>
+                              <ul className="space-y-1.5 ml-1">
+                                {(reasons as string[]).map((r: string, i: number) => (
+                                  <li key={i} className="text-xs flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>{r}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        })}
+                        {Object.keys(viewingMacro.compEdgeReasons || {}).length === 0 && (
+                          <div className="text-xs text-gray-500 italic">Nessun match esplicito salvato (profilo singolo o generato in fallback)</div>
+                        )}
+                      </div>
+
+                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><Fingerprint className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {viewingMacro.profileIds.map((pid: string) => {
+                            const fp = (viewingMacro.compFootprints as any)?.[pid];
+                            const pname = profiles[pid]?.name || pid;
+                            return (
+                              <div key={pid} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <div className="text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2 truncate">{pname}</div>
+                                {fp ? (
+                                  <div className="space-y-2 text-[10px] font-mono text-gray-600 dark:text-gray-400">
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">vToken:</span>
+                                      <span className="break-all">{fp.vToken || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">Canvas:</span>
+                                      <span className="break-all">{fp.canvas || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">Audio:</span>
+                                      <span className="break-all">{fp.audio || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">GPU:</span>
+                                      <span className="break-all">{fp.gpu || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">Screen:</span>
+                                      <span className="break-all">{fp.screen || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">Cores:</span>
+                                      <span className="break-all">{fp.cores || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">Rects:</span>
+                                      <span className="break-all">{fp.rects || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">Math:</span>
+                                      <span className="break-all">{fp.math || "-"}</span>
+                                    </div>
+                                    <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                      <span className="w-20 font-bold shrink-0">UserAgent:</span>
+                                      <span className="break-all">{fp.userAgent || "-"}</span>
+                                    </div>
+                                    <div className="mt-2 text-indigo-500 font-bold p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded inline-block w-full break-all">
+                                      SEED: {fp.seed}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-[10px] text-gray-500 italic">Impronta non calcolata / vecchi dati.</div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

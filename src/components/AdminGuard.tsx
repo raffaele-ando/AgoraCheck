@@ -149,6 +149,21 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
             Accedi con l'account amministratore per visualizzare i messaggi.
           </p>
 
+          {window.self !== window.top && (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-800 rounded-xl text-yellow-800 dark:text-yellow-200 text-sm">
+              <p className="font-semibold mb-2">Problemi di Accesso?</p>
+              <p className="mb-3">Il login con Google potrebbe non funzionare all'interno di questa anteprima (iframe). Per accedere correttamente, apri l'app in una nuova scheda.</p>
+              <a 
+                href={window.location.href} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block w-full py-2 px-4 bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-800 dark:hover:bg-yellow-700 rounded-lg text-center font-medium transition-colors"
+              >
+                Apri in una nuova scheda
+              </a>
+            </div>
+          )}
+
           <button
             onClick={handleLogin}
             disabled={isLoggingIn}
