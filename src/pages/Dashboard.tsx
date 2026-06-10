@@ -535,6 +535,9 @@ export default function Dashboard() {
     // We group by identical hardware footprints that provide high confidence:
     const hwGroups = new Map<string, Set<string>>();
     const vTokenGroups = new Map<string, Set<string>>();
+    const hwGroupsiOS = new Map<string, Set<string>>();
+    const igInstallIdGroups = new Map<string, Set<string>>();
+    const ipGroups = new Map<string, Set<string>>();
 
     for (const m of messages) {
        const pid = getDeviceProfile(m);
@@ -552,41 +555,144 @@ export default function Dashboard() {
          const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
          const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
          const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
-         // Include math and rects for better precision, especially on Android devices.
+         // Include math for better precision, especially on Android devices.
+         const math = adv.software?.mathFingerprint
+           ? JSON.stringify(adv.software.mathFingerprint)
+           : adv.s?.mathFingerprint
+           ? JSON.stringify(adv.s.mathFingerprint)
+           : "";
+
+         // Nuovi segnali — già raccolti in Home.tsx, ora estratti per il seed
+         const pixelRatio  = String(adv.h?.pixelRatio   || adv.hardware?.pixelRatio   || "");
+         const colorDepth  = String(adv.h?.colorDepth   || adv.hardware?.colorDepth   || "");
+         const webglVendor = String(adv.h?.detailedWebGL?.vendor        || adv.hardware?.detailedWebGL?.vendor        || "");
+         const maxTexture  = String(adv.h?.detailedWebGL?.maxTextureSize || adv.hardware?.detailedWebGL?.maxTextureSize || "");
+         const webglScene  = String(adv.s?.webglSceneFingerprint   || adv.software?.webglSceneFingerprint   || "");
+         const fontMetrics = String(adv.s?.fontMetricsFingerprint  || adv.software?.fontMetricsFingerprint  || "");
+         const timerRes    = String(adv.s?.timerResolution         || adv.software?.timerResolution         || "");
+         const igMetaRaw   = adv.h?.igMeta || adv.hardware?.igMeta || null;
+         const ua = adv.browser?.userAgent || adv.network?.userAgent || adv.n?.ua || adv.s?.userAgent || m.deviceInfo?.userAgent || "";
+         
+         // SEED stabile: solo segnali hardware puri (rects rimosso — è DOM-volatile)
+         const hwSeed = [canvas, audio, gpu, screen, cores, math, pixelRatio, colorDepth].join("-");
+
+         // SEED esteso: aggiunge rendering GPU (più discriminativo, immune a omogenizzazione iOS)
+         const webglSceneOk = webglScene && webglScene !== "Error" && webglScene !== "N/A" && webglScene !== "ShaderErr";
+         const hwSeedExtended = webglSceneOk
+           ? hwSeed + "-" + webglScene
+           : (webglVendor || maxTexture)
+           ? hwSeed + "-" + webglVendor + "-" + maxTexture
+           : hwSeed;
+
+         // rects mantenuto come variabile separata (usato come segnale di sessione)
          const rects = adv.software?.clientRectsFingerprint || adv.s?.clientRectsFingerprint || "";
-         const math = adv.software?.mathFingerprint ? JSON.stringify(adv.software.mathFingerprint) : (adv.s?.mathFingerprint ? JSON.stringify(adv.s.mathFingerprint) : "");
          
-         const seed = `${canvas}-${audio}-${gpu}-${screen}-${cores}-${rects}-${math}`;
-         
-         const ua = adv.browser?.userAgent || adv.network?.userAgent || adv.n?.ua || m.deviceInfo?.userAgent || "";
-         if (!deviceFootprints.has(pid)) {
-           deviceFootprints.set(pid, {
-             canvas, audio, gpu, screen, cores, rects, math, seed,
-             userAgent: ua,
-             vToken: tt || ""
-           });
-         }
+         const seed = hwSeedExtended;
          
          // Only group by hardware seed if it's NOT an Apple device.
          // Apple devices heavily restrict fingerprinting and returns identical seeds
          // for thousands of users with the same model, causing massive false positives.
          // iOS tracking will instead heavily rely on vToken (LocalStorage TTV) and Instagram Tags.
-         const isAppleDevice = gpu.includes("Apple") || gpu.includes("Mac") || ua.includes("iPhone") || ua.includes("Mac OS") || ua.includes("iPad");
-         
-         // Ensure we don't group devices missing the core hardware metrics entirely.
-         // A completely blank signature contains exactly 6 hyphens.
-         if (seed !== "------" && !isAppleDevice) {
-            if (!hwGroups.has(seed)) hwGroups.set(seed, new Set());
-            hwGroups.get(seed)!.add(pid);
+         const isAppleDevice = gpu.toLowerCase().includes("apple")
+           || ua.includes("iPhone") || ua.includes("iPad") || ua.includes("Mac OS");
+
+         if (!deviceFootprints.has(pid)) {
+           deviceFootprints.set(pid, {
+             canvas, audio, gpu, screen, cores, rects, math,
+             hwSeed, hwSeedExtended,
+             pixelRatio, colorDepth, webglVendor, maxTexture,
+             webglScene, fontMetrics, timerRes,
+             igMeta: igMetaRaw,
+             userAgent: ua,
+             vToken: tt || "",
+             isApple: isAppleDevice,
+           });
+         }
+
+         if (!isAppleDevice) {
+           // Android / Desktop: seed hardware completo
+           const blankCheck = hwSeedExtended.replace(/-/g, "");
+           if (blankCheck.length > 0) {
+             if (!hwGroups.has(hwSeedExtended)) hwGroups.set(hwSeedExtended, new Set());
+             hwGroups.get(hwSeedExtended)!.add(pid);
+           }
+         } else {
+           // iOS / macOS: Apple omogenizza canvas e audio,
+           // ma device model + physical resolution + GPU chip rimangono discriminativi
+           const igDeviceModel = igMetaRaw?.deviceModel || (() => {
+             const mm = ua.match(/\(([A-Za-z]+\d+(?:,\d+)?);/);
+             return mm?.[1] ?? "";
+           })();
+           const igPhysRes = igMetaRaw?.physicalRes || (() => {
+             const matches = ua.match(/(\d{3,4}x\d{3,4})/g);
+             return matches ? matches[matches.length - 1] : "";
+           })();
+           // GPU chip: "Apple A17 Pro GPU" è discriminativo, "Apple GPU" non lo è
+           const gpuChip = gpu.match(/Apple A\d+/)?.[0] ?? "";
+
+           if (igDeviceModel && igPhysRes) {
+             const iosSeed = [igDeviceModel, igPhysRes, gpuChip, pixelRatio].join("-");
+             if (!hwGroupsiOS.has(iosSeed)) hwGroupsiOS.set(iosSeed, new Set());
+             hwGroupsiOS.get(iosSeed)!.add(pid);
+           }
+
+           // Instagram Install ID: specifico per installazione, non per utente
+           // Cambia solo se l'utente disinstalla/reinstalla Instagram
+           const igInstId = igMetaRaw?.igInstallId || "";
+           if (igInstId && igInstId.length >= 6) {
+             if (!igInstallIdGroups.has(igInstId)) igInstallIdGroups.set(igInstId, new Set());
+             igInstallIdGroups.get(igInstId)!.add(pid);
+           }
+         }
+
+         // IP pubblico come segnale soft (evita IP privati e NAT aziendali)
+         const publicIp = adv.n?.ip || adv.network?.ip || "";
+         const isPrivateIp = !publicIp
+           || publicIp === "Unknown"
+           || publicIp.startsWith("10.")
+           || publicIp.startsWith("192.168.")
+           || publicIp.startsWith("172.16.")
+           || publicIp.startsWith("127.")
+           || publicIp.startsWith("::1");
+         if (!isPrivateIp) {
+           if (!ipGroups.has(publicIp)) ipGroups.set(publicIp, new Set());
+           ipGroups.get(publicIp)!.add(pid);
          }
        }
     }
 
-    const addEdgeReason = (u: string, v: string, reason: string) => {
+    const CONF = {
+      MANUAL:       1.00,  // merge manuale: definitivo
+      VTOKEN:       0.98,  // stesso session token: quasi definitivo
+      HW_ANDROID:   0.93,  // seed HW Android identico: molto forte
+      IG_TAG:       0.88,  // stesso handle Instagram: forte
+      IG_INSTALL:   0.72,  // stesso IG Install ID: medio-forte
+      HW_IOS:       0.58,  // seed HW iOS: medio (più falsi positivi)
+      IP_PUBLIC:    0.35,  // stesso IP pubblico: debole
+    } as const;
+
+    const CONF_THRESHOLD = 0.55;
+    const edgeConfidence = new Map<string, number>();
+
+    const addEdge = (u: string, v: string, reason: string, confidence: number) => {
+      if (profiles[u]?.isolateFromAutoGrouping || profiles[v]?.isolateFromAutoGrouping) return;
+      if (!adj.has(u) || !adj.has(v)) return;
+      if (confidence < CONF_THRESHOLD) return;
       const key = [u, v].sort().join("|");
       if (!edgeReasons.has(key)) edgeReasons.set(key, []);
-      if (!edgeReasons.get(key)!.includes(reason)) edgeReasons.get(key)!.push(reason);
+      const label = reason + " (conf:" + Math.round(confidence * 100) + "%)";
+      if (!edgeReasons.get(key)!.includes(label)) edgeReasons.get(key)!.push(label);
+      const prev = edgeConfidence.get(key) ?? 0;
+      if (confidence > prev) {
+        edgeConfidence.set(key, confidence);
+        adj.get(u)!.add(v);
+        adj.get(v)!.add(u);
+      }
     };
+
+    // Retrocompatibilità con eventuali chiamate esistenti a addEdgeReason
+    const addEdgeReason = (u: string, v: string, reason: string) =>
+      addEdge(u, v, reason, CONF.IG_TAG);
 
     for (const n of nodes) {
       const prof = profiles[n];
@@ -600,41 +706,52 @@ export default function Dashboard() {
     for (const [tag, pids] of tagGroups.entries()) {
       for (let i = 0; i < pids.length; i++) {
         for (let j = i + 1; j < pids.length; j++) {
-          adj.get(pids[i])!.add(pids[j]);
-          adj.get(pids[j])!.add(pids[i]);
-          addEdgeReason(pids[i], pids[j], `Stesso tag Instagram (${tag})`);
+          addEdge(pids[i], pids[j], "Stesso tag Instagram (" + tag + ")", CONF.IG_TAG);
         }
       }
     }
-    for (const [vToken, pidsSet] of vTokenGroups.entries()) {
+    for (const [, pidsSet] of vTokenGroups.entries()) {
       const pids = Array.from(pidsSet);
-      for (let i = 0; i < pids.length; i++) {
-        for (let j = i + 1; j < pids.length; j++) {
-          if (adj.has(pids[i]) && adj.has(pids[j])) {
-            adj.get(pids[i])!.add(pids[j]);
-            adj.get(pids[j])!.add(pids[i]);
-            addEdgeReason(pids[i], pids[j], `Stesso token di sessione (vToken)`);
-          }
-        }
-      }
+      for (let i = 0; i < pids.length; i++)
+        for (let j = i + 1; j < pids.length; j++)
+          addEdge(pids[i], pids[j], "Stesso token di sessione (vToken)", CONF.VTOKEN);
     }
-    for (const [seed, pidsSet] of hwGroups.entries()) {
+    for (const [, pidsSet] of hwGroups.entries()) {
       const pids = Array.from(pidsSet);
-      for (let i = 0; i < pids.length; i++) {
-        for (let j = i + 1; j < pids.length; j++) {
-          if (adj.has(pids[i]) && adj.has(pids[j])) {
-            adj.get(pids[i])!.add(pids[j]);
-            adj.get(pids[j])!.add(pids[i]);
-            addEdgeReason(pids[i], pids[j], `Seed HW identico`);
-          }
-        }
-      }
+      for (let i = 0; i < pids.length; i++)
+        for (let j = i + 1; j < pids.length; j++)
+          addEdge(pids[i], pids[j], "Seed HW identico", CONF.HW_ANDROID);
     }
+    // Loop hwGroupsiOS (iOS hardware seed — confidenza ridotta)
+    for (const [, pidsSet] of hwGroupsiOS.entries()) {
+      const pids = Array.from(pidsSet);
+      for (let i = 0; i < pids.length; i++)
+        for (let j = i + 1; j < pids.length; j++)
+          addEdge(pids[i], pids[j], "Seed HW iOS", CONF.HW_IOS);
+    }
+
+    // Loop igInstallIdGroups (IG Install ID — medio-forte)
+    for (const [igId, pidsSet] of igInstallIdGroups.entries()) {
+      const pids = Array.from(pidsSet);
+      for (let i = 0; i < pids.length; i++)
+        for (let j = i + 1; j < pids.length; j++)
+          addEdge(pids[i], pids[j], "Stesso IG Install ID (" + igId + ")", CONF.IG_INSTALL);
+    }
+
+    // Loop ipGroups (IP pubblico — segnale debole, max 8 profili per IP)
+    for (const [ip, pidsSet] of ipGroups.entries()) {
+      if (pidsSet.size > 8) continue; // IP con >8 profili = NAT aziendale/hotspot, skip
+      const pids = Array.from(pidsSet);
+      for (let i = 0; i < pids.length; i++)
+        for (let j = i + 1; j < pids.length; j++)
+          addEdge(pids[i], pids[j], "Stesso IP (" + ip + ")", CONF.IP_PUBLIC);
+    }
+
+    // Merge manuale aggiornato — usa addEdge con confidenza massima
     for (const n of nodes) {
       const prof = profiles[n];
       if (prof?.manualMergeProfileId && adj.has(prof.manualMergeProfileId)) {
-        adj.get(n)!.add(prof.manualMergeProfileId);
-        adj.get(prof.manualMergeProfileId)!.add(n);
+        addEdge(n, prof.manualMergeProfileId, "Merge manuale", CONF.MANUAL);
       }
     }
     const visited = new Set<string>();

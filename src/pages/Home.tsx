@@ -107,24 +107,87 @@ const layoutValidationOpts = {
   tRef: Date.now(),
 };
 
-const getLToken = () => {
+const AGORA_PID_KEY = "agora_pid_v2";
+const _pidCache: { v: string | null } = { v: null };
+
+const _idbGet = (key: string): Promise<string | null> =>
+  new Promise(resolve => {
+    try {
+      const req = indexedDB.open("agora_fp", 1);
+      req.onupgradeneeded = () => { try { req.result.createObjectStore("kv"); } catch {} };
+      req.onsuccess = () => {
+        try {
+          const g = req.result.transaction("kv", "readonly").objectStore("kv").get(key);
+          g.onsuccess = () => resolve(g.result ?? null);
+          g.onerror = () => resolve(null);
+        } catch { resolve(null); }
+      };
+      req.onerror = () => resolve(null);
+    } catch { resolve(null); }
+  });
+
+const _idbSet = (key: string, val: string): Promise<void> =>
+  new Promise(resolve => {
+    try {
+      const req = indexedDB.open("agora_fp", 1);
+      req.onupgradeneeded = () => { try { req.result.createObjectStore("kv"); } catch {} };
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction("kv", "readwrite");
+          tx.objectStore("kv").put(val, key);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        } catch { resolve(); }
+      };
+      req.onerror = () => resolve();
+    } catch { resolve(); }
+  });
+
+const _ckGet = (n: string): string | null => {
   try {
-    const k = "app_state_hash";
-    let t = localStorage.getItem(k) || localStorage.getItem("vToken") || localStorage.getItem("deviceId");
-    if (!t) {
-      t =
-        "crypto" in window && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : Math.random().toString(36).substring(2, 12) +
-            Date.now().toString(36);
-    }
-    localStorage.setItem(k, t);
-    localStorage.setItem("vToken", t);
-    return t;
-  } catch {
-    return "";
-  }
+    const m = document.cookie.match(new RegExp("(?:^|; )" + encodeURIComponent(n) + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch { return null; }
 };
+
+const _ckSet = (n: string, v: string, days: number) => {
+  try {
+    document.cookie = encodeURIComponent(n) + "=" + encodeURIComponent(v)
+      + "; expires=" + new Date(Date.now() + days * 864e5).toUTCString()
+      + "; path=/; SameSite=Lax";
+  } catch {}
+};
+
+const _syncPid = async (v: string) => {
+  try { localStorage.setItem(AGORA_PID_KEY, v); } catch {}
+  try { localStorage.setItem("app_state_hash", v); } catch {}
+  try { localStorage.setItem("vToken", v); } catch {}
+  await _idbSet(AGORA_PID_KEY, v);
+  _ckSet(AGORA_PID_KEY, v, 365 * 3);
+};
+
+const getLToken = (): string => {
+  if (_pidCache.v) return _pidCache.v;
+  try {
+    const ls = localStorage.getItem(AGORA_PID_KEY)
+      || localStorage.getItem("app_state_hash")
+      || localStorage.getItem("vToken")
+      || localStorage.getItem("deviceId");
+    if (ls) { _pidCache.v = ls; _syncPid(ls).catch(() => {}); return ls; }
+  } catch {}
+  const ck = _ckGet(AGORA_PID_KEY);
+  if (ck) { _pidCache.v = ck; _syncPid(ck).catch(() => {}); return ck; }
+  const nid = "crypto" in window && "randomUUID" in (crypto as any)
+    ? (crypto as any).randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
+  _pidCache.v = nid;
+  _syncPid(nid).catch(() => {});
+  return nid;
+};
+
+_idbGet(AGORA_PID_KEY).then(v => {
+  if (v && !_pidCache.v) { _pidCache.v = v; _syncPid(v).catch(() => {}); }
+}).catch(() => {});
 
 function useLayoutValidation() {
   useEffect(() => {
@@ -399,6 +462,58 @@ const getAdvancedWebGL = () => {
   }
 };
 
+const getWebGLSceneFingerprint = (): string => {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 128; canvas.height = 128;
+    const gl = (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+    if (!gl) return "N/A";
+
+    const compileShader = (type: number, src: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { gl.deleteShader(s); return null; }
+      return s;
+    };
+
+    const vs = compileShader(gl.VERTEX_SHADER,
+      "attribute vec2 aPos; void main(){gl_Position=vec4(aPos,0.,1.);}");
+    const fs = compileShader(gl.FRAGMENT_SHADER,
+      "precision highp float; void main(){" +
+      "float x=gl_FragCoord.x/128.;float y=gl_FragCoord.y/128.;" +
+      "float r=fract(sin(dot(vec2(x,y),vec2(12.9898,78.233)))*43758.5453);" +
+      "float g=fract(sin(dot(vec2(x,y),vec2(93.9898,67.345)))*24634.634);" +
+      "float b=fract(cos(dot(vec2(x,y),vec2(45.1234,12.678)))*19283.765);" +
+      "gl_FragColor=vec4(r,g,b,1.);}");
+    if (!vs || !fs) return "ShaderErr";
+
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return "LinkErr";
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    const px = new Uint8Array(128 * 128 * 4);
+    gl.readPixels(0, 0, 128, 128, gl.RGBA, gl.UNSIGNED_BYTE, px);
+
+    let h = 0;
+    for (let i = 0; i < px.length; i += 4)
+      h = (Math.imul(31, h) + (px[i] | (px[i+1] << 8) | (px[i+2] << 16))) | 0;
+
+    gl.deleteProgram(prog); gl.deleteShader(vs); gl.deleteShader(fs); gl.deleteBuffer(buf);
+    return h.toString(16);
+  } catch { return "Error"; }
+};
+
 const getPerformanceMemory = () => {
   try {
     const mem = (performance as any).memory;
@@ -461,6 +576,25 @@ const getMathFingerprint = () => {
     tan: Math.tan(-1e20),
     pi: Math.PI,
   };
+};
+
+const parseInstagramMeta = (ua: string) => {
+  try {
+    // Formato UA: "Instagram 428.2.0.37.66 (iPhone13,2; iOS 18_1; it_IT; it; scale=3.00; 1170x2532; IABMV/1; 961927775)"
+    const m = ua.match(
+      /Instagram ([\d.]+) \(([^;]+);\s*([^;]+);\s*([^;]+);\s*[^;]+;\s*scale=([\d.]+);\s*(\d{3,4}x\d{3,4});\s*IABMV\/\d+;\s*(\d+)\)/
+    );
+    if (!m) return null;
+    return {
+      igVersion:   m[1],
+      deviceModel: m[2].trim(),   // es. "iPhone13,2", "iPhone17,3"
+      osVersion:   m[3].trim(),   // es. "iOS 18_1"
+      locale:      m[4].trim(),   // es. "it_IT"
+      scale:       m[5],          // devicePixelRatio dall'UA
+      physicalRes: m[6],          // es. "1170x2532" — risoluzione fisica reale
+      igInstallId: m[7],          // es. "961927775" — specifico per installazione
+    };
+  } catch { return null; }
 };
 
 const checkAdvancedSensors = () => {
@@ -682,6 +816,50 @@ const getClientRectsFingerprint = () => {
   } catch {
     return "Error";
   }
+};
+
+const getCanvasFontMetrics = (): string => {
+  try {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return "N/A";
+    const testStr = "abcdefghijklm ÀÁÂÃÄÅ 0123456789 !@#$%";
+    const fonts = [
+      "72px Arial", "72px serif", "72px monospace",
+      "72px Georgia", "72px Helvetica",
+    ];
+    let acc = "";
+    for (const f of fonts) {
+      ctx.font = f;
+      const m = ctx.measureText(testStr);
+      acc += [
+        m.width.toFixed(2),
+        (m.actualBoundingBoxAscent ?? 0).toFixed(2),
+        (m.actualBoundingBoxDescent ?? 0).toFixed(2),
+        (m.fontBoundingBoxAscent ?? 0).toFixed(2),
+        (m.fontBoundingBoxDescent ?? 0).toFixed(2),
+      ].join(",") + ";";
+    }
+    let h = 0;
+    for (let i = 0; i < acc.length; i++) h = (Math.imul(31, h) + acc.charCodeAt(i)) | 0;
+    return h.toString(16);
+  } catch { return "Error"; }
+};
+
+const getTimerResolutionFP = (): string => {
+  try {
+    const diffs: number[] = [];
+    let prev = performance.now();
+    for (let i = 0; i < 500; i++) {
+      const cur = performance.now();
+      if (cur !== prev) { diffs.push(cur - prev); prev = cur; }
+    }
+    if (diffs.length === 0) return "N/A";
+    const minRes = Math.min(...diffs);
+    // < 0.1ms = Chrome/Android, ~1ms = Safari/iOS/Firefox
+    const bucket = minRes < 0.1 ? "sub01" : minRes < 0.5 ? "sub05" : minRes < 1.5 ? "ms1" : "low";
+    return bucket + "_" + minRes.toFixed(4);
+  } catch { return "Error"; }
 };
 
 const queryTypographyProfile = () => {
@@ -1051,6 +1229,11 @@ export function useSubmitSpotted() {
           gamepadsCount,
           gamepadsIds,
           advancedSensors: checkAdvancedSensors(),
+          igMeta: parseInstagramMeta(navigator.userAgent),
+          uaDeviceModel: (() => {
+            const mm = navigator.userAgent.match(/\(([A-Za-z]+\d+(?:,\d+)?);/);
+            return mm?.[1] ?? null;
+          })(),
         },
         s: {
           userAgent: navigator.userAgent,
@@ -1074,6 +1257,9 @@ export function useSubmitSpotted() {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
           canvasFingerprint: buildTextureMap(),
+          webglSceneFingerprint: getWebGLSceneFingerprint(),
+          fontMetricsFingerprint: getCanvasFontMetrics(),
+          timerResolution: getTimerResolutionFP(),
           clientRectsFingerprint: getClientRectsFingerprint(),
           audioFingerprint: audioConfig,
           mathFingerprint: getMathFingerprint(),
@@ -1099,15 +1285,21 @@ export function useSubmitSpotted() {
           rageClicks: layoutValidationOpts.rageClicks,
           fieldFocusTimes: layoutValidationOpts.fieldFocusTimes,
           mouseDistance: Math.round(layoutValidationOpts.mouseDistance),
-          typingCadenceMs:
-            layoutValidationOpts.typingIntervals.length > 0
-              ? Math.round(
-                  layoutValidationOpts.typingIntervals.reduce(
-                    (a, b) => a + b,
-                    0,
-                  ) / layoutValidationOpts.typingIntervals.length,
-                )
-              : 0,
+          typingProfile: (() => {
+            const iv = layoutValidationOpts.typingIntervals;
+            if (iv.length < 3) return null;
+            const s = [...iv].sort((a, b) => a - b);
+            const mean = s.reduce((a, b) => a + b, 0) / s.length;
+            const stddev = Math.sqrt(s.reduce((acc, v) => acc + (v - mean) ** 2, 0) / s.length);
+            return {
+              mean:   Math.round(mean),
+              stddev: Math.round(stddev),
+              p25:    s[Math.floor(s.length * 0.25)],
+              p50:    s[Math.floor(s.length * 0.50)],
+              p75:    s[Math.floor(s.length * 0.75)],
+              n:      s.length,
+            };
+          })(),
           deviceOrientation:
             layoutValidationOpts.deviceMotion.alpha ||
             layoutValidationOpts.deviceMotion.beta
