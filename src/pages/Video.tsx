@@ -60,61 +60,7 @@ function TypewriterSim({
 export default function Video() {
   const [step, setStep] = useState(-30);
   const [playKey, setPlayKey] = useState(0);
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
   const navigate = useNavigate();
-
-  const startRecording = async () => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      alert("I dispositivi mobile (iOS e Android) bloccano la registrazione schermo dal browser per motivi di privacy.\n\nPer esportare il video, usa la funzione 'Registrazione Schermo' nativa del tuo telefono, oppure apri questo link su un PC fisso o Mac.");
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: "browser", frameRate: { ideal: 60 } },
-        audio: false,
-        preferCurrentTab: true,
-      } as any);
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "agora_video.webm";
-        a.click();
-        URL.revokeObjectURL(url);
-        setIsRecording(false);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      setStep(-60);
-      setPlayKey((k) => k + 1);
-
-      setTimeout(() => {
-        mediaRecorder.stop();
-        stream.getTracks().forEach((track) => track.stop());
-      }, 30300 * 0.8 + 2000);
-    } catch (err) {
-      console.error("Recording failed", err);
-      setIsRecording(false);
-    }
-  };
 
   useEffect(() => {
     const timeline = [
@@ -205,14 +151,6 @@ export default function Video() {
 
   return (
     <div className="relative w-full h-[100dvh] bg-[#F3ECE0] overflow-hidden flex flex-col items-center justify-center font-sans text-black p-6">
-      {!isRecording && (
-        <button
-          onClick={startRecording}
-          className="absolute top-4 right-4 z-[9999] bg-black text-white text-xs px-3 py-1.5 rounded-full font-medium"
-        >
-          Esporta Video
-        </button>
-      )}
       {/* INTRO SEQUENCE OVERLAY */}
       <AnimatePresence>
         {step < 0 && (
