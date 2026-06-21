@@ -150,7 +150,11 @@ export default function Video() {
   })();
 
   return (
-    <div className="relative w-full h-[100dvh] bg-[#F3ECE0] overflow-hidden flex flex-col items-center justify-center font-sans text-black p-6">
+    <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
+      <div 
+        className="relative bg-[#F3ECE0] overflow-hidden flex flex-col items-center justify-center font-sans text-black p-6 shadow-2xl"
+        style={{ aspectRatio: '9/16', width: '100%', maxHeight: '100dvh', maxWidth: 'calc(100dvh * 9 / 16)' }}
+      >
       {/* INTRO SEQUENCE OVERLAY */}
       <AnimatePresence>
         {step < 0 && (
@@ -933,6 +937,7 @@ export default function Video() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
     </div>
   );
 }
