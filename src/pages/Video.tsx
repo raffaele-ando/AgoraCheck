@@ -66,8 +66,10 @@ export default function Video() {
   const navigate = useNavigate();
 
   const startRecording = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      alert("La registrazione dello schermo non è supportata qui. Apri l'app in una nuova scheda o usa un browser desktop compatibile.");
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      alert("I dispositivi mobile (iOS e Android) bloccano la registrazione schermo dal browser per motivi di privacy.\n\nPer esportare il video, usa la funzione 'Registrazione Schermo' nativa del tuo telefono, oppure apri questo link su un PC fisso o Mac.");
       return;
     }
 
@@ -107,7 +109,7 @@ export default function Video() {
       setTimeout(() => {
         mediaRecorder.stop();
         stream.getTracks().forEach((track) => track.stop());
-      }, 30100 * 0.8 + 2000);
+      }, 30300 * 0.8 + 2000);
     } catch (err) {
       console.error("Recording failed", err);
       setIsRecording(false);
@@ -131,18 +133,18 @@ export default function Video() {
       { t: 8200, val: 7.5 }, // Hover on Polimi
       { t: 9000, val: 8 }, // Select Polimi
       { t: 10000, val: 9 }, // Expand WhatsApp (Entra nel gruppo WhatsApp locale.)
-      { t: 11600, val: 10 }, // Show Bento Form (Spotted) (Indica il luogo esatto.)
-      { t: 13100, val: 11 }, // Typewriter Dove
-      { t: 14800, val: 12 }, // Typewriter Quando (Indica quando è successo.)
-      { t: 16400, val: 13 }, // Typewriter Chi (Descrivi chi cerchi.)
-      { t: 18400, val: 13.5 }, // Mount IG Input + Change Text
-      { t: 19100, val: 14 }, // Type username (Lascia il tuo Instagram per i DM.)
-      { t: 20600, val: 15 }, // Submit (Richiesta inviata al canale.)
-      { t: 23100, val: 16 }, // Swap Mode to Sondaggio -> Show Sondaggio Form (Passa ai sondaggi anonimi.)
-      { t: 24600, val: 17 }, // Sondaggio typewriter (Scopri l'opinione degli studenti.)
-      { t: 26600, val: 18 }, // Add 3rd option
-      { t: 28100, val: 19 }, // Show 4th option button
-      { t: 30100, val: 20 }, // CTA
+      { t: 11800, val: 10 }, // Show Bento Form (Spotted) (Indica il luogo esatto.)
+      { t: 13300, val: 11 }, // Typewriter Dove
+      { t: 15000, val: 12 }, // Typewriter Quando (Indica quando è successo.)
+      { t: 16600, val: 13 }, // Typewriter Chi (Descrivi chi cerchi.)
+      { t: 18600, val: 13.5 }, // Mount IG Input + Change Text
+      { t: 19300, val: 14 }, // Type username (Lascia il tuo Instagram per i DM.)
+      { t: 20800, val: 15 }, // Submit (Richiesta inviata al canale.)
+      { t: 23300, val: 16 }, // Swap Mode to Sondaggio -> Show Sondaggio Form (Passa ai sondaggi anonimi.)
+      { t: 24800, val: 17 }, // Sondaggio typewriter (Scopri l'opinione degli studenti.)
+      { t: 26800, val: 18 }, // Add 3rd option
+      { t: 28300, val: 19 }, // Show 4th option button
+      { t: 30300, val: 20 }, // CTA
     ];
 
     const timers = timeline.map(({ t, val }) =>
@@ -233,7 +235,7 @@ export default function Video() {
             <div className="flex flex-col items-center justify-center gap-1 font-[Anton] text-6xl md:text-8xl text-black uppercase tracking-normal leading-[0.95] z-10 pt-4">
               <AnimatePresence>
                 {step >= -60 && step < 0 && (
-                  <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="mb-4">
+                  <motion.div key="intro-logo" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="mb-4">
                     <img
                       src="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/refs/heads/main/logo%205.png"
                       alt="Agorà Logo"
@@ -242,12 +244,12 @@ export default function Video() {
                   </motion.div>
                 )}
                 {step >= -40 && step < 0 && (
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="drop-shadow-sm">
+                  <motion.div key="intro-nuovo" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="drop-shadow-sm">
                     NUOVO
                   </motion.div>
                 )}
                 {step >= -20 && step < 0 && (
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="drop-shadow-sm">
+                  <motion.div key="intro-sito" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="drop-shadow-sm">
                     SITO
                   </motion.div>
                 )}
@@ -294,7 +296,7 @@ export default function Video() {
                 className="text-center w-full flex flex-col items-center justify-center"
               >
                 <h2 className="font-extrabold text-[#DC5F00] tracking-tight leading-[1.1] text-3xl md:text-[2.5rem] lg:text-5xl drop-shadow-sm relative flex items-center justify-center text-center">
-                  <TypewriterSim word={getText(step)} active={true} className="text-[#DC5F00] text-center" />
+                  <TypewriterSim word={getText(step)} active={true} className="text-[#DC5F00] text-center" baseDelay={step === 9 ? 15 : 5} randomDelay={step === 9 ? 15 : 10} />
                   <span className="absolute -inset-1 bg-[#111111]/5 blur-xl -z-10 rounded-full" />
                 </h2>
               </motion.div>
@@ -395,6 +397,7 @@ export default function Video() {
                     <AnimatePresence>
                       {step >= 5 && step < 6 && (
                         <motion.div
+                          key="dropdown-city"
                           initial={{ opacity: 0, y: -10, scale: 0.95 }}
                           animate={{ opacity: 1, y: 8, scale: 1 }}
                           exit={{
@@ -448,6 +451,7 @@ export default function Video() {
                         <AnimatePresence>
                           {step >= 7 && step < 8 && (
                             <motion.div
+                              key="dropdown-ateneo"
                               initial={{ opacity: 0, y: -10, scale: 0.95 }}
                               animate={{ opacity: 1, y: 8, scale: 1 }}
                               exit={{
@@ -555,6 +559,7 @@ export default function Video() {
                 {step < 13.5 && (
                   <motion.div
                     layout
+                    key="spotted-content"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -958,13 +963,23 @@ export default function Video() {
             initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
             animate={{ opacity: 1, backdropFilter: "blur(20px)" }}
             transition={{ duration: 1.5 }}
-            className="absolute inset-0 z-50 bg-[#F3ECE0]/90 flex flex-col items-center justify-center p-8"
+            className="absolute inset-0 z-50 bg-[#F3ECE0]/90 flex flex-col items-center justify-center p-8 overflow-hidden"
           >
+            {/* Background ambient grid */}
+            <div
+              className="absolute inset-0 z-0 pointer-events-none opacity-[0.04]"
+              style={{
+                backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+                backgroundSize: "40px 40px",
+                backgroundPosition: "center center",
+              }}
+            />
+
             <motion.div 
               initial={{ opacity: 0, scale: 0.8 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 1, ease: easeOutExpo, delay: 0.2 }} 
-              className="mb-8"
+              className="mb-8 relative z-10"
             >
               <img src="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/refs/heads/main/logo%205.png" alt="Agorà Logo" className="h-24 md:h-32 object-contain drop-shadow-md" />
             </motion.div>
@@ -973,7 +988,7 @@ export default function Video() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="text-[#111] font-bold tracking-[0.2em] text-lg md:text-xl text-center"
+              className="text-[#111] font-bold tracking-[0.2em] text-lg md:text-xl text-center relative z-10"
             >
               agora.theproject.world
             </motion.p>
