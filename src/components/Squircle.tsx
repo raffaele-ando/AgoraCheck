@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, HTMLAttributes, FocusEvent } from '
 import { getSvgPath } from 'figma-squircle';
 
 interface SquircleProps extends HTMLAttributes<HTMLDivElement> {
-  cornerRadius?: number | 'full' | string;
+  cornerRadius?: number | 'full';
   cornerSmoothing?: number;
   as?: any;
   [key: string]: any;
@@ -23,6 +23,7 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
   const [svgParams, setSvgParams] = useState({ path: '', mask: '', w: 0, h: 0 });
   const [isFocused, setIsFocused] = useState(false);
 
+  // Merge refs
   const ref = (node: any) => {
     innerRef.current = node;
     if (typeof forwardedRef === 'function') {
@@ -41,11 +42,7 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
       const height = el.offsetHeight;
       if (width === 0 || height === 0) return;
       
-      const parsedRadius = cornerRadius === 'full' 
-        ? Math.min(width, height) / 2 
-        : (typeof cornerRadius === 'string' ? parseFloat(cornerRadius) : Number(cornerRadius));
-        
-      const radius = isNaN(parsedRadius) ? 0 : parsedRadius;
+      const radius = cornerRadius === 'full' ? Math.min(width, height) / 2 : Number(cornerRadius);
       const computedPath = getSvgPath({ width, height, cornerRadius: radius, cornerSmoothing });
       
       const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><path d="${computedPath}" fill="black" /></svg>`;
@@ -85,7 +82,7 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
   };
 
   const isReady = svgParams.w > 0;
-  
+
   return (
     <Component 
       ref={ref} 
@@ -99,10 +96,10 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
         maskImage: isReady ? svgParams.mask : undefined,
         WebkitMaskPosition: "center",
         WebkitMaskRepeat: "no-repeat",
-        WebkitMaskSize: "100% 100%",
+        WebkitMaskSize: "contain",
         maskPosition: "center",
         maskRepeat: "no-repeat",
-        maskSize: "100% 100%",
+        maskSize: "contain",
         transform: 'translateZ(0)',
         isolation: 'isolate'
       }} 

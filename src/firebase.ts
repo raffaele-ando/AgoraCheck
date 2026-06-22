@@ -3,14 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 
-// Carica opzionalmente il config locale se presente (es. in AI Studio) senza bloccare la build
-const configModules = import.meta.glob("../firebase-applet-config.json", {
-  eager: true,
-});
-const localConfig: any = Object.values(configModules)[0]
-  ? (Object.values(configModules)[0] as any).default ||
-    Object.values(configModules)[0]
-  : {};
+// Mock localConfig for now to avoid Vite glob errors in Remotion
+const localConfig: any = {};
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig.apiKey,
@@ -28,9 +22,21 @@ const firebaseConfig = {
     localConfig.firestoreDatabaseId,
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}),
-}, firebaseConfig.firestoreDatabaseId);
+let app: any;
+let auth: any;
+let db: any;
+
+try {
+  if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}),
+    });
+  }
+} catch (e) {
+  console.warn("Firebase initialization failed:", e);
+}
+
+export { auth, db };
 export const googleProvider = new GoogleAuthProvider();

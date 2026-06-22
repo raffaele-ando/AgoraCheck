@@ -14,7 +14,7 @@ import { Logo } from "../components/Logo";
 import confetti from "canvas-confetti";
 
 const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const smoothSpring = { type: "spring", bounce: 0.15, duration: 0.5 };
+const smoothSpring = { type: "spring" as const, bounce: 0.15, duration: 0.5 };
 
 function TypewriterSim({
   word,
@@ -150,7 +150,7 @@ export default function Video() {
   })();
 
   return (
-    <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
+    <div className="absolute inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
       <div 
         className="relative bg-[#F3ECE0] overflow-hidden flex flex-col items-center justify-center font-sans text-black p-6 shadow-2xl"
         style={{ aspectRatio: '9/16', width: '100%', maxHeight: '100dvh', maxWidth: 'calc(100dvh * 9 / 16)' }}

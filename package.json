@@ -8,9 +8,12 @@
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "build:video": "remotion render src/remotion/index.tsx Video out.mp4"
   },
   "dependencies": {
+    "@remotion/cli": "^4.0.481",
+    "@remotion/player": "^4.0.481",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "canvas-confetti": "^1.9.4",
@@ -29,6 +32,7 @@
     "react-router-dom": "^7.14.0",
     "react-textarea-autosize": "^8.5.9",
     "recharts": "^3.8.1",
+    "remotion": "^4.0.481",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

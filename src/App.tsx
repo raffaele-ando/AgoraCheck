@@ -14,6 +14,7 @@ import { db } from "./firebase";
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
 const DashboardBeta = lazy(() => import("./dashboard-beta/DashboardBeta"));
 const VideoPresentation = lazy(() => import("./pages/Video"));
+const Video2 = lazy(() => import("./pages/Video2"));
 
 function DynamicBrand() {
   useEffect(() => {
@@ -49,6 +50,11 @@ export default function App() {
           <Route path="/video" element={
             <Suspense fallback={<div className="min-h-screen bg-black" />}>
               <VideoPresentation />
+            </Suspense>
+          } />
+          <Route path="/video2" element={
+            <Suspense fallback={<div className="min-h-screen bg-black" />}>
+              <Video2 />
             </Suspense>
           } />
           <Route path="/DashboardBeta" element={

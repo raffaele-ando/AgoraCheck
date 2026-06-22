@@ -1,6 +1,8 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import { exec } from "child_process";
+import fs from "fs";
 
 async function startServer() {
   const app = express();
@@ -64,6 +66,35 @@ async function startServer() {
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Errore del server durante il caricamento." });
+    }
+  });
+
+  app.get("/api/export-video", async (req, res) => {
+    try {
+      const outPath = path.join(process.cwd(), "agora-video.mp4");
+      
+      console.log("Inizio render video Remotion...");
+      // Render using the CLI directly so Chrome Headless can be utilized automatically
+      const child = exec(`npx remotion render src/remotion/index.tsx Video ${outPath}`);
+      
+      child.stdout?.on('data', data => console.log(data));
+      child.stderr?.on('data', data => console.error(data));
+
+      child.on("close", (code) => {
+        if (code === 0 && fs.existsSync(outPath)) {
+          console.log("Video generato con successo!");
+          res.download(outPath, "agora-video.mp4", (err) => {
+            if (err) console.error("Download fail:", err);
+            // Cleanup after sending
+            try { fs.unlinkSync(outPath); } catch(e){}
+          });
+        } else {
+          res.status(500).json({ error: "Errore durante il render di Remotion. Codice: " + code });
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Errore interno del server durante l'esportazione." });
     }
   });
 
