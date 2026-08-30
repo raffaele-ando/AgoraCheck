@@ -29,12 +29,28 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [isStuck, setIsStuck] = useState(false);
 
   useEffect(() => {
-    let timeout = setTimeout(() => {
-      if (authLoading || verifying) {
-        setIsStuck(true);
-      }
+    const warn = setTimeout(() => {
+      if (authLoading || verifying) setIsStuck(true);
     }, 5000);
-    return () => clearTimeout(timeout);
+
+    // Hard stop: if auth never resolves (offline, an expired token whose refresh
+    // hangs, blocked storage), do not spin forever. Fall back to the sign-in
+    // screen, which is actionable, instead of an endless spinner.
+    const giveUp = setTimeout(() => {
+      setAuthLoading((loading) => {
+        if (loading) {
+          setUser(null);
+          setIsAdmin(null);
+        }
+        return false;
+      });
+      setVerifying(false);
+    }, 12000);
+
+    return () => {
+      clearTimeout(warn);
+      clearTimeout(giveUp);
+    };
   }, [authLoading, verifying]);
 
   // Complete a redirect-based sign-in (used when the popup is blocked).
