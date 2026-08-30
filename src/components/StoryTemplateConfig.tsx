@@ -33,6 +33,7 @@ export const DEFAULT_CONFIG: TemplateConfig = {
 
 import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { uploadMedia } from "../utils/media";
 
 export const saveImageToDB = async (dataUrl: string, target: string, mode: string) => {
   try {
@@ -275,9 +276,15 @@ export default function StoryTemplateConfig() {
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
             const compressedUrl = canvas.toDataURL("image/jpeg", 0.7);
-            setBackgroundImage(compressedUrl);
+            // Prefer R2 (stores a small URL in Firestore instead of a big dataURL).
+            const r2 = await uploadMedia(
+              compressedUrl,
+              `story_${selectedTarget}_${selectedMode}.jpg`,
+            );
+            const toStore = r2 || compressedUrl;
+            setBackgroundImage(toStore);
             try {
-              await saveImageToDB(compressedUrl, selectedTarget, selectedMode);
+              await saveImageToDB(toStore, selectedTarget, selectedMode);
               setSavedStatus(true);
               setTimeout(() => setSavedStatus(false), 2000);
             } catch (err) {

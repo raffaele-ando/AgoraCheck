@@ -60,10 +60,19 @@ handlers from `worker.js` into that existing Worker.
   append-only events are far cheaper in D1 than as Firestore documents. Keep
   aggregates in Firestore for the dashboard.
 
-## Client wiring for media (next step, not yet enabled)
+## Client wiring for media (DONE — activate with an env var)
 
 `src/utils/media.ts` exposes `uploadMedia(file)`. It posts to
 `import.meta.env.VITE_MEDIA_UPLOAD_URL` (e.g. `https://agora.theproject.world/media`)
-when set, else returns `null` so callers keep their current path. Once the
-Worker is live, set that env var and switch `LogoSettings`, `StoryTemplateConfig`
-and `CarouselTemplateConfig` uploads to `uploadMedia`.
+when set, else returns `null` so callers keep their current path.
+
+`LogoSettings`, `StoryTemplateConfig` and `CarouselTemplateConfig` already call
+`uploadMedia` first and only fall back to the old path (GitHub upload for logos,
+Firestore dataURL for template/carousel images) when it returns `null`. So:
+
+1. Deploy the Worker (above).
+2. Set `VITE_MEDIA_UPLOAD_URL=https://agora.theproject.world/media` at build time.
+
+From then on all new images go to R2 and only their URL is stored in Firestore.
+Existing dataURLs keep working (they are still valid `<img src>` values), so no
+data migration is required — old assets can be re-uploaded lazily if desired.

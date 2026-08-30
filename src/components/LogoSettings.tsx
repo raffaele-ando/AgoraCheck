@@ -11,6 +11,7 @@ export interface CustomLogo {
 
 import { LOCATIONS } from "./HeaderVariations";
 import { Logo, clearLogoCache, updateLogoScalesCache } from "./Logo";
+import { uploadMedia } from "../utils/media";
 
 const getBaseLogos = () => {
   const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
@@ -110,22 +111,26 @@ export function LogoSettings() {
       
       try {
         const fileExt = file.name.split('.').pop() || 'png';
-        const githubFilename = `${id}.${fileExt}`;
-        
-        const response = await fetch('/api/upload-github', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ filename: githubFilename, content: dataUrl })
-        });
-        
-        if (!response.ok) {
-           const errData = await response.json();
-           throw new Error(errData.error || "Errore durante l'upload su GitHub");
-        }
-        
-        const { url: githubUrl } = await response.json();
 
-        await setDoc(doc(db, "logos", id), { name, dataUrl: githubUrl });
+        // Prefer Cloudflare R2 (via the edge Worker) when configured; otherwise
+        // fall back to the existing GitHub-backed upload endpoint.
+        let finalUrl = await uploadMedia(file, `${id}.${fileExt}`);
+
+        if (!finalUrl) {
+          const githubFilename = `${id}.${fileExt}`;
+          const response = await fetch('/api/upload-github', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ filename: githubFilename, content: dataUrl })
+          });
+          if (!response.ok) {
+             const errData = await response.json();
+             throw new Error(errData.error || "Errore durante l'upload");
+          }
+          finalUrl = (await response.json()).url;
+        }
+
+        await setDoc(doc(db, "logos", id), { name, dataUrl: finalUrl });
         clearLogoCache();
         loadLogos();
       } catch (err: any) {

@@ -34,6 +34,7 @@ import {
   updateDoc 
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { uploadMedia } from "../utils/media";
 import { LOCATIONS } from "./HeaderVariations";
 
 export interface BoxConfig {
@@ -339,16 +340,23 @@ export default function CarouselTemplateConfig({
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
             const compressedUrl = canvas.toDataURL("image/jpeg", 0.7);
-            
+
+            // Prefer R2 (stores a small URL in Firestore instead of a big dataURL).
+            const r2 = await uploadMedia(
+              compressedUrl,
+              `carousel_${targetZone || "default"}_${index}.jpg`,
+            );
+            const toStore = r2 || compressedUrl;
+
             // Save local state
             const targetBgs = [...carouselBgs];
-            targetBgs[index] = compressedUrl;
+            targetBgs[index] = toStore;
             setCarouselBgs(targetBgs);
 
             try {
               const bgId = targetZone ? `carousel_bg_${targetZone}_${index}` : `carousel_bg_${index}`;
               const bgDoc = doc(db, "settings", bgId);
-              await setDoc(bgDoc, { bgImage: compressedUrl });
+              await setDoc(bgDoc, { bgImage: toStore });
               setSavedStatus(true);
               setTimeout(() => setSavedStatus(false), 1500);
             } catch (err) {
