@@ -132,6 +132,10 @@ export default {
       obj.writeHttpMetadata(headers);
       headers.set("etag", obj.httpEtag);
       headers.set("Cache-Control", "public, max-age=31536000, immutable");
+      // CORS so these images can be drawn into a canvas (html-to-image export)
+      // without tainting it.
+      headers.set("Access-Control-Allow-Origin", "*");
+      headers.set("Timing-Allow-Origin", "*");
       return new Response(obj.body, { headers });
     }
 

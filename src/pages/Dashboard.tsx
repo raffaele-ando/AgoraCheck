@@ -1945,7 +1945,7 @@ export default function Dashboard() {
                     {snapshotsError ? (
                       <span className="text-red-500">Errore di connessione a Firebase: {snapshotsError}</span>
                     ) : (
-                      "Se il caricamento è infinito, la connessione al database potrebbe essere bloccata dall'iframe di AI Studio. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra."
+                      "Il caricamento dei dati sta impiegando piu del previsto. Controlla la connessione e ricarica la pagina."
                     )}
                   </div>
                 )}
@@ -2964,7 +2964,7 @@ export default function Dashboard() {
                     {snapshotsError ? (
                       <span className="text-red-500">Errore di connessione: {snapshotsError}</span>
                     ) : (
-                      "Se il caricamento è infinito, la connessione al database potrebbe essere bloccata dall'iframe di AI Studio. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra."
+                      "Il caricamento dei dati sta impiegando piu del previsto. Controlla la connessione e ricarica la pagina."
                     )}
                   </div>
                 )}

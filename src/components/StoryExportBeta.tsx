@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Download, Image as ImageIcon } from "lucide-react";
 import { toPng } from "html-to-image";
+import { downloadDataUrl } from "../utils/download";
 import { motion } from "framer-motion";
 import {
   TemplateConfig,
   DEFAULT_CONFIG,
   loadImageFromDB,
+  loadImageForExport,
   loadConfigFromDB,
   AutoScalingText,
 } from "./StoryTemplateConfig";
@@ -42,6 +44,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
   const [isExporting, setIsExporting] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.25);
   const [isDBReady, setIsDBReady] = useState(false);
+  const [templateSource, setTemplateSource] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const captureRef = useRef<HTMLDivElement>(null);
@@ -51,9 +54,13 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
     setBackgroundImage(null);
     const loadData = async () => {
       try {
-        const img = await loadImageFromDB(selectedTarget, selectedMode);
-        setBackgroundImage(img || null);
-        
+        const { url, usedTarget } = await loadImageForExport(
+          selectedTarget,
+          selectedMode,
+        );
+        setBackgroundImage(url);
+        setTemplateSource(usedTarget);
+
         const savedConfig = await loadConfigFromDB(selectedMode);
         if (savedConfig) {
           setConfig(savedConfig);
@@ -84,24 +91,33 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
   }, []);
 
   const handleExport = async () => {
-    if (!captureRef.current || !backgroundImage) return;
+    if (!captureRef.current) return;
+    if (!backgroundImage) {
+      alert(
+        "Nessun template configurato per questa combinazione. Impostane uno nella sezione \"Template Storie\" della Dashboard.",
+      );
+      return;
+    }
     setIsExporting(true);
     try {
       const dataUrl = await toPng(captureRef.current, {
         cacheBust: true,
         pixelRatio: 1,
+        // Cross-origin background images (R2 / GitHub) would otherwise taint the
+        // canvas and make the export throw a SecurityError.
+        fetchRequestInit: { mode: "cors", credentials: "omit" },
         style: {
           transform: "scale(1)",
-          transformOrigin: "top left"
-        }
+          transformOrigin: "top left",
+        },
       });
-      const link = document.createElement("a");
-      link.download = `ngls-story-${Date.now()}.png`;
-      link.href = dataUrl;
-      link.click();
+      const ok = downloadDataUrl(dataUrl, `agora-story-${Date.now()}.png`);
+      if (!ok) alert("Il browser ha bloccato il download. Riprova.");
     } catch (err) {
       console.error("Error exporting image", err);
-      alert("Errore durante l'esportazione. Riprova.");
+      alert(
+        "Errore durante l'esportazione. Se l'immagine di sfondo viene da un dominio esterno, ricaricala dalla sezione Template.",
+      );
     } finally {
       setIsExporting(false);
     }
@@ -131,7 +147,19 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           <div className="bg-white dark:bg-gray-900 p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">Stile Esportazione</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">
+                  Stile Esportazione
+                  {isDBReady && templateSource && templateSource !== selectedTarget && (
+                    <span className="ml-2 font-normal text-[10px] text-amber-600 dark:text-amber-400">
+                      (template «{templateSource}»: nessuno per «{selectedTarget}»)
+                    </span>
+                  )}
+                  {isDBReady && !templateSource && (
+                    <span className="ml-2 font-normal text-[10px] text-red-500">
+                      (nessun template per «{selectedTarget}»)
+                    </span>
+                  )}
+                </label>
                 <select 
                   value={selectedMode} 
                   onChange={e => setSelectedMode(e.target.value as any)}
@@ -239,7 +267,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
           <button
             onClick={handleExport}
-            disabled={isExporting || !backgroundImage}
+            disabled={isExporting}
             className="w-full py-3.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isExporting ? (

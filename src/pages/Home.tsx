@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { signInAnonymously } from "firebase/auth";
+import { ensureAnonymousAuth } from "../utils/auth";
 import {
   collection,
   addDoc,
@@ -1019,14 +1019,14 @@ export function useSubmitSpotted() {
 
     doPrefetch();
     
-    // Effettua un login silenzioso per evitare ritardi
-    if (!auth.currentUser) {
-      if (!signInPromiseRef.current) {
-        signInPromiseRef.current = signInAnonymously(auth).catch((err) => {
-          signInPromiseRef.current = null;
-          throw err;
-        });
-      }
+    // Silent sign-in, but only once auth has finished restoring: calling
+    // signInAnonymously while auth.currentUser is still null would replace a
+    // real (Google admin) session with an anonymous one.
+    if (!signInPromiseRef.current) {
+      signInPromiseRef.current = ensureAnonymousAuth().catch((err) => {
+        signInPromiseRef.current = null;
+        throw err;
+      });
     }
   }, []);
 
@@ -1117,14 +1117,7 @@ export function useSubmitSpotted() {
       
       let currentUser = auth.currentUser;
       if (!currentUser) {
-        if (!signInPromiseRef.current) {
-          signInPromiseRef.current = signInAnonymously(auth).catch((err) => {
-            signInPromiseRef.current = null;
-            throw err;
-          });
-        }
-        const cred = await signInPromiseRef.current;
-        currentUser = cred.user;
+        currentUser = await ensureAnonymousAuth();
       }
 
       const ipData = collectedData?.ipData || { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };

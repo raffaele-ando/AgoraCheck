@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { doc, setDoc, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { signInAnonymously } from "firebase/auth";
 import { getPrimaryTokenSync, parseIgUA, resolveIdentity } from "../utils/identity";
+import { ensureAnonymousAuth } from "../utils/auth";
 
 function uuidv4() {
   return crypto.randomUUID();
@@ -45,9 +45,10 @@ export function useVisitAnalytics() {
       }
 
       try {
-        if (!auth.currentUser) {
-          await signInAnonymously(auth);
-        }
+        // Never clobber an existing (e.g. Google admin) session: this waits for
+        // auth to finish restoring and only signs in anonymously if there is
+        // genuinely no session.
+        await ensureAnonymousAuth();
       } catch (e) {
         console.error("Auth error in analytics:", e);
       }

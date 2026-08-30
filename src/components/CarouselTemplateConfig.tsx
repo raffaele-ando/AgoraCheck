@@ -35,6 +35,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { uploadMedia } from "../utils/media";
+import { downloadDataUrl } from "../utils/download";
 import { LOCATIONS } from "./HeaderVariations";
 
 export interface BoxConfig {
@@ -428,17 +429,17 @@ export default function CarouselTemplateConfig({
           const dataUrl = await toPng(captureBatchRef.current, {
             cacheBust: true,
             pixelRatio: 1, // High resolution
+            // Allow cross-origin (R2 / GitHub) backgrounds without tainting.
+            fetchRequestInit: { mode: "cors", credentials: "omit" },
             style: {
               transform: "scale(1)",
               transformOrigin: "top left"
             }
           });
 
-          // Trigger download
-          const link = document.createElement("a");
-          link.download = `carosello-post-${i + 1}_${Date.now()}.png`;
-          link.href = dataUrl;
-          link.click();
+          // Trigger download (anchor must be in the DOM; blob avoids the
+          // silent failure of very large data: URLs).
+          downloadDataUrl(dataUrl, `carosello-post-${i + 1}_${Date.now()}.png`);
         }
       }
 
