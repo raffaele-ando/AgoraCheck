@@ -40,7 +40,7 @@ Cerca queste righe e cambia il testo contenuto:
 <title>Polimi Agorà</title>
 <meta property="og:title" content="Polimi Agorà" />
 <meta name="twitter:title" content="Polimi Agorà" />
-<meta property="og:description" content="La bacheca anonima del Politecnico di Milano." />
+<meta property="og:description" content="La bacheca del Politecnico di Milano." />
 ```
 
 ---

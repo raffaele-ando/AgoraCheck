@@ -86,7 +86,7 @@ export default function Video() {
       { t: 18600, val: 13.5 }, // Mount IG Input + Change Text
       { t: 19300, val: 14 }, // Type username (Lascia il tuo Instagram per i DM.)
       { t: 20800, val: 15 }, // Submit (Richiesta inviata al canale.)
-      { t: 23300, val: 16 }, // Swap Mode to Sondaggio -> Show Sondaggio Form (Passa ai sondaggi anonimi.)
+      { t: 23300, val: 16 }, // Swap Mode to Sondaggio -> Show Sondaggio Form (Passa ai sondaggi.)
       { t: 24800, val: 17 }, // Sondaggio typewriter (Scopri l'opinione degli studenti.)
       { t: 26800, val: 18 }, // Add 3rd option
       { t: 28300, val: 19 }, // Show 4th option button
@@ -135,7 +135,7 @@ export default function Video() {
     if (step >= 13 && step < 13.5) return "Descrivi chi (o cosa) cerchi.";
     if (step >= 13.5 && step < 15) return "I risultati nei tuoi DM.";
     if (step >= 15 && step < 16) return "Messaggio inviato!";
-    if (step >= 16 && step < 17) return "Passa ai sondaggi anonimi.";
+    if (step >= 16 && step < 17) return "Passa ai sondaggi.";
     if (step >= 17) return "Scopri l'opinione degli studenti.";
     return "";
   };

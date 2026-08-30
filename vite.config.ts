@@ -6,7 +6,9 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: '/',
+    // Base path. Root ('/') for the Cloud Run / custom-domain build; set
+    // VITE_BASE=/AgoraCheck/ for the GitHub Pages project-site build.
+    base: process.env.VITE_BASE || env.VITE_BASE || '/',
     plugins: [react(), tailwindcss()],
     define: {},
     resolve: {
