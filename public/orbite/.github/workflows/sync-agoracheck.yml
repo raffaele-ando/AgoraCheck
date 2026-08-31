@@ -1,0 +1,47 @@
+name: Sincronizza AgoraCheck/public/orbite
+
+# Ogni push su main (e sul branch di lavoro attuale) copia tutto il
+# contenuto di questo repo dentro public/orbite del repo AgoraCheck
+# e lo pusha su main lì, cosi il sito pubblico
+# raffaele-ando.github.io/AgoraCheck/orbite/ resta sempre allineato.
+on:
+  push:
+    branches:
+      - main
+      - claude/vai-push-sito-rm0p8g
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout agora-orbite
+        uses: actions/checkout@v4
+        with:
+          path: agora-orbite
+
+      - name: Checkout AgoraCheck
+        uses: actions/checkout@v4
+        with:
+          repository: raffaele-ando/AgoraCheck
+          token: ${{ secrets.AGORACHECK_TOKEN }}
+          path: agoracheck
+
+      - name: Copia i file in public/orbite
+        run: |
+          rm -rf agoracheck/public/orbite
+          mkdir -p agoracheck/public/orbite
+          rsync -a --exclude='.git' agora-orbite/ agoracheck/public/orbite/
+
+      - name: Commit e push su AgoraCheck
+        run: |
+          cd agoracheck
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A public/orbite
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica da sincronizzare."
+            exit 0
+          fi
+          SHA="${{ github.sha }}"
+          git commit -m "Sincronizza public/orbite con agora-orbite @ ${SHA:0:7}" -m "Copia automatica da raffaele-ando/agora-orbite (${{ github.ref_name }})."
+          git push origin main
