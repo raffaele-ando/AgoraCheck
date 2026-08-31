@@ -12,46 +12,17 @@
 <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
 <script>
 /* Il velo d'apertura esiste solo se c'è JavaScript e il movimento è consentito:
-   senza JS la pagina resta accessibile e non c'è nulla da chiudere.
-
-   Questo blocco gira prima che il corpo sia disegnato, e deve farlo: il velo lo
-   mette in pagina il selettore, che è differito, quindi per un centinaio di
-   millisecondi la pagina esisterebbe senza niente sopra e si vedrebbe il
-   fallback — loghi e bandiere incolonnati. Il fondo d'attesa (.ground) copre lo
-   schermo dal primo disegno; il selettore lo toglie appena il velo ha
-   disegnato il suo primo fotogramma. Serve anche il nome del design scelto,
-   perché il primo ha il fondo scuro e gli altri crema: il colore sbagliato
-   sarebbe un lampo di crema prima del nero. */
+   senza JS la pagina resta accessibile e non c'è nulla da chiudere. Il velo
+   sta già nel markup qui sotto, non lo scrive JS: nessun ritardo, nessun
+   fotogramma in cui la pagina è scoperta. */
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  var radice = document.documentElement;
-  radice.className += ' has-portal';
-  var scelta = null;
-  try { scelta = localStorage.getItem('agora:apertura'); } catch (e) {}
-  radice.setAttribute('data-apertura', scelta || 'tunnel-archi');
-  /* Rete di sicurezza: se il selettore non arriva — script bloccato, errore —
-     il fondo d'attesa non deve restare a coprire la pagina per sempre. */
-  setTimeout(function () {
-    var g = document.querySelector('.ground');
-    if (g && g.parentNode) g.parentNode.removeChild(g);
-  }, 8000);
+  document.documentElement.className += ' has-portal';
 }
-/* Registro dei design d'apertura: i file in assets/js/aperture/ si iscrivono
-   qui, il selettore in assets/js/intro.js ne avvia uno. */
-window.AgoraAperture = { items: {}, register: function (id, fn) { this.items[id] = fn; } };
 </script>
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-<!-- Fondo d'attesa: copre la pagina dal primo disegno fino al primo fotogramma
-     dell'apertura. Senza JavaScript non compare affatto. -->
-<div class="ground" aria-hidden="true"></div>
-
-<!-- I quattro design d'apertura. Ogni template è il markup del velo così
-     com'era al proprio commit; il selettore ne clona uno e avvia lo script
-     omonimo in assets/js/aperture/. -->
-<!-- «Marchio» — markup del velo al commit 271f3f4, riportato senza modifiche -->
-<template data-aperture="marchio">
 <!-- Apertura: la porta del brandmark si allarga e scopre il sito -->
 <div class="portal" id="portal" aria-hidden="true">
   <svg class="portal__svg" id="portal-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -69,88 +40,6 @@ window.AgoraAperture = { items: {}, register: function (id, fn) { this.items[id]
     </g>
   </svg>
 </div>
-</template>
-
-<!-- «Sequenza» — markup del velo al commit c37e886, riportato senza modifiche -->
-<template data-aperture="sequenza">
-<!-- Apertura: le porte del brandmark sfilano una dopo l'altra e scoprono il sito -->
-<div class="portal" id="portal" aria-hidden="true">
-  <svg class="portal__svg" id="portal-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <defs>
-      <!-- Lo stesso fondo della scena: il bordo della finestra non si vede
-           come un salto di tono, resta visibile solo il nero delle porte. -->
-      <radialGradient id="portal-bg" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1">
-        <stop offset="0" stop-color="#F4F1EA"/>
-        <stop offset="1" stop-color="#EAE0D0"/>
-      </radialGradient>
-    </defs>
-    <path class="portal__veil" id="portal-veil" fill="url(#portal-bg)" fill-rule="evenodd"></path>
-    <g id="portal-bars" fill="#111111">
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-    </g>
-  </svg>
-</div>
-</template>
-
-<!-- «Tunnel · una porta» — markup del velo al commit 8d11425, riportato senza modifiche -->
-<template data-aperture="tunnel-unico">
-<!-- Apertura: le porte del brandmark sfilano una dopo l'altra e scoprono il sito -->
-<div class="portal" id="portal" aria-hidden="true">
-  <svg class="portal__svg" id="portal-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <defs>
-      <!-- Lo stesso fondo della scena: il bordo della finestra non si vede
-           come un salto di tono, resta visibile solo il nero delle porte. -->
-      <radialGradient id="portal-bg" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1">
-        <stop offset="0" stop-color="#F4F1EA"/>
-        <stop offset="1" stop-color="#EAE0D0"/>
-      </radialGradient>
-    </defs>
-    <path class="portal__veil" id="portal-veil" fill="url(#portal-bg)" fill-rule="evenodd"></path>
-    <g id="portal-bars" fill="#111111">
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-    </g>
-  </svg>
-</div>
-</template>
-
-<!-- «Tunnel · cinque archi» — markup del velo al commit 77bcd1d, riportato senza modifiche -->
-<template data-aperture="tunnel-archi">
-<!-- Apertura: un tunnel fatto dai cinque archi del marchio -->
-<div class="portal" id="portal" aria-hidden="true">
-  <svg class="portal__svg" id="portal-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <defs>
-      <!-- Il velo. Il colore riprende la sfumatura dello sfondo della scena, così
-           non si legge come un salto di tono: resta visibile solo il nero delle
-           porte. La trasparenza sta negli stop centrali, spostati da JS: seguono
-           il vano della porta più lontana, cioè il fondo del tunnel. Il bordo è
-           sfumato, così il taglio dei contenuti non si vede. Niente maschera
-           SVG: costa un ridisegno a schermo intero per fotogramma. -->
-      <radialGradient id="portal-bg" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1">
-        <stop offset="0" stop-color="#F4F1EA" stop-opacity="0"/>
-        <stop offset="0" stop-color="#F4F1EA" stop-opacity="0"/>
-        <stop offset="0" stop-color="#F4F1EA" stop-opacity="1"/>
-        <stop offset="1" stop-color="#EAE0D0" stop-opacity="1"/>
-      </radialGradient>
-    </defs>
-    <rect class="portal__veil" x="0" y="0" width="100%" height="100%" fill="url(#portal-bg)"></rect>
-    <g id="portal-bars" fill="#111111">
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-      <path class="portal__bar"></path>
-    </g>
-  </svg>
-</div>
-</template>
 
 <main class="scene" id="scene">
 
@@ -213,10 +102,6 @@ window.AgoraAperture = { items: {}, register: function (id, fn) { this.items[id]
 
 </main>
 
-<script src="assets/js/aperture/marchio.js" defer></script>
-<script src="assets/js/aperture/sequenza.js" defer></script>
-<script src="assets/js/aperture/tunnel-unico.js" defer></script>
-<script src="assets/js/aperture/tunnel-archi.js" defer></script>
 <script src="assets/js/intro.js" defer></script>
 <script src="assets/js/orbits.js" defer></script>
 </body>

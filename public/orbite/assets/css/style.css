@@ -211,45 +211,22 @@ a:hover { color: var(--arancio-cupo); }
 }
 
 /* =================================================================
-   Apertura: il velo di uno dei design in assets/js/aperture/
+   Apertura: il velo del brandmark
    ================================================================= */
 
-/* Fondo d'attesa. Copre lo schermo dal primo disegno, perché il velo lo mette
-   in pagina il selettore — che è differito — e senza questo si vedrebbe per un
-   istante il fallback con i loghi incolonnati. Sta sotto al velo e sopra alla
-   scena; il selettore lo rimuove nello stesso fotogramma in cui il velo
-   disegna, quindi non c'è nessun momento in cui si vedano entrambi. */
-.ground { display: none; }
-
-.has-portal .ground {
-  display: block;
-  position: fixed;
-  inset: 0;
-  z-index: 99;
-  background: radial-gradient(120% 90% at 50% 50%, var(--crema-chiara) 0%, var(--crema-scura) 100%);
-}
-
-/* Il primo design apre su fondo scuro: il colore va azzeccato subito, o al suo
-   posto si vede un lampo di crema. */
-.has-portal[data-apertura="marchio"] .ground { background: var(--inchiostro); }
-
+/* L'apertura esiste solo con JavaScript attivo e movimento consentito. Il
+   fondo sta sul contenitore, così copre lo schermo già al primo disegno,
+   prima che lo script calcoli il ritaglio: nessun fotogramma in cui si vede
+   la scena sotto. */
 .portal { display: none; }
 
-/* L'apertura esiste solo con JavaScript attivo e movimento consentito.
-   Il fondo sta sul contenitore, così copre lo schermo già al primo disegno,
-   prima che lo script calcoli il ritaglio. È la sola differenza di stile fra i
-   quattro design: scuro nel primo, uguale alla scena negli altri tre. */
 .has-portal .portal {
   display: block;
   position: fixed;
   inset: 0;
   z-index: 100;
   overflow: hidden;
-}
-
-.has-portal .portal--scuro { background: var(--inchiostro); }
-.has-portal .portal--crema {
-  background: radial-gradient(120% 90% at 50% 50%, var(--crema-chiara) 0%, var(--crema-scura) 100%);
+  background: var(--inchiostro);
 }
 
 .portal__svg {
@@ -263,100 +240,3 @@ a:hover { color: var(--arancio-cupo); }
 /* Mentre la porta si apre la pagina non scorre. */
 html.is-opening,
 html.is-opening body { overflow: hidden; }
-
-/* =================================================================
-   Selettore dei design d'apertura: uno strumento appoggiato sopra la
-   pagina, non parte del marchio. Sta sopra al velo, così si può
-   cambiare apertura anche mentre è in scena.
-   ================================================================= */
-
-.picker {
-  position: fixed;
-  z-index: 200;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: calc(100% - 20px);
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 4px 4px 12px;
-  border-radius: 999px;
-  background: rgba(17, 17, 17, 0.92);
-  box-shadow: 0 2px 14px rgba(17, 17, 17, 0.22);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -webkit-backdrop-filter: saturate(1.4) blur(6px);
-          backdrop-filter: saturate(1.4) blur(6px);
-}
-
-.picker::-webkit-scrollbar { display: none; }
-
-.picker__title {
-  flex: none;
-  padding-right: 8px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(244, 241, 234, 0.55);
-}
-
-.picker__opt,
-.picker__again {
-  flex: none;
-  appearance: none;
-  border: 0;
-  margin: 0;
-  padding: 7px 13px;
-  border-radius: 999px;
-  background: transparent;
-  color: rgba(244, 241, 234, 0.72);
-  font: inherit;
-  font-size: 12.5px;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.picker__opt:hover,
-.picker__again:hover { color: var(--crema-chiara); background: rgba(244, 241, 234, 0.10); }
-
-.picker__opt[aria-pressed="true"] {
-  color: #FFFFFF;
-  background: var(--arancio);
-}
-
-.picker__again {
-  margin-left: 4px;
-  color: rgba(244, 241, 234, 0.5);
-  box-shadow: inset 0 0 0 1px rgba(244, 241, 234, 0.18);
-}
-
-.picker__opt:focus-visible,
-.picker__again:focus-visible {
-  outline: 2px solid var(--arancio);
-  outline-offset: 2px;
-}
-
-/* Su telefono verticale i cinque tasti non stanno in una riga: invece di farli
-   scorrere di lato — con l'ultimo nascosto fuori dal bordo — la barra va a capo,
-   così sono tutti visibili e leggibili senza toccare le etichette. */
-@media (max-width: 560px) {
-  .picker {
-    top: 8px;
-    /* La larghezza va imposta: senza, il contenitore si stringe al minimo e la
-       barra va a capo a ogni tasto invece di riempire la riga. */
-    width: calc(100% - 20px);
-    padding: 5px 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 3px;
-    border-radius: 20px;
-    overflow-x: visible;
-  }
-  .picker__title { display: none; }
-  .picker__opt, .picker__again { padding: 7px 11px; font-size: 12px; }
-  .picker__again { margin-left: 0; }
-}
