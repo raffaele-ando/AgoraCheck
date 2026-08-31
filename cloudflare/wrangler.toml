@@ -1,0 +1,22 @@
+# Cloudflare Worker config for the Agorà edge (identity + media).
+# Deploy:  cd cloudflare && npx wrangler deploy
+# Secret:  npx wrangler secret put ID_SECRET   (any long random string)
+name = "agora-edge"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Bind the resources already provisioned in this account:
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "agora-media"
+
+[[kv_namespaces]]
+binding = "IDENTITY"
+id = "14176b51077746ffb3e9ddc8bcf58e84"   # KV namespace "agora-identity"
+
+# Route it in front of the site so /id, /px.gif and /media work same-origin,
+# and everything else passes through to the origin unchanged.
+# Uncomment and set your zone, then run: npx wrangler deploy
+# [[routes]]
+# pattern = "agora.theproject.world/*"
+# zone_name = "theproject.world"

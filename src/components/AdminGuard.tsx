@@ -10,6 +10,8 @@ import {
 } from "firebase/firestore";
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
   User,
@@ -27,16 +29,50 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [isStuck, setIsStuck] = useState(false);
 
   useEffect(() => {
-    let timeout = setTimeout(() => {
-      if (authLoading || verifying) {
-        setIsStuck(true);
-      }
+    const warn = setTimeout(() => {
+      if (authLoading || verifying) setIsStuck(true);
     }, 5000);
-    return () => clearTimeout(timeout);
+
+    // Hard stop: if auth never resolves (offline, an expired token whose refresh
+    // hangs, blocked storage), do not spin forever. Fall back to the sign-in
+    // screen, which is actionable, instead of an endless spinner.
+    const giveUp = setTimeout(() => {
+      setAuthLoading((loading) => {
+        if (loading) {
+          setUser(null);
+          setIsAdmin(null);
+        }
+        return false;
+      });
+      setVerifying(false);
+    }, 12000);
+
+    return () => {
+      clearTimeout(warn);
+      clearTimeout(giveUp);
+    };
   }, [authLoading, verifying]);
+
+  // Complete a redirect-based sign-in (used when the popup is blocked).
+  useEffect(() => {
+    getRedirectResult(auth).catch((e) => {
+      console.warn("Redirect sign-in did not complete:", e?.code || e);
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // An ANONYMOUS session (created by the public board for rate limiting) is
+      // not a login. Previously it was treated as "signed in", so the guard ran
+      // the admin check against the anonymous uid, found nothing, and rendered
+      // "Accesso Negato" without ever offering the Google button.
+      if (currentUser && currentUser.isAnonymous) {
+        setUser(null);
+        setIsAdmin(null);
+        setAuthLoading(false);
+        return;
+      }
+
       setUser(currentUser);
       if (currentUser) {
         verifyAdminAccess(currentUser);
@@ -52,13 +88,20 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const verifyAdminAccess = async (user: User) => {
     setVerifying(true);
     try {
-      const promises = [getDoc(doc(db, "admins", user.uid))];
+      // Both lookups must tolerate failure independently: previously the uid
+      // lookup had no .catch(), so a single permission error rejected the whole
+      // Promise.all and denied an admin who matched on email.
+      const safe = (p: Promise<any>) =>
+        p.catch(() => ({ exists: () => false }) as any);
+
+      const promises = [safe(getDoc(doc(db, "admins", user.uid)))];
       if (user.email) {
-        promises.push(
-          getDoc(doc(db, "admins", user.email)).catch(
-            () => ({ exists: () => false }) as any,
-          ),
-        );
+        promises.push(safe(getDoc(doc(db, "admins", user.email))));
+        // Emails are stored lowercased by AppSettings; match case-insensitively.
+        const lower = user.email.toLowerCase();
+        if (lower !== user.email) {
+          promises.push(safe(getDoc(doc(db, "admins", lower))));
+        }
       }
 
       const results = await Promise.all(promises);
@@ -86,6 +129,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
     try {
+      // If an anonymous session is active, drop it first so the Google sign-in
+      // replaces it cleanly.
+      if (auth.currentUser?.isAnonymous) {
+        await signOut(auth).catch(() => {});
+      }
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
       console.error("Login popup error:", error);
@@ -101,9 +149,22 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       } else if (
         error.code === "auth/popup-blocked" ||
         error.code === "auth/popup-closed-by-user" ||
+        error.code === "auth/operation-not-supported-in-this-environment" ||
+        error.code === "auth/web-storage-unsupported" ||
         error.message?.includes("popup")
       ) {
-        alert("Il popup di Google è stato bloccato dal browser. Prova ad aprire il link in una nuova scheda del browser o dal browser predefinito (non da Instagram).");
+        // Popup blocked or unusable (third-party cookie restrictions, in-app
+        // browsers, strict privacy settings): fall back to a full-page redirect,
+        // which does not depend on popups or third-party storage.
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return; // page navigates away
+        } catch (redirectErr: any) {
+          console.error("Redirect sign-in failed:", redirectErr);
+          alert(
+            "Il login con Google non è riuscito: il browser ha bloccato sia il popup sia il reindirizzamento. Prova a disattivare il blocco popup o ad usare un'altra finestra del browser.",
+          );
+        }
       } else {
         alert(`Errore durante il login: ${error.message || "Errore sconosciuto"}`);
       }
@@ -122,7 +183,27 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
         {isStuck && (
           <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-4 dark:text-gray-400">
-            Se il caricamento è infinito, l'accesso di Google potrebbe essere bloccato dall'iframe. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra, oppure abilita i cookie di terze parti.
+            Il controllo dell'accesso sta impiegando più del previsto.
+            {window.self !== window.top
+              ? " La pagina è dentro un iframe: aprila in una nuova scheda."
+              : " Ricarica la pagina; se il problema persiste, esci e rifai il login."}
+            <div className="flex gap-2 justify-center mt-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold"
+              >
+                Ricarica
+              </button>
+              <button
+                onClick={async () => {
+                  await signOut(auth).catch(() => {});
+                  window.location.reload();
+                }}
+                className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-bold"
+              >
+                Esci e riprova
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -214,16 +295,32 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
             <ShieldAlert className="w-8 h-8 text-red-500" />
           </div>
           <h2 className="text-xl font-bold mb-2 dark:text-white">Accesso Negato</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <p className="text-gray-500 dark:text-gray-400 mb-2">
             L'account corrente non è autorizzato o non dispone dei permessi
             necessari per visualizzare la bacheca.
           </p>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
-          >
-            Disconnetti
-          </button>
+          {user?.email && (
+            <p className="text-xs font-mono text-gray-400 dark:text-gray-500 mb-6 break-all">
+              Account: {user.email}
+            </p>
+          )}
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={async () => {
+                await signOut(auth).catch(() => {});
+                window.location.reload();
+              }}
+              className="w-full py-2.5 px-4 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium text-sm"
+            >
+              Esci e accedi con un altro account
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+            >
+              Disconnetti
+            </button>
+          </div>
         </div>
       </div>
     );

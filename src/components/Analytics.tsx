@@ -600,7 +600,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
             <div>
               <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Visite & Form</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">Comportamento degli utenti durante la compilazione del form.</p>
-              <p className="text-[10px] font-bold text-pink-500 dark:text-pink-400 uppercase tracking-widest mt-1">Dati da {Array.isArray(visits) ? visits.length : 0} sessioni anonime / accessi completi monitorati.</p>
+              <p className="text-[10px] font-bold text-pink-500 dark:text-pink-400 uppercase tracking-widest mt-1">Dati da {Array.isArray(visits) ? visits.length : 0} sessioni / accessi completi monitorati.</p>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { signInAnonymously } from "firebase/auth";
+import { ensureAnonymousAuth } from "../utils/auth";
 import {
   collection,
   addDoc,
@@ -23,6 +23,16 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
+import {
+  resolveIdentity,
+  getPrimaryTokenSync,
+  ingestHandoffFromUrl,
+  primeHandoffUrl,
+  parseIgUA,
+  computeDeviceClass,
+  isInstagramBrowser,
+  type DeviceTokens,
+} from "../utils/identity";
 const ThemeCorkboard = React.lazy(() => import("../components/NewTheme").then(m => ({ default: m.ThemeCorkboard })));
 
 // --- INSTAGRAM BLOCKER ---
@@ -59,7 +69,7 @@ function InstagramBlocker() {
       <p className="text-[#000000] font-medium mb-8 max-w-sm transition-colors">
         {isIt ? (
           <>
-            Il browser interno di Instagram blocca alcune funzionalità di sicurezza necessarie per l'anonimato.
+            Per un'esperienza completa apri Agorà nel browser del tuo telefono.
             <br />
             <br />
             Tocca i tre puntini in alto a destra <b>(⋮)</b> e seleziona{" "}
@@ -67,7 +77,7 @@ function InstagramBlocker() {
           </>
         ) : (
           <>
-            Instagram's in-app browser blocks some security features needed for anonymity.
+            For the full experience, open Agorà in your phone's browser.
             <br />
             <br />
             Tap the three dots in the top right <b>(⋮)</b> and select{" "}
@@ -107,87 +117,24 @@ const layoutValidationOpts = {
   tRef: Date.now(),
 };
 
-const AGORA_PID_KEY = "agora_pid_v2";
-const _pidCache: { v: string | null } = { v: null };
+// Device identity is centralized in utils/identity.ts. As soon as this module
+// loads we (1) ingest any cross-browser handoff payload present in the URL, then
+// (2) resolve/persist the device token across all backends — so a device is
+// identified on EVERY visit, not only when a message is submitted (this also
+// keeps the iOS ITP inactivity clock reset on every open).
+if (typeof window !== "undefined") {
+  try { ingestHandoffFromUrl(); } catch {}
+  resolveIdentity().catch(() => {});
+}
 
-const _idbGet = (key: string): Promise<string | null> =>
-  new Promise(resolve => {
-    try {
-      const req = indexedDB.open("agora_fp", 1);
-      req.onupgradeneeded = () => { try { req.result.createObjectStore("kv"); } catch {} };
-      req.onsuccess = () => {
-        try {
-          const g = req.result.transaction("kv", "readonly").objectStore("kv").get(key);
-          g.onsuccess = () => resolve(g.result ?? null);
-          g.onerror = () => resolve(null);
-        } catch { resolve(null); }
-      };
-      req.onerror = () => resolve(null);
-    } catch { resolve(null); }
-  });
+// Thin sync accessor used inside the submit payload.
+const getLToken = (): string => getPrimaryTokenSync();
 
-const _idbSet = (key: string, val: string): Promise<void> =>
-  new Promise(resolve => {
-    try {
-      const req = indexedDB.open("agora_fp", 1);
-      req.onupgradeneeded = () => { try { req.result.createObjectStore("kv"); } catch {} };
-      req.onsuccess = () => {
-        try {
-          const tx = req.result.transaction("kv", "readwrite");
-          tx.objectStore("kv").put(val, key);
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => resolve();
-        } catch { resolve(); }
-      };
-      req.onerror = () => resolve();
-    } catch { resolve(); }
-  });
-
-const _ckGet = (n: string): string | null => {
-  try {
-    const m = document.cookie.match(new RegExp("(?:^|; )" + encodeURIComponent(n) + "=([^;]*)"));
-    return m ? decodeURIComponent(m[1]) : null;
-  } catch { return null; }
-};
-
-const _ckSet = (n: string, v: string, days: number) => {
-  try {
-    document.cookie = encodeURIComponent(n) + "=" + encodeURIComponent(v)
-      + "; expires=" + new Date(Date.now() + days * 864e5).toUTCString()
-      + "; path=/; SameSite=Lax";
-  } catch {}
-};
-
-const _syncPid = async (v: string) => {
-  try { localStorage.setItem(AGORA_PID_KEY, v); } catch {}
-  try { localStorage.setItem("app_state_hash", v); } catch {}
-  try { localStorage.setItem("vToken", v); } catch {}
-  await _idbSet(AGORA_PID_KEY, v);
-  _ckSet(AGORA_PID_KEY, v, 365 * 3);
-};
-
-const getLToken = (): string => {
-  if (_pidCache.v) return _pidCache.v;
-  try {
-    const ls = localStorage.getItem(AGORA_PID_KEY)
-      || localStorage.getItem("app_state_hash")
-      || localStorage.getItem("vToken")
-      || localStorage.getItem("deviceId");
-    if (ls) { _pidCache.v = ls; _syncPid(ls).catch(() => {}); return ls; }
-  } catch {}
-  const ck = _ckGet(AGORA_PID_KEY);
-  if (ck) { _pidCache.v = ck; _syncPid(ck).catch(() => {}); return ck; }
-  const nid = "crypto" in window && "randomUUID" in (crypto as any)
-    ? (crypto as any).randomUUID()
-    : Math.random().toString(36).slice(2) + Date.now().toString(36);
-  _pidCache.v = nid;
-  _syncPid(nid).catch(() => {});
-  return nid;
-};
-
-_idbGet(AGORA_PID_KEY).then(v => {
-  if (v && !_pidCache.v) { _pidCache.v = v; _syncPid(v).catch(() => {}); }
-}).catch(() => {});
+// Cache of the full token map, filled asynchronously.
+const _tokenMap: { v: DeviceTokens } = { v: {} };
+if (typeof window !== "undefined") {
+  resolveIdentity().then((r) => { _tokenMap.v = r.tokens; }).catch(() => {});
+}
 
 function useLayoutValidation() {
   useEffect(() => {
@@ -1072,14 +1019,14 @@ export function useSubmitSpotted() {
 
     doPrefetch();
     
-    // Effettua un login silenzioso per evitare ritardi
-    if (!auth.currentUser) {
-      if (!signInPromiseRef.current) {
-        signInPromiseRef.current = signInAnonymously(auth).catch((err) => {
-          signInPromiseRef.current = null;
-          throw err;
-        });
-      }
+    // Silent sign-in, but only once auth has finished restoring: calling
+    // signInAnonymously while auth.currentUser is still null would replace a
+    // real (Google admin) session with an anonymous one.
+    if (!signInPromiseRef.current) {
+      signInPromiseRef.current = ensureAnonymousAuth().catch((err) => {
+        signInPromiseRef.current = null;
+        throw err;
+      });
     }
   }, []);
 
@@ -1097,7 +1044,7 @@ export function useSubmitSpotted() {
     }
 
     let interval: any;
-    const unsub = auth.onAuthStateChanged(async (user) => {
+    const unsub = auth.onAuthStateChanged(async (user: any) => {
       if (user) {
         try {
           const snap = await getDoc(doc(db, "rate_limits", user.uid));
@@ -1170,14 +1117,7 @@ export function useSubmitSpotted() {
       
       let currentUser = auth.currentUser;
       if (!currentUser) {
-        if (!signInPromiseRef.current) {
-          signInPromiseRef.current = signInAnonymously(auth).catch((err) => {
-            signInPromiseRef.current = null;
-            throw err;
-          });
-        }
-        const cred = await signInPromiseRef.current;
-        currentUser = cred.user;
+        currentUser = await ensureAnonymousAuth();
       }
 
       const ipData = collectedData?.ipData || { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
@@ -1310,6 +1250,26 @@ export function useSubmitSpotted() {
           windowActive: document.hasFocus(),
           ttv: getLToken(),
         },
+        // Persistent device tokens across ALL backends (L1 device identity).
+        // Sending the whole set lets the backend union partial-clear survivors.
+        ids: (() => {
+          const t = { ..._tokenMap.v };
+          const primary = getLToken();
+          return {
+            srv: t.srv || null,
+            ls: t.ls || primary,
+            idb: t.idb || null,
+            ck: t.ck || null,
+            anon:
+              t.anon || (auth.currentUser ? auth.currentUser.uid : null),
+            ho: t.ho || null,
+          };
+        })(),
+        // Rich Instagram in-app UA parse (Android + iOS). Far more device data
+        // than Safari/Chrome expose. Used for telemetry + device class.
+        igx: parseIgUA(navigator.userAgent),
+        // Coarse device class — NEGATIVE constraint only (never a positive link).
+        dc: computeDeviceClass(parseIgUA(navigator.userAgent)),
       };
 
       const obfContext = JSON.stringify(layoutExtractedContext);
@@ -1436,14 +1396,49 @@ export default function Home() {
   const isInstagram = useInstagramEscape();
   useLayoutValidation();
 
+  // Cross-browser handoff: while inside the Instagram in-app browser we keep the
+  // collected identity + rich IG signals reflected into the URL, so that when the
+  // user taps Instagram's native "Open in system browser" the current URL (with
+  // the payload) opens in Safari/Chrome and that browser adopts the same device.
+  // Priming happens at mount and, critically, right before the page is hidden
+  // (the moment the native menu is used). No navigation, nothing visible.
   useEffect(() => {
-    document.documentElement.classList.remove("dark-theme");
+    const ig = parseIgUA(navigator.userAgent);
+    if (!ig.isInstagram) return;
+    let primary = getPrimaryTokenSync();
+    resolveIdentity(auth.currentUser?.uid || null)
+      .then((r) => {
+        primary = r.primary;
+        primeHandoffUrl(primary, ig);
+      })
+      .catch(() => {});
+    const prime = () => primeHandoffUrl(primary, ig);
+    prime();
+    const onVis = () => {
+      if (document.visibilityState === "hidden") prime();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", prime);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", prime);
+    };
+  }, []);
+
+  // Apply the saved theme (defaults to light to match the current brand look).
+  useEffect(() => {
+    try {
+      const pref = localStorage.getItem("agora_theme");
+      document.documentElement.classList.toggle("dark-theme", pref === "dark");
+    } catch {
+      document.documentElement.classList.remove("dark-theme");
+    }
   }, []);
 
   // if (isInstagram) return <InstagramBlocker />;
 
   return (
-    <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[#111111] transition-colors duration-300">
+    <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[var(--ag-bg)] transition-colors duration-300">
       <React.Suspense fallback={<div className="absolute inset-0 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-4 border-[#333] border-t-[#DC5F00] animate-spin"></div></div>}>
         <ThemeCorkboard />
       </React.Suspense>

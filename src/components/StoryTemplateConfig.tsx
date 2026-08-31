@@ -33,6 +33,7 @@ export const DEFAULT_CONFIG: TemplateConfig = {
 
 import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { uploadMedia } from "../utils/media";
 
 export const saveImageToDB = async (dataUrl: string, target: string, mode: string) => {
   try {
@@ -66,6 +67,30 @@ export const loadImageFromDB = async (target: string, mode: string) => {
     console.warn("Error loading image from Firestore", error);
     return null;
   }
+};
+
+/**
+ * Export-time template loader with a fallback chain:
+ *   requested target -> DEFAULT (which itself falls back to the legacy doc)
+ *
+ * The config editor deliberately uses loadImageFromDB (no fallback) so an admin
+ * can see whether THIS target has its own template. The export, on the other
+ * hand, must not dead-end: previously a message from a zone with no dedicated
+ * template produced no background, which disabled the export button and made
+ * the click do nothing at all.
+ */
+export const loadImageForExport = async (
+  target: string,
+  mode: string,
+): Promise<{ url: string | null; usedTarget: string | null }> => {
+  const direct = await loadImageFromDB(target, mode);
+  if (direct) return { url: direct, usedTarget: target };
+
+  if (target !== "DEFAULT") {
+    const fallback = await loadImageFromDB("DEFAULT", mode);
+    if (fallback) return { url: fallback, usedTarget: "DEFAULT" };
+  }
+  return { url: null, usedTarget: null };
 };
 
 export const clearImageFromDB = async (target: string, mode: string) => {
@@ -275,9 +300,15 @@ export default function StoryTemplateConfig() {
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
             const compressedUrl = canvas.toDataURL("image/jpeg", 0.7);
-            setBackgroundImage(compressedUrl);
+            // Prefer R2 (stores a small URL in Firestore instead of a big dataURL).
+            const r2 = await uploadMedia(
+              compressedUrl,
+              `story_${selectedTarget}_${selectedMode}.jpg`,
+            );
+            const toStore = r2 || compressedUrl;
+            setBackgroundImage(toStore);
             try {
-              await saveImageToDB(compressedUrl, selectedTarget, selectedMode);
+              await saveImageToDB(toStore, selectedTarget, selectedMode);
               setSavedStatus(true);
               setTimeout(() => setSavedStatus(false), 2000);
             } catch (err) {

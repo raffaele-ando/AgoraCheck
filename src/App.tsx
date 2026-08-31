@@ -12,7 +12,6 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
-const DashboardBeta = lazy(() => import("./dashboard-beta/DashboardBeta"));
 const VideoPresentation = lazy(() => import("./pages/Video"));
 const Video2 = lazy(() => import("./pages/Video2"));
 
@@ -44,7 +43,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <DynamicBrand />
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/video" element={
@@ -55,15 +54,6 @@ export default function App() {
           <Route path="/video2" element={
             <Suspense fallback={<div className="min-h-screen bg-black" />}>
               <Video2 />
-            </Suspense>
-          } />
-          <Route path="/DashboardBeta" element={
-            <Suspense fallback={
-              <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin"></div>
-              </div>
-            }>
-              <DashboardBeta />
             </Suspense>
           } />
           <Route path="/:param1" element={<Home />} />

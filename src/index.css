@@ -8,6 +8,38 @@
 
 @custom-variant dark (&:is(.dark-theme *));
 
+/* -------------------------------------------------------------------------
+   Brand palette as CSS variables. Light = the current cream/orange identity.
+   Dark = warm near-black surfaces with the SAME orange accent (kept on-brand)
+   and the cream tone reused as text, so the branding is preserved.
+   ------------------------------------------------------------------------- */
+:root {
+  --ag-bg: #f3ece0;         /* page background (cream) */
+  --ag-surface: #eae0d0;    /* cards / panels */
+  --ag-surface-2: #e8dec8;  /* alt panel */
+  --ag-inset: #f3ece0;      /* inputs / inset wells */
+  --ag-text: #2c2c2c;       /* body text */
+  --ag-text-strong: #000000;/* headings */
+  --ag-muted: #6b7280;      /* secondary text */
+  --ag-accent: #dc5f00;     /* brand orange */
+  --ag-accent-hover: #c95300;
+  --ag-on-accent: #ffffff;
+  --ag-ring: #dc5f00;
+}
+.dark-theme {
+  --ag-bg: #17130f;
+  --ag-surface: #241d17;
+  --ag-surface-2: #2b231b;
+  --ag-inset: #1e1813;
+  --ag-text: #ede4d6;
+  --ag-text-strong: #ffffff;
+  --ag-muted: #a89a88;
+  --ag-accent: #ff6e00;     /* slightly brighter orange for dark contrast */
+  --ag-accent-hover: #ff8124;
+  --ag-on-accent: #17130f;
+  --ag-ring: #ff6e00;
+}
+
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;

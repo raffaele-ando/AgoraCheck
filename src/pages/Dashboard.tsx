@@ -327,7 +327,7 @@ export default function Dashboard() {
             isAnonymous: auth.currentUser?.isAnonymous,
             tenantId: auth.currentUser?.tenantId,
             providerInfo:
-              auth.currentUser?.providerData?.map((provider) => ({
+              auth.currentUser?.providerData?.map((provider: any) => ({
                 providerId: provider.providerId,
                 email: provider.email,
               })) || [],
@@ -600,6 +600,9 @@ export default function Dashboard() {
            deviceFootprints.set(pid, {
              canvas, audio, gpu, screen, cores, rects, math,
              hwSeed, hwSeedExtended,
+             // `seed` is the field the report/UI reads (previously undefined).
+             seed: tt || hwSeedExtended || "-",
+             token: tt || "",
              pixelRatio, colorDepth, webglVendor, maxTexture,
              webglScene, fontMetrics, timerRes,
              igMeta: igMetaRaw,
@@ -703,10 +706,15 @@ export default function Dashboard() {
         tagGroups.get(tag)!.push(n);
       }
     }
+    const CONTESTED_HANDLE_MAX = 3; // handle claimed by >3 devices => contested
     for (const [tag, pids] of tagGroups.entries()) {
-      for (let i = 0; i < pids.length; i++) {
-        for (let j = i + 1; j < pids.length; j++) {
-          addEdge(pids[i], pids[j], "Stesso tag Instagram (" + tag + ")", CONF.IG_TAG);
+      const distinct = Array.from(new Set(pids));
+      // A handle spread across many distinct devices is likely typed by several
+      // people (or someone entering another user's username): do NOT auto-merge.
+      if (distinct.length > CONTESTED_HANDLE_MAX) continue;
+      for (let i = 0; i < distinct.length; i++) {
+        for (let j = i + 1; j < distinct.length; j++) {
+          addEdge(distinct[i], distinct[j], "Stesso tag Instagram (" + tag + ")", CONF.IG_TAG);
         }
       }
     }
@@ -716,36 +724,21 @@ export default function Dashboard() {
         for (let j = i + 1; j < pids.length; j++)
           addEdge(pids[i], pids[j], "Stesso token di sessione (vToken)", CONF.VTOKEN);
     }
-    for (const [, pidsSet] of hwGroups.entries()) {
-      const pids = Array.from(pidsSet);
-      for (let i = 0; i < pids.length; i++)
-        for (let j = i + 1; j < pids.length; j++)
-          addEdge(pids[i], pids[j], "Seed HW identico", CONF.HW_ANDROID);
-    }
-    // Loop hwGroupsiOS (iOS hardware seed — confidenza ridotta)
-    for (const [, pidsSet] of hwGroupsiOS.entries()) {
-      const pids = Array.from(pidsSet);
-      for (let i = 0; i < pids.length; i++)
-        for (let j = i + 1; j < pids.length; j++)
-          addEdge(pids[i], pids[j], "Seed HW iOS", CONF.HW_IOS);
-    }
-
-    // Loop igInstallIdGroups (IG Install ID — medio-forte)
-    for (const [igId, pidsSet] of igInstallIdGroups.entries()) {
-      const pids = Array.from(pidsSet);
-      for (let i = 0; i < pids.length; i++)
-        for (let j = i + 1; j < pids.length; j++)
-          addEdge(pids[i], pids[j], "Stesso IG Install ID (" + igId + ")", CONF.IG_INSTALL);
-    }
-
-    // Loop ipGroups (IP pubblico — segnale debole, max 8 profili per IP)
-    for (const [ip, pidsSet] of ipGroups.entries()) {
-      if (pidsSet.size > 8) continue; // IP con >8 profili = NAT aziendale/hotspot, skip
-      const pids = Array.from(pidsSet);
-      for (let i = 0; i < pids.length; i++)
-        for (let j = i + 1; j < pids.length; j++)
-          addEdge(pids[i], pids[j], "Stesso IP (" + ip + ")", CONF.IP_PUBLIC);
-    }
+    // ---------------------------------------------------------------------
+    // DEVICE-FINGERPRINT edges are intentionally DISABLED.
+    //
+    // The device identity is now the persistent token (see profiling.ts): two
+    // messages from the same device already share the same profile id, so these
+    // groups are redundant for real linking. Worse, keeping them as positive
+    // edges is exactly what merged DIFFERENT people who happen to own the same
+    // phone model (identical iOS canvas/audio, identical Android hw seed) or
+    // share the same IG app build — the mass false-positive problem.
+    //
+    // hwGroups / hwGroupsiOS / igInstallIdGroups / ipGroups remain COMPUTED
+    // (for display in the technical panels and as future NEGATIVE constraints)
+    // but never create a link. Person-level linking now comes only from the
+    // Instagram handle (below) and manual merges.
+    void hwGroups; void hwGroupsiOS; void igInstallIdGroups; void ipGroups;
 
     // Merge manuale aggiornato — usa addEdge con confidenza massima
     for (const n of nodes) {
@@ -1952,7 +1945,7 @@ export default function Dashboard() {
                     {snapshotsError ? (
                       <span className="text-red-500">Errore di connessione a Firebase: {snapshotsError}</span>
                     ) : (
-                      "Se il caricamento è infinito, la connessione al database potrebbe essere bloccata dall'iframe di AI Studio. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra."
+                      "Il caricamento dei dati sta impiegando piu del previsto. Controlla la connessione e ricarica la pagina."
                     )}
                   </div>
                 )}
@@ -2034,7 +2027,7 @@ export default function Dashboard() {
                                       if (msgMacro && msgMacro.name && msgMacro.name !== "Sconosciuto" && msgMacro.name !== "Profilo" && msgMacro.name !== "Profilo Aggregato") {
                                         return msgMacro.name;
                                       }
-                                      return profiles[profileId]?.name || (profileId.startsWith("AUTO-") ? "Anonimo Auto" : "Anonimo Manuale");
+                                      return profiles[profileId]?.name || (profileId.startsWith("AUTO-") ? "Non identificato" : "Profilo manuale");
                                     })()}
                                   </span>
                                   <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
@@ -2069,7 +2062,7 @@ export default function Dashboard() {
                                 <UserIcon className="w-4 h-4" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Anonimo</span>
+                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Non identificato</span>
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
                                   <Clock className="w-3 h-3" />
                                   {msg.createdAt
@@ -2971,12 +2964,12 @@ export default function Dashboard() {
                     {snapshotsError ? (
                       <span className="text-red-500">Errore di connessione: {snapshotsError}</span>
                     ) : (
-                      "Se il caricamento è infinito, la connessione al database potrebbe essere bloccata dall'iframe di AI Studio. Clicca sull'icona in alto a destra per aprire l'app in una nuova finestra."
+                      "Il caricamento dei dati sta impiegando piu del previsto. Controlla la connessione e ricarica la pagina."
                     )}
                   </div>
                 )}
               </div>
-            ) : Object.keys(profiles).length === 0 ? (
+            ) : macroProfiles.length === 0 ? (
               <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-white/20">
 
                 <UserIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -4416,7 +4409,7 @@ export default function Dashboard() {
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Sicurezza & Configurazione
+                          <Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Configurazione Dispositivo
                         </h4>
                         <div className="flex flex-wrap gap-2.5">
 

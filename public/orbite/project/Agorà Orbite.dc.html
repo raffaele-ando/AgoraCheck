@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  html, body { margin: 0; padding: 0; background: #F4F1EA; }
+  * { box-sizing: border-box; }
+  a { color: #DC5F00; text-decoration: none; }
+  a:hover { color: #c95300; }
+</style>
+</helmet>
+<div ref="{{ stageRef }}" style="position:relative;width:100%;height:100vh;overflow:hidden;background:radial-gradient(120% 90% at 50% 50%, #F4F1EA 0%, #EAE0D0 100%);display:flex;align-items:center;justify-content:center;">
+  <div ref="{{ scaleRef }}" style="position:relative;width:2070px;height:1040px;transform-origin:center center;">
+
+    <div data-ring="0" style="position:absolute;left:50%;top:50%;width:820px;height:420px;margin:-210px 0 0 -410px;border:1px dashed rgba(17,17,17,0.15);border-radius:50%;transform:rotate(-12deg);"></div>
+    <div data-ring="1" style="position:absolute;left:50%;top:50%;width:1080px;height:570px;margin:-285px 0 0 -540px;border:1px dashed rgba(17,17,17,0.12);border-radius:50%;transform:rotate(-12deg);"></div>
+    <div data-ring="2" style="position:absolute;left:50%;top:50%;width:1440px;height:740px;margin:-370px 0 0 -720px;border:1px dashed rgba(17,17,17,0.1);border-radius:50%;transform:rotate(-12deg);"></div>
+    <div data-ring="3" style="position:absolute;left:50%;top:50%;width:1800px;height:910px;margin:-455px 0 0 -900px;border:1px dashed rgba(17,17,17,0.08);border-radius:50%;transform:rotate(-12deg);"></div>
+
+    <div style="position:absolute;inset:0;z-index:2;">
+      <div data-token="" data-orbit="0" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Polimi.svg" alt="Politecnico di Milano" loading="lazy" decoding="async" style="height:34px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="0" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Bocconi.svg" alt="Università Bocconi" loading="lazy" decoding="async" style="height:28px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="0" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Unimi-scuro.svg" alt="Università degli Studi di Milano" loading="lazy" decoding="async" style="height:42px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="0" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Lombardy.svg?width=120" alt="Lombardia" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="0" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Milan.svg?width=120" alt="Milano" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="0" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Rome.svg?width=120" alt="Roma" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Cattolica.svg" alt="Università Cattolica del Sacro Cuore" loading="lazy" decoding="async" style="height:36px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/LUISS-scuro.svg" alt="LUISS Guido Carli" loading="lazy" decoding="async" style="height:27px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Polito.svg" alt="Politecnico di Torino" loading="lazy" decoding="async" style="height:38px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Lazio.svg?width=120" alt="Lazio" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Piedmont.svg?width=120" alt="Piemonte" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Turin.svg?width=120" alt="Torino" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="1" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Naples.svg?width=120" alt="Napoli" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Unito.svg" alt="Università di Torino" loading="lazy" decoding="async" style="height:36px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Unige-fix.svg" alt="Università di Genova" loading="lazy" decoding="async" style="height:30px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Unimib-trasp.png" alt="Università di Milano-Bicocca" loading="lazy" decoding="async" style="height:44px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/IULM-ink.png" alt="Università IULM" loading="lazy" decoding="async" style="height:32px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Sicily.svg?width=120" alt="Sicilia" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Veneto.svg?width=120" alt="Veneto" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Tuscany.svg?width=120" alt="Toscana" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Florence.svg?width=120" alt="Firenze" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="2" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Palermo.svg?width=120" alt="Palermo" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/La_Sapienza.svg" alt="Sapienza Università di Roma" loading="lazy" decoding="async" style="height:32px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/UniSR.svg" alt="Università Vita-Salute San Raffaele" loading="lazy" decoding="async" style="height:36px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;width:172px;height:74px;border-radius:999px;background:#FFFDF8;border:1px solid rgba(17,17,17,0.1);box-shadow:0 1px 3px rgba(17,17,17,0.06);"><img src="loghi/Hunimed.svg" alt="Humanitas University" loading="lazy" decoding="async" style="height:28px;width:auto;max-width:150px;object-fit:contain;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Campania.svg?width=120" alt="Campania" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Apulia.svg?width=120" alt="Puglia" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Emilia-Romagna.svg?width=120" alt="Emilia-Romagna" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Bologna.svg?width=120" alt="Bologna" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Bari.svg?width=120" alt="Bari" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Genoa.svg?width=120" alt="Genova" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+      <div data-token="" data-orbit="3" style="position:absolute;left:50%;top:50%;width:46px;height:31px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(17,17,17,0.14), 0 1px 3px rgba(17,17,17,0.08);"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Cagliari.svg?width=120" alt="Cagliari" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+    </div>
+
+    <div style="position:absolute;left:50%;top:50%;z-index:10;width:580px;height:340px;margin:-170px 0 0 -290px;pointer-events:none;background:radial-gradient(closest-side, #F4F1EA 0%, #F4F1EA 62%, rgba(244,241,234,0.96) 78%, rgba(244,241,234,0) 100%);"></div>
+
+    <img src="agora-logo.png" alt="Agorà" style="position:absolute;left:50%;top:50%;z-index:11;width:420px;max-width:80vw;height:auto;transform:translate(-50%,-50%);display:block;" />
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.stageRef = React.createRef();
+    this.scaleRef = React.createRef();
+    this.orbits = [
+      { rx: 410, ry: 210, tilt: -12, dur: 46 },
+      { rx: 540, ry: 285, tilt: -12, dur: 66, rev: true },
+      { rx: 720, ry: 370, tilt: -12, dur: 88 },
+      { rx: 900, ry: 455, tilt: -12, dur: 112, rev: true }
+    ];
+  }
+
+  renderVals() {
+    return { stageRef: this.stageRef, scaleRef: this.scaleRef };
+  }
+
+  componentDidMount() {
+    const root = this.stageRef.current;
+    if (!root) return;
+    this.tokens = Array.from(root.querySelectorAll("[data-token]"));
+    this.rings = Array.from(root.querySelectorAll("[data-ring]"));
+    const perOrbit = {};
+    this.tokens.forEach(el => { const o = +el.dataset.orbit; perOrbit[o] = (perOrbit[o] || 0) + 1; });
+    this.meta = new Map();
+    const seen = {};
+    this.tokens.forEach(el => {
+      const o = +el.dataset.orbit;
+      seen[o] = seen[o] || 0;
+      this.meta.set(el, { o, phase: (seen[o] / perOrbit[o]) * Math.PI * 2 });
+      seen[o]++;
+      el.style.willChange = "transform";
+      el.style.contain = "layout paint";
+    });
+    this.resize = () => {
+      const s = Math.min(1, root.clientWidth / 2110, root.clientHeight / 1080);
+      if (this.scaleRef.current) this.scaleRef.current.style.transform = "scale(" + s.toFixed(3) + ")";
+    };
+    this.resize();
+    window.addEventListener("resize", this.resize);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t0 = performance.now();
+    let last = -999;
+    const frame = (now) => {
+      this.raf = requestAnimationFrame(frame);
+      if (now - last < 33) return;
+      last = now;
+      const t = reduce ? 0 : (now - t0) / 1000;
+      const breathe = 1 + 0.04 * Math.sin(t / 7);
+      this.orbits.forEach((orb, i) => {
+        const ring = this.rings[i];
+        if (ring) ring.style.transform = "rotate(" + orb.tilt + "deg) scale(" + breathe.toFixed(4) + ")";
+      });
+      this.tokens.forEach(el => {
+        const m = this.meta.get(el);
+        const orb = this.orbits[m.o];
+        const a = m.phase + (orb.rev ? -1 : 1) * (t / orb.dur) * Math.PI * 2;
+        const x0 = Math.cos(a) * orb.rx * breathe;
+        const y0 = Math.sin(a) * orb.ry * breathe;
+        const r = orb.tilt * Math.PI / 180;
+        const x = x0 * Math.cos(r) - y0 * Math.sin(r);
+        const y = x0 * Math.sin(r) + y0 * Math.cos(r);
+        const depth = Math.sin(a);
+        const sc = 0.88 + 0.14 * (depth + 1) / 2;
+        el.style.transform = "translate(-50%,-50%) translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) scale(" + sc.toFixed(3) + ")";
+        el.style.opacity = (0.55 + 0.45 * (depth + 1) / 2).toFixed(2);
+      });
+    };
+    this.raf = requestAnimationFrame(frame);
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener("resize", this.resize);
+  }
+}
+</script>
+</body>
+</html>

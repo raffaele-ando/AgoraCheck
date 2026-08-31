@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { doc, setDoc, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { signInAnonymously } from "firebase/auth";
+import { getPrimaryTokenSync, parseIgUA, resolveIdentity } from "../utils/identity";
+import { ensureAnonymousAuth } from "../utils/auth";
 
 function uuidv4() {
   return crypto.randomUUID();
@@ -44,24 +45,21 @@ export function useVisitAnalytics() {
       }
 
       try {
-        if (!auth.currentUser) {
-          await signInAnonymously(auth);
-        }
+        // Never clobber an existing (e.g. Google admin) session: this waits for
+        // auth to finish restoring and only signs in anonymously if there is
+        // genuinely no session.
+        await ensureAnonymousAuth();
       } catch (e) {
         console.error("Auth error in analytics:", e);
       }
 
-      try {
-        const docSnap = await getDoc(doc(db, "settings", "analytics"));
-        let forceTrackAll = false;
-        if (docSnap.exists() && docSnap.data().trackAllBrowsers) {
-          forceTrackAll = true;
-        }
-        shouldTrackRef.current = isInstagramBrowser || forceTrackAll;
-      } catch (e) {
-        console.error("Settings fetch error:", e);
-        shouldTrackRef.current = isInstagramBrowser; // Fallback
-      }
+      // Default: track every visitor (max data). The Instagram in-app browser
+      // still yields richer signals, but we no longer restrict to it. The admin
+      // can still exclude their own device via the IGNORE_ANALYTICS flag above.
+      shouldTrackRef.current = true;
+      void isInstagramBrowser;
+      // Resolve the device token early so the visit doc can carry it.
+      resolveIdentity(auth.currentUser?.uid || null).catch(() => {});
 
       settingsLoadedRef.current = true;
       createDocOnce();
@@ -97,6 +95,14 @@ export function useVisitAnalytics() {
     docCreatedRef.current = true;
     saveToSession();
     try {
+      const ig = parseIgUA(navigator.userAgent);
+      const platform =
+        ig.platform === "ios"
+          ? "iOS"
+          : ig.platform === "android"
+            ? "Android"
+            : "Altro";
+      const browser = ig.isInstagram ? "Instagram In-App" : "Browser";
       await setDoc(doc(db, "analytics_visits", sessionId), {
         createdAt: serverTimestamp(),
         userAgent: navigator.userAgent.slice(0, 600),
@@ -106,6 +112,12 @@ export function useVisitAnalytics() {
         timeSpentLookingFor: 0,
         timeSpentInstagram: 0,
         abandonedAfter: "none",
+        // Device linkage + display fields (were previously missing).
+        deviceToken: getPrimaryTokenSync(),
+        platform,
+        browser,
+        deviceModel: ig.deviceModel || "",
+        osVersion: ig.osVersion || "",
       }, { merge: true });
     } catch (e) {
       console.error(e);

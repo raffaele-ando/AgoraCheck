@@ -1,68 +1,60 @@
-import { test } from 'node:test';
-import assert from 'node:assert';
-import { computeDeviceProfileId } from './profiling';
+import { test } from "node:test";
+import assert from "node:assert";
+import { computeDeviceProfileId, extractDeviceToken } from "./profiling";
 
-test('computeDeviceProfileId backward compatibility', (t) => {
+test("computeDeviceProfileId: persistent token is the identity", (t) => {
   const deviceInfo = { userAgent: "Mozilla/5.0" };
-  
-  // 1. Format v1 (software / hardware full structure)
-  const v1 = {
-    software: {
-      canvasFingerprint: "c1",
-      audioFingerprint: "a1"
-    },
-    hardware: {
-      gpu: "g1",
-      screen: "s1",
-      cores: "4"
-    }
+
+  // Same token in different backend slots => SAME device id.
+  const a = computeDeviceProfileId({ ids: { srv: "tok-123" } }, deviceInfo);
+  const b = computeDeviceProfileId({ b: { ttv: "tok-123" } }, deviceInfo);
+  const c = computeDeviceProfileId({ ids: { ls: "tok-123" } }, deviceInfo);
+  assert.strictEqual(a, b, "srv and ttv of same token must match");
+  assert.strictEqual(a, c, "srv and ls of same token must match");
+  assert.ok(a.startsWith("DEV-"), "token-based id is prefixed DEV-");
+
+  // Different tokens => different devices.
+  const d = computeDeviceProfileId({ ids: { srv: "tok-999" } }, deviceInfo);
+  assert.notStrictEqual(a, d, "different tokens must not collide");
+});
+
+test("Instagram handle is NOT part of the identity (no poisoning)", (t) => {
+  const deviceInfo = { userAgent: "Mozilla/5.0" };
+  const withHandle = computeDeviceProfileId(
+    { ids: { srv: "tok-1" } },
+    deviceInfo,
+    "victim_user",
+  );
+  const withoutHandle = computeDeviceProfileId(
+    { ids: { srv: "tok-1" } },
+    deviceInfo,
+  );
+  assert.strictEqual(
+    withHandle,
+    withoutHandle,
+    "the handle must never change the device id",
+  );
+});
+
+test("legacy fallback: stable hardware seed, no volatile signals", (t) => {
+  const deviceInfo = { userAgent: "Mozilla/5.0" };
+  // Two sends from the same device where the (volatile) audio differs must map
+  // to the SAME id, because audio is no longer part of the seed.
+  const s1 = {
+    h: { uaDeviceModel: "iPhone14,5", physicalRes: "1170x2532", cores: "6" },
+    s: { audioFingerprint: "124.043", canvasFingerprint: "abc" },
   };
-  
-  // 2. Format v2 (s / h full structure)
-  const v2 = {
-    s: {
-      canvasFingerprint: "c1",
-      audioFingerprint: "a1"
-    },
-    h: {
-      gpu: "g1",
-      screen: "s1",
-      cores: "4"
-    }
+  const s2 = {
+    h: { uaDeviceModel: "iPhone14,5", physicalRes: "1170x2532", cores: "6" },
+    s: { audioFingerprint: "Unknown", canvasFingerprint: "abc" },
   };
+  const id1 = computeDeviceProfileId(s1, deviceInfo);
+  const id2 = computeDeviceProfileId(s2, deviceInfo);
+  assert.strictEqual(id1, id2, "volatile audio must not fragment identity");
+  assert.ok(id1.startsWith("HW-"), "legacy hw id is prefixed HW-");
+});
 
-  // 3. Format v3 (s / h minified structure)
-  const v3 = {
-    s: {
-      c: "c1",
-      a: "a1"
-    },
-    h: {
-      g: "g1",
-      s: "s1",
-      c: "4"
-    }
-  };
-
-  const id1 = computeDeviceProfileId(v1, deviceInfo);
-  const id2 = computeDeviceProfileId(v2, deviceInfo);
-  const id3 = computeDeviceProfileId(v3, deviceInfo);
-
-  // Assert that different parse formats over time yield the exact same device ID
-  assert.strictEqual(id1, id2, 'Format v1 should yield same ID as v2');
-  assert.strictEqual(id1, id3, 'Format v1 should yield same ID as v3');
-  assert.ok(id1 !== "UNKNOWN", 'ID should not be UNKNOWN');
-
-  // Test instagram prioritization
-  const instId = computeDeviceProfileId(v1, deviceInfo, "testuser");
-  const instId2 = computeDeviceProfileId({}, deviceInfo, "testuser");
-  assert.strictEqual(instId, instId2, 'Instagram ID should override hardware seed');
-  assert.ok(instId !== id1, 'Instagram ID should be different from hardware ID');
-
-  // Test empty profile fallback
-  const emptyId = computeDeviceProfileId({}, deviceInfo);
-  const ipId = computeDeviceProfileId(null, { userAgent: "Mozilla/5.0" });
-  
-  // When no adv info is given, fallback to userAgent fingerprint
-  assert.strictEqual(emptyId, computeDeviceProfileId({s:{}, h:{}}, deviceInfo), 'Empty objects fall back to IP/UserAgent');
+test("extractDeviceToken ignores sentinels", (t) => {
+  assert.strictEqual(extractDeviceToken({ ids: { srv: "Unknown" } }), "");
+  assert.strictEqual(extractDeviceToken({ ids: { srv: "real-token" } }), "real-token");
 });

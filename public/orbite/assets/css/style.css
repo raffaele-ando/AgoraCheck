@@ -1,0 +1,362 @@
+/* Agorà — palette e scena orbitale
+   Colori: crema #F3ECE0 / #EAE0D0 / #F4F1EA · arancio #DC5F00 / #c95300 · inchiostro #111111 */
+
+:root {
+  --crema-chiara: #F4F1EA;
+  --crema-scura:  #EAE0D0;
+  --inchiostro:   #111111;
+  --arancio:      #DC5F00;
+  --arancio-cupo: #c95300;
+
+  /* Misure calcolate da JS a ogni resize; questi sono i valori di riserva */
+  --chip-w: 172px;
+  --chip-h: 74px;
+  --flag-w: 46px;
+  --flag-h: 31px;
+  --logo-w: 420px;
+  --veil-w: 580px;
+  --veil-h: 340px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--crema-chiara);
+  color: var(--inchiostro);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior: none;
+}
+
+a { color: var(--arancio); text-decoration: none; }
+a:hover { color: var(--arancio-cupo); }
+
+/* ---------------------------------------------------------------- scena */
+
+.scene {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;      /* niente salti quando la barra del browser si ritrae */
+  min-height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 50%, var(--crema-chiara) 0%, var(--crema-scura) 100%);
+
+  /* Fallback senza JS: logo sopra, elementi incolonnati sotto */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 32px 16px;
+}
+
+/* ------------------------------------------------------------ il marchio */
+
+.brand {
+  margin: 0;
+  line-height: 0;
+  order: -1;               /* nel fallback il logo resta in cima */
+}
+
+.brand img {
+  display: block;
+  width: var(--logo-w);
+  max-width: 84vw;
+  height: auto;
+}
+
+/* ------------------------------------------------------ loghi e bandiere */
+
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 1100px;
+}
+
+.token {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.token[hidden] { display: none; }
+
+.token--logo {
+  width: var(--chip-w);
+  height: var(--chip-h);
+  padding: 0 calc(var(--chip-w) * 0.075);
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 1px solid rgba(17, 17, 17, 0.10);
+  box-shadow: 0 1px 3px rgba(17, 17, 17, 0.06);
+}
+
+.token--logo img {
+  display: block;
+  width: auto;
+  height: calc(var(--chip-h) * var(--logo-scale, 0.5));
+  max-width: 100%;
+  max-height: calc(var(--chip-h) * 0.88);
+  object-fit: contain;
+}
+
+.token--flag {
+  width: var(--flag-w);
+  height: var(--flag-h);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.14), 0 1px 3px rgba(17, 17, 17, 0.08);
+}
+
+.token--flag img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ------------------------------------------------- tracciati e velo (JS) */
+
+.orbits,
+.veil { display: none; }
+
+/* Nessun will-change: promuovere questi tracciati a livello GPU crea texture
+   grandi come lo schermo e fa crollare il frame rate. */
+.orbit { stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+#orbits-g { transform-origin: 0 0; }
+
+/* =================================================================
+   Modalità orbitale: attivata da JS quando la scena è pronta
+   ================================================================= */
+
+.scene.is-orbiting {
+  display: block;
+  padding: 0;
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+}
+
+.scene.is-orbiting .orbits {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.scene.is-orbiting .field {
+  position: absolute;
+  inset: 0;
+  display: block;
+  max-width: none;
+  z-index: 2;
+}
+
+.scene.is-orbiting .token {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  will-change: transform, opacity;
+  contain: layout paint style;
+  backface-visibility: hidden;
+}
+
+/* Il velo riprende esattamente lo stesso sfondo della scena (stessa sfumatura,
+   stessa dimensione, stesso centro) e lo sfuma ai bordi con una maschera:
+   così non si vede come un alone, ma i token che gli passano sotto spariscono
+   prima di raggiungere il marchio. */
+.scene.is-orbiting .veil {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 10;
+  width: var(--veil-w);
+  height: var(--veil-h);
+  margin: calc(var(--veil-h) / -2) 0 0 calc(var(--veil-w) / -2);
+  pointer-events: none;
+  background-image: radial-gradient(120% 90% at 50% 50%, var(--crema-chiara) 0%, var(--crema-scura) 100%);
+  background-size: var(--scene-w, 100vw) var(--scene-h, 100vh);
+  background-position: center center;
+  background-repeat: no-repeat;
+  -webkit-mask-image: radial-gradient(closest-side, #000 0%, #000 58%, rgba(0, 0, 0, 0.92) 76%, transparent 100%);
+          mask-image: radial-gradient(closest-side, #000 0%, #000 58%, rgba(0, 0, 0, 0.92) 76%, transparent 100%);
+}
+
+.scene.is-orbiting .brand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 11;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.scene.is-orbiting .brand img { max-width: none; }
+
+/* --------------------------------------------------- movimento ridotto */
+
+@media (prefers-reduced-motion: reduce) {
+  .scene.is-orbiting .token { will-change: auto; }
+}
+
+/* =================================================================
+   Apertura: il velo di uno dei design in assets/js/aperture/
+   ================================================================= */
+
+/* Fondo d'attesa. Copre lo schermo dal primo disegno, perché il velo lo mette
+   in pagina il selettore — che è differito — e senza questo si vedrebbe per un
+   istante il fallback con i loghi incolonnati. Sta sotto al velo e sopra alla
+   scena; il selettore lo rimuove nello stesso fotogramma in cui il velo
+   disegna, quindi non c'è nessun momento in cui si vedano entrambi. */
+.ground { display: none; }
+
+.has-portal .ground {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: radial-gradient(120% 90% at 50% 50%, var(--crema-chiara) 0%, var(--crema-scura) 100%);
+}
+
+/* Il primo design apre su fondo scuro: il colore va azzeccato subito, o al suo
+   posto si vede un lampo di crema. */
+.has-portal[data-apertura="marchio"] .ground { background: var(--inchiostro); }
+
+.portal { display: none; }
+
+/* L'apertura esiste solo con JavaScript attivo e movimento consentito.
+   Il fondo sta sul contenitore, così copre lo schermo già al primo disegno,
+   prima che lo script calcoli il ritaglio. È la sola differenza di stile fra i
+   quattro design: scuro nel primo, uguale alla scena negli altri tre. */
+.has-portal .portal {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.has-portal .portal--scuro { background: var(--inchiostro); }
+.has-portal .portal--crema {
+  background: radial-gradient(120% 90% at 50% 50%, var(--crema-chiara) 0%, var(--crema-scura) 100%);
+}
+
+.portal__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Mentre la porta si apre la pagina non scorre. */
+html.is-opening,
+html.is-opening body { overflow: hidden; }
+
+/* =================================================================
+   Selettore dei design d'apertura: uno strumento appoggiato sopra la
+   pagina, non parte del marchio. Sta sopra al velo, così si può
+   cambiare apertura anche mentre è in scena.
+   ================================================================= */
+
+.picker {
+  position: fixed;
+  z-index: 200;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 20px);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.92);
+  box-shadow: 0 2px 14px rgba(17, 17, 17, 0.22);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-backdrop-filter: saturate(1.4) blur(6px);
+          backdrop-filter: saturate(1.4) blur(6px);
+}
+
+.picker::-webkit-scrollbar { display: none; }
+
+.picker__title {
+  flex: none;
+  padding-right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 234, 0.55);
+}
+
+.picker__opt,
+.picker__again {
+  flex: none;
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(244, 241, 234, 0.72);
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.picker__opt:hover,
+.picker__again:hover { color: var(--crema-chiara); background: rgba(244, 241, 234, 0.10); }
+
+.picker__opt[aria-pressed="true"] {
+  color: #FFFFFF;
+  background: var(--arancio);
+}
+
+.picker__again {
+  margin-left: 4px;
+  color: rgba(244, 241, 234, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(244, 241, 234, 0.18);
+}
+
+.picker__opt:focus-visible,
+.picker__again:focus-visible {
+  outline: 2px solid var(--arancio);
+  outline-offset: 2px;
+}
+
+/* Su telefono verticale i cinque tasti non stanno in una riga: invece di farli
+   scorrere di lato — con l'ultimo nascosto fuori dal bordo — la barra va a capo,
+   così sono tutti visibili e leggibili senza toccare le etichette. */
+@media (max-width: 560px) {
+  .picker {
+    top: 8px;
+    /* La larghezza va imposta: senza, il contenitore si stringe al minimo e la
+       barra va a capo a ogni tasto invece di riempire la riga. */
+    width: calc(100% - 20px);
+    padding: 5px 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 3px;
+    border-radius: 20px;
+    overflow-x: visible;
+  }
+  .picker__title { display: none; }
+  .picker__opt, .picker__again { padding: 7px 11px; font-size: 12px; }
+  .picker__again { margin-left: 0; }
+}
