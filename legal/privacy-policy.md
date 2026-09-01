@@ -8,7 +8,7 @@
 
 **Informativa sul trattamento dei dati personali ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR)**
 
-- **Servizio:** Agorà — bacheca sociale universitaria ("spotted", sondaggi e messaggi)
+- **Servizio:** Agorà — bacheca sociale ("", sondaggi e messaggi)
 - **Sito / applicazione:** https://agora.theproject.world
 - **Versione bozza:** 0.1
 - **Data ultimo aggiornamento:** [DA COMPILARE]
@@ -43,7 +43,7 @@ Qualora il servizio sia gestito, in tutto o in parte, da un soggetto diverso (es
 
 Per rispettare il principio di trasparenza (artt. 12-14 GDPR), forniamo una sintesi. **Ti invitiamo comunque a leggere l'intera informativa.**
 
-- Agorà è una bacheca per studenti universitari dove puoi pubblicare messaggi ("spotted") e partecipare a sondaggi, in forma anonima o, in futuro, con un account.
+- Agorà è una bacheca per utenti dove puoi pubblicare messaggi ("") e partecipare a sondaggi, in futuro, con un account.
 - Anche senza registrarti, l'applicazione **raccoglie numerose informazioni tecniche sul tuo dispositivo e sul tuo comportamento** allo scopo di creare un identificativo stabile del dispositivo (tecniche di *fingerprinting*), prevenire abusi e far funzionare il servizio.
 - Alcune di queste tecniche (fingerprinting, identificativi persistenti, memorizzazione di dati sul tuo dispositivo per finalità non strettamente tecniche) **richiedono il tuo consenso preventivo**, che ti chiederemo tramite un banner/schermata dedicata.
 - Puoi collegare, in via facoltativa, il tuo **handle Instagram** al profilo del tuo dispositivo.
@@ -100,12 +100,12 @@ Tali identificativi possono avere una durata prolungata, **fino a circa 400 gior
 - Dati dell'**account di accesso** (funzionalità pianificata): credenziali, identificativo utente ed eventuali dati di profilo forniti in fase di registrazione
 
 ### 3.8 Contenuti generati dagli utenti (UGC)
-- Testi dei messaggi "spotted", voti e risposte ai sondaggi, e ogni altro contenuto pubblicato dall'utente. **Ricorda che potresti inserire, di tua iniziativa, dati personali (tuoi o di terzi) all'interno dei contenuti**: v. sezione 13.
+- Testi dei messaggi "", voti e risposte ai sondaggi, e ogni altro contenuto pubblicato dall'utente. **Ricorda che potresti inserire, di tua iniziativa, dati personali (tuoi o di terzi) all'interno dei contenuti**: v. sezione 13.
 
 ### 3.9 Log tecnici e dati di sicurezza
 - Log di sistema, timestamp, richieste effettuate, esiti di operazioni, dati necessari a prevenire frodi, spam e abusi.
 
-> **Categorie particolari di dati (art. 9 GDPR).** Agorà **non richiede** intenzionalmente dati appartenenti a categorie particolari (origine etnica, opinioni politiche, convinzioni religiose, dati sulla salute, vita/orientamento sessuale, dati biometrici a fini identificativi, ecc.). Tuttavia, per la natura della bacheca ("spotted"), tali dati potrebbero **emergere dai contenuti liberamente pubblicati** dagli utenti. Non è consentito pubblicare dati particolari di terzi senza base giuridica idonea (v. Termini e Condizioni). Il Titolare adotta misure di moderazione per limitare tali contenuti (v. sezione 7).
+> **Categorie particolari di dati (art. 9 GDPR).** Agorà **non richiede** intenzionalmente dati appartenenti a categorie particolari (origine etnica, opinioni politiche, convinzioni religiose, dati sulla salute, vita/orientamento sessuale, dati biometrici a fini identificativi, ecc.). Tuttavia, per la natura della bacheca (""), tali dati potrebbero **emergere dai contenuti liberamente pubblicati** dagli utenti. Non è consentito pubblicare dati particolari di terzi senza base giuridica idonea (v. Termini e Condizioni). Il Titolare adotta misure di moderazione per limitare tali contenuti (v. sezione 7).
 
 ---
 
@@ -123,7 +123,7 @@ I dati sono trattati per le seguenti finalità:
 
 | # | Finalità | Esempi di dati |
 |---|----------|----------------|
-| A | **Erogazione del servizio** (pubblicazione spotted, sondaggi, autenticazione anonima e, in futuro, tramite account) | Contenuti UGC, identificativi tecnici minimi, dati di account |
+| A | **Erogazione del servizio** (pubblicazione , sondaggi, autenticazione  e, in futuro, tramite account) | Contenuti UGC, identificativi tecnici minimi, dati di account |
 | B | **Sicurezza, prevenzione di abusi, spam, frodi e voti multipli/duplicati** | Fingerprint del dispositivo, IP, identificativi persistenti, log |
 | C | **Identificazione e riconoscimento stabile del dispositivo** (anche tra browser diversi) | Fingerprinting, identificativi persistenti, handoff cross-browser |
 | D | **Analisi comportamentale e telemetria** (comprensione dell'uso, rilevamento di comportamenti anomali/bot, miglioramento del servizio) | Telemetria di digitazione, mouse/touch, scroll, sensori |
@@ -141,7 +141,7 @@ Per ciascuna finalità individuiamo la base giuridica ai sensi dell'**art. 6 GDP
 
 | Finalità | Base giuridica | Note |
 |----------|----------------|------|
-| A — Erogazione del servizio | **Art. 6(1)(b)** — esecuzione del contratto/misure precontrattuali. Per gli strumenti tecnici strettamente necessari, si applica l'esenzione da consenso dell'art. 122 c.1 Codice Privacy | Include gli identificativi **strettamente necessari** a far funzionare il servizio (es. sessione anonima essenziale) |
+| A — Erogazione del servizio | **Art. 6(1)(b)** — esecuzione del contratto/misure precontrattuali. Per gli strumenti tecnici strettamente necessari, si applica l'esenzione da consenso dell'art. 122 c.1 Codice Privacy | Include gli identificativi **strettamente necessari** a far funzionare il servizio (es. sessione  essenziale) |
 | B — Sicurezza di base / anti-abuso essenziale | **Art. 6(1)(f)** — legittimo interesse; per gli strumenti che comportano archiviazione/accesso al terminale, solo se **strettamente necessari** all'erogazione del servizio richiesto | Va documentato un **bilanciamento (LIA)**. Le tecniche invasive eccedenti la stretta necessità richiedono consenso |
 | C — Identificazione stabile del dispositivo (fingerprinting, identificativi persistenti, handoff cross-browser) | **Art. 6(1)(a)** — **consenso** dell'interessato | Il fingerprinting e gli identificativi non tecnici rientrano nell'art. 5(3) ePrivacy / art. 122 Codice Privacy e richiedono **consenso preventivo, libero, specifico, informato e inequivocabile** |
 | D — Analisi comportamentale / telemetria / profilazione | **Art. 6(1)(a)** — **consenso** | Anche la profilazione a fini analitici non "solo tecnici" richiede consenso |
@@ -196,14 +196,14 @@ I dati sono conservati per il tempo strettamente necessario alle finalità per c
 |-----------|------------------------------|
 | Identificativi persistenti sul dispositivo (cookie/localStorage/IndexedDB/ETag) | Durata massima indicata al momento del consenso; **fino a ~400 giorni**, salvo revoca del consenso o cancellazione anticipata |
 | Fingerprint e profilo del dispositivo | Per il tempo necessario alle finalità di sicurezza/identificazione; riesame periodico `[DA COMPILARE]` |
-| Telemetria comportamentale | Il minor tempo possibile; preferibilmente in forma aggregata/anonimizzata `[DA COMPILARE]` |
-| Contenuti generati dagli utenti (spotted, sondaggi) | Per la durata di pubblicazione e per un periodo successivo `[DA COMPILARE]`; possibile conservazione in forma aggregata |
+| Telemetria comportamentale | Il minor tempo possibile;  `[DA COMPILARE]` |
+| Contenuti generati dagli utenti (, sondaggi) | Per la durata di pubblicazione e per un periodo successivo `[DA COMPILARE]`; possibile conservazione in forma aggregata |
 | Handle Instagram collegato | Fino a revoca del consenso o cancellazione dell'associazione |
 | Dati di account (funzionalità futura) | Per la durata del rapporto e nei termini di legge successivi |
 | Log tecnici e di sicurezza | Periodo `[DA COMPILARE]` proporzionato alle esigenze di sicurezza e agli obblighi di legge |
 | Dati necessari alla difesa in giudizio | Fino al termine di prescrizione applicabile |
 
-Al termine dei periodi, i dati sono cancellati o resi anonimi in modo irreversibile.
+
 
 ---
 
@@ -256,7 +256,7 @@ In qualità di interessato, hai diritto di:
 
 **Come esercitare i diritti.** Puoi inviare una richiesta all'indirizzo **[DA COMPILARE — e-mail dedicata]** (o al DPO, se nominato). Il Titolare risponde **senza ingiustificato ritardo e comunque entro un mese** dalla richiesta (prorogabile di due mesi per richieste complesse, con informativa all'interessato, ex art. 12 GDPR). L'esercizio dei diritti è **gratuito**, salvo richieste manifestamente infondate o eccessive.
 
-> **Nota per l'utente anonimo.** Se utilizzi Agorà senza account, per esercitare i diritti potremmo doverti chiedere **informazioni aggiuntive** utili a identificare i dati riferiti al tuo dispositivo (art. 11 e art. 12 GDPR). Se non siamo in grado di identificarti, potremmo non poter dar seguito ad alcune richieste.
+> **Nota per l'utente.** Se utilizzi Agorà senza account, per esercitare i diritti potremmo doverti chiedere **informazioni aggiuntive** utili a identificare i dati riferiti al tuo dispositivo (art. 11 e art. 12 GDPR). Se non siamo in grado di identificarti, potremmo non poter dar seguito ad alcune richieste.
 
 ---
 
@@ -270,7 +270,7 @@ In qualità di interessato, hai diritto di:
 
 ## 13. Dati personali contenuti nei contenuti pubblicati
 
-Quando pubblichi uno "spotted", un sondaggio o un commento, **potresti inserire dati personali** tuoi o di terzi. Ti ricordiamo che:
+Quando pubblichi uno "", un sondaggio o un commento, **potresti inserire dati personali** tuoi o di terzi. Ti ricordiamo che:
 - non devi pubblicare dati personali di terzi senza una base giuridica idonea o il loro consenso;
 - non devi pubblicare dati appartenenti a **categorie particolari** (art. 9 GDPR) di terzi;
 - sei responsabile dei contenuti che pubblichi (v. Termini e Condizioni).
@@ -289,7 +289,7 @@ Rispetto ai dati di terzi eventualmente presenti nei contenuti, il Titolare trat
 
 ## 15. Minori
 
-Agorà è destinata a studenti universitari. Ai sensi dell'**art. 8 GDPR** e dell'**art. 2-quinquies del D.lgs. 196/2003** (come modificato dal D.lgs. 101/2018), in Italia il minore che ha compiuto **14 anni** può prestare autonomamente il consenso ai servizi della società dell'informazione; per i minori di 14 anni il consenso deve essere prestato o autorizzato da chi esercita la responsabilità genitoriale. Il Titolare adotta misure ragionevoli per verificare l'età e non tratta consapevolmente dati di minori di 14 anni senza le condizioni di legge. Vedi anche i Termini e Condizioni per i requisiti di età di accesso al servizio.
+Agorà è destinata a utenti. Ai sensi dell'**art. 8 GDPR** e dell'**art. 2-quinquies del D.lgs. 196/2003** (come modificato dal D.lgs. 101/2018), in Italia il minore che ha compiuto **14 anni** può prestare autonomamente il consenso ai servizi della società dell'informazione; per i minori di 14 anni il consenso deve essere prestato o autorizzato da chi esercita la responsabilità genitoriale. Il Titolare adotta misure ragionevoli per verificare l'età e non tratta consapevolmente dati di minori di 14 anni senza le condizioni di legge. Vedi anche i Termini e Condizioni per i requisiti di età di accesso al servizio.
 
 ---
 
