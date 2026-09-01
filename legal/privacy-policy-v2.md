@@ -2,7 +2,7 @@
 
 **Informativa sul trattamento dei dati personali ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR), dell'art. 122 del D.lgs. 196/2003 e delle Linee Guida EDPB 2/2023**
 
-- **Servizio:** Agorà — piattaforma digitale di bacheche di prossimità, interazione sociale universitaria ("spotted"), consultazioni e sondaggi
+- **Servizio:** Agorà — piattaforma digitale di bacheche di prossimità, interazione sociale, consultazioni e sondaggi
 - **Sito / applicazione:** https://agora.theproject.world
 - **Versione:** 1.0 (Revisione Legale Integrale)
 - **Data ultimo aggiornamento:** [DA COMPILARE]
@@ -37,8 +37,8 @@ Qualora il servizio sia gestito, in tutto o in parte, da un soggetto diverso (es
 
 Per garantire la massima trasparenza ai sensi degli artt. 12, 13 e 14 del GDPR, forniamo un quadro di sintesi ad accesso rapido:
 
-- **Cos'è Agorà:** Una piattaforma di bacheche universitarie e consultazioni in cui puoi interagire, pubblicare messaggi ("spotted") e votare sondaggi, fruibile senza necessità di creare un account tradizionale con password.
-- **Come garantiamo la sicurezza senza login:** Per evitare voti duplicati, frodi, attacchi informatici coordinati (Sybil attacks) e abusi nel rispetto dell'anonimato, l'applicazione esegue verifiche tecniche avanzate sull'integrità del tuo terminale (fingerprinting e analisi euristica).
+- **Cos'è Agorà:** Una piattaforma di bacheche e consultazioni in cui puoi interagire, pubblicare messaggi e votare sondaggi, fruibile senza necessità di creare un account tradizionale con password.
+- **Come garantiamo la sicurezza senza login:** Per evitare voti duplicati, frodi, attacchi informatici coordinati (Sybil attacks) e abusi nel rispetto dell'utente, l'applicazione esegue verifiche tecniche avanzate sull'integrità del tuo terminale (fingerprinting e analisi euristica).
 - **Consenso preventivo e trasparenza:** I presidi tecnici strettamente necessari all'esecuzione del servizio e alla sicurezza perimetrale operano su base contrattuale e di legittimo interesse. Le misure di riconoscimento univoco a lungo termine (fino a 400 giorni), la telemetria euristica e la continuità cross-browser richiedono il tuo **consenso preventivo e granulare**, liberamente revocabile in qualsiasi momento tramite il pannello di gestione.
 - **Funzionalità Social e Cross-Platform:** Puoi associare, in via puramente facoltativa, il tuo handle Instagram al profilo del tuo dispositivo. I contenuti pubblicati possono essere selezionati per la diffusione sui profili social ufficiali collegati ad Agorà.
 - **Infrastruttura e Hosting:** I dati sono elaborati mediante fornitori leader di mercato: **Google Ireland Ltd. / Google LLC (Firebase Firestore)** e **Cloudflare, Inc. (Workers, R2, D1, KV)**, con adozione delle garanzie legali per i trasferimenti internazionali (EU-U.S. Data Privacy Framework e SCCs).
@@ -48,7 +48,7 @@ Per garantire la massima trasparenza ai sensi degli artt. 12, 13 e 14 del GDPR, 
 
 ## 3. Categorie di dati personali trattati
 
-Agorà tratta le seguenti categorie di dati, sia in modalità anonima/pseudonima, sia a seguito dell'eventuale inserimento volontario di informazioni da parte dell'Utente:
+Agorà tratta le seguenti categorie di dati sia a seguito dell'eventuale inserimento volontario di informazioni da parte dell'Utente:
 
 ### 3.1 Dati di identificazione dell'integrità del dispositivo e del browser (Device Posture & Fingerprinting)
 - **Canvas Fingerprint:** Rilevamento delle micro-variazioni di rendering grafico computazionale generate dal sottosistema grafico/driver del dispositivo tramite elementi HTML5 Canvas;
@@ -92,7 +92,7 @@ Tali presidi garantiscono una durata dello stato di sicurezza e dei controlli an
 - **Credenziali di autenticazione avanzata (funzionalità futura):** Identificativi univoci di account, email e credenziali protette in caso di attivazione di profili nominativi opzionali.
 
 ### 3.8 Contenuti generati dagli utenti (UGC) e interazioni
-- Testi dei messaggi "spotted", voti espressi nei sondaggi, risposte a consultazioni, segnalazioni di moderazione e menzioni.
+- Testi dei messaggi, voti espressi nei sondaggi, risposte a consultazioni, segnalazioni di moderazione e menzioni.
 
 ### 3.9 Log di sistema e sicurezza perimetrale
 - Timestamp delle richieste, log di transazione, codici di risposta HTTP, indirizzi URL richiesti, esiti dei controlli di sicurezza e record di audit informatico.
@@ -174,7 +174,7 @@ I dati sono conservati per periodi rigorosamente proporzionati alle finalità pe
 | **Marcatori di Persistenza Multi-Layer (IndexedDB, Storage, ETag)** | Fino a un massimo di **400 giorni** | Corrispondente alla durata del ciclo accademico annuale, per garantire la non duplicazione dei voti e l'efficacia dei ban disciplinari. |
 | **Fingerprint Hardware e Profilo Tecnico Dispositivo** | Fino a revoca del consenso o massimo 400 giorni | Mantenimento della coerenza di sicurezza del terminale associato. |
 | **Telemetria Comportamentale (Dinamica Digitazione / Sensori)** | Elaborazione volatile in tempo reale (log grezzi eliminati entro **24 ore**) | I dati biometrico-comportamentali grezzi vengono distrutti subito dopo il calcolo dello score di sicurezza anti-bot. |
-| **Contenuti Pubblicati (Messaggi UGC, Sondaggi)** | Fino a richiesta di rimozione o fino a **12 mesi** dalla pubblicazione | Ciclo di vita editoriale delle bacheche universitarie e conservazione statistica aggregata. |
+| **Contenuti Pubblicati (Messaggi UGC, Sondaggi)** | Fino a richiesta di rimozione o fino a **12 mesi** dalla pubblicazione | Ciclo di vita editoriale delle bacheche e conservazione statistica aggregata. |
 | **Handle Instagram Associato** | Fino a revoca del consenso o disconnessione manuale | Permanenza del dato a discrezione dell'interessato. |
 | **Log di Connessione e Sicurezza Informatica** | **6 mesi** (salvo conservazione ulteriore per indagini giudiziarie) | Adempimento degli obblighi di sicurezza e tracciabilità delle reti. |
 | **Dati per la Tutela Legale / Difesa in Giudizio** | Fino al decorso dei termini di prescrizione ordinaria (10 anni) | Esercizio del diritto di difesa ai sensi dell'art. 2946 c.c. |
