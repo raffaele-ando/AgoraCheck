@@ -12,8 +12,8 @@ Provisioned in your account (ready to use):
 `worker.js` is meant to run **in front of** `agora.theproject.world` and pass
 everything through to the current origin, adding only:
 
-- **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` cookie valid ~400
-  days and returns a signed token. This is the **iOS durability fix**: Safari/
+- **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` cookie valid
+  and returns a signed token. This is the **iOS durability fix**: Safari/
   WKWebView ITP caps `document.cookie` at 7 days, but a server `Set-Cookie` is
   not capped. The client (`src/utils/identity.ts`) already calls `/id` and
   folds the token into the device identity — it silently no-ops until the Worker
