@@ -6,7 +6,7 @@
 
 # Termini e Condizioni d'uso — Agorà
 
-- **Servizio:** Agorà — bacheca sociale universitaria ("spotted", sondaggi e messaggi)
+- **Servizio:** Agorà — bacheca di gruppi sociali ("spotted", sondaggi e messaggi)
 - **Sito / applicazione:** https://agora.theproject.world
 - **Versione bozza:** 0.1
 - **Data ultimo aggiornamento:** [DA COMPILARE]
@@ -53,15 +53,15 @@ Il servizio Agorà è fornito da:
 
 ---
 
-## 4. Account, autenticazione senza registrazione e sicurezza
+## 4. Accesso al Servizio, Misure di Sicurezza Tecnica e Account
 
-4.1 Il Servizio consente l'utilizzo **senza registrazione** tramite autenticazione automatica del dispositivo e dell’utente per prevenire comportamenti dannosi o abusi della piattaforma (permettendo così una moderazione più precisa rispetto a forme semplici di registrazione dove potrebbero essere bypassate rispetto a questo riconoscimento del dispositivo e dell’utente. È inoltre prevista, come funzionalità **futura**, la possibilità di creare un **account** con credenziali di accesso.
+4.1 **Accesso senza registrazione e credenziali tecniche.** Il Servizio è fruibile senza la preventiva creazione di un account tradizionale basato su credenziali personali. Al fine di garantire la funzionalità tecnica del Servizio, la sicurezza delle comunicazioni, la validità delle votazioni/sondaggi e la prevenzione di abusi informatici o condotte illecite, il Servizio genera e memorizza identificatori tecnici univoci di sessione (token crittografici/crittogrammi di sicurezza) associati temporaneamente al terminale dell'Utente. Tali misure sono adottate in quanto strettamente necessarie all'erogazione del Servizio richiesto dall'Utente e a presidio dell'integrità della piattaforma.
 
-4.2 Sei responsabile della riservatezza delle eventuali credenziali di accesso e di tutte le attività svolte tramite il tuo account o il tuo dispositivo.
+4.2 **Account e funzionalità avanzate.** È facoltà del Fornitore implementare, in qualsiasi momento, sistemi di autenticazione opzionali o obbligatori basati su credenziali create dall'Utente. In tal caso, l'Utente è custode esclusivo delle proprie credenziali e risponde di tutte le attività poste in essere tramite esse.
 
-4.3 Puoi collegare, in via **facoltativa**, il tuo **handle Instagram** al profilo del tuo dispositivo. Dichiari di essere titolare dell'account Instagram indicato e di avere il diritto di collegarlo.
+4.3 **Collegamento a servizi terzi (Handle social).** L'Utente può, in via puramente facoltativa, associare al proprio profilo pubblico identificatori di terze parti (es. handle Instagram). Procedendo a tale associazione, l'Utente dichiara e garantisce di essere il legittimo titolare dell'account collegato e accetta che tale dato sia visibile agli altri utenti del Servizio secondo le impostazioni della piattaforma.
 
-4.4 Il Fornitore utilizza tecniche di identificazione del dispositivo (v. Informativa sulla Privacy) anche a fini di sicurezza e prevenzione degli abusi; l'elusione o la manomissione di tali sistemi costituisce violazione dei presenti Termini.
+4.4 **Presidi di sicurezza e divieto di elusione.** Il Fornitore applica misure logiche e tecniche di sicurezza volte a prevenire attacchi informatici, spamming, manipolazioni di sondaggi, alterazione delle metriche o la reiterazione di violazioni dei presenti Termini da parte di soggetti già sanzionati. È fatto espresso divieto all'Utente di compiere atti diretti a manomettere, falsificare, bypassare o eludere tali sistemi di protezione e controllo dell'integrità del Servizio. Qualsiasi tentativo in tal senso comporterà l'interruzione immediata dell'accesso e le eventuali azioni a tutela dei diritti del Fornitore.
 
 ---
 
