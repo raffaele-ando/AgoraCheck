@@ -12,14 +12,14 @@ Provisioned in your account (ready to use):
 `worker.js` is meant to run **in front of** `agora.theproject.world` and pass
 everything through to the current origin, adding only:
 
-- **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` cookie valid
+- **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` session token valid for rate-limiting and anti-abuse protection.
   and returns a signed token. This is the **iOS durability fix**: Safari/
   WKWebView ITP caps `document.cookie` at 7 days, but a server `Set-Cookie` is
   not capped. The client (`src/utils/identity.ts`) already calls `/id` and
   folds the token into the device identity — it silently no-ops until the Worker
   is deployed, so nothing breaks in the meantime.
 - **`GET /px.gif`** — a 1×1 gif whose `ETag` is the device token, so identity
-  survives a localStorage/IndexedDB clear (lives in the HTTP cache instead).
+  survives a localStorage/IndexedDB clear (lives in the HTTP cache instead). Technical heartbeat endpoint for session continuity.
 - **`POST /media`** + **`GET /media/<key>`** — store/serve binary assets in R2.
 
 ## Deploy
