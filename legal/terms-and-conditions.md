@@ -33,14 +33,14 @@ Il servizio Agorà è fornito da:
 
 2.1 I presenti Termini e Condizioni d'uso (i **"Termini"**) disciplinano l'accesso e l'utilizzo dell'applicazione e del sito Agorà (il **"Servizio"**) da parte dell'utente (l'**"Utente"** o **"tu"**).
 
-2.2 Natura della piattaforma, Ecosistema Multicanale e Discrezionalità Editoriale.
-Agorà è un'infrastruttura digitale di interazione sociale e aggregazione logica, accessibile tramite applicazione web e integrata con canali di diffusione esterni e profili social ufficiali (inclusi, in via non limitativa, account Instagram, canali broadcast, funzionalità di messaggistica e formati multimediali proprietari o terzi). La piattaforma si articola in, a titolo meramente esemplificativo e non esaustivo, canali tematici, territoriali, istituzionali o di prossimità.
-Resta espressamente inteso che:
-(a) Il Fornitore opera con piena e insindacabile discrezionalità nella selezione, impaginazione, ripubblicazione, archiviazione o scarto dei Contenuti destinati ai canali social, senza che la pubblicazione sul sito web generi alcun diritto, aspettativa o pretesa dell'Utente alla diffusione su Instagram o canali terzi;
-(b) Il Fornitore si riserva la facoltà di creare, riorganizzare, sospendere, limitare o cancellare canali, bacheche e collegamenti a piattaforme terze in qualsiasi momento e senza preavviso, senza che ciò comporti alcuna responsabilità o obbligo risarcitorio;
-(c) La disponibilità e il funzionamento delle funzionalità cross-platform dipendono dall'infrastruttura di soggetti terzi indipendenti (Meta Platforms Ireland Ltd.), per le cui interruzioni, limitazioni o modifiche di policy il Fornitore declina ogni responsabilità.
+2.2 **Natura della piattaforma, Ecosistema Multicanale e Selezione Editoriale.**
+Agorà è un'infrastruttura digitale di interazione sociale e aggregazione logica, accessibile tramite applicazione web e integrata con canali di diffusione esterni e profili social ufficiali (inclusi, in via non limitativa, account Instagram, canali broadcast e formati multimediali proprietari o terzi). Trattandosi di una piattaforma fornita a titolo gratuito:
+(a) L'Utente prende atto che l'eventuale selezione, rielaborazione grafica, ripubblicazione o archiviazione dei Contenuti sui canali social collegati costituisce una libera facoltà editoriale del Fornitore. La pubblicazione sul sito web non genera alcun diritto o aspettativa dell'Utente alla diffusione su Instagram o piattaforme terze;
+(b) Il Fornitore potrà modificare, riorganizzare o dismettere canali, bacheche o collegamenti a piattaforme terze per giustificate esigenze tecniche, organizzative o legali, dandone ragionevole informazione agli Utenti tramite la piattaforma ove operativamente possibile;
+(c) La disponibilità dei servizi cross-platform dipende dall'infrastruttura di soggetti terzi indipendenti (Meta Platforms Ireland Ltd.), per le cui anomalie tecniche, interruzioni o modifiche contrattuali il Fornitore non assume responsabilità, fatto salvo il corretto adempimento delle proprie prestazioni.
 
-2.3 Utilizzando il Servizio, dichiari di aver letto, compreso e accettato i presenti Termini e l'**Informativa sulla Privacy**, che ne costituisce parte integrante. Se non accetti i Termini, non devi utilizzare il Servizio.
+2.3 **Accettazione e perfezionamento del contratto.**
+La visualizzazione dell'apposita schermata di informativa al primo accesso e l'interazione attiva con il Servizio (compresi l'invio di messaggi, la creazione di contenuti o la partecipazione a sondaggi) costituiscono manifestazione espressa di accettazione dei presenti Termini e dell'Informativa sulla Privacy. Se non intendi accettare i Termini, sei tenuto a non utilizzare il Servizio.
 
 2.4 Il Servizio è gestito in totale autonomia. Salvo diverso accordo scritto, il Servizio non è affiliato, sponsorizzato o approvato da atenei, enti pubblici, istituzioni o società terze. L'eventuale denominazione di canali o bacheche con nomi di atenei, facoltà, città o luoghi geografici ha finalità esclusivamente descrittiva, toponomastica e di geolocalizzazione logica per facilitare l'aggregazione degli Utenti.
 
@@ -60,7 +60,7 @@ Resta espressamente inteso che:
 
 ## 4. Accesso al Servizio, Misure di Sicurezza Tecnica e Account
 
-4.1 **Accesso senza registrazione e credenziali tecniche.** Il Servizio è fruibile senza la preventiva creazione di un account tradizionale basato su credenziali personali (account nominativo). Al fine di garantire la funzionalità tecnica del Servizio, la sicurezza delle comunicazioni, la validità delle votazioni/sondaggi e la prevenzione di abusi informatici o condotte illecite, il Servizio genera e memorizza identificatori tecnici univoci di sessione (token crittografici/crittogrammi di sicurezza) associati al terminale dell'Utente, quali presidi di stretta necessità tecnica e legittimo interesse di sicurezza dell'infrastruttura.. Tali misure sono adottate in quanto strettamente necessarie all'erogazione del Servizio richiesto dall'Utente e a presidio dell'integrità della piattaforma.
+4.1 **Accesso senza registrazione e identificatori tecnici.** Il Servizio è accessibile senza la preventiva creazione di un account basato su credenziali nominative (email/password). Al fine di erogare le funzionalità richieste, garantire la sicurezza dell'infrastruttura, convalidare i sondaggi e prevenire abusi o violazioni dei Termini, il Servizio genera e conserva identificatori tecnici crittografici univoci associati al dispositivo dell'Utente. Tali misure sono trattate nel rispetto della normativa privacy applicabile (Regolamento UE 2016/679) quali presidi strettamente necessari per l'esecuzione del servizio richiesto e per il perseguimento del legittimo interesse alla sicurezza del sistema.
 
 4.2 **Account e funzionalità avanzate.** È facoltà del Fornitore implementare, in qualsiasi momento, sistemi di autenticazione opzionali o obbligatori basati su credenziali create dall'Utente. In tal caso, l'Utente è custode esclusivo delle proprie credenziali e risponde di tutte le attività poste in essere tramite esse.
 
@@ -90,10 +90,13 @@ Resta espressamente inteso che:
 
 5.2 Sei l'unico responsabile dei contenuti che pubblichi e delle conseguenze della loro pubblicazione.
 
-5.3 Condivisione di identificativi social di terzi e ricerche di contatto.
-(a) L'indicazione di account o handle di terzi (es. tag di profili Instagram) quale risposta a ricerche di contatto, "avvistamenti" o richieste della community è consentita esclusivamente se effettuata in buona fede, per fini di mera interazione sociale, e purché non arrechi molestia, ridicolo o pregiudizio al titolare del profilo.
-(b) L'Utente che pubblica l'handle social di un terzo garantisce che tale indicazione non viola la riservatezza altrui e si assume ogni responsabilità civile o penale per eventuali contestazioni sollevate dal soggetto indicato.
-(c) È severamente vietato associare profili o handle di terzi a messaggi offensivi, denigratori, a sfondo sessuale, o finalizzati a generare campagne di molestia (cyberbullismo o "mass-tagging").
+5.3 Interazioni della community, ricerche di contatto ("avvistamenti") e dati di terzi.
+(a) La piattaforma consente agli Utenti di inviare messaggi di socializzazione e ricerche di contatto. L'Utente che inserisce o menziona identificatori social di terzi (es. tag o handle di profili Instagram pubblici):
+
+Dichiara di agire per finalità esclusivamente personali e sociali, in totale buona fede e nel rispetto dell'onore, del decoro e della riservatezza della persona interessata;
+Ha il divieto assoluto di pubblicare dati di contatto riservati (quali numeri telefonici, indirizzi privati o profili personali non pubblici), nonché di associare profili terzi a contenuti denigratori, volgari, a sfondo sessuale o suscettibili di costituire molestia o cyberbullismo.
+(b) L'Utente assume la piena ed esclusiva titolarità e responsabilità in merito all'indicazione di identificativi di terzi effettuata in violazione dei divieti sopra indicati.
+(c) Il Fornitore opera quale prestatore intermediario di servizi della società dell'informazione (hosting) e mette a disposizione un canale prioritario e immediato di rimozione (v. Sezione 7.5) a tutela di qualsiasi soggetto terzo menzionato che richieda l'oscuramento dei riferimenti alla propria persona.
 
 ---
 
@@ -124,11 +127,11 @@ Resta espressamente inteso che:
 
 7.4 Ove tecnicamente possibile e non contrario alla legge, l'Utente destinatario di una misura può ricevere informazioni sui motivi e può contestare la decisione ai contatti indicati.
 
-7.5 Procedura di rimozione rapida, Clausola di Salvaguardia e Rimedio Esclusivo.
-(a) Qualsiasi soggetto che si riconosca, direttamente o indirettamente, in un contenuto pubblicato sulla piattaforma o ripubblicato sui canali social collegati (Instagram), ovvero riscontri la presenza del proprio nome, handle social, immagine o riferimento personale indesiderato, ha facoltà di richiederne la cancellazione immediata inoltrando apposita segnalazione tramite gli strumenti in-app, via e-mail all'indirizzo dedicato o tramite Messaggio Diretto (DM) al profilo Instagram ufficiale.
-(b) Ricevuta la segnalazione, il Fornitore provvederà alla rimozione o all'oscuramento del contenuto nel minor tempo tecnicamente ed operativamente possibile, senza necessità di istruttoria o motivazione da parte del richiedente.
-(c) Esclusione di ulteriori responsabilità: L'avvenuta rimozione tempestiva del contenuto contestato costituisce adempimento integrale ed esaustivo degli obblighi di diligenza del Fornitore e soddisfa interamente la tutela dell'interessato, escludendo qualsiasi responsabilità risarcitoria o indennitaria del Fornitore per il periodo di permanenza online antecedente alla lavorazione della richiesta.
-(d) Il Fornitore non risponde e non può essere ritenuto responsabile per la circolazione, archiviazione, duplicazione (screenshot) o ricondivisione autonoma dei contenuti effettuata da terzi al di fuori delle infrastrutture direttamente controllate da Agorà.
+7.5 Segnalazioni, procedura di rimozione rapida (Notice and Action) ed esenzione di responsabilità.
+(a) Qualsiasi soggetto (Utente o terzo) che si riconosca in un contenuto, riscontri la presenza del proprio nome, immagine o handle social, ovvero ritenga un contenuto lesivo dei propri diritti o contrario alla legge, può richiederne l'immediata cancellazione inoltrando segnalazione tramite il pulsante in-app, via email all'indirizzo [DA COMPILARE — es. moderazione@theproject.world] o tramite Messaggio Diretto (DM) al profilo Instagram ufficiale.
+(b) Ricevuta la segnalazione contenente gli elementi necessari per individuare il materiale, il Fornitore provvede senza ritardo ingiustificato e con la massima celerità tecnica all'oscuramento o alla cancellazione del contenuto dalla piattaforma web e dai canali social direttamente gestiti, in conformità agli articoli 6 e 16 del Regolamento (UE) 2022/2065 (Digital Services Act).
+(c) In conformità alla normativa europea in materia di commercio elettronico e servizi digitali, il Fornitore non risponde civilmente per i contenuti generati dagli utenti a condizione che, non appena a conoscenza dell'illiceità o ricevuta la notifica di rimozione, abbia agito con tempestività per rimuovere il materiale contestato o disabilitarne l'accesso. Restano fermi i casi di dolo o colpa grave del Fornitore e i diritti inderogabili dell'interessato.
+(d) Il Fornitore non assume responsabilità per la riproduzione, archiviazione o diffusione autonoma dei contenuti (inclusi screenshot o salvataggi locali) effettuata da terzi al di fuori degli ambienti digitali direttamente amministrati dal Fornitore.
 
 ---
 
@@ -158,9 +161,8 @@ Resta espressamente inteso che:
 
 ---
 
-## 11. Manleva (indennizzo)
-
-Nei limiti consentiti dalla legge, ti impegni a **manlevare e tenere indenne** il Fornitore da pretese, richieste di risarcimento, costi e spese (incluse le spese legali ragionevoli) derivanti da tuoi Contenuti o da un tuo utilizzo del Servizio in violazione dei presenti Termini o della legge o dei diritti di terzi. La presente clausola non si applica ove ed in quanto in contrasto con i diritti inderogabili del consumatore.
+## 11. Responsabilità dell'Utente e Indennizzo
+L'Utente si impegna a utilizzare il Servizio nel pieno rispetto della legge, dei diritti dei terzi e dei presenti Termini. Nei limiti massimi consentiti dalla normativa applicabile, l'Utente sarà tenuto a risarcire e manlevare il Fornitore per i soli danni effettivi, costi, sanzioni e spese legali documentate che dovessero derivare al Fornitore da violazioni intenzionali o gravemente colpose dei presenti Termini commesse dall'Utente medesimo (ivi inclusa la pubblicazione dolosa o gravemente negligente di contenuti diffamatori, illeciti o lesivi della riservatezza altrui). La presente disposizione non pregiudica in alcun caso i diritti inderogabili garantiti all'Utente nella sua qualità di consumatore ai sensi del D.lgs. 206/2005 (Codice del Consumo).
 
 ---
 
