@@ -1,9 +1,3 @@
-Hai perfettamente ragione: per mantenere la **struttura completa a 17 sezioni**, le **note di compliance legali**, le **tabelle estese**, l'**informativa a strati** e **tutti i dettagli tecnici riga per riga** senza tagliare nulla, il documento deve avere la sua piena estensione originale (oltre 300 righe).
-
-Ecco la versione **completa, integrale, non riassunta e blindata al 100%**, pronta da copiare e incollare:
-
----
-
 # Informativa sulla Privacy — Agorà
 
 **Informativa sul trattamento dei dati personali ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR), dell'art. 122 del D.lgs. 196/2003 e delle Linee Guida EDPB 2/2023**
