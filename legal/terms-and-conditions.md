@@ -86,15 +86,14 @@ La visualizzazione dell'apposita schermata di informativa al primo accesso e l'i
 - tentare di **eludere, disattivare o compromettere** le misure di sicurezza, moderazione o identificazione del Servizio;
 - interferire con il funzionamento del Servizio, introdurre malware, o compiere attività che ne pregiudichino l'integrità o la disponibilità;
 - utilizzare il Servizio per finalità illecite o non consentite dai presenti Termini.
-- è consentito manifestare apprezzamento, interesse relazionale o ricercare il contatto con altri utenti nei limiti della reciproca educazione e del rispetto della dignità personale. È tuttavia tassativamente vietato formulare domande, sondaggi o insinuazioni pubbliche riguardanti la sfera intima, l'orientamento sessuale o la vita privata di terzi. Qualsiasi informazione relativa alle preferenze personali può essere condivisa esclusivamente dal diretto interessato in prima persona e su base puramente volontaria.
+- formulare domande, sondaggi, insinuazioni o speculazioni pubbliche riguardanti la sfera intima, l'orientamento sessuale o la vita privata di terzi, restando inteso che manifestazioni di apprezzamento o ricerche di contatto sono lecite solo nei limiti della reciproca educazione e del rispetto della dignità personale, e che ogni informazione su preferenze personali può essere condivisa unicamente dal diretto interessato su base volontaria;
 
 5.2 Sei l'unico responsabile dei contenuti che pubblichi e delle conseguenze della loro pubblicazione.
 
 5.3 Interazioni della community, ricerche di contatto ("avvistamenti") e dati di terzi.
 (a) La piattaforma consente agli Utenti di inviare messaggi di socializzazione e ricerche di contatto. L'Utente che inserisce o menziona identificatori social di terzi (es. tag o handle di profili Instagram pubblici):
-
-Dichiara di agire per finalità esclusivamente personali e sociali, in totale buona fede e nel rispetto dell'onore, del decoro e della riservatezza della persona interessata;
-Ha il divieto assoluto di pubblicare dati di contatto riservati (quali numeri telefonici, indirizzi privati o profili personali non pubblici), nonché di associare profili terzi a contenuti denigratori, volgari, a sfondo sessuale o suscettibili di costituire molestia o cyberbullismo.
+- Dichiara di agire per finalità esclusivamente personali e sociali, in totale buona fede e nel rispetto dell'onore, del decoro e della riservatezza della persona interessata;
+- Ha il divieto assoluto di pubblicare dati di contatto riservati (quali numeri telefonici, indirizzi privati o profili personali non pubblici), nonché di associare profili terzi a contenuti denigratori, volgari, a sfondo sessuale o suscettibili di costituire molestia o cyberbullismo.
 (b) L'Utente assume la piena ed esclusiva titolarità e responsabilità in merito all'indicazione di identificativi di terzi effettuata in violazione dei divieti sopra indicati.
 (c) Il Fornitore opera quale prestatore intermediario di servizi della società dell'informazione (hosting) e mette a disposizione un canale prioritario e immediato di rimozione (v. Sezione 7.5) a tutela di qualsiasi soggetto terzo menzionato che richieda l'oscuramento dei riferimenti alla propria persona.
 
