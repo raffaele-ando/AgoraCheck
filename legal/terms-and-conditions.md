@@ -33,7 +33,7 @@ Il servizio Agorà è fornito da:
 
 2.1 I presenti Termini e Condizioni d'uso (i **"Termini"**) disciplinano l'accesso e l'utilizzo dell'applicazione e del sito Agorà (il **"Servizio"**) da parte dell'utente (l'**"Utente"** o **"tu"**).
 
-2.2 Agorà è una piattaforma sociale rivolta principalmente agli studenti universitari (tra cui il Politecnico di Milano e altri atenei) che consente di pubblicare messaggi di tipo "spotted", creare e partecipare a sondaggi e interagire con altri utenti, senza account o, ove disponibile, tramite account.
+2.2 Agorà è una piattaforma sociale rivolta a differenti gruppi sociali che consente di pubblicare messaggi di tipo "spotted", creare e partecipare a sondaggi e interagire con altri utenti, senza account o, ove disponibile, tramite account.
 
 2.3 Utilizzando il Servizio, dichiari di aver letto, compreso e accettato i presenti Termini e l'**Informativa sulla Privacy**, che ne costituisce parte integrante. Se non accetti i Termini, non devi utilizzare il Servizio.
 
