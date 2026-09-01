@@ -33,7 +33,7 @@ Il servizio Agorà è fornito da:
 
 2.1 I presenti Termini e Condizioni d'uso (i **"Termini"**) disciplinano l'accesso e l'utilizzo dell'applicazione e del sito Agorà (il **"Servizio"**) da parte dell'utente (l'**"Utente"** o **"tu"**).
 
-2.2 Agorà è una piattaforma sociale rivolta principalmente agli studenti universitari (tra cui il Politecnico di Milano e altri atenei) che consente di pubblicare messaggi di tipo "spotted", creare e partecipare a sondaggi e interagire con altri utenti, in forma anonima o, ove disponibile, tramite account.
+2.2 Agorà è una piattaforma sociale rivolta principalmente agli studenti universitari (tra cui il Politecnico di Milano e altri atenei) che consente di pubblicare messaggi di tipo "spotted", creare e partecipare a sondaggi e interagire con altri utenti, senza account o, ove disponibile, tramite account.
 
 2.3 Utilizzando il Servizio, dichiari di aver letto, compreso e accettato i presenti Termini e l'**Informativa sulla Privacy**, che ne costituisce parte integrante. Se non accetti i Termini, non devi utilizzare il Servizio.
 
@@ -53,9 +53,9 @@ Il servizio Agorà è fornito da:
 
 ---
 
-## 4. Account, autenticazione anonima e sicurezza
+## 4. Account, autenticazione senza registrazione e sicurezza
 
-4.1 Il Servizio consente l'utilizzo in forma **anonima** tramite autenticazione anonima. È inoltre prevista, come funzionalità **futura**, la possibilità di creare un **account** con credenziali di accesso.
+4.1 Il Servizio consente l'utilizzo **senza registrazione** tramite autenticazione automatica del dispositivo e dell’utente per prevenire comportamenti dannosi o abusi della piattaforma (permettendo così una moderazione più precisa rispetto a forme semplici di registrazione dove potrebbero essere bypassate rispetto a questo riconoscimento del dispositivo e dell’utente. È inoltre prevista, come funzionalità **futura**, la possibilità di creare un **account** con credenziali di accesso.
 
 4.2 Sei responsabile della riservatezza delle eventuali credenziali di accesso e di tutte le attività svolte tramite il tuo account o il tuo dispositivo.
 
