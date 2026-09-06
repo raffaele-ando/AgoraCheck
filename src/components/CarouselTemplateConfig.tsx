@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { 
   Upload, 
   Settings, 
@@ -31,7 +31,8 @@ import {
   deleteDoc, 
   collection, 
   getDocs, 
-  updateDoc 
+  updateDoc,
+  writeBatch 
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { uploadMedia } from "../utils/media";
@@ -81,24 +82,45 @@ const CarouselAutoScalingText = ({
   const textRef = useRef<HTMLDivElement>(null);
   const [currentSize, setCurrentSize] = useState(config.fontSize);
 
-  useEffect(() => {
-    setCurrentSize(config.fontSize);
-  }, [text, config.fontSize, config.width, config.height]);
-
-  useEffect(() => {
-    if (!containerRef.current || !textRef.current) return;
+  /**
+   * Adatta il testo al riquadro in UN SOLO passaggio di layout.
+   *
+   * Prima la riduzione avveniva di 2px per render, incatenando setTimeout(0):
+   * un testo lungo richiedeva decine di cicli asincroni. L'esportazione, che
+   * attendeva un tempo fisso, poteva quindi catturare l'immagine mentre il
+   * testo si stava ancora rimpicciolendo, producendo PNG con testo tagliato.
+   * Misurando e correggendo qui, al termine di questo effetto la dimensione è
+   * già quella definitiva.
+   */
+  useLayoutEffect(() => {
     const container = containerRef.current;
     const textEl = textRef.current;
-    
-    // Check if overflowing
-    if (textEl.scrollHeight > container.clientHeight || textEl.scrollWidth > container.clientWidth) {
-      if (currentSize > 12) {
-        setTimeout(() => {
-          setCurrentSize((prev) => Math.max(12, prev - 2));
-        }, 0);
-      }
+    if (!container || !textEl) {
+      setCurrentSize(config.fontSize);
+      return;
     }
-  }, [currentSize, text, config.width, config.height]);
+    let size = config.fontSize;
+    textEl.style.fontSize = `${size}px`;
+    let guard = 0;
+    while (
+      guard++ < 300 &&
+      size > 12 &&
+      (textEl.scrollHeight > container.clientHeight ||
+        textEl.scrollWidth > container.clientWidth)
+    ) {
+      size -= 2;
+      textEl.style.fontSize = `${size}px`;
+    }
+    setCurrentSize(size);
+  }, [
+    text,
+    config.fontSize,
+    config.width,
+    config.height,
+    config.enabled,
+    config.textAlign,
+    config.alignItems,
+  ]);
 
   if (!config.enabled || !text) return null;
 
@@ -272,23 +294,56 @@ export default function CarouselTemplateConfig({
     return () => observer.disconnect();
   }, [slideDimensions, selectedSlideIndex]);
 
-  // Save Config changes
-  const handleConfigChange = async (key: keyof BoxConfig, value: any) => {
-    const activeBoxConfig = config[activeTab] || DEFAULT_CAROUSEL_CONFIG[activeTab];
-    const newConfig = { 
-      ...config, 
-      [activeTab]: { ...activeBoxConfig, [key]: value } 
-    };
+  // Copia sincrona: due modifiche nello stesso gestore devono comporsi.
+  const configRef = useRef(config);
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    },
+    [],
+  );
+
+  /**
+   * Salvataggio ritardato: prima ogni tick di uno slider produceva una scrittura
+   * su Firestore, quindi decine di scritture per un singolo trascinamento.
+   */
+  const scheduleSave = (next: CarouselConfig, zone: string) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        const configId = zone ? `carousel_config_${zone}` : "carousel_config";
+        await setDoc(doc(db, "settings", configId), { config: next });
+        setSavedStatus(true);
+        setTimeout(() => setSavedStatus(false), 1500);
+      } catch (e) {
+        console.warn("Error saving carousel config", e);
+      }
+    }, 400);
+  };
+
+  /**
+   * Applica una modifica al riquadro attivo.
+   *
+   * Accetta un OGGETTO: i pulsanti di allineamento devono aggiornare
+   * `textAlign` e `justifyContent` insieme. Con la firma precedente le due
+   * chiamate consecutive partivano entrambe dallo stesso `config` stantio,
+   * quindi la seconda annullava la prima e il testo non si allineava.
+   */
+  const handleConfigChange = (patch: Partial<BoxConfig>) => {
+    const prev = configRef.current;
+    const activeBoxConfig = prev[activeTab] || DEFAULT_CAROUSEL_CONFIG[activeTab];
+    const newConfig = {
+      ...prev,
+      [activeTab]: { ...activeBoxConfig, ...patch },
+    } as CarouselConfig;
+    configRef.current = newConfig;
     setConfig(newConfig);
-    try {
-      const configId = targetZone ? `carousel_config_${targetZone}` : "carousel_config";
-      const configDoc = doc(db, "settings", configId);
-      await setDoc(configDoc, { config: newConfig });
-      setSavedStatus(true);
-      setTimeout(() => setSavedStatus(false), 1500);
-    } catch (e) {
-      console.warn("Error saving carousel config", e);
-    }
+    scheduleSave(newConfig, targetZone);
   };
 
   // Set message as the first / cover slide of the carousel
@@ -297,14 +352,21 @@ export default function CarouselTemplateConfig({
       const targetMsg = localValidatedMessages.find(m => m.id === msgId);
       const isCurrentlyFirst = targetMsg?.isFirstSlideOfCarousel;
 
-      for (const m of localValidatedMessages) {
-        let isFirst = false;
-        if (m.id === msgId && !isCurrentlyFirst) {
-          isFirst = true;
+      // Un solo batch atomico invece di N updateDoc sequenziali: prima, se la
+      // scrittura falliva a metà, due messaggi potevano restare entrambi cover.
+      const changes = localValidatedMessages.filter((m) => {
+        const isFirst = m.id === msgId && !isCurrentlyFirst;
+        return !!m.isFirstSlideOfCarousel !== isFirst;
+      });
+      if (changes.length > 0) {
+        const batch = writeBatch(db);
+        for (const m of changes) {
+          const isFirst = m.id === msgId && !isCurrentlyFirst;
+          batch.update(doc(db, "messages", m.id), {
+            isFirstSlideOfCarousel: isFirst,
+          });
         }
-        if (m.isFirstSlideOfCarousel !== isFirst) {
-          await updateDoc(doc(db, "messages", m.id), { isFirstSlideOfCarousel: isFirst });
-        }
+        await batch.commit();
       }
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 1500);
@@ -396,7 +458,22 @@ export default function CarouselTemplateConfig({
     
     // Warn user about browser settings if downloading up to 20 files
     const countToExport = Math.min(20, localValidatedMessages.length);
-    if (!window.confirm(`Inizierai lo scaricamento sequenziale di ${countToExport} immagini per il carosello. Se richiesto dal browser, acconsenti al download di file multipli.`)) return;
+
+    // Le slide senza sfondo venivano esportate su fondo bianco senza alcun
+    // avviso: si scopriva il problema solo guardando i PNG scaricati.
+    const missingBg: number[] = [];
+    for (let i = 0; i < countToExport; i++) {
+      if (!carouselBgs[i]) missingBg.push(i + 1);
+    }
+    const warning = missingBg.length
+      ? `\n\nAttenzione: ${missingBg.length} slide non hanno uno sfondo (${missingBg.join(", ")}) e verranno generate su fondo bianco.`
+      : "";
+    if (
+      !window.confirm(
+        `Inizierai lo scaricamento sequenziale di ${countToExport} immagini per il carosello. Se richiesto dal browser, acconsenti al download di file multipli.${warning}`,
+      )
+    )
+      return;
 
     setExportProgress({
       isOpen: true,
@@ -428,7 +505,11 @@ export default function CarouselTemplateConfig({
         if (captureBatchRef.current) {
           const dataUrl = await toPng(captureBatchRef.current, {
             cacheBust: true,
-            pixelRatio: 1, // High resolution
+            // Il nodo è già renderizzato alla risoluzione nativa della slide
+            // (1080px o quella dell'immagine di sfondo), quindi 1 è corretto:
+            // il commento precedente diceva "High resolution" suggerendo il
+            // contrario.
+            pixelRatio: 1,
             // Allow cross-origin (R2 / GitHub) backgrounds without tainting.
             fetchRequestInit: { mode: "cors", credentials: "omit" },
             style: {
@@ -757,7 +838,7 @@ export default function CarouselTemplateConfig({
                           type="range"
                           min="0" max="100"
                           value={activeBox.left}
-                          onChange={(e) => handleConfigChange("left", Number(e.target.value))}
+                          onChange={(e) => handleConfigChange({ left: Number(e.target.value) })}
                           className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
@@ -770,7 +851,7 @@ export default function CarouselTemplateConfig({
                           type="range"
                           min="0" max="100"
                           value={activeBox.top}
-                          onChange={(e) => handleConfigChange("top", Number(e.target.value))}
+                          onChange={(e) => handleConfigChange({ top: Number(e.target.value) })}
                           className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
@@ -792,7 +873,7 @@ export default function CarouselTemplateConfig({
                           type="range"
                           min="10" max="100"
                           value={activeBox.width}
-                          onChange={(e) => handleConfigChange("width", Number(e.target.value))}
+                          onChange={(e) => handleConfigChange({ width: Number(e.target.value) })}
                           className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
@@ -805,7 +886,7 @@ export default function CarouselTemplateConfig({
                           type="range"
                           min="5" max="100"
                           value={activeBox.height}
-                          onChange={(e) => handleConfigChange("height", Number(e.target.value))}
+                          onChange={(e) => handleConfigChange({ height: Number(e.target.value) })}
                           className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
@@ -822,7 +903,7 @@ export default function CarouselTemplateConfig({
                         type="number"
                         min="16" max="250"
                         value={activeBox.fontSize}
-                        onChange={(e) => handleConfigChange("fontSize", Number(e.target.value))}
+                        onChange={(e) => handleConfigChange({ fontSize: Number(e.target.value) })}
                         className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                       />
                     </div>
@@ -833,7 +914,7 @@ export default function CarouselTemplateConfig({
                         <input
                           type="color"
                           value={activeBox.color}
-                          onChange={(e) => handleConfigChange("color", e.target.value)}
+                          onChange={(e) => handleConfigChange({ color: e.target.value })}
                           className="w-8 h-8 rounded-lg cursor-pointer shrink-0 border-0 p-0"
                           style={{ backgroundColor: 'transparent' }}
                         />
@@ -848,8 +929,10 @@ export default function CarouselTemplateConfig({
                         <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl">
                           <button 
                             onClick={() => {
-                              handleConfigChange("textAlign", "left");
-                              handleConfigChange("justifyContent", "flex-start");
+                              handleConfigChange({
+                                textAlign: "left",
+                                justifyContent: "flex-start",
+                              });
                             }}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.textAlign === "left" || !activeBox.textAlign ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
@@ -857,8 +940,10 @@ export default function CarouselTemplateConfig({
                           </button>
                           <button 
                             onClick={() => {
-                              handleConfigChange("textAlign", "center");
-                              handleConfigChange("justifyContent", "center");
+                              handleConfigChange({
+                                textAlign: "center",
+                                justifyContent: "center",
+                              });
                             }}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.textAlign === "center" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
@@ -866,8 +951,10 @@ export default function CarouselTemplateConfig({
                           </button>
                           <button 
                             onClick={() => {
-                              handleConfigChange("textAlign", "right");
-                              handleConfigChange("justifyContent", "flex-end");
+                              handleConfigChange({
+                                textAlign: "right",
+                                justifyContent: "flex-end",
+                              });
                             }}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.textAlign === "right" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
@@ -879,19 +966,19 @@ export default function CarouselTemplateConfig({
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Posizione Verticale</label>
                         <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl">
                           <button 
-                            onClick={() => handleConfigChange("alignItems", "flex-start")}
+                            onClick={() => handleConfigChange({ alignItems: "flex-start" })}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.alignItems === "flex-start" || !activeBox.alignItems ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
                             <ArrowUpToLine className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => handleConfigChange("alignItems", "center")}
+                            onClick={() => handleConfigChange({ alignItems: "center" })}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.alignItems === "center" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
                             <Minus className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => handleConfigChange("alignItems", "flex-end")}
+                            onClick={() => handleConfigChange({ alignItems: "flex-end" })}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.alignItems === "flex-end" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
                             <ArrowDownToLine className="w-4 h-4" />
@@ -924,7 +1011,7 @@ export default function CarouselTemplateConfig({
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Galleria Sfondi</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Fomato verticale (3:4) raccomandato.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Formato verticale (3:4) raccomandato.</p>
                 </div>
                 <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-bold text-gray-600 dark:text-gray-400">
                   {carouselBgs.filter(Boolean).length}/20 Inseriti

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Upload, Settings, Type, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -71,7 +71,8 @@ export const loadImageFromDB = async (target: string, mode: string) => {
 
 /**
  * Export-time template loader with a fallback chain:
- *   requested target -> DEFAULT (which itself falls back to the legacy doc)
+ *   requested target -> intermediate levels (e.g. the city) -> DEFAULT
+ *   (DEFAULT itself falls back to the legacy doc)
  *
  * The config editor deliberately uses loadImageFromDB (no fallback) so an admin
  * can see whether THIS target has its own template. The export, on the other
@@ -82,13 +83,19 @@ export const loadImageFromDB = async (target: string, mode: string) => {
 export const loadImageForExport = async (
   target: string,
   mode: string,
+  intermediateTargets: string[] = [],
 ): Promise<{ url: string | null; usedTarget: string | null }> => {
-  const direct = await loadImageFromDB(target, mode);
-  if (direct) return { url: direct, usedTarget: target };
+  // Catena: zona richiesta -> città (o altri livelli intermedi) -> DEFAULT.
+  // Prima si passava direttamente a DEFAULT, quindi un messaggio di una zona
+  // priva di template ignorava il template della PROPRIA CITTÀ anche quando
+  // esisteva, ripiegando su quello generico.
+  const candidates = [target, ...intermediateTargets, "DEFAULT"].filter(
+    (t, i, arr): t is string => !!t && arr.indexOf(t) === i,
+  );
 
-  if (target !== "DEFAULT") {
-    const fallback = await loadImageFromDB("DEFAULT", mode);
-    if (fallback) return { url: fallback, usedTarget: "DEFAULT" };
+  for (const candidate of candidates) {
+    const url = await loadImageFromDB(candidate, mode);
+    if (url) return { url, usedTarget: candidate };
   }
   return { url: null, usedTarget: null };
 };
@@ -140,25 +147,45 @@ export const AutoScalingText = ({ text, config, showBorders, isActive, label }: 
   const textRef = useRef<HTMLDivElement>(null);
   const [currentSize, setCurrentSize] = useState(config.fontSize);
 
-  useEffect(() => {
-    setCurrentSize(config.fontSize);
-  }, [text, config.fontSize, config.width, config.height]);
-
-  useEffect(() => {
-    if (!containerRef.current || !textRef.current) return;
+  /**
+   * Adatta il testo al riquadro in UN SOLO passaggio di layout.
+   *
+   * Prima la riduzione avveniva di 2px per render, incatenando setTimeout(0):
+   * un testo lungo richiedeva decine di cicli asincroni. L'esportazione, che
+   * attendeva un tempo fisso, poteva quindi catturare l'immagine mentre il
+   * testo si stava ancora rimpicciolendo, producendo PNG con testo tagliato.
+   * Misurando e correggendo qui, al termine di questo effetto la dimensione è
+   * già quella definitiva.
+   */
+  useLayoutEffect(() => {
     const container = containerRef.current;
     const textEl = textRef.current;
-    
-    // Check if overflowing
-    if (textEl.scrollHeight > container.clientHeight || textEl.scrollWidth > container.clientWidth) {
-      if (currentSize > 12) {
-        // use setTimeout to avoid React loop warnings
-        setTimeout(() => {
-          setCurrentSize((prev) => Math.max(12, prev - 2));
-        }, 0);
-      }
+    if (!container || !textEl) {
+      setCurrentSize(config.fontSize);
+      return;
     }
-  }, [currentSize, text, config.width, config.height]);
+    let size = config.fontSize;
+    textEl.style.fontSize = `${size}px`;
+    let guard = 0;
+    while (
+      guard++ < 300 &&
+      size > 12 &&
+      (textEl.scrollHeight > container.clientHeight ||
+        textEl.scrollWidth > container.clientWidth)
+    ) {
+      size -= 2;
+      textEl.style.fontSize = `${size}px`;
+    }
+    setCurrentSize(size);
+  }, [
+    text,
+    config.fontSize,
+    config.width,
+    config.height,
+    config.enabled,
+    config.textAlign,
+    config.alignItems,
+  ]);
 
   if (!config.enabled || !text) return null;
 
@@ -261,17 +288,58 @@ export default function StoryTemplateConfig() {
     return () => observer.disconnect();
   }, []);
 
-  const handleConfigChange = (key: keyof BoxConfig, value: any) => {
-    const activeConfig = config[activeTab] || DEFAULT_CONFIG[activeTab];
-    const newConfig = { 
-      ...config, 
-      [activeTab]: { ...activeConfig, [key]: value } 
-    };
+  // Copia sincrona della configurazione: due chiamate consecutive nello stesso
+  // gestore devono comporsi, non sovrascriversi (vedi handleConfigChange).
+  const configRef = useRef(config);
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    },
+    [],
+  );
+
+  /**
+   * Salvataggio ritardato.
+   *
+   * Prima ogni singolo `onChange` di uno slider scriveva su Firestore: trascinare
+   * "Posizione Y" da 20 a 80 produceva decine di scritture in un secondo.
+   */
+  const scheduleSave = (next: TemplateConfig, mode: string) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveConfigToDB(next, mode)
+        .then(() => {
+          setSavedStatus(true);
+          setTimeout(() => setSavedStatus(false), 2000);
+        })
+        .catch((err) => console.warn("Salvataggio configurazione fallito", err));
+    }, 400);
+  };
+
+  /**
+   * Applica una modifica al riquadro attivo.
+   *
+   * Accetta un OGGETTO di proprietà e non più una singola coppia chiave/valore:
+   * l'allineamento orizzontale deve aggiornare `textAlign` e `justifyContent`
+   * insieme. Con la vecchia firma le due chiamate consecutive partivano
+   * entrambe dallo stesso `config` stantio, quindi la seconda annullava la
+   * prima e il testo restava allineato come prima.
+   */
+  const handleConfigChange = (patch: Partial<BoxConfig>) => {
+    const prev = configRef.current;
+    const activeConfig = prev[activeTab] || DEFAULT_CONFIG[activeTab];
+    const newConfig = {
+      ...prev,
+      [activeTab]: { ...activeConfig, ...patch },
+    } as TemplateConfig;
+    configRef.current = newConfig;
     setConfig(newConfig);
-    saveConfigToDB(newConfig, selectedMode).then(() => {
-      setSavedStatus(true);
-      setTimeout(() => setSavedStatus(false), 2000);
-    });
+    scheduleSave(newConfig, selectedMode);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,11 +401,15 @@ export default function StoryTemplateConfig() {
   const activeBox = (config[activeTab] || DEFAULT_CONFIG[activeTab]) as BoxConfig;
 
   // Flattiamo le options per il target: DEFAULT + tutte le aree e città
-  const targetOptions = [
-    "DEFAULT", 
-    ...Object.entries(LOCATIONS)
-      .flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])
-  ];
+  const targetOptions = Array.from(
+    new Set([
+      "DEFAULT",
+      ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [
+        city,
+        ...areas.filter((a) => a !== city),
+      ]),
+    ]),
+  );
 
   const getTabsForMode = () => {
     if (selectedMode === "spotted") return ["chi", "quando", "dove"] as const;
@@ -619,6 +691,15 @@ export default function StoryTemplateConfig() {
               </div>
             </div>
 
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-[11px] leading-relaxed">
+              <span className="font-black shrink-0">!</span>
+              <span>
+                Lo <b>sfondo</b> è specifico per la zona selezionata, ma la{" "}
+                <b>posizione dei testi è condivisa da tutte le zone</b> con la
+                stessa modalità: spostando un riquadro qui lo si sposta ovunque.
+              </span>
+            </div>
+
             <hr className="border-gray-100 dark:border-gray-800" />
 
             {/* Background Template */}
@@ -678,7 +759,7 @@ export default function StoryTemplateConfig() {
                     <input 
                       type="checkbox"
                       checked={activeBox.enabled}
-                      onChange={(e) => handleConfigChange("enabled", e.target.checked)}
+                      onChange={(e) => handleConfigChange({ enabled: e.target.checked })}
                       className="rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     />
                     <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Attivo</span>
@@ -693,7 +774,7 @@ export default function StoryTemplateConfig() {
                         type="range"
                         min="0" max="100"
                         value={activeBox.top}
-                        onChange={(e) => handleConfigChange("top", Number(e.target.value))}
+                        onChange={(e) => handleConfigChange({ top: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.top}%</div>
@@ -704,7 +785,7 @@ export default function StoryTemplateConfig() {
                         type="range"
                         min="0" max="100"
                         value={activeBox.left}
-                        onChange={(e) => handleConfigChange("left", Number(e.target.value))}
+                        onChange={(e) => handleConfigChange({ left: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.left}%</div>
@@ -715,7 +796,7 @@ export default function StoryTemplateConfig() {
                         type="range"
                         min="10" max="100"
                         value={activeBox.width}
-                        onChange={(e) => handleConfigChange("width", Number(e.target.value))}
+                        onChange={(e) => handleConfigChange({ width: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.width}%</div>
@@ -726,7 +807,7 @@ export default function StoryTemplateConfig() {
                         type="range"
                         min="5" max="100"
                         value={activeBox.height}
-                        onChange={(e) => handleConfigChange("height", Number(e.target.value))}
+                        onChange={(e) => handleConfigChange({ height: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.height}%</div>
@@ -740,7 +821,7 @@ export default function StoryTemplateConfig() {
                         type="number"
                         min="16" max="250"
                         value={activeBox.fontSize}
-                        onChange={(e) => handleConfigChange("fontSize", Number(e.target.value))}
+                        onChange={(e) => handleConfigChange({ fontSize: Number(e.target.value) })}
                         className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
                       />
                     </div>
@@ -750,13 +831,13 @@ export default function StoryTemplateConfig() {
                         <input
                           type="color"
                           value={activeBox.color}
-                          onChange={(e) => handleConfigChange("color", e.target.value)}
+                          onChange={(e) => handleConfigChange({ color: e.target.value })}
                           className="w-10 h-10 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer"
                         />
                         <input 
                           type="text" 
                           value={activeBox.color.toUpperCase()}
-                          onChange={(e) => handleConfigChange("color", e.target.value)}
+                          onChange={(e) => handleConfigChange({ color: e.target.value })}
                           className="flex-1 w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono text-gray-900 dark:text-white"
                         />
                       </div>
@@ -767,8 +848,16 @@ export default function StoryTemplateConfig() {
                         <select
                           value={activeBox.textAlign || "left"}
                           onChange={(e) => {
-                            handleConfigChange("textAlign", e.target.value);
-                            handleConfigChange("justifyContent", e.target.value === "center" ? "center" : e.target.value === "right" ? "flex-end" : "flex-start");
+                            const align = e.target.value as BoxConfig["textAlign"];
+                            handleConfigChange({
+                              textAlign: align,
+                              justifyContent:
+                                align === "center"
+                                  ? "center"
+                                  : align === "right"
+                                    ? "flex-end"
+                                    : "flex-start",
+                            });
                           }}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
                         >
@@ -781,7 +870,7 @@ export default function StoryTemplateConfig() {
                         <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Allineamento Verticale</label>
                         <select
                           value={activeBox.alignItems || "flex-start"}
-                          onChange={(e) => handleConfigChange("alignItems", e.target.value)}
+                          onChange={(e) => handleConfigChange({ alignItems: e.target.value as BoxConfig["alignItems"] })}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
                         >
                           <option value="flex-start">In Alto</option>

@@ -57,6 +57,9 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
         const { url, usedTarget } = await loadImageForExport(
           selectedTarget,
           selectedMode,
+          // Livello intermedio: se la zona non ha un template proprio si prova
+          // quello della città prima di ripiegare su quello generico.
+          message.city && message.city !== selectedTarget ? [message.city] : [],
         );
         setBackgroundImage(url);
         setTemplateSource(usedTarget);
@@ -123,8 +126,24 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
     }
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isExporting) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, isExporting]);
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !isExporting) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Esporta storia"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
