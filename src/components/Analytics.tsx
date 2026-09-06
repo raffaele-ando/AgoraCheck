@@ -2,7 +2,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { db } from "../firebase";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { computeProfileColor } from "../utils/profiling";
 import {
   AreaChart,
   Area,
@@ -47,6 +48,31 @@ const COLORS = [
   "#8b5cf6",
   "#3b82f6",
 ];
+
+/**
+ * Il tema è applicato con la classe `dark-theme` sull'elemento radice, che
+ * Recharts non può leggere: griglie, tick e tooltip erano codificati con colori
+ * chiari e in tema scuro sparivano. Qui lo si osserva e si espone come stato.
+ */
+const useIsDarkTheme = () => {
+  const [isDark, setIsDark] = useState(
+    () =>
+      typeof document !== "undefined" &&
+      document.documentElement.classList.contains("dark-theme"),
+  );
+  useEffect(() => {
+    const el = document.documentElement;
+    const update = () => setIsDark(el.classList.contains("dark-theme"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return isDark;
+};
+
+/** Quante righe mostrare per volta nei modali di dettaglio. */
+const DETAIL_PAGE_SIZE = 50;
 const getPlatform = (m: any) => {
   const ua = m.deviceInfo?.userAgent || "";
   const platform = m.deviceInfo?.platform || "Sconosciuto";
@@ -96,10 +122,36 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 }) => {
   const [detailView, setDetailView] = useState<DetailView>(null);
   const [isReady, setIsReady] = useState(false);
+  const isDark = useIsDarkTheme();
+  // I modali di dettaglio renderizzavano OGNI riga del set selezionato: con
+  // migliaia di messaggi la tabella bloccava la pagina all'apertura.
+  const [detailVisible, setDetailVisible] = useState(DETAIL_PAGE_SIZE);
+
+  // Palette dei grafici, dipendente dal tema.
+  const chartTheme = useMemo(
+    () => ({
+      grid: isDark ? "#374151" : "#f3f4f6",
+      tick: isDark ? "#9ca3af" : "#9ca3af",
+      tickStrong: isDark ? "#d1d5db" : "#4b5563",
+      tooltip: {
+        borderRadius: "16px",
+        border: "none",
+        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.25)",
+        backgroundColor: isDark ? "#1f2937" : "#ffffff",
+        color: isDark ? "#f3f4f6" : "#111827",
+      } as React.CSSProperties,
+      cursorFill: isDark ? "#374151" : "#f3f4f6",
+    }),
+    [isDark],
+  );
   React.useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 50);
     return () => clearTimeout(timer);
   }, []);
+  React.useEffect(() => {
+    setDetailVisible(DETAIL_PAGE_SIZE);
+  }, [detailView]);
+
   React.useEffect(() => {
     if (detailView) {
       document.body.style.overflow = "hidden";
@@ -109,6 +161,15 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     return () => {
       document.body.style.overflow = "";
     };
+  }, [detailView]);
+
+  React.useEffect(() => {
+    if (!detailView) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDetailView(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [detailView]);
 
   const [trackAllBrowsers, setTrackAllBrowsers] = useState(false);
@@ -137,15 +198,55 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     }
   };
 
-  const [isAdminTrackingIgnored, setIsAdminTrackingIgnored] = useState(
-    localStorage.getItem("IGNORE_ANALYTICS") !== "false"
-  );
+  const [isAdminTrackingIgnored, setIsAdminTrackingIgnored] = useState(() => {
+    try {
+      return localStorage.getItem("IGNORE_ANALYTICS") !== "false";
+    } catch {
+      return true;
+    }
+  });
+
+  // Il valore predefinito (dispositivo admin escluso) va scritto davvero:
+  // useVisitAnalytics legge la chiave e, se assente, tratterebbe l'admin come
+  // un visitatore qualsiasi.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("IGNORE_ANALYTICS") === null) {
+        localStorage.setItem("IGNORE_ANALYTICS", "true");
+      }
+    } catch {}
+  }, []);
 
   const toggleAdminTracking = () => {
     const newVal = !isAdminTrackingIgnored;
     setIsAdminTrackingIgnored(newVal);
-    localStorage.setItem("IGNORE_ANALYTICS", newVal ? "true" : "false");
+    try {
+      localStorage.setItem("IGNORE_ANALYTICS", newVal ? "true" : "false");
+    } catch {}
   };
+
+  /** Messaggi raggruppati per profilo: evita un filter() per ogni riga. */
+  const messagesByProfileId = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const m of messages) {
+      const pid = m.computedProfileId || m.profileId;
+      if (!pid) continue;
+      if (!map.has(pid)) map.set(pid, []);
+      map.get(pid)!.push(m);
+    }
+    return map;
+  }, [messages]);
+
+  /** Messaggi raggruppati per gruppo manuale, usati dalla vista macro. */
+  const messagesByGroupId = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const m of messages) {
+      if (!m.profileGroupId) continue;
+      if (!map.has(m.profileGroupId)) map.set(m.profileGroupId, []);
+      map.get(m.profileGroupId)!.push(m);
+    }
+    return map;
+  }, [messages]);
 
   const stats = useMemo(() => {
     const totalViews = messages.length;
@@ -249,6 +350,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       browserData,
     };
   }, [messages, profiles, macroProfiles, visits]);
+  const detailRows = useMemo(
+    () => (detailView ? detailView.data.slice(0, detailVisible) : []),
+    [detailView, detailVisible],
+  );
+  const detailHasMore = !!detailView && detailView.data.length > detailRows.length;
+
   const kpis = [
     {
       label: "Totale Avvistamenti",
@@ -463,7 +570,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                 <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-3">
                   Andamento Traffico
                 </h3>
-                <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 px-3 py-1.5 rounded-xl">
+                <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-xl">
                   Ultimi 14 Giorni
                 </span>
               </div>
@@ -482,10 +589,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f3f4f6" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} dy={15} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} dx={-10} />
-                        <RechartsTooltip contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={chartTheme.grid} />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.tick, fontWeight: 600 }} dy={15} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.tick, fontWeight: 600 }} dx={-10} />
+                        <RechartsTooltip contentStyle={chartTheme.tooltip} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
                         <Area type="monotone" dataKey="views" name="Accessi Totali" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
                         <Area type="monotone" dataKey="actions" name="Spotted Effettuati" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorActions)" />
                       </AreaChart>
@@ -508,7 +615,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                           <Pie data={stats.platformData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" className="cursor-pointer focus:outline-none transition-transform hover:scale-105 duration-300" onClick={(data) => setDetailView({ title: `Piattaforma: ${data.name}`, type: "messages", data: messages.filter((m) => getPlatform(m) === data.name) })}>
                             {stats.platformData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />)}
                           </Pie>
-                          <RechartsTooltip contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }} />
+                          <RechartsTooltip contentStyle={chartTheme.tooltip} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -533,10 +640,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={stats.browserData} layout="vertical" margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
-                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#9ca3af", fontWeight: 600 }} />
-                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#4b5563", fontWeight: "bold" }} width={100} />
-                          <RechartsTooltip cursor={{ fill: "#f3f4f6" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }} />
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartTheme.grid} />
+                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: chartTheme.tick, fontWeight: 600 }} />
+                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.tickStrong, fontWeight: "bold" }} width={100} />
+                          <RechartsTooltip cursor={{ fill: chartTheme.cursorFill }} contentStyle={chartTheme.tooltip} />
                           <Bar dataKey="value" name="Visite" fill="#8b5cf6" radius={[0, 6, 6, 0]} className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(data) => setDetailView({ title: `Sorgente: ${data.name}`, type: "messages", data: messages.filter((m) => getBrowser(m) === data.name) })}>
                             {stats.browserData.map((entry) => <Cell key={`cell-${entry.name}`} fill={COLORS[stats.browserData.indexOf(entry) % COLORS.length]} />)}
                           </Bar>
@@ -563,7 +670,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {kpis.filter(k => ["Dispositivi Unici", "Identità Unificate"].includes(k.label)).map((kpi, i) => (
               <motion.div
                 key={kpi.label}
@@ -604,7 +711,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {kpis.filter(k => ["Totale Utenti (Entrati)", "Conversione spotted"].includes(k.label)).map((kpi, i) => (
               <motion.div
                 key={kpi.label}
@@ -705,13 +812,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       {detailView.data.length}
                     </span>
                   </h2>
-                  <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 font-semibold tracking-wide uppercase">
+                  <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-wide uppercase">
                     Dettaglio statistica per la voce selezionata
                   </p>
                 </div>
                 <button
                   onClick={() => setDetailView(null)}
-                  className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 dark:text-gray-500 transition-all active:scale-95 shrink-0 ml-4"
+                  className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 transition-all active:scale-95 shrink-0 ml-4"
                 >
 
                   <X className="w-5 h-5" />
@@ -729,7 +836,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
 
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 border-collapse">
 
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
 
@@ -747,7 +854,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                           </thead>
                           <tbody className="divide-y divide-gray-100">
 
-                            {detailView.data.map((m) => (
+                            {detailRows.map((m) => (
                               <tr
                                 key={m.id}
                                 className="hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors"
@@ -770,7 +877,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                       <div className="font-black text-gray-800 dark:text-gray-200 mb-1 leading-relaxed">
                                         "{m.lookingFor}"
                                       </div>
-                                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 flex gap-3">
+                                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 flex gap-3">
 
                                         {m.where && (
                                           <span className="flex items-center gap-1">
@@ -844,7 +951,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                     {/* Mobile Cards View */}
                     <div className="md:hidden flex flex-col p-4 gap-4">
 
-                      {detailView.data.map((m) => (
+                      {detailRows.map((m) => (
                         <div
                           key={m.id}
                           className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
@@ -854,7 +961,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                             <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
 
-                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 dark:text-gray-500 " />
+                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 " />
                               {m.createdAt
                                 ? format(
                                     m.createdAt.toDate(),
@@ -880,7 +987,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 <div className="font-black text-gray-900 dark:text-gray-100 text-sm leading-relaxed mb-3">
                                   "{m.lookingFor}"
                                 </div>
-                                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 flex flex-wrap gap-x-4 gap-y-2">
+                                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 flex flex-wrap gap-x-4 gap-y-2">
 
                                   {m.where && (
                                     <span className="flex items-center gap-1.5">
@@ -947,7 +1054,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
 
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 border-collapse">
 
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
 
@@ -966,10 +1073,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                           </thead>
                           <tbody className="divide-y divide-gray-100">
 
-                            {detailView.data.map((p) => {
-                              const userMessages = messages.filter(
-                                (m) => m.computedProfileId === p.id,
-                              );
+                            {detailRows.map((p) => {
+                              const userMessages =
+                                messagesByProfileId.get(p.id) ?? [];
                               const searchMessages = userMessages.filter(
                                 (m) => m.lookingFor,
                               );
@@ -986,7 +1092,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                       <div
                                         className="w-12 h-12 rounded-full flex flex-col items-center justify-center text-white font-bold shadow-inner shrink-0"
                                         style={{
-                                          backgroundColor: p.color || "#9ca3af",
+                                          backgroundColor: computeProfileColor(p.id),
                                         }}
                                       >
 
@@ -997,7 +1103,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         <div className="font-black text-gray-900 dark:text-gray-100 text-base">
                                           {p.name || "Senza Nome"}
                                         </div>
-                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
+                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
                                           {p.id}
                                         </div>
                                       </div>
@@ -1048,10 +1154,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                     </div>
                     <div className="md:hidden flex flex-col p-4 gap-4">
 
-                      {detailView.data.map((p) => {
-                        const userMessages = messages.filter(
-                          (m) => m.computedProfileId === p.id,
-                        );
+                      {detailRows.map((p) => {
+                        const userMessages =
+                          messagesByProfileId.get(p.id) ?? [];
                         const searchMessages = userMessages.filter(
                           (m) => m.lookingFor,
                         );
@@ -1066,7 +1171,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                               <div
                                 className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-inner"
                                 style={{
-                                  backgroundColor: p.color || "#9ca3af",
+                                  backgroundColor: computeProfileColor(p.id),
                                 }}
                               >
 
@@ -1077,14 +1182,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 <div className="font-black text-gray-900 dark:text-gray-100 text-base truncate">
                                   {p.name || "Senza Nome"}
                                 </div>
-                                <div className="text-[10px] font-bold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-500 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
+                                <div className="text-[10px] font-bold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
                                   {p.id}
                                 </div>
                               </div>
                             </div>
                             <div className="flex flex-col bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 gap-3 text-center">
 
-                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                                 Accessi Registrati
                               </span>
                               <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 block">
@@ -1134,7 +1239,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
 
-                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 border-collapse">
+                        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400 border-collapse">
 
                           <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-bold uppercase text-xs tracking-widest border-b border-gray-200 dark:border-gray-600 ">
 
@@ -1153,13 +1258,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                           </thead>
                           <tbody className="divide-y divide-gray-100">
 
-                            {detailView.data.map((m) => {
-                              const relatedMsgs = messages.filter(
-                                (msg) =>
-                                  m.profileIds?.includes(
-                                    msg.computedProfileId || msg.profileId,
-                                  ) || msg.profileGroupId === m.id,
-                              );
+                            {detailRows.map((m) => {
+                              const relatedMsgs = [
+                                ...(m.profileIds ?? []).flatMap(
+                                  (pid: string) => messagesByProfileId.get(pid) ?? [],
+                                ),
+                                ...(messagesByGroupId.get(m.id) ?? []),
+                              ];
                               let mostRecentMsg: any = null;
                               const ips = new Set<string>();
                               relatedMsgs.forEach((msg) => {
@@ -1206,7 +1311,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                         {m.profileIds.map((pid: string) => (
                                           <span
                                             key={pid}
-                                            className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 flex items-center gap-1.5"
+                                            className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5"
                                           >
 
                                             <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />
@@ -1251,13 +1356,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                     </div>
                     <div className="md:hidden flex flex-col p-4 gap-4">
 
-                      {detailView.data.map((m) => {
-                        const relatedMsgs = messages.filter(
-                          (msg) =>
-                            m.profileIds?.includes(
-                              msg.computedProfileId || msg.profileId,
-                            ) || msg.profileGroupId === m.id,
-                        );
+                      {detailRows.map((m) => {
+                        const relatedMsgs = [
+                          ...(m.profileIds ?? []).flatMap(
+                            (pid: string) => messagesByProfileId.get(pid) ?? [],
+                          ),
+                          ...(messagesByGroupId.get(m.id) ?? []),
+                        ];
                         let mostRecentMsg: any = null;
                         const ips = new Set<string>();
                         relatedMsgs.forEach((msg) => {
@@ -1293,7 +1398,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-gray-700 ">
 
-                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                              <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                                 <Cpu className="w-3.5 h-3.5" /> Dispositivi
                                 Collegati
                               </span>
@@ -1333,7 +1438,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </div>
                             <div className="flex items-center justify-between pt-2">
 
-                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                                 Ultima acquisizione
                               </span>
                               <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm px-3 py-1.5 rounded-xl flex items-center gap-1.5">
@@ -1377,7 +1482,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                            {detailView.data.map((v) => (
+                            {detailRows.map((v) => (
                               <tr key={v.id} className="hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors">
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-2">
@@ -1422,7 +1527,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                       </div>
                     </div>
                     <div className="md:hidden flex flex-col p-4 gap-4">
-                      {detailView.data.map((v) => (
+                      {detailRows.map((v) => (
                         <div key={v.id} className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4">
                           <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
                             <span className="text-xs font-bold text-gray-500 flex items-center gap-2 dark:text-gray-400">
@@ -1446,6 +1551,24 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+                {detailHasMore && (
+                  <div className="flex flex-col items-center gap-2 py-8">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {detailRows.length} di {detailView.data.length}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setDetailVisible((v) => v + DETAIL_PAGE_SIZE)
+                      }
+                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-sm transition-colors"
+                    >
+                      Mostra altri {Math.min(
+                        DETAIL_PAGE_SIZE,
+                        detailView.data.length - detailRows.length,
+                      )}
+                    </button>
                   </div>
                 )}
               </div>

@@ -162,17 +162,10 @@ const MESSAGES_BASE_BUFFER = 1000;
 const MESSAGES_HARD_CAP = 8000;
 
 export default function Dashboard() {
-  const [isAdminTrackingIgnored, setIsAdminTrackingIgnored] = useState(
-    localStorage.getItem("IGNORE_ANALYTICS") !== "false" // default true
-  );
-
-  useEffect(() => {
-    if (isAdminTrackingIgnored) {
-      localStorage.setItem("IGNORE_ANALYTICS", "true");
-    } else {
-      localStorage.setItem("IGNORE_ANALYTICS", "false");
-    }
-  }, [isAdminTrackingIgnored]);
+  // Il flag IGNORE_ANALYTICS ha un'unica fonte di verità nella scheda
+  // Analytics, che lo mostra e lo modifica. Qui esisteva una seconda copia in
+  // useState, mai usata dall'interfaccia: due stati indipendenti sulla stessa
+  // chiave di localStorage, liberi di divergere nella stessa sessione.
   const [profiles, setProfiles] = useState<Record<string, ProfileRecord>>({});
   const [loading, setLoading] = useState(true);
   const [profilesLoaded, setProfilesLoaded] = useState(false);

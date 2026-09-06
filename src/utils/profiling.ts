@@ -112,6 +112,23 @@ export const getProfileIdConfidence = (
 };
 
 /**
+ * Deterministic colour for a profile id.
+ *
+ * Lives here (rather than inside the dashboard page) so every view that shows a
+ * profile avatar derives the same colour from the same id. The analytics tables
+ * used to read a `color` field that no profile document has ever carried, so
+ * every avatar there rendered the same grey.
+ */
+export const computeProfileColor = (profileId: string): string => {
+  let hash = 0;
+  for (let i = 0; i < profileId.length; i++) {
+    hash = profileId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+  return "#" + "00000".substring(0, 6 - c.length) + c;
+};
+
+/**
  * The stable, physically-immutable traits of a device.
  *
  * Deliberately EXCLUDES the OS version, the browser version and the Instagram
