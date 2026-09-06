@@ -11,11 +11,17 @@ name: Deploy to GitHub Pages
 #  - Server routes (/api/*, /id cookie) do NOT exist on Pages; the app degrades
 #    to client-only persistence there. Use Cloud Run for the full backend.
 
+# Si pubblica SOLO da main, e non è una preferenza: l'ambiente "github-pages"
+# ha una regola di protezione che accetta il solo ramo predefinito, quindi da
+# un ramo di lavoro il passo "build" riesce e il passo "deploy" fallisce dopo
+# un secondo. Tenere i rami di lavoro nell'elenco faceva anche un danno
+# peggiore del rumore: la concorrenza qui sotto usa cancel-in-progress sul
+# gruppo "pages", perciò un push su un ramo secondario ANNULLAVA un rilascio
+# di main già in corso per poi fallire da solo — e il sito restava alla
+# versione precedente senza che nulla lo segnalasse.
 on:
   push:
     branches:
-      - claude/algorithm-analysis-improvements-llcj8b
-      - claude/dashboard-issues-improvements-c0j538
       - main
   workflow_dispatch:
 

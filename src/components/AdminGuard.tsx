@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
 import {
   getDocs,
   query,
   collection,
   limit,
   getDoc,
+  getDocFromCache,
   doc,
 } from "firebase/firestore";
 import {
@@ -20,6 +20,12 @@ import { db, auth, googleProvider } from "../firebase";
 import { Logo } from "./Logo";
 import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
+
+// Contrassegno lasciato prima di uscire dalla pagina per un accesso con
+// reindirizzamento, così al ritorno sappiamo che c'è un risultato da
+// riscuotere. Vive in sessionStorage: sparisce con la scheda, che è
+// esattamente la durata di un reindirizzamento.
+const REDIRECT_PENDING_KEY = "agora_auth_redirect_pending";
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -66,11 +72,71 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   // Complete a redirect-based sign-in (used when the popup is blocked).
+  //
+  // Questa chiamata era incondizionata, ed era la causa principale dell'attesa
+  // all'accesso. getRedirectResult obbliga Firebase a inizializzare il
+  // "redirect resolver": scarica apis.google.com/js/api.js e apre un iframe
+  // nascosto verso <authDomain>/__/auth/iframe, aspettandone la stretta di
+  // mano. Finché quella non finisce, Firebase NON emette il primo stato di
+  // autenticazione — quindi onAuthStateChanged resta muto e la pagina mostra
+  // lo spinner. Su rete mobile è il grosso dei secondi di attesa, e lo pagava
+  // ogni visita, comprese le moltissime in cui nessun reindirizzamento era
+  // mai stato avviato.
+  //
+  // Il reindirizzamento lo iniziamo noi (vedi handleLogin) e lasciamo un
+  // contrassegno prima di uscire dalla pagina: solo al ritorno, quindi solo
+  // quando c'è davvero un risultato da riscuotere, paghiamo quel costo.
   useEffect(() => {
-    getRedirectResult(auth).catch((e) => {
-      console.warn("Redirect sign-in did not complete:", e?.code || e);
+    let pending = false;
+    try {
+      pending = sessionStorage.getItem(REDIRECT_PENDING_KEY) === "1";
+    } catch {
+      // Archiviazione bloccata dal browser: è anche il caso in cui il popup
+      // non funziona e si finisce sul reindirizzamento, quindi qui conviene
+      // riscuotere comunque piuttosto che perdere l'accesso.
+      pending = true;
+    }
+    if (!pending) return;
+    getRedirectResult(auth)
+      .catch((e) => {
+        console.warn("Redirect sign-in did not complete:", e?.code || e);
+      })
+      .finally(() => {
+        try {
+          sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+        } catch {
+          /* archiviazione non disponibile: nulla da ripulire */
+        }
+      });
+  }, []);
+
+  // Il blocco di codice della Dashboard è a caricamento differito, quindi la
+  // sua richiesta partiva solo DOPO che il controllo di accesso era concluso:
+  // due attese in fila invece che sovrapposte. Qui lo si scarica in anticipo,
+  // così quando il controllo passa il codice è già in cache.
+  //
+  // Ma NON subito: la Dashboard tira con sé le sue dipendenze (fra cui la
+  // libreria di animazione), e avviarlo insieme al primo disegno gli farebbe
+  // contendere la banda proprio all'autenticazione — misurato, non supposto.
+  // Si aspetta quindi che il browser sia inattivo, cioè che la schermata
+  // d'accesso sia disegnata.
+  //
+  // Chi non è amministratore ha scaricato un file che resta in cache: nessun
+  // dato riservato, quelli restano protetti dalle regole di Firestore.
+  const prefetchDashboard = React.useCallback(() => {
+    void import("../pages/Dashboard").catch(() => {
+      /* la rotta lo richiederà di nuovo mostrando il proprio errore */
     });
   }, []);
+
+  useEffect(() => {
+    if (typeof requestIdleCallback !== "function") {
+      const t = setTimeout(prefetchDashboard, 1200);
+      return () => clearTimeout(t);
+    }
+    const handle = requestIdleCallback(prefetchDashboard, { timeout: 3000 });
+    return () => cancelIdleCallback(handle);
+  }, [prefetchDashboard]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -97,8 +163,47 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Gli identificativi sotto i quali un amministratore può essere registrato.
+  // Le email sono salvate in minuscolo da AppSettings, quindi si confronta
+  // senza distinzione di maiuscole.
+  const adminDocIds = (user: User) => {
+    const ids = [user.uid];
+    if (user.email) {
+      ids.push(user.email);
+      const lower = user.email.toLowerCase();
+      if (lower !== user.email) ids.push(lower);
+    }
+    return ids;
+  };
+
   const verifyAdminAccess = async (user: User) => {
-    setVerifying(true);
+    // Prima si interroga la cache locale di Firestore, che risponde senza
+    // rete. Se l'esito è già noto da una visita precedente la Dashboard
+    // compare subito e la conferma dal server arriva in sottofondo: prima
+    // invece OGNI apertura restava ferma sullo spinner per il tempo di un
+    // giro di rete completo, anche quando la risposta era immutata da mesi.
+    //
+    // Mostrare la Dashboard in anticipo non allarga i permessi di nessuno:
+    // il vero controllo sono le regole di Firestore sul server, che negano
+    // comunque i dati a chi non è autorizzato. Questo è solo il cancello
+    // dell'interfaccia, e il responso del server lo corregge se sbagliato.
+    let settledFromCache = false;
+    try {
+      const cached = await Promise.all(
+        adminDocIds(user).map((id) =>
+          getDocFromCache(doc(db, "admins", id)).catch(() => null),
+        ),
+      );
+      if (cached.some((snap) => snap?.exists())) {
+        setIsAdmin(true);
+        setAuthLoading(false);
+        settledFromCache = true;
+      }
+    } catch {
+      /* nessuna cache disponibile: si procede con il controllo in rete */
+    }
+
+    if (!settledFromCache) setVerifying(true);
     try {
       // Both lookups must tolerate failure independently: previously the uid
       // lookup had no .catch(), so a single permission error rejected the whole
@@ -106,17 +211,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       const safe = (p: Promise<any>) =>
         p.catch(() => ({ exists: () => false }) as any);
 
-      const promises = [safe(getDoc(doc(db, "admins", user.uid)))];
-      if (user.email) {
-        promises.push(safe(getDoc(doc(db, "admins", user.email))));
-        // Emails are stored lowercased by AppSettings; match case-insensitively.
-        const lower = user.email.toLowerCase();
-        if (lower !== user.email) {
-          promises.push(safe(getDoc(doc(db, "admins", lower))));
-        }
-      }
-
-      const results = await Promise.all(promises);
+      const results = await Promise.all(
+        adminDocIds(user).map((id) => safe(getDoc(doc(db, "admins", id)))),
+      );
       const isUserAdmin = results.some((res) => res.exists());
       setIsAdmin(isUserAdmin);
     } catch (error: any) {
@@ -140,6 +237,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const handleLogin = async () => {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
+    // Da qui l'intenzione è certa: se il precaricamento non è ancora partito
+    // (browser mai inattivo, clic immediato) si scarica ora, mentre l'utente
+    // sceglie l'account nel popup di Google. È tempo che sarebbe comunque
+    // speso ad aspettare.
+    prefetchDashboard();
     try {
       // If an anonymous session is active, drop it first so the Google sign-in
       // replaces it cleanly.
@@ -169,9 +271,21 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         // browsers, strict privacy settings): fall back to a full-page redirect,
         // which does not depend on popups or third-party storage.
         try {
+          // Segnato PRIMA di navigare via: al ritorno è l'unico indizio che
+          // esista un risultato da riscuotere.
+          try {
+            sessionStorage.setItem(REDIRECT_PENDING_KEY, "1");
+          } catch {
+            /* archiviazione bloccata: si riscuoterà comunque al prossimo giro */
+          }
           await signInWithRedirect(auth, googleProvider);
           return; // page navigates away
         } catch (redirectErr: any) {
+          try {
+            sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+          } catch {
+            /* niente da ripulire */
+          }
           console.error("Redirect sign-in failed:", redirectErr);
           alert(
             "Il login con Google non è riuscito: il browser ha bloccato sia il popup sia il reindirizzamento. Prova a disattivare il blocco popup o ad usare un'altra finestra del browser.",
@@ -191,10 +305,10 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (authLoading || verifying) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex flex-col gap-4 items-center justify-center transition-colors">
-        <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[var(--ag-bg)] flex flex-col gap-4 items-center justify-center transition-colors">
+        <div className="w-8 h-8 border-4 border-[var(--ag-accent)] border-t-transparent rounded-full animate-spin"></div>
         {isStuck && (
-          <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-4 dark:text-gray-400">
+          <div className="text-center text-sm text-[var(--ag-muted)] px-4 max-w-sm mt-4">
             Il controllo dell'accesso sta impiegando più del previsto.
             {window.self !== window.top
               ? " La pagina è dentro un iframe: aprila in una nuova scheda."
@@ -202,7 +316,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
             <div className="flex gap-2 justify-center mt-4">
               <button
                 onClick={() => window.location.reload()}
-                className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold"
+                className="px-3 py-1.5 rounded-lg bg-[var(--ag-surface-2)] text-[var(--ag-text)] border border-[var(--ag-border)] text-xs font-bold"
               >
                 Ricarica
               </button>
@@ -224,21 +338,24 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center p-4 relative transition-colors">
+      <div className="min-h-screen bg-[var(--ag-bg)] flex items-center justify-center p-4 relative transition-colors">
         <Link
           to="/"
-          className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500 dark:text-gray-400"
+          className="absolute top-8 left-8 text-sm font-medium hover:underline text-[var(--ag-muted)] hover:text-[var(--ag-text)]"
         >
           &larr; Torna alla Home
         </Link>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border dark:border-white/10"
-        >
+        {/*
+          Era un <motion.div> per una sola dissolvenza in entrata. Costava
+          l'intera libreria di animazione — circa 100 kB — sul percorso
+          critico di /dashboard, cioè proprio la schermata d'accesso di cui si
+          lamenta la lentezza. La stessa animazione in CSS pesa due righe
+          (ag-fade-in, in index.css) e non richiede JavaScript.
+        */}
+        <div className="ag-fade-in bg-[var(--ag-surface)] p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-[var(--ag-border)]">
           <Logo className="mb-8 w-48 h-16 mx-auto" />
-          <h2 className="text-2xl font-bold mb-2 dark:text-white">Accesso Riservato</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8">
+          <h2 className="text-2xl font-bold mb-2 text-[var(--ag-text-strong)]">Accesso Riservato</h2>
+          <p className="text-[var(--ag-muted)] mb-8">
             Accedi con l'account amministratore per visualizzare i messaggi.
           </p>
 
@@ -260,15 +377,23 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
           <button
             onClick={handleLogin}
             disabled={isLoggingIn}
-            className="w-full py-3 px-4 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            /* Era nero fisso: sul pannello scuro (#241f1a) il pulsante
+               principale spariva quasi nel fondo. Ora usa l'arancio del
+               marchio, che è il colore dell'azione in entrambi i temi. */
+            className="w-full py-3 px-4 bg-[var(--ag-accent)] text-[var(--ag-on-accent)] rounded-xl font-medium hover:bg-[var(--ag-accent-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoggingIn ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-[var(--ag-on-accent)] border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                {/* La "G" a quattro colori di Google sta su una piastrella
+                    bianca: sull'arancio del pulsante il giallo e il rosso del
+                    marchio si confonderebbero con il fondo, ed è anche il
+                    trattamento previsto dalle linee guida di Google. */}
+                <span className="w-7 h-7 -ml-1 rounded-lg bg-white flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
-                    fill="currentColor"
+                    fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   />
                   <path
@@ -284,35 +409,36 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
+                </span>
                 <span>Accedi con Google</span>
               </>
             )}
           </button>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-[#F4F1EA] dark:bg-gray-900 flex items-center justify-center p-4 relative transition-colors">
+      <div className="min-h-screen bg-[var(--ag-bg)] flex items-center justify-center p-4 relative transition-colors">
         <Link
           to="/"
-          className="absolute top-8 left-8 text-sm font-medium hover:underline text-gray-500 dark:text-gray-400"
+          className="absolute top-8 left-8 text-sm font-medium hover:underline text-[var(--ag-muted)] hover:text-[var(--ag-text)]"
         >
           &larr; Torna alla Home
         </Link>
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border dark:border-white/10">
+        <div className="bg-[var(--ag-surface)] p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-[var(--ag-border)]">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4 border dark:border-red-800">
             <ShieldAlert className="w-8 h-8 text-red-500" />
           </div>
-          <h2 className="text-xl font-bold mb-2 dark:text-white">Accesso Negato</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-2">
+          <h2 className="text-xl font-bold mb-2 text-[var(--ag-text-strong)]">Accesso Negato</h2>
+          <p className="text-[var(--ag-muted)] mb-2">
             L'account corrente non è autorizzato o non dispone dei permessi
             necessari per visualizzare la bacheca.
           </p>
           {user?.email && (
-            <p className="text-xs font-mono text-gray-400 dark:text-gray-500 mb-6 break-all">
+            <p className="text-xs font-mono text-[var(--ag-muted)] mb-6 break-all">
               Account: {user.email}
             </p>
           )}
@@ -322,13 +448,13 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
                 await signOut(auth).catch(() => {});
                 window.location.reload();
               }}
-              className="w-full py-2.5 px-4 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium text-sm"
+              className="w-full py-2.5 px-4 bg-[var(--ag-accent)] text-[var(--ag-on-accent)] hover:bg-[var(--ag-accent-hover)] transition-colors rounded-xl font-medium text-sm"
             >
               Esci e accedi con un altro account
             </button>
             <button
               onClick={handleLogout}
-              className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+              className="text-sm font-medium text-[var(--ag-muted)] hover:text-[var(--ag-text)] transition-colors"
             >
               Disconnetti
             </button>

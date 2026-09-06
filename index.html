@@ -25,10 +25,34 @@
     <link rel="preconnect" href="https://apis.google.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      I caratteri si caricano SENZA bloccare il disegno della pagina.
+
+      Un <link rel="stylesheet"> normale è bloccante: il browser non disegna
+      nulla finché non lo ha ricevuto. Essendo su un host di terze parti, se
+      fonts.googleapis.com è lento o irraggiungibile la pagina resta BIANCA
+      per tutto il tempo dell'attesa — misurato qui in 12,5 secondi di
+      schermata vuota simulando l'host non raggiungibile. Su rete mobile
+      instabile è esattamente il caso che si presenta.
+
+      Il trucco: si dichiara il foglio per il solo mezzo "print", che non
+      blocca il disegno; appena è arrivato lo si promuove a "all". La pagina
+      compare subito con il carattere di sistema e i caratteri del marchio
+      subentrano quando sono pronti (display=swap è già nell'indirizzo).
+      Il <noscript> copre chi ha JavaScript disattivato.
+    -->
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@800;900&family=Anton&display=swap"
+      media="print"
+      onload="this.media='all'; this.onload=null;"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@800;900&family=Anton&display=swap"
+      />
+    </noscript>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Agorà</title>
     <meta name="description" content="Agorà — la bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />

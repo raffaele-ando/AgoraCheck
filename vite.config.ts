@@ -23,11 +23,32 @@ export default defineConfig(({mode}) => {
       // dell'applicazione, i file si scaricano in parallelo e soprattutto
       // restano in cache fra un rilascio e l'altro: dopo la prima visita si
       // ri-scarica solo il nostro codice, non React e Firebase.
+      //
+      // I gruppi si decidono dal PERCORSO del modulo, non da un elenco di nomi
+      // di pacchetto. Con l'elenco il raggruppamento era silenziosamente
+      // sbagliato: l'applicazione importa "react-dom/client", che è uno
+      // specificatore diverso da "react-dom", quindi non veniva riconosciuto e
+      // i ~520 kB di react-dom restavano nel blocco iniziale. Verificato dalla
+      // mappa dei sorgenti, non a occhio.
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            // Il percorso è normalizzato perché su Windows i separatori sono
+            // rovesciati e il confronto fallirebbe.
+            const p = id.replace(/\\/g, '/');
+            const inPkg = (name: string) =>
+              p.includes(`/node_modules/${name}/`);
+
+            if (inPkg('react-dom') || inPkg('react') || inPkg('scheduler') || inPkg('react-router') || inPkg('react-router-dom')) {
+              return 'vendor-react';
+            }
+            if (inPkg('firebase') || inPkg('@firebase')) return 'vendor-firebase';
+            // La libreria di animazione serve alla bacheca pubblica, non alla
+            // schermata d'accesso: tenuta a parte, /dashboard non la scarica.
+            if (inPkg('motion') || inPkg('framer-motion') || inPkg('motion-dom') || inPkg('motion-utils')) {
+              return 'vendor-motion';
+            }
           },
         },
       },
