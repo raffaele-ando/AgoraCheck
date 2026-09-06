@@ -124,8 +124,32 @@ function BootIntro() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing]);
 
+  // Ritorno col tasto "indietro": il browser ripresenta la pagina congelata,
+  // ma i timer e l'animazione non ripartono. Senza questo, tornando indietro
+  // si potrebbe restare sotto la copertura d'avvio senza via d'uscita.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      document.documentElement.classList.add("ag-booted");
+      setPlaying(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
   if (!playing) return null;
-  return <Portal open onDone={finish} />;
+  return (
+    <Portal
+      open
+      // La copertura statica di index.html va tolta appena il velo del portale
+      // copre lo schermo. Restava invece fino alla fine dell'animazione, e
+      // siccome sta SOTTO il portale, il vano della porta si apriva su altro
+      // inchiostro anziché sulla pagina: è il motivo per cui la porta finale
+      // non era trasparente come in Orbite.
+      onVeiled={() => document.documentElement.classList.add("ag-booted")}
+      onDone={finish}
+    />
+  );
 }
 
 export default function App() {

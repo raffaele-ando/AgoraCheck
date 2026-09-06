@@ -82,41 +82,47 @@
 .dark-theme { --ag-edge-color: var(--ag-border); }
 
 /*
-  Cambio di tema: TUTTO si muove insieme.
+  Cambio di tema: tutto insieme, e senza costare nulla.
 
-  Il difetto era che ogni elemento portava la propria durata — 200, 300, 500,
-  700, perfino 1000 ms — perché quelle transizioni erano state scritte per le
-  interazioni (passaggio del dito, pressione), non per lo scambio di tema. Al
-  click sulla lunetta partivano quindi tutte insieme ma finivano in momenti
-  diversi, e la schermata sembrava sfaldarsi a pezzi. I contorni disegnati in
-  SVG, per giunta, cambiavano di scatto perché non avevano transizione affatto.
+  Ogni elemento portava la propria durata — 200, 300, 500, 700, perfino
+  1000 ms — perché quelle transizioni erano scritte per le interazioni, non per
+  lo scambio di tema: partivano insieme e finivano in momenti diversi, e la
+  schermata sembrava sfaldarsi a pezzi.
 
-  Qui si impone una durata unica a tutto ciò che cambia colore, ma SOLO per la
-  frazione di secondo dello scambio: la classe viene messa e tolta da
-  toggleTheme. Fuori da quel momento ogni elemento torna alle proprie
-  transizioni, che per le interazioni vanno benissimo.
+  Il primo rimedio che avevo messo — imporre una durata unica a tutti gli
+  elementi — era sì uniforme, ma costringeva il browser ad animare colore,
+  bordo e ombra su OGNI nodo della pagina: uniforme e lento, cioè un difetto
+  scambiato con un altro.
 
-  Le proprietà elencate sono solo quelle cromatiche: mettere `all` animerebbe
-  anche posizioni e dimensioni, facendo strisciare il layout.
+  Ora si fa il contrario. Durante lo scambio le transizioni si spengono tutte
+  (una regola che non anima nulla è gratuita) e la dissolvenza incrociata la
+  disegna il browser con l'API di transizione della vista. Dove quell'API non
+  c'è, lo scambio è istantaneo: brusco, ma uniforme e immediato, che è
+  comunque meglio dello sfaldamento.
 */
 html.ag-theme-switching,
 html.ag-theme-switching *,
 html.ag-theme-switching *::before,
 html.ag-theme-switching *::after {
-  transition-property: background-color, color, border-color, fill, stroke,
-    box-shadow, opacity !important;
-  transition-duration: 260ms !important;
-  transition-timing-function: ease !important;
-  transition-delay: 0s !important;
+  transition: none !important;
+  animation: none !important;
 }
 
-/* Chi ha chiesto meno animazioni cambia tema di scatto, che è corretto. */
+/*
+  La dissolvenza incrociata la disegna il browser: fotografa la schermata prima
+  e dopo e le sovrappone sulla GPU. Una sola animazione per l'intera pagina,
+  invece di centinaia di proprietà animate una per elemento.
+*/
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  html.ag-theme-switching,
-  html.ag-theme-switching *,
-  html.ag-theme-switching *::before,
-  html.ag-theme-switching *::after {
-    transition-duration: 0s !important;
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
 
@@ -151,7 +157,6 @@ html.ag-theme-switching *::after {
 html, body {
   background-color: var(--ag-bg);
   color: var(--ag-text);
-  transition: background-color 300ms, color 300ms;
   overflow-x: hidden;
   max-width: 100vw;
 }

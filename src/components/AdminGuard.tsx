@@ -33,6 +33,8 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
+  /** Cambia al ritorno dalla cache del browser, per far ripartire le scadenze. */
+  const [revived, setRevived] = useState(0);
 
   // Lo stato corrente letto dai timer senza entrare fra le loro dipendenze.
   const authLoadingRef = React.useRef(authLoading);
@@ -69,7 +71,24 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       clearTimeout(warn);
       clearTimeout(giveUp);
     };
-  }, [user]);
+  }, [user, revived]);
+
+  // Ritorno col tasto "indietro".
+  //
+  // Il browser ripresenta la pagina congelata: i timer qui sopra erano già
+  // scaduti o annullati e non ripartono, quindi se si torna indietro mentre il
+  // controllo era ancora in corso si resta davanti al marchio che respira,
+  // per sempre e senza vie d'uscita. È il blocco segnalato. Cambiando
+  // `revived` l'effetto qui sopra si rimonta e la scadenza riparte, così o il
+  // controllo si conclude o si finisce sulla schermata d'accesso, che è
+  // qualcosa su cui si può agire.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setRevived((n) => n + 1);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
 
   // Complete a redirect-based sign-in (used when the popup is blocked).
   //

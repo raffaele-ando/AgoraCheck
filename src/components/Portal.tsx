@@ -116,9 +116,36 @@ export interface PortalProps {
    * così le due metà sono un movimento solo invece di due animazioni in fila.
    */
   onComposed?: () => void;
+  /**
+   * Chiamata al primo fotogramma disegnato, quando il velo copre lo schermo.
+   *
+   * Serve a togliere la copertura statica di index.html: finché quella resta,
+   * il vano della porta si apre su ALTRO inchiostro invece che sulla pagina —
+   * ed è il motivo per cui la porta "non era trasparente come in Orbite".
+   */
+  onVeiled?: () => void;
+  /**
+   * Il velo compare in dissolvenza invece che di colpo.
+   *
+   * Serve quando il portale si apre su una pagina già visibile — il clic sul
+   * logo: senza, la bacheca veniva sostituita dal nero in un fotogramma solo,
+   * ed è lo "scatto" che si vedeva. All'avvio invece lo schermo è già
+   * inchiostro e non c'è nulla da dissolvere.
+   */
+  fadeIn?: boolean;
   /** Colore del velo. Per difetto l'inchiostro di Orbite: vedi sotto. */
   veil?: string;
 }
+
+/**
+ * Durata della comparsa del velo, quando richiesta da `fadeIn`.
+ *
+ * La progressione è lineare e non "easeOut": quest'ultima parte velocissima e
+ * rallenta alla fine, cioè l'esatto contrario di quel che serve qui. Misurata,
+ * dava già il 77% di opacità dopo 80 ms — che all'occhio è lo stesso scatto al
+ * nero che si voleva togliere. Lineare la bacheca svanisce con regolarità.
+ */
+const T_VEIL_IN = 320;
 
 /*
   I colori NON seguono il tema chiaro/scuro, ed è voluto: sono quelli con cui
@@ -130,19 +157,48 @@ export interface PortalProps {
 const VEIL_INK = "#111111";
 const ARCH_CREAM = "#F4F1EA";
 
-export function Portal({ open, onDone, onComposed, veil }: PortalProps) {
+/*
+  I tracciati si costruiscono UNA VOLTA SOLA, in coordinate unitarie.
+
+  Prima venivano ricomposti a ogni fotogramma: sei stringhe di tracciato, con
+  archi di cerchio, concatenate e riassegnate sessanta volte al secondo. Su un
+  telefono di fascia media, mentre la bacheca fa già le sue cose, è la causa
+  degli scatti dell'animazione d'ingresso.
+
+  Ora si costruiscono al caricamento del modulo e a ogni fotogramma si scrive
+  una sola trasformazione sul gruppo che li contiene: scalare un gruppo è
+  lavoro che il browser sa comporre da sé, ricostruire un tracciato no.
+*/
+const UNIT = builder(1, 0, 0);
+const ARCH_D = ARCHES.map((a) => archPath(a, UNIT));
+const DOOR_D = doorPath(UNIT);
+
+export function Portal({
+  open,
+  onDone,
+  onComposed,
+  onVeiled,
+  fadeIn,
+  veil,
+}: PortalProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const veilRef = useRef<SVGPathElement>(null);
+  const markRef = useRef<SVGGElement>(null);
   const plugRef = useRef<SVGPathElement>(null);
   const barsRef = useRef<(SVGPathElement | null)[]>([]);
   const openRef = useRef(open);
   const doneRef = useRef(false);
   const composedRef = useRef(false);
+  const veiledRef = useRef(false);
   const onDoneRef = useRef(onDone);
   const onComposedRef = useRef(onComposed);
+  const onVeiledRef = useRef(onVeiled);
+  const fadeInRef = useRef(fadeIn);
   openRef.current = open;
   onDoneRef.current = onDone;
   onComposedRef.current = onComposed;
+  onVeiledRef.current = onVeiled;
+  fadeInRef.current = fadeIn;
 
   useEffect(() => {
     // Chi ha chiesto meno animazioni non deve attraversare nessuna porta.
@@ -162,11 +218,16 @@ export function Portal({ open, onDone, onComposed, veil }: PortalProps) {
     let openedAt: number | null = null;
     const barDone = [false, false, false, false, false];
 
+    let barsSettled = false;
+    let lastW = -1;
+    let lastH = -1;
+
     const frame = (now: number) => {
       const svg = svgRef.current;
       const veilEl = veilRef.current;
       const plugEl = plugRef.current;
-      if (!svg || !veilEl || !plugEl) return;
+      const markEl = markRef.current;
+      if (!svg || !veilEl || !plugEl || !markEl) return;
 
       if (!last) last = now;
       elapsed += now - last;
@@ -180,7 +241,14 @@ export function Portal({ open, onDone, onComposed, veil }: PortalProps) {
 
       const W = window.innerWidth;
       const H = window.innerHeight;
-      svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      // Il riquadro di disegno si riscrive solo se lo schermo è cambiato:
+      // riassegnarlo a ogni fotogramma obbliga il browser a rivalutare tutto
+      // il disegno anche quando non è cambiato nulla.
+      if (W !== lastW || H !== lastH) {
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        lastW = W;
+        lastH = H;
+      }
 
       const openProgress =
         openedAt === null ? 0 : clamp01((elapsed - openedAt) / T_OPEN);
@@ -219,42 +287,67 @@ export function Portal({ open, onDone, onComposed, veil }: PortalProps) {
         s = sLogo + (sEnd - sLogo) * easeIn(openProgress);
       }
 
-      const b = builder(s, W / 2 - ax * s, H / 2 - ay * s);
+      const px = W / 2 - ax * s;
+      const py = H / 2 - ay * s;
 
-      // Velo col vano ritagliato: un solo tracciato, regola di riempimento
-      // evenodd. Il rettangolo copre esattamente il viewport e nulla di più.
+      // Marchio e tappo: una sola scrittura, la trasformazione del gruppo.
+      // I tracciati dentro non cambiano mai.
+      markEl.setAttribute("transform", `translate(${n2(px)} ${n2(py)}) scale(${s})`);
+
+      // Il velo è l'unico tracciato ancora ricostruito: deve essere UN solo
+      // percorso perché il vano sia un buco vero (regola evenodd) e non un
+      // rettangolo sopra un altro. Sono però otto comandi, non un marchio
+      // intero. Il rettangolo copre esattamente il viewport e nulla di più.
       veilEl.setAttribute(
         "d",
-        `M-1 -1H${W + 1}V${H + 1}H-1Z` + doorPath(b),
+        `M-1 -1H${W + 1}V${H + 1}H-1Z` + doorPath(builder(s, px, py)),
       );
+
+      // Comparsa del velo, quando il portale si apre su una pagina visibile.
+      if (fadeInRef.current && elapsed < T_VEIL_IN) {
+        veilEl.setAttribute("opacity", (elapsed / T_VEIL_IN).toFixed(3));
+      } else if (!veiledRef.current) {
+        veilEl.setAttribute("opacity", "1");
+      }
+
+      // Lo schermo è coperto: chi teneva una copertura statica può toglierla,
+      // altrimenti il vano si aprirebbe su quella invece che sulla pagina.
+      if (!veiledRef.current && (!fadeInRef.current || elapsed >= T_VEIL_IN)) {
+        veiledRef.current = true;
+        onVeiledRef.current?.();
+      }
 
       // Il tappo tiene chiuso il vano finché la porta non parte, così durante
       // la composizione il marchio si legge come nel logo.
       const plugOp = 1 - clamp01((openProgress - 0.05) / 0.09);
-      if (plugOp > 0) {
-        plugEl.setAttribute("d", doorPath(b));
-        plugEl.setAttribute("opacity", plugOp.toFixed(3));
-      } else {
-        plugEl.setAttribute("d", "");
+      plugEl.setAttribute("opacity", plugOp > 0 ? plugOp.toFixed(3) : "0");
+
+      // Gli archi compaiono dall'interno verso l'esterno. Finita la comparsa
+      // non si scrive più nulla: restano opachi da soli.
+      if (!barsSettled) {
+        let allOpaque = true;
+        for (let i = 0; i < ARCHES.length; i++) {
+          const el = barsRef.current[i];
+          if (!el) continue;
+          const appear = clamp01(
+            (elapsed - (ARCHES.length - 1 - i) * STAGGER) / 300,
+          );
+          el.setAttribute("opacity", easeOut(appear).toFixed(3));
+          if (appear < 1) allOpaque = false;
+        }
+        barsSettled = allOpaque;
       }
 
-      // Gli archi compaiono dall'interno verso l'esterno. Quando il raggio
-      // interno di un arco supera lo schermo smette di essere disegnato: non
-      // è più visibile e ridisegnarlo costa soltanto.
+      // Quando un arco è uscito dallo schermo si smette di disegnarlo: resta
+      // enorme e invisibile, e rasterizzarlo costa comunque.
       const reach = Math.sqrt(W * W + H * H) / 2 + 4;
       for (let i = 0; i < ARCHES.length; i++) {
         const el = barsRef.current[i];
         if (!el || barDone[i]) continue;
         if (ARCHES[i].ri * s > reach) {
-          el.setAttribute("d", "");
+          el.style.display = "none";
           barDone[i] = true;
-          continue;
         }
-        el.setAttribute("d", archPath(ARCHES[i], b));
-        const appear = clamp01(
-          (elapsed - (ARCHES.length - 1 - i) * STAGGER) / 300,
-        );
-        el.setAttribute("opacity", easeOut(appear).toFixed(3));
       }
 
       // Ultimo tratto: dissolvenza di sicurezza, se restasse un angolo scoperto.
@@ -291,24 +384,44 @@ export function Portal({ open, onDone, onComposed, veil }: PortalProps) {
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
       >
-        <path ref={veilRef} fill={veil ?? VEIL_INK} fillRule="evenodd" />
-        {/* Il contorno dello stesso colore copre la cucitura col bordo del velo. */}
         <path
-          ref={plugRef}
+          ref={veilRef}
           fill={veil ?? VEIL_INK}
-          stroke={veil ?? VEIL_INK}
-          strokeWidth="2"
+          fillRule="evenodd"
+          opacity={fadeIn ? 0 : 1}
         />
-        <g fill={ARCH_CREAM}>
-          {ARCHES.map((_, i) => (
-            <path
-              key={i}
-              ref={(el) => {
-                barsRef.current[i] = el;
-              }}
-              opacity="0"
-            />
-          ))}
+        {/*
+          Marchio e tappo vivono in un gruppo che viene SCALATO. I loro
+          tracciati sono scritti qui una volta sola, in coordinate unitarie, e
+          non cambiano mai: l'animazione è tutta nella trasformazione del
+          gruppo, che è lavoro che il browser compone da sé.
+        */}
+        {/* will-change avvisa il browser che questo gruppo verrà trasformato
+            in continuo, così predispone il disegno una volta sola invece di
+            riorganizzarlo a ogni fotogramma. */}
+        <g ref={markRef} style={{ willChange: "transform" }}>
+          {/* Il tappo tiene chiuso il vano durante la composizione; il
+              contorno dello stesso colore copre la cucitura col velo. */}
+          <path
+            ref={plugRef}
+            d={DOOR_D}
+            fill={veil ?? VEIL_INK}
+            stroke={veil ?? VEIL_INK}
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+          <g fill={ARCH_CREAM}>
+            {ARCH_D.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                ref={(el) => {
+                  barsRef.current[i] = el;
+                }}
+                opacity="0"
+              />
+            ))}
+          </g>
         </g>
       </svg>
     </div>

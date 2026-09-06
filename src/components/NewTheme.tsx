@@ -12,37 +12,87 @@ import { useSubmitSpotted } from '../pages/Home';
 import { useVisitAnalytics } from '../hooks/useVisitAnalytics';
 import { loadWhatsappLinksFromDB, loadEventWidgetConfigFromDB, EventWidgetConfig, DEFAULT_EVENT_WIDGET_CONFIG } from './AppSettings';
 
-function useTypewriter(words: string[], speed = 60, waitTime = 2000) {
+/**
+ * Testo che si scrive e si cancella da solo, usato per i suggerimenti nei campi.
+ *
+ * La versione precedente era una sorgente costante di scatti su telefono, e la
+ * causa non era l'animazione in sé ma come era costruita: l'effetto aveva
+ * `text` fra le dipendenze, quindi veniva SMONTATO E RIMONTATO a ogni singolo
+ * carattere — sedici volte al secondo — e a ogni giro rifaceva anche un
+ * JSON.parse dell'elenco delle parole. Moltiplicato per i tre campi della
+ * bacheca, era lavoro continuo sul filo principale, proprio mentre si scrive.
+ *
+ * Ora l'effetto parte una volta sola e si ripianifica da sé; le parole si
+ * interpretano una volta. E soprattutto può essere messo in pausa: mentre si
+ * digita, o quando la scheda è in secondo piano, non ha alcun senso continuare
+ * a riscrivere un suggerimento che nessuno sta leggendo.
+ */
+function useTypewriter(
+  words: string[],
+  { paused = false, speed = 60, waitTime = 2000 } = {},
+) {
   const [text, setText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [loopNum, setLoopNum] = useState(0);
 
-  // We stringify words to avoid infinite effect triggers on referential equality check
+  // Confronto per contenuto: l'array arriva nuovo a ogni render, quindi
+  // usarlo direttamente come dipendenza rifarebbe partire tutto ogni volta.
   const wordsJson = JSON.stringify(words);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    const parsedWords = JSON.parse(wordsJson) as string[];
-    const i = loopNum % parsedWords.length;
-    const fullText = parsedWords[i];
+    if (paused) return;
+    const list = JSON.parse(wordsJson) as string[];
+    if (!list.length) return;
 
-    if (isDeleting) {
-      timer = setTimeout(() => setText(fullText.substring(0, text.length - 1)), speed / 2);
-    } else {
-      timer = setTimeout(() => setText(fullText.substring(0, text.length + 1)), speed);
-    }
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    let i = 0;
+    let len = 0;
+    let deleting = false;
 
-    if (!isDeleting && text === fullText) {
-      timer = setTimeout(() => setIsDeleting(true), waitTime);
-    } else if (isDeleting && text === "") {
-      setIsDeleting(false);
-      setLoopNum(loopNum + 1);
-    }
+    const step = () => {
+      if (!alive) return;
+      const full = list[i % list.length];
+      let delay = speed;
 
-    return () => clearTimeout(timer);
-  }, [text, isDeleting, loopNum, wordsJson, speed, waitTime]);
+      if (!deleting) {
+        len = Math.min(len + 1, full.length);
+        if (len === full.length) {
+          deleting = true;
+          delay = waitTime; // pausa a parola completa, per poterla leggere
+        }
+      } else {
+        len = Math.max(len - 1, 0);
+        delay = speed / 2; // si cancella più in fretta di quanto si scriva
+        if (len === 0) {
+          deleting = false;
+          i += 1;
+        }
+      }
+
+      setText(full.slice(0, len));
+      timer = setTimeout(step, delay);
+    };
+
+    timer = setTimeout(step, speed);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [wordsJson, paused, speed, waitTime]);
 
   return text;
+}
+
+/** True quando la scheda non è in primo piano. */
+function usePageVisible() {
+  const [visible, setVisible] = useState(
+    () => typeof document === "undefined" || !document.hidden,
+  );
+  useEffect(() => {
+    const onChange = () => setVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onChange);
+    return () => document.removeEventListener("visibilitychange", onChange);
+  }, []);
+  return visible;
 }
 
 const MODES = [
@@ -62,8 +112,30 @@ for (const city of CITIES) {
 }
 
 function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { words: string[], prefix?: string }) {
-  const placeholderText = useTypewriter(words);
-  return <textarea placeholder={`${prefix}${placeholderText}`} {...props} />;
+  const [focused, setFocused] = useState(false);
+  const visible = usePageVisible();
+
+  // Il suggerimento si ferma quando non serve più: se il campo è in uso — a
+  // fuoco o già scritto — il segnaposto non si vede nemmeno, e continuare a
+  // riscriverlo significa ridisegnare il campo sedici volte al secondo
+  // esattamente mentre qualcuno ci sta digitando dentro.
+  const inUse = focused || !!props.value;
+  const placeholderText = useTypewriter(words, { paused: inUse || !visible });
+
+  return (
+    <textarea
+      placeholder={inUse ? prefix.trim() : `${prefix}${placeholderText}`}
+      {...props}
+      onFocus={(e) => {
+        setFocused(true);
+        props.onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setFocused(false);
+        props.onBlur?.(e);
+      }}
+    />
+  );
 }
 
 export function ThemeCorkboard() {
@@ -83,23 +155,36 @@ export function ThemeCorkboard() {
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
-    try {
-      const root = document.documentElement;
-      // Durata unica per tutto ciò che cambia colore, per la sola durata dello
-      // scambio: senza, ogni elemento finiva con i propri tempi (200, 300,
-      // 500, 700 ms) e la schermata sembrava sfaldarsi a pezzi. La regola è in
-      // index.css. Il timer viene riavviato se si preme di nuovo prima della
-      // fine, così due click ravvicinati non lasciano la classe appesa.
-      root.classList.add("ag-theme-switching");
-      if (themeAnimTimer.current) clearTimeout(themeAnimTimer.current);
-      themeAnimTimer.current = setTimeout(() => {
-        root.classList.remove("ag-theme-switching");
-        themeAnimTimer.current = null;
-      }, 300);
 
-      root.classList.toggle("dark-theme", next);
-      localStorage.setItem("agora_theme", next ? "dark" : "light");
-    } catch {}
+    // Lo scambio vero e proprio. Le transizioni dei singoli elementi vengono
+    // spente (regola in index.css): finivano a tempi diversi e la schermata
+    // sembrava sfaldarsi a pezzi. La dissolvenza la fa il browser, sotto.
+    const apply = () => {
+      try {
+        const root = document.documentElement;
+        root.classList.add("ag-theme-switching");
+        if (themeAnimTimer.current) clearTimeout(themeAnimTimer.current);
+        themeAnimTimer.current = setTimeout(() => {
+          root.classList.remove("ag-theme-switching");
+          themeAnimTimer.current = null;
+        }, 400);
+
+        root.classList.toggle("dark-theme", next);
+        localStorage.setItem("agora_theme", next ? "dark" : "light");
+      } catch {}
+    };
+
+    // Se il browser sa fare le transizioni di vista, fotografa la schermata
+    // prima e dopo e le sovrappone sulla GPU: una sola animazione per tutta la
+    // pagina, uniforme per costruzione. Altrimenti lo scambio è istantaneo.
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => unknown;
+    };
+    if (typeof doc.startViewTransition === "function") {
+      doc.startViewTransition(apply);
+    } else {
+      apply();
+    }
   };
   useEffect(
     () => () => {
@@ -109,6 +194,22 @@ export function ThemeCorkboard() {
   );
   /** In viaggio verso Orbite: il portale è in scena e sta aprendo la porta. */
   const [leaving, setLeaving] = useState(false);
+
+  // Ritorno col tasto "indietro".
+  //
+  // Il browser tiene la pagina congelata in memoria e la ripresenta com'era:
+  // React ritrova `leaving` a true, quindi il portale è ancora in scena, ma il
+  // suo ciclo di animazione era già finito con la navigazione. Risultato: si
+  // torna indietro e si resta davanti al marchio, senza modo di proseguire —
+  // è il blocco segnalato. L'evento pageshow con persisted è l'unico segnale
+  // di questo ritorno; qui si rimette la bacheca allo stato normale.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setLeaving(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
   const defaultCity = Object.keys(locations)[0] || "Milano";
   const [city, setCity] = useState(defaultCity);
   const [zone, setZone] = useState(locations[defaultCity]?.[0] || "");
@@ -341,6 +442,11 @@ export function ThemeCorkboard() {
       {leaving && (
         <Portal
           open={false}
+          // Il velo entra in dissolvenza sopra la bacheca invece di
+          // sostituirla di colpo: senza, il primo fotogramma era già nero
+          // pieno e il movimento sembrava cominciare da un'altra parte
+          // anziché da qui.
+          fadeIn
           onComposed={() => {
             window.location.href = `${ORBITE_URL}?p=1`;
           }}
@@ -603,7 +709,19 @@ export function ThemeCorkboard() {
 
         {/* MAIN CONTEXT FORM */}
         <div className="flex flex-col flex-1 drop-shadow-sm relative w-full h-full min-h-0">
-          <Squircle cornerRadius={32} className="ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 h-full">
+          {/*
+            In modalità sondaggio il pannello si adatta al contenuto invece di
+            stirarsi a tutta altezza: con quattro opzioni resta comunque una
+            fascia vuota sotto l'ultima, ed era quella lo "spazio di troppo".
+            Nella modalità spotted, dove il campo del racconto deve essere
+            grande, l'altezza piena serve e resta.
+          */}
+          <Squircle
+            cornerRadius={32}
+            className={`ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 ${
+              mode === "sondaggio" ? "h-auto" : "h-full"
+            }`}
+          >
              {mode === 'spotted' && (
                 <div key="spotted" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
@@ -622,15 +740,33 @@ export function ThemeCorkboard() {
              )}
   
              {mode === 'sondaggio' && (
-                <div key="sondaggio" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
+                <div key="sondaggio" className="flex flex-col gap-3 animate-in fade-in duration-200 relative z-10">
                    <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden shrink-0 min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📊</div>
                       <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
-                   <div className="flex flex-col gap-2.5 flex-1 min-h-0 justify-start overflow-y-auto pr-1 pb-1">
+                   <div className="flex flex-col gap-2.5 min-h-0 justify-start pr-1 pb-1">
                       {options.map((opt, i) => (
                         <Squircle key={opt.id} cornerRadius={18} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
-                         <div className="w-[3rem] text-center font-bold text-[var(--ag-muted)] text-[10px] flex flex-col justify-center items-center h-full border-r border-[var(--ag-border)] bg-[var(--ag-surface-2)] group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
+                         {/*
+                           La targhetta era bg-[var(--ag-surface-2)]: nel tema
+                           chiaro è #e8dec8 contro il pannello #eae0d0, cioè
+                           due colori praticamente uguali — le opzioni si
+                           impastavano l'una nell'altra.
+
+                           Ora il colore distingue anche il RUOLO: le prime due
+                           risposte sono obbligatorie e portano l'arancio del
+                           marchio, le altre sono facoltative e restano neutre.
+                           Così si capisce a colpo d'occhio quali servono, cosa
+                           che prima era scritta solo nel testo segnaposto.
+                         */}
+                         <div
+                           className={`w-[3rem] text-center font-bold text-[10px] flex flex-col justify-center items-center h-full border-r border-[var(--ag-border)] transition-colors ${
+                             i < 2
+                               ? "bg-[var(--ag-accent)]/15 text-[var(--ag-accent)]"
+                               : "bg-[var(--ag-surface)] text-[var(--ag-muted)]"
+                           } group-focus-within:bg-[var(--ag-accent)]/30 group-focus-within:text-[var(--ag-accent)]`}
+                         >
                            OPZ<br/>{i+1}
                          </div>
                          <input 
