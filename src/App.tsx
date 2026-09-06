@@ -81,10 +81,39 @@ function RouteFallback() {
 
 /** L'apertura è già stata mostrata in questa scheda? */
 const INTRO_KEY = "agora_intro";
+function reducedMotion() {
+  try {
+    return matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
 function introAlreadyPlayed() {
   try {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+    if (reducedMotion()) return true;
     return sessionStorage.getItem(INTRO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Si è arrivati qui col tasto "indietro" (o "avanti")?
+ *
+ * Serve a dare un'animazione anche al ritorno: si torna da Orbite e la porta
+ * si riapre sulla bacheca, come all'andata. Senza, il ritorno era l'unico
+ * passaggio secco rimasto fra i due siti.
+ *
+ * Il tipo di navigazione è quello dichiarato dal browser; quando la pagina
+ * viene invece ripescata dalla memoria (bfcache) non c'è nessuna navigazione
+ * da leggere e se ne accorge l'evento pageshow, gestito più sotto.
+ */
+function cameFromHistory() {
+  try {
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    return nav?.type === "back_forward";
   } catch {
     return false;
   }
@@ -99,7 +128,54 @@ function introAlreadyPlayed() {
  * navigazione interna sarebbe un pedaggio, non un benvenuto.
  */
 function BootIntro() {
-  const [playing, setPlaying] = useState(() => !introAlreadyPlayed());
+  const [playing, setPlaying] = useState(
+    () => !introAlreadyPlayed() || cameFromHistory(),
+  );
+  /**
+   * Si parte dal marchio già composto quando si arriva dalla cronologia.
+   *
+   * Tornando indietro da Orbite, la crescita degli archi è già stata vista
+   * andando: rifarla sarebbe la stessa animazione due volte. Resta la sola
+   * apertura, che è il movimento che racconta "sei rientrato".
+   */
+  const [composed] = useState(() => cameFromHistory());
+  /**
+   * L'animazione non parte finché l'app non ha finito di avviarsi.
+   *
+   * È la correzione che toglie gli scatti, e non è un'ottimizzazione
+   * dell'animazione: misurando gli intervalli fra un fotogramma e l'altro,
+   * la mediana era 17 ms — perfettamente fluida — ma in mezzo c'era un blocco
+   * isolato da 250 ms. Quel quarto di secondo è React che monta, Firebase che
+   * si inizializza e Firestore che apre la connessione: lavoro che occupa il
+   * filo principale e che stava girando PROPRIO durante l'animazione.
+   *
+   * Non c'è motivo di sovrapporli. Lo schermo è già coperto d'inchiostro dal
+   * primo fotogramma (#ag-boot in index.html), quindi far aspettare l'apertura
+   * non si vede: si vede solo che, quando parte, parte liscia.
+   *
+   * Il tetto serve perché su una connessione pessima l'avvio può non
+   * concludersi mai: passato quel tempo si parte comunque.
+   */
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!playing) return;
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      setReady(true);
+    };
+    const cap = setTimeout(go, 1200);
+    const handle =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(go, { timeout: 1000 })
+        : (setTimeout(go, 250) as unknown as number);
+    return () => {
+      clearTimeout(cap);
+      if (typeof cancelIdleCallback === "function") cancelIdleCallback(handle);
+      else clearTimeout(handle);
+    };
+  }, [playing]);
 
   const finish = () => {
     try {
@@ -130,6 +206,12 @@ function BootIntro() {
   useEffect(() => {
     const onShow = (e: PageTransitionEvent) => {
       if (!e.persisted) return;
+      // Ritorno dalla MEMORIA del browser: la pagina ricompare istantanea,
+      // già disegnata, senza ricaricare nulla. Qui NON si anima: coprire con
+      // l'inchiostro una schermata che è già sotto gli occhi, per poi
+      // scoprirla, sarebbe un lampo aggiunto a un passaggio che era già
+      // immediato. L'apertura al ritorno vale per il caso in cui la pagina si
+      // ricarica davvero, gestito da cameFromHistory().
       document.documentElement.classList.add("ag-booted");
       setPlaying(false);
     };
@@ -138,9 +220,12 @@ function BootIntro() {
   }, []);
 
   if (!playing) return null;
+  // Finché non si è pronti resta soltanto la copertura d'inchiostro statica.
+  if (!ready) return null;
   return (
     <Portal
       open
+      startComposed={composed}
       // La copertura statica di index.html va tolta appena il velo del portale
       // copre lo schermo. Restava invece fino alla fine dell'animazione, e
       // siccome sta SOTTO il portale, il vano della porta si apriva su altro

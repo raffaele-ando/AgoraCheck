@@ -133,6 +133,15 @@ export interface PortalProps {
    * inchiostro e non c'è nulla da dissolvere.
    */
   fadeIn?: boolean;
+  /**
+   * Si parte dal marchio già composto, saltando la crescita: resta la sola
+   * apertura.
+   *
+   * Serve quando si ARRIVA da un'altra pagina che la crescita l'ha già fatta:
+   * Orbite quando si torna indietro, o Agorà quando ci si va. Rifarla sarebbe
+   * la stessa animazione due volte, che è il difetto che si voleva togliere.
+   */
+  startComposed?: boolean;
   /** Colore del velo. Per difetto l'inchiostro di Orbite: vedi sotto. */
   veil?: string;
 }
@@ -179,11 +188,12 @@ export function Portal({
   onComposed,
   onVeiled,
   fadeIn,
+  startComposed,
   veil,
 }: PortalProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const veilRef = useRef<SVGPathElement>(null);
-  const markRef = useRef<SVGGElement>(null);
+  const markRef = useRef<HTMLDivElement>(null);
   const plugRef = useRef<SVGPathElement>(null);
   const barsRef = useRef<(SVGPathElement | null)[]>([]);
   const openRef = useRef(open);
@@ -212,7 +222,9 @@ export function Portal({
 
     let raf = 0;
     let last = 0;
-    let elapsed = 0;
+    // Partendo da composti si salta la fase di crescita: il tempo comincia
+    // dove quella sarebbe finita.
+    let elapsed = startComposed ? T_GROW : 0;
     // Istante in cui è stato dato il via libera all'apertura: prima di allora
     // il tempo scorre solo per la fase di crescita.
     let openedAt: number | null = null;
@@ -221,6 +233,11 @@ export function Portal({
     let barsSettled = false;
     let lastW = -1;
     let lastH = -1;
+    // Scala a cui il marchio è stato disegnato una volta per tutte. Si fissa al
+    // primo fotogramma, sulla misura che avrà da composto.
+    let refScale = 0;
+    let lastVeilW = -1;
+    let lastVeilH = -1;
 
     const frame = (now: number) => {
       const svg = svgRef.current;
@@ -262,6 +279,14 @@ export function Portal({
 
       const target = Math.max(150, Math.min(Math.min(W, H) * 0.3, 340));
       const sLogo = target / MARK_W;
+
+      // Il marchio si disegna una volta sola, alla misura che ha da composto.
+      // Da lì in poi lo si scala soltanto.
+      if (refScale === 0) {
+        refScale = sLogo;
+        const g = markEl.firstElementChild as SVGGElement | null;
+        if (g) g.setAttribute("transform", `scale(${refScale})`);
+      }
       const sStart = sLogo * 0.05;
       const need = Math.max(
         Math.sqrt(W * W + H * H) / 2 / DOOR.ri,
@@ -290,18 +315,45 @@ export function Portal({
       const px = W / 2 - ax * s;
       const py = H / 2 - ay * s;
 
-      // Marchio e tappo: una sola scrittura, la trasformazione del gruppo.
-      // I tracciati dentro non cambiano mai.
-      markEl.setAttribute("transform", `translate(${n2(px)} ${n2(py)}) scale(${s})`);
+      // Marchio e tappo: una trasformazione CSS su un livello a sé, non un
+      // attributo SVG.
+      //
+      // È la differenza fra scattare e non scattare. Con `transform` sull'SVG
+      // il browser deve RIDISEGNARE i cinque archi a ogni fotogramma, perché
+      // cambiano di dimensione: misurato, dodici fotogrammi in un secondo e
+      // mezzo. Con una trasformazione CSS su un livello promosso, gli archi
+      // vengono disegnati una volta e poi soltanto spostati e scalati, che è
+      // lavoro che la scheda grafica fa da sola.
+      //
+      // La scala di riferimento è quella del marchio composto: durante la
+      // crescita si rimpicciolisce un disegno più grande (nitido), alla posa si
+      // è esattamente 1:1, e solo nell'apertura si ingrandisce — quando gli
+      // archi corrono fuori schermo e nessuno li guarda più.
+      markEl.style.transform =
+        `translate(${n2(px)}px, ${n2(py)}px) scale(${(s / refScale).toFixed(5)})`;
 
-      // Il velo è l'unico tracciato ancora ricostruito: deve essere UN solo
-      // percorso perché il vano sia un buco vero (regola evenodd) e non un
-      // rettangolo sopra un altro. Sono però otto comandi, non un marchio
-      // intero. Il rettangolo copre esattamente il viewport e nulla di più.
-      veilEl.setAttribute(
-        "d",
-        `M-1 -1H${W + 1}V${H + 1}H-1Z` + doorPath(builder(s, px, py)),
-      );
+      // Il velo si ridisegna SOLO mentre la porta si apre.
+      //
+      // Qui stava il costo vero dell'animazione, e non era dove pensavo. Il
+      // velo è un rettangolo grande quanto lo schermo col vano ritagliato:
+      // riscriverne il tracciato a ogni fotogramma obbliga il browser a
+      // ridipingere l'intera superficie della pagina, sessanta volte al
+      // secondo, per un buco che durante la crescita è comunque coperto dal
+      // tappo e quindi invisibile.
+      //
+      // Durante crescita e posa il velo è quindi un rettangolo pieno, scritto
+      // una volta e mai più toccato: zero ridisegni. Il vano compare solo
+      // quando serve, cioè quando comincia ad aprirsi.
+      if (openedAt !== null) {
+        veilEl.setAttribute(
+          "d",
+          `M-1 -1H${W + 1}V${H + 1}H-1Z` + doorPath(builder(s, px, py)),
+        );
+      } else if (W !== lastVeilW || H !== lastVeilH) {
+        veilEl.setAttribute("d", `M-1 -1H${W + 1}V${H + 1}H-1Z`);
+        lastVeilW = W;
+        lastVeilH = H;
+      }
 
       // Comparsa del velo, quando il portale si apre su una pagina visibile.
       if (fadeInRef.current && elapsed < T_VEIL_IN) {
@@ -390,40 +442,53 @@ export function Portal({
           fillRule="evenodd"
           opacity={fadeIn ? 0 : 1}
         />
-        {/*
-          Marchio e tappo vivono in un gruppo che viene SCALATO. I loro
-          tracciati sono scritti qui una volta sola, in coordinate unitarie, e
-          non cambiano mai: l'animazione è tutta nella trasformazione del
-          gruppo, che è lavoro che il browser compone da sé.
-        */}
-        {/* will-change avvisa il browser che questo gruppo verrà trasformato
-            in continuo, così predispone il disegno una volta sola invece di
-            riorganizzarlo a ogni fotogramma. */}
-        <g ref={markRef} style={{ willChange: "transform" }}>
-          {/* Il tappo tiene chiuso il vano durante la composizione; il
-              contorno dello stesso colore copre la cucitura col velo. */}
-          <path
-            ref={plugRef}
-            d={DOOR_D}
-            fill={veil ?? VEIL_INK}
-            stroke={veil ?? VEIL_INK}
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-          />
-          <g fill={ARCH_CREAM}>
-            {ARCH_D.map((d, i) => (
-              <path
-                key={i}
-                d={d}
-                ref={(el) => {
-                  barsRef.current[i] = el;
-                }}
-                opacity="0"
-              />
-            ))}
-          </g>
-        </g>
       </svg>
+
+      {/*
+        Il marchio sta FUORI dall'SVG del velo, in un livello proprio.
+
+        Dentro l'SVG veniva ridisegnato a ogni fotogramma perché cambiava di
+        scala: cinque tracciati grandi da rasterizzare sessanta volte al
+        secondo, misurati in dodici fotogrammi ogni secondo e mezzo. Qui invece
+        e' un livello promosso (will-change), disegnato una volta alla misura
+        del marchio composto e poi solo spostato e scalato dalla scheda grafica.
+
+        L'SVG interno non ha dimensioni e lascia traboccare il disegno: serve
+        solo da contenitore per i tracciati, il posizionamento lo fa la
+        trasformazione CSS del div.
+      */}
+      <div
+        ref={markRef}
+        className="absolute top-0 left-0"
+        style={{ transformOrigin: "0 0", willChange: "transform" }}
+      >
+        <svg width="0" height="0" style={{ overflow: "visible" }}>
+          <g>
+            {/* Il tappo tiene chiuso il vano durante la composizione; il
+                contorno dello stesso colore copre la cucitura col velo. */}
+            <path
+              ref={plugRef}
+              d={DOOR_D}
+              fill={veil ?? VEIL_INK}
+              stroke={veil ?? VEIL_INK}
+              strokeWidth="2"
+              vectorEffect="non-scaling-stroke"
+            />
+            <g fill={ARCH_CREAM}>
+              {ARCH_D.map((d, i) => (
+                <path
+                  key={i}
+                  d={d}
+                  ref={(el) => {
+                    barsRef.current[i] = el;
+                  }}
+                  opacity="0"
+                />
+              ))}
+            </g>
+          </g>
+        </svg>
+      </div>
     </div>
   );
 }

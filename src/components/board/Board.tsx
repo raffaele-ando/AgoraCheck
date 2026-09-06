@@ -182,17 +182,18 @@ export function Board() {
       } catch {}
     };
 
-    // Se il browser sa fare le transizioni di vista, fotografa la schermata
-    // prima e dopo e le sovrappone sulla GPU: una sola animazione per tutta la
-    // pagina, uniforme per costruzione. Altrimenti lo scambio è istantaneo.
-    const doc = document as Document & {
-      startViewTransition?: (cb: () => void) => unknown;
-    };
-    if (typeof doc.startViewTransition === "function") {
-      doc.startViewTransition(apply);
-    } else {
-      apply();
-    }
+    // Lo scambio è ISTANTANEO, senza dissolvenza.
+    //
+    // Avevo provato la transizione di vista del browser: tecnicamente è la cosa
+    // giusta — una sola animazione per tutta la pagina, composta sulla GPU — ma
+    // fotografa la schermata prima e dopo e le incrocia, e all'occhio quello è
+    // esattamente l'aspetto di una pagina che si ricarica. Non è un difetto di
+    // resa: è che una dissolvenza a schermo intero significa "sto cambiando
+    // pagina", mentre qui non sta cambiando pagina, cambia solo il colore.
+    //
+    // Uno scambio secco è quello che fanno i sistemi operativi e le altre app:
+    // immediato, uniforme, e non lascia il dubbio che sia successo altro.
+    apply();
   };
   useEffect(
     () => () => {
@@ -755,7 +756,7 @@ export function Board() {
                   una domanda può essere lunga, mentre le risposte sono corte e
                   di altezza fissa.
                 */
-                <div key="sondaggio" className="flex flex-col gap-3 h-full min-h-0 animate-in fade-in duration-200 relative z-10">
+                <div key="sondaggio" className="flex flex-col gap-3 h-full min-h-0 overflow-y-auto animate-in fade-in duration-200 relative z-10">
                    {/*
                      Il campo della domanda cresce, ma entro un limite: senza
                      tetto si prendeva tutto lo spazio avanzato e diventava un
@@ -763,21 +764,27 @@ export function Board() {
                      massimo sta un campo da tre o quattro righe, che è quanto
                      serve davvero a una domanda.
                    */}
-                   <Squircle cornerRadius={24} className="ag-edge bg-[var(--ag-inset)] flex overflow-hidden flex-[2] min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                   <Squircle cornerRadius={24} className="ag-edge bg-[var(--ag-inset)] flex overflow-hidden flex-1 min-h-[3.5rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📊</div>
                       <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                    {/*
-                     Le righe crescono per riempire il pannello quando c'è
-                     spazio (max-h le tiene comunque proporzionate) e si
-                     stringono al minimo quando la tastiera riduce lo schermo.
-                     Se nemmeno il minimo entra, questo contenitore scorre:
-                     senza, le ultime due risposte restavano tagliate fuori e
-                     irraggiungibili — verificato a 420px di altezza.
+                     Le quattro risposte hanno altezza fissa e NON si
+                     comprimono. Farle crescere in proporzione sembrava una
+                     buona idea, ma su uno schermo piu' corto del mio banco di
+                     prova la loro altezza minima non entrava piu' e compariva
+                     una barra di scorrimento dentro il pannello: sulla pagina
+                     normale non ci deve essere nulla da scorrere.
+
+                     E' la colonna intera a scorrere, e solo quando serve
+                     davvero: con la tastiera aperta lo spazio si dimezza e
+                     allora scorrere e' l'unico modo per raggiungere l'ultima
+                     risposta. Quello che avanza lo assorbe il campo della
+                     domanda, che e' l'unico elemento elastico.
                    */}
-                   <div className="flex flex-col gap-2.5 flex-[3] min-h-0 justify-start overflow-y-auto pr-1 pb-1">
+                   <div className="flex flex-col gap-2.5 shrink-0 justify-start pr-1">
                       {options.map((opt, i) => (
-                        <Squircle key={opt.id} cornerRadius={18} className="ag-edge bg-[var(--ag-inset)] flex items-center overflow-hidden flex-1 min-h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
+                        <Squircle key={opt.id} cornerRadius={18} className="ag-edge bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
                          {/*
                            La targhetta era bg-[var(--ag-surface-2)]: nel tema
                            chiaro è #e8dec8 contro il pannello #eae0d0, cioè

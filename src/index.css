@@ -94,11 +94,12 @@
   bordo e ombra su OGNI nodo della pagina: uniforme e lento, cioè un difetto
   scambiato con un altro.
 
-  Ora si fa il contrario. Durante lo scambio le transizioni si spengono tutte
-  (una regola che non anima nulla è gratuita) e la dissolvenza incrociata la
-  disegna il browser con l'API di transizione della vista. Dove quell'API non
-  c'è, lo scambio è istantaneo: brusco, ma uniforme e immediato, che è
-  comunque meglio dello sfaldamento.
+  Ora lo scambio è istantaneo: questa regola spegne ogni transizione per la
+  frazione di secondo in cui i colori cambiano, e nient'altro. Avevo provato
+  una dissolvenza a schermo intero con l'API di transizione della vista, ma
+  incrociare due fotografie dell'intera pagina ha l'aspetto di un
+  ricaricamento — che è proprio la cosa da non far sembrare, visto che la
+  pagina non sta cambiando affatto.
 */
 html.ag-theme-switching,
 html.ag-theme-switching *,
@@ -108,23 +109,6 @@ html.ag-theme-switching *::after {
   animation: none !important;
 }
 
-/*
-  La dissolvenza incrociata la disegna il browser: fotografa la schermata prima
-  e dopo e le sovrappone sulla GPU. Una sola animazione per l'intera pagina,
-  invece di centinaia di proprietà animate una per elemento.
-*/
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 260ms;
-  animation-timing-function: ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none;
-  }
-}
 
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {
