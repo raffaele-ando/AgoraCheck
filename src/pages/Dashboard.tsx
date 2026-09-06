@@ -74,11 +74,26 @@ import {
   Copy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Analytics } from "../components/Analytics";
-import StoryExportBeta from "../components/StoryExportBeta";
-import StoryTemplateConfig from "../components/StoryTemplateConfig";
-import CarouselTemplateConfig from "../components/CarouselTemplateConfig";
-import AppSettings, { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../components/AppSettings";
+import { lazy, Suspense } from "react";
+
+/**
+ * Componenti delle schede caricati SOLO quando la scheda viene aperta.
+ *
+ * Erano importati staticamente, quindi il pacchetto della Dashboard (700 KB)
+ * conteneva anche recharts e html-to-image: chi apriva soltanto "Messaggi" —
+ * cioè l'uso normale — li scaricava comunque. Ora ciascuno diventa un file a
+ * parte, richiesto al primo utilizzo.
+ */
+const Analytics = lazy(() =>
+  import("../components/Analytics").then((m) => ({ default: m.Analytics })),
+);
+const StoryExportBeta = lazy(() => import("../components/StoryExportBeta"));
+const StoryTemplateConfig = lazy(() => import("../components/StoryTemplateConfig"));
+const CarouselTemplateConfig = lazy(() => import("../components/CarouselTemplateConfig"));
+const AppSettings = lazy(() => import("../components/AppSettings"));
+// Le utilità di configurazione restano statiche: sono poche righe e servono
+// subito, senza trascinare l'interfaccia delle impostazioni.
+import { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../components/AppSettings";
 import { LinkWidgetCard } from "../components/LinkWidgetCard";
 import { LOCATIONS } from "../components/HeaderVariations";
 interface Message {
@@ -153,12 +168,21 @@ const getProfileInitials = (name?: string): string | null => {
 const computeDeviceProfileColor = computeProfileColor;
 
 /** Documenti caricati all'apertura: copre abbondantemente le prime pagine. */
-const MESSAGES_BASE_BUFFER = 1000;
+const MESSAGES_BASE_BUFFER = 120;
 /**
  * Tetto assoluto di documenti sottoscritti. Le schede che analizzano l'intero
  * storico si fermano qui invece di scaricare la collezione senza limite.
  */
-const MESSAGES_HARD_CAP = 8000;
+const MESSAGES_HARD_CAP = 2500;
+
+/** Segnaposto mostrato mentre il codice di una scheda viene scaricato. */
+function TabLoading() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <div className="w-8 h-8 border-4 border-gray-300 dark:border-gray-600 border-t-indigo-600 rounded-full animate-spin" />
+    </div>
+  );
+}
 
 export default function Dashboard() {
   // Il flag IGNORE_ANALYTICS ha un'unica fonte di verità nella scheda
@@ -2451,31 +2475,37 @@ export default function Dashboard() {
             </div>
           )}
         </header>
-        <div className={activeTab === "analytics" ? "block" : "hidden"}>
-          <Analytics
-            messages={analyticsMessages}
-            profiles={analyticsProfiles}
-            macroProfiles={analyticsMacroProfiles}
-            visits={visits}
-          />
-        </div>
-        <div className={activeTab === "story_template" ? "block" : "hidden"}>
-          <StoryTemplateConfig />
-        </div>
-        <div className={activeTab === "settings" ? "block" : "hidden"}>
-          <AppSettings isSuperAdmin={isSuperAdmin} />
-        </div>
-        <div className={activeTab === "carousel" ? "block" : "hidden"}>
-          {activeTab === "carousel" && (
-            <CarouselTemplateConfig 
+        {activeTab === "analytics" && (
+          <Suspense fallback={<TabLoading />}>
+            <Analytics
+              messages={analyticsMessages}
+              profiles={analyticsProfiles}
+              macroProfiles={analyticsMacroProfiles}
+              visits={visits}
+            />
+          </Suspense>
+        )}
+        {activeTab === "story_template" && (
+          <Suspense fallback={<TabLoading />}>
+            <StoryTemplateConfig />
+          </Suspense>
+        )}
+        {activeTab === "settings" && (
+          <Suspense fallback={<TabLoading />}>
+            <AppSettings isSuperAdmin={isSuperAdmin} />
+          </Suspense>
+        )}
+        {activeTab === "carousel" && (
+          <Suspense fallback={<TabLoading />}>
+            <CarouselTemplateConfig
               validatedMessages={carouselValidatedMessages}
               onUnvalidateMessage={async (msgId) => {
                 const docRef = doc(db, "messages", msgId);
                 await updateDoc(docRef, { isValidatedForCarousel: false });
               }}
             />
-          )}
-        </div>
+          </Suspense>
+        )}
         <div className={activeTab === "messages" ? "block" : "hidden"}>
           <>
             {/* Global Tools Section */}
@@ -5281,10 +5311,12 @@ export default function Dashboard() {
       )}
       
       {exportingMessage && (
-        <StoryExportBeta
-          message={exportingMessage}
-          onClose={() => setExportingMessage(null)}
-        />
+        <Suspense fallback={null}>
+          <StoryExportBeta
+            message={exportingMessage}
+            onClose={() => setExportingMessage(null)}
+          />
+        </Suspense>
       )}
 
       {/* Notifiche non bloccanti (sostituiscono gli alert). */}

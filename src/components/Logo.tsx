@@ -34,15 +34,66 @@ export const normalizeLogoUrl = (url: string | null): string | null => {
   return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
 };
 
+const LS_LOGO_PREFIX = "agora_logo_";
+const LS_SCALES_KEY = "agora_logo_scales";
+
+/**
+ * Cache persistente degli indirizzi dei loghi.
+ *
+ * Il logo attendeva una lettura Firestore a OGNI caricamento di pagina: finché
+ * quella non tornava, l'intestazione restava vuota — ed è la prima cosa che si
+ * guarda. Ricordando l'indirizzo si disegna subito, mentre la lettura prosegue
+ * in sottofondo e corregge il valore se nel frattempo è cambiato
+ * (stale-while-revalidate). Si memorizza solo un URL, non l'immagine.
+ */
+const readStoredLogo = (name: string): string | null | undefined => {
+  try {
+    const raw = localStorage.getItem(LS_LOGO_PREFIX + name);
+    if (raw === null) return undefined;   // mai memorizzato
+    return raw === "" ? null : raw;       // memorizzato come "assente"
+  } catch {
+    return undefined;
+  }
+};
+
+const writeStoredLogo = (name: string, url: string | null) => {
+  try {
+    localStorage.setItem(LS_LOGO_PREFIX + name, url ?? "");
+  } catch {}
+};
+
 const logoCache: Record<string, string | null> = {};
 const pendingPromises: Record<string, Promise<string | null>> = {};
 const listeners: Record<string, Set<(url: string | null) => void>> = {};
+/** Nomi già riletti da Firestore in questa sessione. */
+const revalidated = new Set<string>();
+
+// Idratazione all'avvio del modulo: deve avvenire PRIMA del primo render,
+// altrimenti il componente troverebbe la cache vuota, mostrerebbe il segnaposto
+// e il valore ricordato non servirebbe a nulla.
+try {
+  for (const k of Object.keys(localStorage)) {
+    if (!k.startsWith(LS_LOGO_PREFIX)) continue;
+    const name = k.slice(LS_LOGO_PREFIX.length);
+    const v = localStorage.getItem(k);
+    logoCache[name] = v ? v : null;
+  }
+} catch {}
 
 let scalesCache: { zoneScale: number, agoraScale: number, customLogoScale: number, spacing: number } | null = null;
 const scalesListeners = new Set<(scales: any) => void>();
 
 export const fetchLogoScales = async () => {
   if (scalesCache) return scalesCache;
+  // Valore ricordato: evita che l'intestazione salti di dimensione al primo
+  // disegno mentre la lettura da Firestore è ancora in corso.
+  try {
+    const stored = localStorage.getItem(LS_SCALES_KEY);
+    if (stored) {
+      scalesCache = JSON.parse(stored);
+      scalesListeners.forEach(cb => cb(scalesCache));
+    }
+  } catch {}
   try {
     const snap = await getDoc(doc(db, "settings", "logo_scales"));
     if (snap.exists()) {
@@ -58,6 +109,9 @@ export const fetchLogoScales = async () => {
   } catch (e) {
     scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 };
   }
+  try {
+    localStorage.setItem(LS_SCALES_KEY, JSON.stringify(scalesCache));
+  } catch {}
   scalesListeners.forEach(cb => cb(scalesCache));
   return scalesCache;
 };
@@ -69,6 +123,12 @@ export const updateLogoScalesCache = (newScales: any) => {
 
 
 export const clearLogoCache = () => {
+  revalidated.clear();
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith(LS_LOGO_PREFIX)) localStorage.removeItem(k);
+    }
+  } catch {}
   for (const key in logoCache) {
     logoCache[key] = null;
     if (listeners[key]) {
@@ -82,30 +142,48 @@ export const clearLogoCache = () => {
 };
 
 const fetchLogo = async (name: string): Promise<string | null> => {
-  if (name in logoCache) return logoCache[name];
-  if (name in pendingPromises) return pendingPromises[name];
+  // Valore ricordato dalla visita precedente: disponibile subito.
+  if (!(name in logoCache)) {
+    const stored = readStoredLogo(name);
+    if (stored !== undefined) logoCache[name] = stored;
+  }
+
+  const cached = name in logoCache ? logoCache[name] : undefined;
+
+  // Già riletto in questa sessione: nessuna richiesta ulteriore.
+  if (cached !== undefined && revalidated.has(name)) return cached;
+  if (name in pendingPromises) return cached !== undefined ? cached : pendingPromises[name];
 
   const promise = (async () => {
     try {
       const snap = await getDoc(doc(db, "logos", name));
       const raw = snap.exists() && snap.data()?.dataUrl ? snap.data().dataUrl : null;
       const url = normalizeLogoUrl(raw);
+      revalidated.add(name);
+      const changed = logoCache[name] !== url;
       logoCache[name] = url;
-      if (listeners[name]) {
+      writeStoredLogo(name, url);
+      // Si avvisano gli ascoltatori solo se il valore è DIVERSO da quello già
+      // mostrato, per non far lampeggiare un logo già corretto.
+      if (changed && listeners[name]) {
         listeners[name].forEach(cb => cb(url));
       }
       return url;
     } catch {
-      delete pendingPromises[name];
-      if (listeners[name]) {
+      // Firestore irraggiungibile: si tiene quanto ricordato invece di
+      // cancellarlo, così un problema di rete non fa sparire il logo.
+      if (cached === undefined && listeners[name]) {
         listeners[name].forEach(cb => cb(null));
       }
-      return null;
+      return cached ?? null;
+    } finally {
+      delete pendingPromises[name];
     }
   })();
-  
+
   pendingPromises[name] = promise;
-  return promise;
+  // Se abbiamo già un valore ricordato lo restituiamo subito, senza attendere.
+  return cached !== undefined ? cached : promise;
 };
 
 export function Logo({ className, logoName = "default", fallbackText, forceTextFallback = false }: { className?: string; logoName?: string; fallbackText?: string, forceTextFallback?: boolean }) {
@@ -138,35 +216,42 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
     setFailed(false);
     setTimeoutText(false);
 
-    if (!(logoName in logoCache)) {
-      setLoading(true);
-      
-      const t = setTimeout(() => {
-         if (mounted && !(logoName in logoCache)) setTimeoutText(true);
-      }, 1000); // 1s fast text fallback if slow network
-      
-      const cb = (newUrl: string | null) => {
-        if (!mounted) return;
-        setUrl(newUrl);
-        setLoading(false);
-        if (!newUrl) setFailed(true);
-        else { setFailed(false); setTimeoutText(false); }
-      };
-      
-      if (!listeners[logoName]) listeners[logoName] = new Set();
-      listeners[logoName].add(cb);
-      
-      fetchLogo(logoName);
-      
-      return () => {
-        mounted = false;
-        clearTimeout(t);
-        listeners[logoName]?.delete(cb);
-      };
+    const known = logoName in logoCache;
+
+    // Con un valore già noto si disegna subito: niente segnaposto, niente
+    // attesa. La rilettura parte comunque, così un logo cambiato arriva.
+    if (known) {
+      setUrl(logoCache[logoName]);
+      setLoading(false);
+      if (!logoCache[logoName]) setFailed(true);
     } else {
-       setLoading(false);
-       if (!logoCache[logoName]) setFailed(true);
+      setLoading(true);
     }
+
+    const t = known
+      ? null
+      : setTimeout(() => {
+          if (mounted && !(logoName in logoCache)) setTimeoutText(true);
+        }, 1000); // 1s fast text fallback if slow network
+
+    const cb = (newUrl: string | null) => {
+      if (!mounted) return;
+      setUrl(newUrl);
+      setLoading(false);
+      if (!newUrl) setFailed(true);
+      else { setFailed(false); setTimeoutText(false); }
+    };
+
+    if (!listeners[logoName]) listeners[logoName] = new Set();
+    listeners[logoName].add(cb);
+
+    fetchLogo(logoName);
+
+    return () => {
+      mounted = false;
+      if (t) clearTimeout(t);
+      listeners[logoName]?.delete(cb);
+    };
   }, [logoName]);
 
   useEffect(() => {

@@ -16,6 +16,23 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      // Il bundle iniziale era un unico file da ~970 KB: il browser doveva
+      // scaricarlo e interpretarlo INTERAMENTE prima di disegnare qualsiasi
+      // cosa. Separando le dipendenze che non cambiano mai dal codice
+      // dell'applicazione, i file si scaricano in parallelo e soprattutto
+      // restano in cache fra un rilascio e l'altro: dopo la prima visita si
+      // ri-scarica solo il nostro codice, non React e Firebase.
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          },
+        },
+      },
+      chunkSizeWarningLimit: 700,
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
