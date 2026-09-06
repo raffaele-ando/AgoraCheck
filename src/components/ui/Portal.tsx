@@ -34,8 +34,31 @@ const DOOR = ARCHES[4];
 const DOOR_DOWN = 91.2;
 
 const T_GROW = 620; // comparsa e crescita fino alla misura del marchio
+/**
+ * Posa: il marchio composto resta fermo prima di aprirsi.
+ *
+ * Mancava, ed e' il motivo della segnalazione "non si caricano tutte le porte
+ * del brandmark". Tracciando le opacita' fotogramma per fotogramma: l'arco piu'
+ * esterno arrivava a piena opacita' a 620 ms, cioe' nell'istante esatto in cui
+ * cominciava l'apertura. Non esisteva un momento in cui il marchio completo
+ * stesse fermo abbastanza da leggersi: si vedevano gli archi comparire e subito
+ * volare via, e l'impressione era che alcuni non ci fossero proprio.
+ *
+ * Orbite questa posa ce l'ha (T_HOLD = 240 in intro.js); portandola qui le due
+ * animazioni tornano anche a durare uguale.
+ */
+const T_HOLD = 300;
 const T_OPEN = 900; // apertura accelerata oltre i bordi
-const STAGGER = 80; // ritardo fra un arco e il successivo
+/**
+ * Ritardo fra un arco e il successivo, e durata della loro comparsa.
+ *
+ * Calcolati perche' l'ULTIMO arco sia gia' pieno prima che la crescita finisca:
+ * 4 x 70 + 260 = 540 ms, contro i 620 della crescita. Con i valori precedenti
+ * (4 x 80 + 300 = 620) l'ultimo arco finiva di comparire nello stesso istante
+ * in cui partiva l'apertura.
+ */
+const STAGGER = 70;
+const T_APPEAR = 260;
 
 const cutY = (dx: number) =>
   CUT_CY + Math.sqrt(Math.max(0, CUT_R * CUT_R - dx * dx));
@@ -224,7 +247,7 @@ export function Portal({
     let last = 0;
     // Partendo da composti si salta la fase di crescita: il tempo comincia
     // dove quella sarebbe finita.
-    let elapsed = startComposed ? T_GROW : 0;
+    let elapsed = startComposed ? T_GROW + T_HOLD : 0;
     // Istante in cui è stato dato il via libera all'apertura: prima di allora
     // il tempo scorre solo per la fase di crescita.
     let openedAt: number | null = null;
@@ -253,7 +276,7 @@ export function Portal({
       if (openRef.current && openedAt === null) {
         // Non si apre prima di essersi composta: aprirsi a metà crescita
         // darebbe uno scatto invece di un movimento.
-        openedAt = Math.max(elapsed, T_GROW);
+        openedAt = Math.max(elapsed, T_GROW + T_HOLD);
       }
 
       const W = window.innerWidth;
@@ -382,7 +405,7 @@ export function Portal({
           const el = barsRef.current[i];
           if (!el) continue;
           const appear = clamp01(
-            (elapsed - (ARCHES.length - 1 - i) * STAGGER) / 300,
+            (elapsed - (ARCHES.length - 1 - i) * STAGGER) / T_APPEAR,
           );
           el.setAttribute("opacity", easeOut(appear).toFixed(3));
           if (appear < 1) allOpaque = false;
@@ -428,7 +451,19 @@ export function Portal({
     <div
       className="fixed inset-0 z-[100] overflow-hidden"
       aria-hidden="true"
-      style={{ background: "transparent" }}
+      style={{
+        background: "transparent",
+        // Il portale sta su un livello proprio e isolato.
+        //
+        // Senza, ogni ridisegno del velo — che copre tutto lo schermo — può
+        // trascinare con sé anche la bacheca che sta sotto, che di suo non è
+        // cambiata di un pixel. `contain: paint` dice al browser che nulla di
+        // questo elemento esce dai suoi bordi, e `will-change` gli fa
+        // preparare il livello prima che l'animazione cominci invece che al
+        // primo fotogramma.
+        contain: "paint",
+        willChange: "opacity",
+      }}
     >
       <svg
         ref={svgRef}

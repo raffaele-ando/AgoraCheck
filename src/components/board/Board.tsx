@@ -82,6 +82,69 @@ function useTypewriter(
   return text;
 }
 
+/**
+ * I suggerimenti animati si fermano per SEMPRE al primo tocco sul modulo.
+ *
+ * Servono a chi arriva e non sa cosa scrivere. Da quando ha toccato il primo
+ * campo, quella spiegazione l'ha avuta: continuare a riscriverli significa
+ * ridisegnare i campi sedici volte al secondo per tutto il tempo in cui sta
+ * compilando. E siccome mettere in pausa e riprendere fa RIPARTIRE il testo da
+ * zero, passando da un campo all'altro si vedeva ogni segnaposto azzerarsi:
+ * sono i lampeggi segnalati.
+ *
+ * È un modulo condiviso e non uno stato di React di proposito: i campi sono
+ * fratelli, e questo deve fermarli tutti insieme senza farli ridisegnare.
+ */
+let formTouched = false;
+const touchListeners = new Set<() => void>();
+function markFormTouched() {
+  if (formTouched) return;
+  formTouched = true;
+  touchListeners.forEach((cb) => cb());
+}
+function useFormTouched() {
+  const [touched, setTouched] = useState(formTouched);
+  useEffect(() => {
+    if (touched) return;
+    const cb = () => setTouched(true);
+    touchListeners.add(cb);
+    return () => {
+      touchListeners.delete(cb);
+    };
+  }, [touched]);
+  return touched;
+}
+
+/**
+ * True finché l'apertura del marchio è ancora sullo schermo.
+ *
+ * Serve a tenere ferma la bacheca mentre la porta si apre. Misurando i
+ * fotogrammi dell'animazione d'ingresso, i blocchi non venivano dal portale ma
+ * da quello che la bacheca faceva DIETRO di esso: i suggerimenti che si
+ * riscrivono sedici volte al secondo sono lavoro continuo speso per un testo
+ * che in quel momento nessuno può vedere, perché è coperto dall'inchiostro.
+ *
+ * Il segnale è la classe che App mette su <html> quando l'apertura è finita.
+ */
+function useIntroOver() {
+  const [over, setOver] = useState(
+    () => typeof document === "undefined" ||
+      document.documentElement.classList.contains("ag-booted"),
+  );
+  useEffect(() => {
+    if (over) return;
+    const obs = new MutationObserver(() => {
+      if (document.documentElement.classList.contains("ag-booted")) {
+        setOver(true);
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, [over]);
+  return over;
+}
+
 /** True quando la scheda non è in primo piano. */
 function usePageVisible() {
   const [visible, setVisible] = useState(
@@ -119,8 +182,14 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
   // fuoco o già scritto — il segnaposto non si vede nemmeno, e continuare a
   // riscriverlo significa ridisegnare il campo sedici volte al secondo
   // esattamente mentre qualcuno ci sta digitando dentro.
+  const touched = useFormTouched();
+  const introOver = useIntroOver();
   const inUse = focused || !!props.value;
-  const placeholderText = useTypewriter(words, { paused: inUse || !visible });
+  // Fermo: mentre l'apertura del marchio copre lo schermo, per sempre dopo il
+  // primo tocco sul modulo, e mentre la scheda è in secondo piano.
+  const placeholderText = useTypewriter(words, {
+    paused: !introOver || touched || inUse || !visible,
+  });
 
   return (
     <textarea
@@ -128,6 +197,7 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
       {...props}
       onFocus={(e) => {
         setFocused(true);
+        markFormTouched();
         props.onFocus?.(e);
       }}
       onBlur={(e) => {
@@ -159,48 +229,24 @@ export function Board() {
       return false;
     }
   });
-  const themeAnimTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
-
-    // Lo scambio vero e proprio. Le transizioni dei singoli elementi vengono
-    // spente (regola in index.css): finivano a tempi diversi e la schermata
-    // sembrava sfaldarsi a pezzi. La dissolvenza la fa il browser, sotto.
-    const apply = () => {
-      try {
-        const root = document.documentElement;
-        root.classList.add("ag-theme-switching");
-        if (themeAnimTimer.current) clearTimeout(themeAnimTimer.current);
-        themeAnimTimer.current = setTimeout(() => {
-          root.classList.remove("ag-theme-switching");
-          themeAnimTimer.current = null;
-        }, 400);
-
-        root.classList.toggle("dark-theme", next);
-        localStorage.setItem("agora_theme", next ? "dark" : "light");
-      } catch {}
-    };
-
-    // Lo scambio è ISTANTANEO, senza dissolvenza.
-    //
-    // Avevo provato la transizione di vista del browser: tecnicamente è la cosa
-    // giusta — una sola animazione per tutta la pagina, composta sulla GPU — ma
-    // fotografa la schermata prima e dopo e le incrocia, e all'occhio quello è
-    // esattamente l'aspetto di una pagina che si ricarica. Non è un difetto di
-    // resa: è che una dissolvenza a schermo intero significa "sto cambiando
-    // pagina", mentre qui non sta cambiando pagina, cambia solo il colore.
-    //
-    // Uno scambio secco è quello che fanno i sistemi operativi e le altre app:
-    // immediato, uniforme, e non lascia il dubbio che sia successo altro.
-    apply();
+    try {
+      // Solo lo scambio della classe: nient'altro.
+      //
+      // Prima qui si accendeva e spegneva anche una classe che disattivava le
+      // transizioni per la durata del cambio. Era proprio quella a far sembrare
+      // che la pagina si ricaricasse: aggiungere e poi togliere una regola che
+      // seleziona ogni elemento invalida gli stili dell'intera pagina due volte
+      // di fila. Ora la regola che toglie i colori dalle transizioni e' statica
+      // e sta in index.css: il browser la risolve una volta al caricamento e
+      // qui non resta nulla da orchestrare.
+      document.documentElement.classList.toggle("dark-theme", next);
+      localStorage.setItem("agora_theme", next ? "dark" : "light");
+    } catch {}
   };
-  useEffect(
-    () => () => {
-      if (themeAnimTimer.current) clearTimeout(themeAnimTimer.current);
-    },
-    [],
-  );
+
   /** In viaggio verso Orbite: il portale è in scena e sta aprendo la porta. */
   const [leaving, setLeaving] = useState(false);
 

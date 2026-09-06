@@ -104,7 +104,10 @@
   // pagina nascosto sotto la copertura d'inchiostro.
   var continuing = /(?:^|[?&])p=1(?:&|$)/.test(location.search);
 
-  var elapsed = continuing ? T_GROW + T_HOLD : 0;
+  // Si riprende dalla POSA, non dall'apertura: la crescita e' gia' avvenuta
+  // sulla bacheca, ma la pausa in cui il marchio si legge deve esserci, e cade
+  // qui. Saltandola anche, il marchio composto non si vedeva mai fermo.
+  var elapsed = continuing ? T_GROW : 0;
   var last = 0, speed = 1, raf = 0, cleared = false, plugGone = false;
   var barDone = [false, false, false, false, false];
 

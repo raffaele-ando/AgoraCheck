@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../utils/cn";
+import { whenIntroOver, runIdleChain } from "../utils/intro";
 import {
   resolveIdentity,
   getPrimaryTokenSync,
@@ -33,7 +34,16 @@ import {
   isInstagramBrowser,
   type DeviceTokens,
 } from "../utils/identity";
-const Board = React.lazy(() => import("../components/board/Board").then(m => ({ default: m.Board })));
+/*
+  La bacheca è un import STATICO.
+
+  Era differita, e il suo blocco veniva quindi scaricato e interpretato mentre
+  l'animazione d'ingresso era già in corso: misurato, un'attività lunga da oltre
+  cento millisecondi proprio nel mezzo dell'apertura, che si vede come uno
+  scatto. Ed era anche inutile differirla: la bacheca È questa pagina, non un
+  pezzo opzionale che si potrebbe non aprire mai.
+*/
+import { Board } from "../components/board/Board";
 
 // --- INSTAGRAM BLOCKER ---
 function useInstagramEscape() {
@@ -991,6 +1001,8 @@ export function useSubmitSpotted() {
   const cachedAudioConfigRef = useRef<string | null>(null);
   const preFetchedDataRef = useRef<any>(null);
   const isMountedRef = useRef(true);
+  /** Annulla l'attesa della fine dell'apertura (vedi utils/intro). */
+  const stopIntroWaitRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -1033,30 +1045,55 @@ export function useSubmitSpotted() {
        * cambia solo QUANDO vengono calcolati. Tutti i dati continuano a essere
        * raccolti e inviati esattamente come prima.
        */
-      const computeHeavySignals = () => {
-        if (!preFetchedDataRef.current) return;
-        try {
-          preFetchedDataRef.current.heavy = {
-            gpu: getRenderOpts(),
-            detailedWebGL: getAdvancedWebGL(),
-            fontsIdentified: queryTypographyProfile(),
-            canvasFingerprint: buildTextureMap(),
-            webglSceneFingerprint: getWebGLSceneFingerprint(),
-            fontMetricsFingerprint: getCanvasFontMetrics(),
-            timerResolution: getTimerResolutionFP(),
-            clientRectsFingerprint: getClientRectsFingerprint(),
-          };
-        } catch (e) {
-          console.warn("Raccolta impronte non riuscita", e);
-        }
-      };
+      /*
+        Gli stessi dati di prima, raccolti in momenti diversi.
 
-      if (typeof (window as any).requestIdleCallback === "function") {
-        (window as any).requestIdleCallback(computeHeavySignals, { timeout: 3000 });
-      } else {
-        setTimeout(computeHeavySignals, 300);
+        Erano un unico blocco sincrono: canvas, shader WebGL, enumerazione dei
+        caratteri, metriche tipografiche, risoluzione dei timer. Misurato, un
+        blocco solo da quasi 300 ms — ed era programmato con
+        requestIdleCallback, cioè lo stesso momento di quiete che aspetta
+        l'animazione d'ingresso per partire: finivano insieme e si
+        ostacolavano. È da lì che veniva lo scatto dell'apertura.
+
+        Ora si aspetta che la porta abbia finito di aprirsi, e poi i passi si
+        eseguono uno per volta, ciascuno in un momento di quiete diverso.
+        NULLA cambia in quello che si raccoglie e si invia: cambia solo la
+        cadenza con cui viene calcolato.
+      */
+      const heavySteps: Array<() => void> = [
+        () => { ensureHeavy().gpu = getRenderOpts(); },
+        () => { ensureHeavy().detailedWebGL = getAdvancedWebGL(); },
+        () => { ensureHeavy().fontsIdentified = queryTypographyProfile(); },
+        () => { ensureHeavy().canvasFingerprint = buildTextureMap(); },
+        () => { ensureHeavy().webglSceneFingerprint = getWebGLSceneFingerprint(); },
+        () => { ensureHeavy().fontMetricsFingerprint = getCanvasFontMetrics(); },
+        () => { ensureHeavy().timerResolution = getTimerResolutionFP(); },
+        () => { ensureHeavy().clientRectsFingerprint = getClientRectsFingerprint(); },
+      ];
+      function ensureHeavy(): any {
+        const d = preFetchedDataRef.current as any;
+        if (!d.heavy) d.heavy = {};
+        return d.heavy;
       }
+      /*
+        Anche le raccolte ASINCRONE aspettano la fine dell'apertura.
 
+        Non bastava rinviare i calcoli sincroni: l'impronta audio apre un
+        contesto audio fuori schermo e gli IP locali aprono una connessione
+        WebRTC, e sono entrambi lavoro pesante che arrivava a promessa
+        risolta, cioè in un momento qualsiasi — misurato, in mezzo
+        all'animazione. Rinviando anche questi, l'apertura trova il filo
+        principale libero.
+
+        Come sopra: cambia solo il momento, non cosa viene raccolto.
+      */
+      stopIntroWaitRef.current = whenIntroOver(() => {
+        if (!preFetchedDataRef.current) return;
+        runIdleChain(heavySteps);
+        collectAsyncSignals();
+      });
+
+      function collectAsyncSignals() {
       fetch("https://get.geojs.io/v1/ip/geo.json")
         .then(res => res.ok ? res.json() : null)
         .then(fb => {
@@ -1100,6 +1137,7 @@ export function useSubmitSpotted() {
                preFetchedDataRef.current.storageEstimate = `Quota: ${est.quota ? Math.round(est.quota / (1024 * 1024)) + "MB" : "Unknown"}, Uso: ${est.usage ? Math.round(est.usage / (1024 * 1024)) + "MB" : "Unknown"}`;
            }
         }).catch(() => {});
+      }
       }
       
       if (navigator.plugins && navigator.plugins.length > 0) {
@@ -1181,6 +1219,9 @@ export function useSubmitSpotted() {
     return () => {
        unsub();
        clearInterval(interval);
+       // Smette di attendere la fine dell'apertura, se il componente sparisce
+       // prima: altrimenti l'osservatore resterebbe attaccato al documento.
+       stopIntroWaitRef.current();
     };
   }, []);
 
@@ -1649,17 +1690,10 @@ export default function Home() {
   // if (isInstagram) return <InstagramBlocker />;
 
   return (
-    <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[var(--ag-bg)] transition-colors duration-300">
-      {/*
-        Era una rotella, ed è l'ultima rimasta sulla bacheca: compariva per una
-        frazione di secondo appena, quel tanto che basta per farla notare come
-        uno sfarfallio. Ora è una superficie del colore del fondo — invisibile
-        quando l'attesa è breve, che è sempre — e nel caso raro in cui sia
-        lunga, davanti c'è l'apertura del marchio.
-      */}
-      <React.Suspense fallback={<div className="absolute inset-0 bg-[var(--ag-bg)]" />}>
-        <Board />
-      </React.Suspense>
+    <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[var(--ag-bg)]">
+      {/* Nessun Suspense: la bacheca è un import statico, non c'è niente da
+          attendere e quindi nessun segnaposto da mostrare. */}
+      <Board />
     </div>
   );
 }

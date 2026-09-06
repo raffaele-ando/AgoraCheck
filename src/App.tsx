@@ -160,16 +160,44 @@ function BootIntro() {
   useEffect(() => {
     if (!playing) return;
     let done = false;
+    let handle = 0;
     const go = () => {
       if (done) return;
       done = true;
       setReady(true);
     };
-    const cap = setTimeout(go, 1200);
-    const handle =
-      typeof requestIdleCallback === "function"
-        ? requestIdleCallback(go, { timeout: 1000 })
-        : (setTimeout(go, 250) as unknown as number);
+
+    // Non basta UN momento di quiete: il primo arriva appena c'è una pausa fra
+    // un pezzo di lavoro e il successivo, non quando il lavoro è finito.
+    // Misurato, l'animazione partiva mentre la bacheca stava ancora montando i
+    // suoi riquadri, e le attività lunghe che ne seguivano diventavano scatti.
+    //
+    // Si aspettano quindi DUE finestre di quiete consecutive e larghe: due
+    // pause di seguito con tempo libero davanti significano che la coda si è
+    // davvero svuotata. Il conteggio riparte da zero appena una finestra
+    // risulta stretta o scaduta.
+    let calm = 0;
+    const waitCalm = () => {
+      if (done) return;
+      if (typeof requestIdleCallback !== "function") {
+        handle = setTimeout(go, 400) as unknown as number;
+        return;
+      }
+      handle = requestIdleCallback(
+        (dl) => {
+          calm = !dl.didTimeout && dl.timeRemaining() > 8 ? calm + 1 : 0;
+          if (calm >= 2) go();
+          else waitCalm();
+        },
+        { timeout: 300 },
+      );
+    };
+
+    // Tetto assoluto: su una rete o un telefono molto lenti la quiete potrebbe
+    // non arrivare mai, e la copertura non può restare all'infinito.
+    const cap = setTimeout(go, 2000);
+    waitCalm();
+
     return () => {
       clearTimeout(cap);
       if (typeof cancelIdleCallback === "function") cancelIdleCallback(handle);

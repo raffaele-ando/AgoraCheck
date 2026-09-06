@@ -82,33 +82,40 @@
 .dark-theme { --ag-edge-color: var(--ag-border); }
 
 /*
-  Cambio di tema: tutto insieme, e senza costare nulla.
+  Cambio di tema: istantaneo, e senza toccare nulla a runtime.
 
-  Ogni elemento portava la propria durata — 200, 300, 500, 700, perfino
-  1000 ms — perché quelle transizioni erano scritte per le interazioni, non per
-  lo scambio di tema: partivano insieme e finivano in momenti diversi, e la
-  schermata sembrava sfaldarsi a pezzi.
+  Tre tentativi prima di questo, e vale la pena spiegarli perché il difetto
+  segnalato — "sembra che si refreshi tutto" — era causato dal RIMEDIO, non dal
+  problema originale.
 
-  Il primo rimedio che avevo messo — imporre una durata unica a tutti gli
-  elementi — era sì uniforme, ma costringeva il browser ad animare colore,
-  bordo e ombra su OGNI nodo della pagina: uniforme e lento, cioè un difetto
-  scambiato con un altro.
+  1. All'inizio ogni elemento aveva la propria durata (200, 300, 500, 700 ms,
+     scritte per le interazioni, non per il tema): partivano insieme e finivano
+     in momenti diversi, e la schermata si sfaldava a pezzi.
+  2. Ho imposto una durata unica a tutti gli elementi: uniforme ma pesante,
+     costringeva il browser ad animare colore, bordo e ombra su ogni nodo.
+  3. Ho provato la transizione di vista del browser: incrocia due fotografie
+     dell'intera pagina, che all'occhio è esattamente un ricaricamento.
+  4. Ho tolto la dissolvenza ma lasciato una classe che spegneva le transizioni
+     per la durata dello scambio. Anche quella era sbagliata: aggiungere e poi
+     togliere una regola che seleziona OGNI elemento invalida gli stili di tutta
+     la pagina due volte di fila. Un doppio ricalcolo globale, che è
+     precisamente l'aspetto di un refresh.
 
-  Ora lo scambio è istantaneo: questa regola spegne ogni transizione per la
-  frazione di secondo in cui i colori cambiano, e nient'altro. Avevo provato
-  una dissolvenza a schermo intero con l'API di transizione della vista, ma
-  incrociare due fotografie dell'intera pagina ha l'aspetto di un
-  ricaricamento — che è proprio la cosa da non far sembrare, visto che la
-  pagina non sta cambiando affatto.
+  La soluzione è che non ci sia niente da accendere e spegnere. Questa regola è
+  statica: il browser la risolve una volta sola quando carica il foglio di
+  stile, e a runtime non costa nulla. Toglie i colori dalle proprietà animabili,
+  quindi il tema cambia di scatto ovunque nello stesso fotogramma.
+
+  Non si perde niente di visibile: le transizioni che contano sul telefono sono
+  quelle di forma e di ombra — la pressione di un pulsante, l'anello di messa a
+  fuoco — e restano tutte. Le dissolvenze di colore servivano al passaggio del
+  mouse, che su un telefono non esiste.
 */
-html.ag-theme-switching,
-html.ag-theme-switching *,
-html.ag-theme-switching *::before,
-html.ag-theme-switching *::after {
-  transition: none !important;
-  animation: none !important;
+*,
+*::before,
+*::after {
+  transition-property: opacity, transform, box-shadow, filter !important;
 }
-
 
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {

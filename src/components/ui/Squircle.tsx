@@ -8,8 +8,37 @@ interface SquircleProps extends HTMLAttributes<HTMLDivElement> {
   [key: string]: any;
 }
 
-export const Squircle = React.forwardRef<any, SquircleProps>(({ 
-  className = '', 
+/**
+ * Forme già calcolate, riusate fra tutti i riquadri.
+ *
+ * Nella bacheca ci sono una quindicina di Squircle e molti hanno la STESSA
+ * misura: i quattro campi delle risposte, i due menu a tendina, i pulsanti.
+ * Ognuno calcolava per conto proprio il tracciato, lo racchiudeva in un SVG e
+ * lo codificava — un lavoro non banale, ripetuto identico, tutto concentrato
+ * nell'istante in cui la pagina si monta. È una delle cause dei blocchi
+ * misurati durante l'animazione d'ingresso, che gira proprio allora.
+ *
+ * La chiave è la geometria, non il componente: due riquadri della stessa
+ * misura condividono lo stesso risultato. La mappa non viene mai svuotata
+ * perché le misure possibili sono poche e ognuna occupa una stringa.
+ */
+const shapeCache = new Map<string, { path: string; mask: string }>();
+
+function shapeFor(width: number, height: number, radius: number, smoothing: number) {
+  const key = `${width}x${height}r${radius}s${smoothing}`;
+  const hit = shapeCache.get(key);
+  if (hit) return hit;
+
+  const path = getSvgPath({ width, height, cornerRadius: radius, cornerSmoothing: smoothing });
+  const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><path d="${path}" fill="black" /></svg>`;
+  const mask = `url("data:image/svg+xml;utf8,${encodeURIComponent(svgData)}")`;
+  const shape = { path, mask };
+  shapeCache.set(key, shape);
+  return shape;
+}
+
+export const Squircle = React.forwardRef<any, SquircleProps>(({
+  className = '',
   children, 
   cornerRadius = 24, 
   cornerSmoothing = 1,
@@ -33,6 +62,9 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
     }
   };
 
+  // Ultima misura per cui la maschera è già stata generata.
+  const lastSize = useRef({ w: 0, h: 0 });
+
   useEffect(() => {
     if (!innerRef.current) return;
     const updatePath = () => {
@@ -41,20 +73,34 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
       const width = el.offsetWidth;
       const height = el.offsetHeight;
       if (width === 0 || height === 0) return;
-      
+
+      // Si rigenera SOLO se la misura è davvero cambiata.
+      //
+      // È la causa dei "refresh" dei singoli riquadri passando da un campo
+      // all'altro. Il ResizeObserver scatta anche per variazioni di frazioni di
+      // pixel — e ne arrivano in continuazione quando la tastiera si apre, il
+      // testo cambia o l'anello di messa a fuoco si sposta. Ogni scatto
+      // ricalcolava il tracciato, ricostruiva un'immagine SVG in base64, la
+      // rimetteva nello stato di React e obbligava il browser a ridecodificare
+      // la maschera: il riquadro lampeggiava. Ora, a parità di misura, non si
+      // fa nulla.
+      if (lastSize.current.w === width && lastSize.current.h === height) return;
+      lastSize.current = { w: width, h: height };
+
       const radius = cornerRadius === 'full' ? Math.min(width, height) / 2 : Number(cornerRadius);
-      const computedPath = getSvgPath({ width, height, cornerRadius: radius, cornerSmoothing });
-      
-      const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><path d="${computedPath}" fill="black" /></svg>`;
-      const encodedSvg = `url("data:image/svg+xml;utf8,${encodeURIComponent(svgData)}")`;
-      
+      const { path: computedPath, mask: encodedSvg } = shapeFor(
+        width, height, radius, cornerSmoothing,
+      );
       setSvgParams({ path: computedPath, mask: encodedSvg, w: width, h: height });
     };
+
+    // La misura precedente non vale più se cambia la forma richiesta.
+    lastSize.current = { w: 0, h: 0 };
 
     const observer = new ResizeObserver(updatePath);
     observer.observe(innerRef.current);
     updatePath();
-    
+
     return () => observer.disconnect();
   }, [cornerRadius, cornerSmoothing]);
 
