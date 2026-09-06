@@ -322,7 +322,18 @@ export function ThemeCorkboard() {
   const [when, setWhen] = useState('');
   const [where, setWhere] = useState('');
   const generateId = () => Math.random().toString(36).substring(2, 9);
-  const [options, setOptions] = useState([{id: generateId(), value: ''}, {id: generateId(), value: ''}]);
+  /*
+    Quattro risposte sempre presenti: le prime due obbligatorie, le altre due
+    facoltative. È il progetto originale, ed è anche quello che risolve il
+    vuoto in fondo al pannello — le righe occupano lo spazio invece di
+    lasciarlo, e non serve più un pulsante per aggiungerle una alla volta.
+    Le risposte lasciate in bianco vengono scartate all'invio (Home.tsx le
+    filtra sia in convalida sia nel payload), quindi un sondaggio con due sole
+    opzioni resta perfettamente possibile.
+  */
+  const emptyOptions = () =>
+    [0, 1, 2, 3].map(() => ({ id: generateId(), value: '' }));
+  const [options, setOptions] = useState(emptyOptions);
   const [instagram, setInstagram] = useState('');
   const [igShake, setIgShake] = useState(false);
 
@@ -390,17 +401,13 @@ export function ThemeCorkboard() {
 
   const handleModeSwitch = (newMode: string) => {
     setMode(newMode);
-    if (newMode === 'sondaggio' && options.length < 2) setOptions([{id: generateId(), value: ''}, {id: generateId(), value: ''}]);
+    if (newMode === 'sondaggio' && options.length < 4) setOptions(emptyOptions());
   };
 
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCity = e.target.value;
     setCity(newCity);
     setZone(locations[newCity][0]);
-  };
-
-  const addOption = () => {
-    if (options.length < 4) setOptions([...options, {id: generateId(), value: ''}]);
   };
 
   const activeModes = MODES.filter(m => m.active);
@@ -426,7 +433,7 @@ export function ThemeCorkboard() {
         setWhen('');
         setWhere('');
         setInstagram('');
-        if (mode === 'sondaggio') setOptions([{ id: "1", value: "" }, { id: "2", value: "" }]);
+        if (mode === 'sondaggio') setOptions(emptyOptions());
       }
     });
   };
@@ -741,13 +748,28 @@ export function ThemeCorkboard() {
                   di altezza fissa.
                 */
                 <div key="sondaggio" className="flex flex-col gap-3 h-full min-h-0 animate-in fade-in duration-200 relative z-10">
-                   <Squircle cornerRadius={24} className="ag-edge bg-[var(--ag-inset)] flex overflow-hidden flex-1 min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                   {/*
+                     Il campo della domanda cresce, ma entro un limite: senza
+                     tetto si prendeva tutto lo spazio avanzato e diventava un
+                     riquadro enorme per una riga di testo. Fra il minimo e il
+                     massimo sta un campo da tre o quattro righe, che è quanto
+                     serve davvero a una domanda.
+                   */}
+                   <Squircle cornerRadius={24} className="ag-edge bg-[var(--ag-inset)] flex overflow-hidden flex-[2] min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📊</div>
                       <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
-                   <div className="flex flex-col gap-2.5 shrink-0 justify-start pr-1 pb-1">
+                   {/*
+                     Le righe crescono per riempire il pannello quando c'è
+                     spazio (max-h le tiene comunque proporzionate) e si
+                     stringono al minimo quando la tastiera riduce lo schermo.
+                     Se nemmeno il minimo entra, questo contenitore scorre:
+                     senza, le ultime due risposte restavano tagliate fuori e
+                     irraggiungibili — verificato a 420px di altezza.
+                   */}
+                   <div className="flex flex-col gap-2.5 flex-[3] min-h-0 justify-start overflow-y-auto pr-1 pb-1">
                       {options.map((opt, i) => (
-                        <Squircle key={opt.id} cornerRadius={18} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
+                        <Squircle key={opt.id} cornerRadius={18} className="ag-edge bg-[var(--ag-inset)] flex items-center overflow-hidden flex-1 min-h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
                          {/*
                            La targhetta era bg-[var(--ag-surface-2)]: nel tema
                            chiaro è #e8dec8 contro il pannello #eae0d0, cioè
@@ -776,11 +798,6 @@ export function ThemeCorkboard() {
                          />
                       </Squircle>
                     ))}
-                    {options.length < 4 && (
-                      <Squircle as="button" cornerRadius="full" onClick={addOption} className="text-[#DC5F00] text-[13px] font-bold py-2 px-3 self-center hover:bg-[var(--ag-inset)] active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0 mt-1">
-                        <span className="text-[16px] leading-none pb-[1px]">+</span> Aggiungi opzione
-                      </Squircle>
-                    )}
                  </div>
               </div>
            )}
