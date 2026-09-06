@@ -59,7 +59,12 @@ export function useVisitAnalytics() {
       shouldTrackRef.current = true;
       void isInstagramBrowser;
       // Resolve the device token early so the visit doc can carry it.
-      resolveIdentity(auth.currentUser?.uid || null).catch(() => {});
+      // Solo una sessione ANONIMA vale come identificativo di dispositivo: con
+      // un amministratore autenticato qui finiva il suo uid Google, identico su
+      // tutti i suoi dispositivi, che li avrebbe fusi in un unico profilo.
+      resolveIdentity(
+        auth.currentUser?.isAnonymous ? auth.currentUser.uid : null,
+      ).catch(() => {});
 
       settingsLoadedRef.current = true;
       createDocOnce();

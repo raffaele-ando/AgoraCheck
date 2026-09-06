@@ -3,6 +3,37 @@ import { cn } from "../lib/utils";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
+/**
+ * Logo di ripiego, mostrato quando Firestore non ha (ancora) restituito nulla.
+ *
+ * Deve puntare al FILE, non alla pagina che lo contiene. La forma
+ * `github.com/<owner>/<repo>/blob/<ramo>/<file>?raw=true` è l'indirizzo di una
+ * pagina HTML che risponde con un redirect: come `src` di un'immagine costa un
+ * salto in più, viene servita da github.com (più lenta e soggetta a limiti di
+ * frequenza) e viene bloccata da alcune estensioni per la privacy. Il risultato
+ * è che proprio nel momento in cui il logo serve — quando il caricamento da
+ * Firestore è lento — il ripiego non compariva.
+ *
+ * Il resto del progetto usa già `raw.githubusercontent.com`, che serve il file
+ * direttamente.
+ */
+export const FALLBACK_LOGO_URL =
+  "https://raw.githubusercontent.com/raffaele-ando/Logo-vari/main/logo.png";
+
+/**
+ * Riscrive gli indirizzi GitHub salvati nella forma "pagina" verso quella
+ * "file". I documenti già presenti in `logos` possono contenere la vecchia
+ * forma: normalizzandola qui si correggono senza dover toccare il database.
+ */
+export const normalizeLogoUrl = (url: string | null): string | null => {
+  if (!url) return url;
+  const m = url.match(
+    /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^?]+)/i,
+  );
+  if (!m) return url;
+  return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
+};
+
 const logoCache: Record<string, string | null> = {};
 const pendingPromises: Record<string, Promise<string | null>> = {};
 const listeners: Record<string, Set<(url: string | null) => void>> = {};
@@ -57,7 +88,8 @@ const fetchLogo = async (name: string): Promise<string | null> => {
   const promise = (async () => {
     try {
       const snap = await getDoc(doc(db, "logos", name));
-      const url = snap.exists() && snap.data()?.dataUrl ? snap.data().dataUrl : null;
+      const raw = snap.exists() && snap.data()?.dataUrl ? snap.data().dataUrl : null;
+      const url = normalizeLogoUrl(raw);
       logoCache[name] = url;
       if (listeners[name]) {
         listeners[name].forEach(cb => cb(url));
@@ -186,8 +218,8 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
          )}
          
          {isActuallyFailing && !forceTextFallback && (
-            <img 
-               src="https://github.com/raffaele-ando/Logo-vari/blob/main/logo.png?raw=true"
+            <img
+               src={FALLBACK_LOGO_URL}
                alt="Fallback Logo"
                className="w-full h-full object-contain z-10 dark:invert opacity-70"
                style={{ transform: `scale(${scales.customLogoScale})`, transformOrigin: "center" }}

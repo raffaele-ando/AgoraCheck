@@ -206,9 +206,22 @@ async function fetchEtagId(): Promise<string | null> {
     const t = setTimeout(() => ctrl.abort(), 2500);
     const res = await fetch("/px.gif", { signal: ctrl.signal });
     clearTimeout(t);
-    const tag = (res.headers.get("etag") || "").replace(/^W\//, "").replace(/"/g, "");
-    // Senza il worker davanti al dominio questa richiesta ricade sull'HTML
-    // dell'applicazione: si accetta il valore solo se ha la forma di un token.
+    if (!res.ok) return null;
+
+    // Senza il worker davanti al dominio, /px.gif ricade sull'HTML della SPA.
+    // Quell'HTML è IDENTICO per tutti, quindi lo è anche il suo ETag: accettarlo
+    // significherebbe assegnare a ogni visitatore lo stesso identificativo di
+    // dispositivo e fondere l'intera utenza in un unico profilo. Si procede solo
+    // se la risposta è davvero l'immagine servita dal worker.
+    const type = (res.headers.get("content-type") || "").toLowerCase();
+    if (!type.startsWith("image/")) return null;
+
+    // Un ETag debole (W/"...") è una validazione di contenuto, non un
+    // identificativo: il worker ne emette uno forte.
+    const rawTag = res.headers.get("etag") || "";
+    if (rawTag.startsWith("W/")) return null;
+
+    const tag = rawTag.replace(/"/g, "").trim();
     return looksLikeToken(tag) ? tag : null;
   } catch {
     return null;

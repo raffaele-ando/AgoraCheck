@@ -28,22 +28,34 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [verifying, setVerifying] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
 
-  useEffect(() => {
-    const warn = setTimeout(() => {
-      if (authLoading || verifying) setIsStuck(true);
-    }, 5000);
+  // Lo stato corrente letto dai timer senza entrare fra le loro dipendenze.
+  const authLoadingRef = React.useRef(authLoading);
+  const verifyingRef = React.useRef(verifying);
+  authLoadingRef.current = authLoading;
+  verifyingRef.current = verifying;
 
+  useEffect(() => {
     // Hard stop: if auth never resolves (offline, an expired token whose refresh
     // hangs, blocked storage), do not spin forever. Fall back to the sign-in
     // screen, which is actionable, instead of an endless spinner.
+    //
+    // Le dipendenze erano [authLoading, verifying]: ogni cambiamento di stato
+    // faceva RIPARTIRE entrambi i timer, quindi il setVerifying(true) all'inizio
+    // del controllo azzerava il conto alla rovescia e la scadenza non era mai
+    // assoluta. Bastava che l'autenticazione oscillasse perché lo spinner
+    // restasse acceso a tempo indeterminato: è il "buffering che non smette".
+    //
+    // Ora la scadenza parte al montaggio e a ogni NUOVO accesso (il cambio di
+    // `user`), non a ogni transizione interna del controllo.
+    const warn = setTimeout(() => {
+      if (authLoadingRef.current || verifyingRef.current) setIsStuck(true);
+    }, 5000);
+
     const giveUp = setTimeout(() => {
-      setAuthLoading((loading) => {
-        if (loading) {
-          setUser(null);
-          setIsAdmin(null);
-        }
-        return false;
-      });
+      if (!authLoadingRef.current && !verifyingRef.current) return;
+      setUser(null);
+      setIsAdmin(null);
+      setAuthLoading(false);
       setVerifying(false);
     }, 12000);
 
@@ -51,7 +63,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       clearTimeout(warn);
       clearTimeout(giveUp);
     };
-  }, [authLoading, verifying]);
+  }, [user]);
 
   // Complete a redirect-based sign-in (used when the popup is blocked).
   useEffect(() => {
