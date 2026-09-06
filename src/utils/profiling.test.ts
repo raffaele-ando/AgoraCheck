@@ -6,6 +6,7 @@ import {
   extractAllDeviceTokens,
   extractDeviceTraits,
   areDeviceTraitsCompatible,
+  hasGeographicConflict,
   getProfileIdConfidence,
 } from "./profiling";
 
@@ -144,6 +145,57 @@ test("incompatible devices can never be the same physical device", (t) => {
 // ---------------------------------------------------------------------------
 // Affidabilità dell'identificativo.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Vincolo negativo temporale: impossibilità geografica.
+// ---------------------------------------------------------------------------
+
+const MIN = 60 * 1000;
+const T0 = Date.UTC(2026, 0, 15, 12, 0, 0);
+
+test("two countries minutes apart cannot be the same physical device", (t) => {
+  const inItalia = [{ t: T0, country: "IT", city: "Milano" }];
+  const inBrasile = [{ t: T0 + 20 * MIN, country: "BR", city: "San Paolo" }];
+  assert.strictEqual(hasGeographicConflict(inItalia, inBrasile), true);
+  // La relazione è simmetrica.
+  assert.strictEqual(hasGeographicConflict(inBrasile, inItalia), true);
+});
+
+test("the same country is never a conflict, however far apart the cities", (t) => {
+  // La geolocalizzazione da IP salta abitualmente fra città su rete mobile:
+  // confrontare le città produrrebbe blocchi su spostamenti legittimi.
+  const milano = [{ t: T0, country: "IT", city: "Milano" }];
+  const palermo = [{ t: T0 + 5 * MIN, country: "IT", city: "Palermo" }];
+  assert.strictEqual(hasGeographicConflict(milano, palermo), false);
+});
+
+test("outside the window a change of country is an ordinary trip", (t) => {
+  const partenza = [{ t: T0, country: "IT", city: "Milano" }];
+  const arrivo = [{ t: T0 + 5 * 60 * MIN, country: "FR", city: "Parigi" }];
+  assert.strictEqual(hasGeographicConflict(partenza, arrivo), false);
+});
+
+test("a missing country is never evidence of impossibility", (t) => {
+  const noto = [{ t: T0, country: "IT", city: "Milano" }];
+  const ignoto = [{ t: T0 + 1 * MIN, country: "", city: "" }];
+  assert.strictEqual(hasGeographicConflict(noto, ignoto), false);
+  assert.strictEqual(hasGeographicConflict(noto, []), false);
+  assert.strictEqual(hasGeographicConflict([], []), false);
+});
+
+test("the conflict is found even when the events are given out of order", (t) => {
+  // La finestra scorrevole ordina gli eventi: un elenco disordinato — il caso
+  // reale, visto che i messaggi arrivano dal più recente — non deve sfuggire.
+  const a = [
+    { t: T0 + 90 * MIN, country: "IT", city: "Milano" },
+    { t: T0, country: "IT", city: "Milano" },
+  ];
+  const b = [
+    { t: T0 + 200 * MIN, country: "IT", city: "Roma" },
+    { t: T0 + 10 * MIN, country: "DE", city: "Berlino" },
+  ];
+  assert.strictEqual(hasGeographicConflict(a, b), true);
+});
 
 test("profile id confidence distinguishes token identities from legacy seeds", (t) => {
   assert.strictEqual(getProfileIdConfidence("DEV-1a2b3c4d5e6f"), "token");

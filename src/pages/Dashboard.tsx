@@ -6,8 +6,10 @@ import {
   extractAllDeviceTokens,
   extractDeviceTraits,
   areDeviceTraitsCompatible,
+  hasGeographicConflict,
   getProfileIdConfidence,
   type DeviceTraits,
+  type GeoEvent,
 } from "../utils/profiling";
 import { motion } from "motion/react";
 import {
@@ -683,6 +685,10 @@ export default function Dashboard() {
     // dispositivo "possiede" davvero un handle (vedi handleOwnership).
     const handleCountsByPid = new Map<string, Map<string, number>>();
     const handleTotalByPid = new Map<string, number>();
+    // Dove e quando ciascun profilo si è manifestato — usato come vincolo
+    // negativo temporale (vedi hasGeographicConflict).
+    const geoEventsByPid = new Map<string, GeoEvent[]>();
+    const GEO_EVENTS_PER_PROFILE = 40;
 
     for (const m of messages) {
        const pid = getDeviceProfile(m);
@@ -703,6 +709,23 @@ export default function Dashboard() {
            const perTag = handleCountsByPid.get(pid)!;
            perTag.set(cleanTag, (perTag.get(cleanTag) ?? 0) + 1);
            handleTotalByPid.set(pid, (handleTotalByPid.get(pid) ?? 0) + 1);
+         }
+       }
+
+       // --- dove e quando il profilo si è manifestato ----------------------
+       const eventCountry = String(adv?.network?.country || adv?.n?.country || "");
+       const eventTime = m.createdAt?.toMillis?.();
+       if (eventCountry && typeof eventTime === "number") {
+         if (!geoEventsByPid.has(pid)) geoEventsByPid.set(pid, []);
+         const list = geoEventsByPid.get(pid)!;
+         // I messaggi arrivano dal più recente: ne bastano pochi per profilo,
+         // il vincolo cerca una contraddizione, non una cronologia completa.
+         if (list.length < GEO_EVENTS_PER_PROFILE) {
+           list.push({
+             t: eventTime,
+             country: eventCountry,
+             city: String(adv?.network?.city || adv?.n?.city || ""),
+           });
          }
        }
 
@@ -924,6 +947,16 @@ export default function Dashboard() {
         const ta = traitsByPid.get(u);
         const tb = traitsByPid.get(v);
         if (ta && tb && !areDeviceTraitsCompatible(ta, tb)) return;
+
+        // Impossibilità temporale: due paesi diversi a poca distanza di tempo.
+        // Applicata SOLO alle prove deboli — una VPN può spostare il paese
+        // apparente, quindi al massimo si perde un suggerimento, mai un
+        // collegamento certo come quello dato da un token condiviso.
+        if (!opts.linking) {
+          const ga = geoEventsByPid.get(u);
+          const gb = geoEventsByPid.get(v);
+          if (ga && gb && hasGeographicConflict(ga, gb)) return;
+        }
       }
 
       const key = [u, v].sort().join("|");

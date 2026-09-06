@@ -117,6 +117,65 @@ export const getProfileIdConfidence = (
 };
 
 /**
+ * Un evento localizzato nel tempo: quando un profilo si è manifestato e da
+ * quale paese, secondo la geolocalizzazione dell'IP.
+ */
+export interface GeoEvent {
+  t: number; // epoch ms
+  country: string;
+  city: string;
+}
+
+/** Finestra entro cui due paesi diversi sono fisicamente incompatibili. */
+export const GEO_CONFLICT_WINDOW_MS = 60 * 60 * 1000;
+
+/**
+ * VINCOLO NEGATIVO TEMPORALE — due profili possono essere lo stesso dispositivo?
+ *
+ * Se il profilo A si è manifestato in Italia e il profilo B in Brasile a
+ * cinquanta minuti di distanza, nessun apparecchio fisico può essere stato
+ * entrambi. È una prova di impossibilità, non di somiglianza: elimina falsi
+ * positivi senza generarne di nuovi.
+ *
+ * Volutamente CONSERVATIVO:
+ *  - confronta solo il PAESE, mai la città. La geolocalizzazione da IP sulle
+ *    reti mobili salta abitualmente fra città vicine e a volte fra regioni,
+ *    quindi una regola più fine bloccherebbe collegamenti legittimi.
+ *  - un paese sconosciuto non blocca nulla: un dato mancante non è una prova.
+ *  - la finestra è ampia (un'ora), così un volo o uno spostamento reale non
+ *    viene mai scambiato per una contraddizione.
+ *
+ * Resta un caso di falso blocco: una VPN che sposta il paese apparente. Per
+ * questo il vincolo viene applicato solo alle prove DEBOLI (fingerprint
+ * hardware, IP, install id), mai a quelle deterministiche come i token: al
+ * massimo si perde un suggerimento, mai un collegamento certo.
+ */
+export const hasGeographicConflict = (
+  eventsA: GeoEvent[],
+  eventsB: GeoEvent[],
+  windowMs: number = GEO_CONFLICT_WINDOW_MS,
+): boolean => {
+  const a = eventsA
+    .filter((e) => !!clean(e.country) && Number.isFinite(e.t))
+    .sort((x, y) => x.t - y.t);
+  const b = eventsB
+    .filter((e) => !!clean(e.country) && Number.isFinite(e.t))
+    .sort((x, y) => x.t - y.t);
+  if (!a.length || !b.length) return false;
+
+  // Finestra scorrevole: `lo` avanza soltanto, quindi si attraversa `b` una
+  // volta sola invece di confrontare tutte le coppie.
+  let lo = 0;
+  for (const ea of a) {
+    while (lo < b.length && b[lo].t < ea.t - windowMs) lo++;
+    for (let i = lo; i < b.length && b[i].t <= ea.t + windowMs; i++) {
+      if (b[i].country !== ea.country) return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Deterministic colour for a profile id.
  *
  * Lives here (rather than inside the dashboard page) so every view that shows a
