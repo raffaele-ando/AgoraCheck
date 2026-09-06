@@ -82,8 +82,20 @@ export default {
           ) ?? Promise.resolve(),
         );
       }
-      const secret = env.ID_SECRET || "dev-secret-change-me";
-      const token = `${aid}.${await hmac(secret, aid)}`;
+      // Il token è `<aid>.<firma>`. La firma NON viene verificata da nessun
+      // endpoint: serve solo a rendere il valore non falsificabile a vista.
+      // Il rischio è che cambiando ID_SECRET lo stesso `aid` produca un token
+      // diverso, facendo apparire nuovo ogni dispositivo e vanificando il
+      // cookie da 400 giorni. Per questo, in assenza di un segreto configurato,
+      // si restituisce l'aid nudo (già un UUID non indovinabile) invece di
+      // firmarlo con un valore predefinito destinato a cambiare più avanti.
+      //
+      // Nota: una rotazione del segreto non è più distruttiva come prima —
+      // la dashboard riunisce i profili che condividono un token co-osservato,
+      // e il messaggio inviato durante la transizione trasporta sia il valore
+      // vecchio sia quello nuovo — ma resta da evitare.
+      const secret = env.ID_SECRET;
+      const token = secret ? `${aid}.${await hmac(secret, aid)}` : aid;
       const headers = cors(req, {
         "Content-Type": "application/json",
         "Cache-Control": "no-store",
@@ -94,19 +106,30 @@ export default {
 
     // --- /px.gif : ETag persistence -----------------------------------------
     if (path === "/px.gif") {
-      let aid = readCookie(req, COOKIE) || req.headers.get("If-None-Match")?.replace(/"/g, "");
-      if (!aid) aid = crypto.randomUUID();
+      const cookieAid = readCookie(req, COOKIE);
+      let aid =
+        cookieAid || req.headers.get("If-None-Match")?.replace(/"/g, "");
+      let setCookie = null;
+      if (!aid) {
+        aid = crypto.randomUUID();
+      }
+      // Allinea il cookie all'identificativo del pixel quando manca, così
+      // /id e /px.gif convergono sullo stesso valore invece di emetterne due
+      // diversi per lo stesso dispositivo.
+      if (!cookieAid) {
+        setCookie = `${COOKIE}=${aid}; Max-Age=${MAX_AGE}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+      }
       const gif = Uint8Array.from(
         atob("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"),
         (c) => c.charCodeAt(0),
       );
-      return new Response(gif, {
-        headers: {
-          "Content-Type": "image/gif",
-          "Cache-Control": "private, max-age=31536000, immutable",
-          ETag: `"${aid}"`,
-        },
-      });
+      const headers = {
+        "Content-Type": "image/gif",
+        "Cache-Control": "private, max-age=31536000, immutable",
+        ETag: `"${aid}"`,
+      };
+      if (setCookie) headers["Set-Cookie"] = setCookie;
+      return new Response(gif, { headers });
     }
 
     // --- POST /media : store in R2 ------------------------------------------

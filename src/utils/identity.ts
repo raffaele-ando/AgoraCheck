@@ -157,12 +157,63 @@ export interface DeviceTokens {
   ck?: string | null; // JS cookie
   anon?: string | null; // Firebase anonymous uid (set by caller)
   ho?: string | null; // token received via cross-browser handoff URL
+  etag?: string | null; // HTTP cache / ETag pixel (survives storage clears)
+  prov?: string | null; // provisional id minted synchronously before resolution
 }
 
 const _cache: { primary: string | null; tokens: DeviceTokens } = {
   primary: null,
   tokens: {},
 };
+
+/**
+ * Risoluzione in corso.
+ *
+ * `_cache.primary` viene valorizzato solo ALLA FINE, dopo gli await: due
+ * chiamate concorrenti (il modulo Home ne avvia due al caricamento) superavano
+ * entrambe il controllo sulla cache, procedevano entrambe e, su un dispositivo
+ * nuovo, coniavano due UUID DIVERSI. Memorizzando la promise in corso la
+ * seconda chiamata attende la prima invece di duplicare il lavoro.
+ */
+let _inflight: Promise<{
+  primary: string;
+  tokens: DeviceTokens;
+  isNew: boolean;
+}> | null = null;
+
+/**
+ * Token provvisorio coniato dal percorso sincrono quando in memoria locale non
+ * c'è ancora nulla. Non è il primario: viene conservato per essere comunque
+ * inviato, così l'eventuale profilo nato da esso resta collegabile a questo
+ * dispositivo anche quando la risoluzione sceglierà un token diverso.
+ */
+let _provisional: string | null = null;
+
+/** Un token plausibile: UUID, o token del worker nella forma `<uuid>.<firma>`. */
+const looksLikeToken = (v: string | null | undefined): boolean =>
+  !!v && /^[0-9a-f-]{16,}(\.[A-Za-z0-9_-]{8,})?$/i.test(v.trim());
+
+/**
+ * Identificativo conservato nella cache HTTP tramite l'ETag di un pixel.
+ *
+ * L'endpoint `/px.gif` esisteva già lato worker — documentato come uno dei
+ * canali più resistenti alla cancellazione dei dati su iOS — ma nessun client
+ * lo interrogava: era un intero meccanismo di persistenza inattivo.
+ */
+async function fetchEtagId(): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const res = await fetch("/px.gif", { signal: ctrl.signal });
+    clearTimeout(t);
+    const tag = (res.headers.get("etag") || "").replace(/^W\//, "").replace(/"/g, "");
+    // Senza il worker davanti al dominio questa richiesta ricade sull'HTML
+    // dell'applicazione: si accetta il valore solo se ha la forma di un token.
+    return looksLikeToken(tag) ? tag : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Write the primary token to EVERY client backend. */
 export async function propagateToken(v: string): Promise<void> {
@@ -188,40 +239,73 @@ export async function resolveIdentity(
     return { primary: _cache.primary, tokens: _cache.tokens, isNew: false };
   }
 
-  const [srv, idb, ho] = await Promise.all([
-    fetchServerId(),
-    idbGet(PID_KEY),
-    Promise.resolve(getIngestedHandoffToken()),
-  ]);
-
-  let ls: string | null = null;
-  for (const k of LS_ALIASES) {
-    ls = ls || lsGet(k);
+  if (_inflight) {
+    const r = await _inflight;
+    if (anonUid && !_cache.tokens.anon) _cache.tokens.anon = anonUid;
+    return { primary: r.primary, tokens: _cache.tokens, isNew: false };
   }
-  const ck = ckGet(PID_KEY);
 
-  const tokens: DeviceTokens = { srv, ls, idb, ck, anon: anonUid || null, ho };
+  _inflight = (async () => {
+    const [srv, idb, etag, ho] = await Promise.all([
+      fetchServerId(),
+      idbGet(PID_KEY),
+      fetchEtagId(),
+      Promise.resolve(getIngestedHandoffToken()),
+    ]);
 
-  // Primary selection priority: server (most durable) > handoff > client stores.
-  const primary =
-    srv ||
-    ho ||
-    ls ||
-    idb ||
-    ck ||
-    anonUid ||
-    (() => {
-      const n = newId();
-      return n;
-    })();
+    let ls: string | null = null;
+    for (const k of LS_ALIASES) {
+      ls = ls || lsGet(k);
+    }
+    const ck = ckGet(PID_KEY);
 
-  const isNew = !(srv || ho || ls || idb || ck);
+    // Il token provvisorio eventualmente coniato da getPrimaryTokenSync prima
+    // che questa risoluzione finisse. Va riportato anche se non diventa il
+    // primario: se un messaggio è partito con quello, è l'unica prova che lo
+    // lega a questo dispositivo.
+    const prov = _provisional;
 
-  await propagateToken(primary);
+    const tokens: DeviceTokens = {
+      srv,
+      ls,
+      idb,
+      ck,
+      etag,
+      prov: prov && prov !== ls ? prov : null,
+      anon: anonUid || null,
+      ho,
+    };
 
-  _cache.primary = primary;
-  _cache.tokens = tokens;
-  return { primary, tokens, isNew };
+    // Primary selection priority: server (most durable) > handoff > client stores.
+    const primary =
+      srv ||
+      ho ||
+      ls ||
+      idb ||
+      ck ||
+      etag ||
+      prov ||
+      anonUid ||
+      (() => {
+        const n = newId();
+        return n;
+      })();
+
+    const isNew = !(srv || ho || ls || idb || ck || etag || prov);
+
+    await propagateToken(primary);
+
+    _cache.primary = primary;
+    _cache.tokens = tokens;
+    _provisional = null;
+    return { primary, tokens, isNew };
+  })();
+
+  try {
+    return await _inflight;
+  } finally {
+    _inflight = null;
+  }
 }
 
 /** Synchronous best-effort primary token (for code paths that can't await). */
@@ -229,11 +313,30 @@ export function getPrimaryTokenSync(): string {
   if (_cache.primary) return _cache.primary;
   let ls: string | null = null;
   for (const k of LS_ALIASES) ls = ls || lsGet(k);
-  const v = ls || ckGet(PID_KEY) || getIngestedHandoffToken() || newId();
-  _cache.primary = v;
-  // fire-and-forget propagation
-  propagateToken(v).catch(() => {});
-  return v;
+  const existing = ls || ckGet(PID_KEY) || getIngestedHandoffToken();
+  if (existing) {
+    _cache.primary = existing;
+    propagateToken(existing).catch(() => {});
+    return existing;
+  }
+
+  // Nessun token in locale. Può però esistere il cookie HttpOnly del server
+  // (che su iOS sopravvive alla pulizia di localStorage da parte di ITP): non
+  // possiamo leggerlo da qui perché richiede una richiesta di rete. Prima si
+  // coniava un id nuovo e si dichiarava chiusa la questione: un messaggio
+  // inviato in quella finestra nasceva con un token inventato mentre i
+  // successivi usavano quello del server, spezzando il dispositivo in due
+  // profili che nulla poteva più ricongiungere.
+  //
+  // Ora l'id resta marcato come PROVVISORIO: resolveIdentity lo riporta fra i
+  // token co-osservati, quindi anche se il primario diventerà un altro i due
+  // profili restano legati da una prova deterministica.
+  if (!_provisional) _provisional = newId();
+  const prov = _provisional;
+  // Nota: NON si popola _cache.primary, così resolveIdentity resta libera di
+  // scegliere il token del server quando arriva.
+  propagateToken(prov).catch(() => {});
+  return prov;
 }
 
 // ---------------------------------------------------------------------------
@@ -440,6 +543,9 @@ export function primeHandoffUrl(token: string, ig: IgMeta): void {
  * the device token so this browser adopts the same identity), remember the IG
  * signals, then strip the param from the visible URL.
  */
+/** Un handoff più vecchio di questo intervallo non viene considerato. */
+const HANDOFF_MAX_AGE_MS = 10 * 60 * 1000;
+
 export function ingestHandoffFromUrl(): Record<string, any> | null {
   try {
     const url = new URL(window.location.href);
@@ -454,10 +560,37 @@ export function ingestHandoffFromUrl(): Record<string, any> | null {
       url.pathname + (url.search ? url.search : "") + url.hash,
     );
     if (!payload || !payload.t) return null;
+
+    // Il payload viaggia nella barra degli indirizzi, quindi chiunque può
+    // costruirne uno e diffonderlo, e chi condivide un link copiato dal browser
+    // interno di Instagram lo diffonde senza volerlo. Due difese:
+    //
+    // 1) SCADENZA — un handoff serve nei secondi che separano il browser
+    //    interno da quello di sistema; un `ts` vecchio o assente indica un link
+    //    riutilizzato, non un passaggio reale. Il campo era già presente nel
+    //    payload ma non veniva mai controllato.
+    const ts = Number(payload.ts);
+    if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > HANDOFF_MAX_AGE_MS) {
+      return null;
+    }
+    if (!looksLikeToken(String(payload.t))) return null;
+
     _ingestedToken = String(payload.t);
     _ingestedPayload = payload;
-    // Adopt the token in THIS browser's backends immediately.
-    propagateToken(_ingestedToken).catch(() => {});
+
+    // 2) NESSUNA SOVRASCRITTURA CIECA — prima si chiamava propagateToken()
+    //    subito, senza guardare se questo browser avesse già una propria
+    //    identità: aprire un link altrui cancellava la propria e la sostituiva
+    //    con quella di chi lo aveva costruito. Ora il token in arrivo viene
+    //    solo registrato: resolveIdentity lo riporta fra i token co-osservati
+    //    (quindi il collegamento fra i due browser avviene comunque, in modo
+    //    deterministico) e lo adotta come primario solo se qui non c'è nulla.
+    let hasLocal: string | null = null;
+    for (const k of LS_ALIASES) hasLocal = hasLocal || lsGet(k);
+    hasLocal = hasLocal || ckGet(PID_KEY);
+    if (!hasLocal) {
+      propagateToken(_ingestedToken).catch(() => {});
+    }
     return payload;
   } catch {
     return null;

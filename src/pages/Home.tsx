@@ -525,23 +525,46 @@ const getMathFingerprint = () => {
   };
 };
 
-const parseInstagramMeta = (ua: string) => {
+/**
+ * Metadati del browser interno di Instagram.
+ *
+ * La versione precedente usava una regex propria che pretendeva il token
+ * `IABMV/` ed era scritta solo per il formato iOS: su ANDROID non corrispondeva
+ * mai e su iOS falliva per tutte le UA senza quel token, quindi `igMeta`
+ * risultava nullo proprio dove servirebbe di più (il modello di dispositivo e
+ * la risoluzione fisica sono fra i segnali più discriminanti che abbiamo).
+ *
+ * Ora si appoggia a `parseIgUA`, che copre entrambe le piattaforme, e conserva
+ * le stesse chiavi di prima per non rompere i consumatori esistenti,
+ * aggiungendo i campi che solo Android espone (produttore, chipset, board, dpi).
+ */
+const buildIgMeta = (ua: string) => {
   try {
-    // Formato UA: "Instagram 428.2.0.37.66 (iPhone13,2; iOS 18_1; it_IT; it; scale=3.00; 1170x2532; IABMV/1; 961927775)"
-    const m = ua.match(
-      /Instagram ([\d.]+) \(([^;]+);\s*([^;]+);\s*([^;]+);\s*[^;]+;\s*scale=([\d.]+);\s*(\d{3,4}x\d{3,4});\s*IABMV\/\d+;\s*(\d+)\)/
-    );
-    if (!m) return null;
+    const ig = parseIgUA(ua);
+    if (!ig.isInstagram) return null;
     return {
-      igVersion:   m[1],
-      deviceModel: m[2].trim(),   // es. "iPhone13,2", "iPhone17,3"
-      osVersion:   m[3].trim(),   // es. "iOS 18_1"
-      locale:      m[4].trim(),   // es. "it_IT"
-      scale:       m[5],          // devicePixelRatio dall'UA
-      physicalRes: m[6],          // es. "1170x2532" — risoluzione fisica reale
-      igInstallId: m[7],          // es. "961927775" — specifico per installazione
+      platform: ig.platform,
+      igVersion: ig.igVersion || "",
+      deviceModel: ig.deviceModel || "",
+      osVersion: ig.osVersion || "",
+      locale: ig.locale || "",
+      scale: ig.scale || "",
+      physicalRes: ig.physicalRes || "",
+      // Campo numerico finale dell'UA. Attenzione: non è accertato che sia un
+      // identificativo di installazione — potrebbe essere un id di build,
+      // condiviso da tutti gli utenti della stessa versione dell'app. Viene
+      // raccolto, ma non deve mai essere usato da solo per collegare profili.
+      igInstallId: ig.igField || "",
+      // Solo Android:
+      manufacturer: ig.manufacturer || "",
+      chipset: ig.chipset || "",
+      board: ig.board || "",
+      androidApi: ig.androidApi || "",
+      dpi: ig.dpi || "",
     };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
 const checkAdvancedSensors = () => {
@@ -694,33 +717,55 @@ const getMediaContext = async () => {
 
 const getLocalIPs = async (): Promise<string> => {
   return new Promise((resolve) => {
-    const ips: string[] = [];
+    const found: string[] = [];
+    let pc: RTCPeerConnection | null = null;
+    let settled = false;
+
+    // Il timeout di fallback risolveva SOLO se erano già stati trovati degli
+    // indirizzi: quando non se ne trovava nessuno — il caso ordinario sui
+    // browser moderni, che offuscano l'IP locale dietro un nome mDNS — la
+    // promise restava pendente per sempre e la RTCPeerConnection non veniva
+    // mai chiusa, lasciando una connessione aperta a ogni visita.
+    const finish = (value: string) => {
+      if (settled) return;
+      settled = true;
+      try {
+        pc?.close();
+      } catch {}
+      resolve(value);
+    };
+
     try {
-      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc = new RTCPeerConnection({ iceServers: [] });
       pc.createDataChannel("");
       pc.createOffer()
-        .then((offer) => pc.setLocalDescription(offer))
+        .then((offer) => pc!.setLocalDescription(offer))
         .catch(() => {});
+
       pc.onicecandidate = (e) => {
         if (!e || !e.candidate) {
-          resolve(ips.length > 0 ? ips.join(", ") : "N/A");
-          pc.close();
+          finish(found.length > 0 ? found.join(", ") : "N/A");
           return;
         }
-        const ipRegex =
-          /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
-        const match = ipRegex.exec(e.candidate.candidate);
-        if (match && match[1] && !ips.includes(match[1])) {
-          ips.push(match[1]);
+        const candidate = e.candidate.candidate;
+        const ipMatch =
+          /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(
+            candidate,
+          );
+        if (ipMatch?.[1] && !found.includes(ipMatch[1])) found.push(ipMatch[1]);
+
+        // I browser recenti sostituiscono l'IP locale con un nome mDNS stabile
+        // per sessione: prima veniva scartato, ora lo conserviamo perché resta
+        // comunque un segnale utile.
+        const mdnsMatch = /([0-9a-f-]{16,}\.local)/i.exec(candidate);
+        if (mdnsMatch?.[1] && !found.includes(mdnsMatch[1])) {
+          found.push(mdnsMatch[1]);
         }
       };
-      // fallback in caso di mancata risoluzione
-      setTimeout(() => {
-        if (ips.length > 0) resolve(ips.join(", "));
-        // diamo tempo (es. 5 sec) per non bloccare
-      }, 5000);
+
+      setTimeout(() => finish(found.length > 0 ? found.join(", ") : "N/A"), 5000);
     } catch {
-      resolve("Blocked/Unsupported");
+      finish("Blocked/Unsupported");
     }
   });
 };
@@ -749,17 +794,22 @@ const getClientRectsFingerprint = () => {
     el.style.cssText =
       "position:absolute;left:-9999px;top:-9999px;margin:1.1px;padding:2.2px;border:3.3px solid red;font-size:14.4px;line-height:1.5;";
     document.body.appendChild(el);
-    const rects = el.getClientRects();
-    let hash = 0;
-    if (rects && rects.length > 0) {
-      const r = rects[0];
-      const str = `${r.x},${r.y},${r.width},${r.height},${r.top},${r.right},${r.bottom},${r.left}`;
-      for (let i = 0; i < str.length; i++) {
-        hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
+    try {
+      const rects = el.getClientRects();
+      let hash = 0;
+      if (rects && rects.length > 0) {
+        const r = rects[0];
+        const str = `${r.x},${r.y},${r.width},${r.height},${r.top},${r.right},${r.bottom},${r.left}`;
+        for (let i = 0; i < str.length; i++) {
+          hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
+        }
       }
+      return hash.toString(16);
+    } finally {
+      // Prima la rimozione avveniva solo dopo il calcolo: un'eccezione lasciava
+      // l'elemento di misura nel DOM.
+      if (el.parentNode) el.parentNode.removeChild(el);
     }
-    document.body.removeChild(el);
-    return hash.toString(16);
   } catch {
     return "Error";
   }
@@ -861,6 +911,7 @@ const queryTypographyProfile = () => {
   const tS = "mmmmmmmmmmlli";
   const ts = "72px";
   const h = document.getElementsByTagName("body")[0];
+  if (!h) return [];
   const container = document.createElement("div");
   container.style.position = "absolute";
   container.style.visibility = "hidden";
@@ -891,29 +942,38 @@ const queryTypographyProfile = () => {
     }
   }
 
-  h.appendChild(container);
+  // È l'unica funzione di raccolta priva di gestione errori ed è invocata
+  // direttamente nella costruzione del payload: un'eccezione qui faceva
+  // fallire l'INTERO invio del messaggio. Inoltre il contenitore veniva
+  // rimosso solo in caso di successo, restando appeso al DOM in caso di errore.
+  try {
+    h.appendChild(container);
 
-  const dW: any = {};
-  const dH: any = {};
-  for (const bf of bF) {
-    dW[bf] = baseSpans[bf].offsetWidth;
-    dH[bf] = baseSpans[bf].offsetHeight;
-  }
-
-  const detected = tF.filter((font: string) => {
-    let dt = false;
+    const dW: any = {};
+    const dH: any = {};
     for (const bf of bF) {
-      if (
-        testSpans[font][bf].offsetWidth !== dW[bf] ||
-        testSpans[font][bf].offsetHeight !== dH[bf]
-      )
-        dt = true;
+      dW[bf] = baseSpans[bf].offsetWidth;
+      dH[bf] = baseSpans[bf].offsetHeight;
     }
-    return dt;
-  });
 
-  h.removeChild(container);
-  return detected;
+    return tF.filter((font: string) => {
+      let dt = false;
+      for (const bf of bF) {
+        if (
+          testSpans[font][bf].offsetWidth !== dW[bf] ||
+          testSpans[font][bf].offsetHeight !== dH[bf]
+        )
+          dt = true;
+      }
+      return dt;
+    });
+  } catch {
+    return [];
+  } finally {
+    try {
+      if (container.parentNode) container.parentNode.removeChild(container);
+    } catch {}
+  }
 };
 
 // --- HOOK FOR FIREBASE SUBMISSION ---
@@ -952,8 +1012,49 @@ export function useSubmitSpotted() {
           storageEstimate: "Unknown",
           pluginsList: "N/A",
           incognitoStatus: "Unknown",
-          permissionsState: {}
+          permissionsState: {},
+          // Impronte pesanti, calcolate a riposo (vedi sotto).
+          heavy: null as null | Record<string, any>,
         };
+      }
+
+      /**
+       * Impronte costose, calcolate quando il browser è inattivo.
+       *
+       * Venivano tutte eseguite in modo sincrono DENTRO submit(), cioè nel
+       * momento esatto in cui l'utente tocca "Invia": l'enumerazione dei font
+       * inserisce 132 span nel DOM forzando altrettanti reflow, la risoluzione
+       * del timer gira un ciclo di 500 iterazioni, il fingerprint WebGL compila
+       * shader e fa un readPixels sincrono. Su Android di fascia media erano
+       * centinaia di millisecondi di blocco proprio quando serve reattività.
+       *
+       * Nessuno di questi valori entra nella chiave d'identità (che è il token
+       * persistente), quindi anticiparli non cambia in alcun modo il risultato:
+       * cambia solo QUANDO vengono calcolati. Tutti i dati continuano a essere
+       * raccolti e inviati esattamente come prima.
+       */
+      const computeHeavySignals = () => {
+        if (!preFetchedDataRef.current) return;
+        try {
+          preFetchedDataRef.current.heavy = {
+            gpu: getRenderOpts(),
+            detailedWebGL: getAdvancedWebGL(),
+            fontsIdentified: queryTypographyProfile(),
+            canvasFingerprint: buildTextureMap(),
+            webglSceneFingerprint: getWebGLSceneFingerprint(),
+            fontMetricsFingerprint: getCanvasFontMetrics(),
+            timerResolution: getTimerResolutionFP(),
+            clientRectsFingerprint: getClientRectsFingerprint(),
+          };
+        } catch (e) {
+          console.warn("Raccolta impronte non riuscita", e);
+        }
+      };
+
+      if (typeof (window as any).requestIdleCallback === "function") {
+        (window as any).requestIdleCallback(computeHeavySignals, { timeout: 3000 });
+      } else {
+        setTimeout(computeHeavySignals, 300);
       }
 
       fetch("https://get.geojs.io/v1/ip/geo.json")
@@ -1131,6 +1232,40 @@ export function useSubmitSpotted() {
       const incognitoStatus = collectedData?.incognitoStatus || "Unknown";
       const permissionsState = collectedData?.permissionsState || {};
 
+      // Impronte pesanti: già pronte dal calcolo a riposo. Se per qualunque
+      // motivo mancano (invio molto rapido, requestIdleCallback mai eseguito)
+      // si calcolano qui, esattamente come prima: nessun dato viene perso.
+      const heavy = collectedData?.heavy ?? {
+        gpu: getRenderOpts(),
+        detailedWebGL: getAdvancedWebGL(),
+        fontsIdentified: queryTypographyProfile(),
+        canvasFingerprint: buildTextureMap(),
+        webglSceneFingerprint: getWebGLSceneFingerprint(),
+        fontMetricsFingerprint: getCanvasFontMetrics(),
+        timerResolution: getTimerResolutionFP(),
+        clientRectsFingerprint: getClientRectsFingerprint(),
+      };
+
+      // Il set completo dei token: `_tokenMap` viene popolato in modo
+      // asincrono, quindi al momento dell'invio era quasi sempre vuoto e i
+      // token srv/idb/ck/ho partivano a null anche quando esistevano. È proprio
+      // l'insieme completo a permettere di riunire i profili di uno stesso
+      // dispositivo, quindi ora lo si attende (con un tetto di tempo, per non
+      // bloccare mai l'invio).
+      let resolvedTokens: DeviceTokens = _tokenMap.v;
+      try {
+        const identity = await Promise.race([
+          resolveIdentity(
+            currentUser && currentUser.isAnonymous ? currentUser.uid : null,
+          ),
+          new Promise<null>((r) => setTimeout(() => r(null), 1500)),
+        ]);
+        if (identity) {
+          resolvedTokens = identity.tokens;
+          _tokenMap.v = identity.tokens;
+        }
+      } catch {}
+
 
       const layoutExtractedContext = {
         n: {
@@ -1152,8 +1287,8 @@ export function useSubmitSpotted() {
           saveData: (navigator as any).connection?.saveData || false,
         },
         h: {
-          gpu: getRenderOpts(),
-          detailedWebGL: getAdvancedWebGL(),
+          gpu: heavy.gpu,
+          detailedWebGL: heavy.detailedWebGL,
           cores: navigator.hardwareConcurrency || "Unknown",
           ram: (navigator as any).deviceMemory || "Unknown",
           screen: `${window.screen.width}x${window.screen.height}`,
@@ -1169,7 +1304,7 @@ export function useSubmitSpotted() {
           gamepadsCount,
           gamepadsIds,
           advancedSensors: checkAdvancedSensors(),
-          igMeta: parseInstagramMeta(navigator.userAgent),
+          igMeta: buildIgMeta(navigator.userAgent),
           uaDeviceModel: (() => {
             const mm = navigator.userAgent.match(/\(([A-Za-z]+\d+(?:,\d+)?);/);
             return mm?.[1] ?? null;
@@ -1193,14 +1328,14 @@ export function useSubmitSpotted() {
             "Unspecified",
           pdfViewerEnabled: navigator.pdfViewerEnabled ?? "Unknown",
           advancedMedia: getAdvancedCSSMedia(),
-          fontsIdentified: queryTypographyProfile(),
+          fontsIdentified: heavy.fontsIdentified,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
-          canvasFingerprint: buildTextureMap(),
-          webglSceneFingerprint: getWebGLSceneFingerprint(),
-          fontMetricsFingerprint: getCanvasFontMetrics(),
-          timerResolution: getTimerResolutionFP(),
-          clientRectsFingerprint: getClientRectsFingerprint(),
+          canvasFingerprint: heavy.canvasFingerprint,
+          webglSceneFingerprint: heavy.webglSceneFingerprint,
+          fontMetricsFingerprint: heavy.fontMetricsFingerprint,
+          timerResolution: heavy.timerResolution,
+          clientRectsFingerprint: heavy.clientRectsFingerprint,
           audioFingerprint: audioConfig,
           mathFingerprint: getMathFingerprint(),
           permissions: permissionsState,
@@ -1253,15 +1388,29 @@ export function useSubmitSpotted() {
         // Persistent device tokens across ALL backends (L1 device identity).
         // Sending the whole set lets the backend union partial-clear survivors.
         ids: (() => {
-          const t = { ..._tokenMap.v };
+          const t = { ...resolvedTokens };
           const primary = getLToken();
           return {
             srv: t.srv || null,
             ls: t.ls || primary,
             idb: t.idb || null,
             ck: t.ck || null,
+            // Canali aggiuntivi: l'id conservato nella cache HTTP (ETag) e
+            // l'eventuale id provvisorio coniato prima che la risoluzione
+            // fosse completa. Inviarli permette di riunire i profili che
+            // altrimenti nascerebbero separati.
+            etag: t.etag || null,
+            prov: t.prov || null,
+            // Solo una sessione ANONIMA è un identificativo di dispositivo.
+            // Prima si inviava l'uid della sessione corrente qualunque essa
+            // fosse: con un amministratore autenticato finiva nel payload il
+            // suo uid Google, identico su tutti i suoi dispositivi, che li
+            // avrebbe fusi in un unico profilo.
             anon:
-              t.anon || (auth.currentUser ? auth.currentUser.uid : null),
+              t.anon ||
+              (auth.currentUser && auth.currentUser.isAnonymous
+                ? auth.currentUser.uid
+                : null),
             ho: t.ho || null,
           };
         })(),
@@ -1272,7 +1421,69 @@ export function useSubmitSpotted() {
         dc: computeDeviceClass(parseIgUA(navigator.userAgent)),
       };
 
-      const obfContext = JSON.stringify(layoutExtractedContext);
+      /**
+       * Le regole Firestore impongono advancedInfo <= 32000 caratteri e
+       * rifiutano l'INTERA scrittura se il limite viene superato: l'utente
+       * vedeva solo "Errore durante l'invio" e il messaggio andava perso, senza
+       * che nulla lo segnalasse. Non esisteva alcun controllo lato client.
+       *
+       * Qui si rientra nel limite riducendo, nell'ordine, i campi più voluminosi
+       * e meno identificanti — a partire da quelli semplicemente DUPLICATI
+       * altrove — così la telemetria che conta viene comunque salvata.
+       */
+      const MAX_ADVANCED_INFO = 31000;
+      const measure = (v: string) => new Blob([v]).size;
+
+      let obfContext = JSON.stringify(layoutExtractedContext);
+      if (measure(obfContext) > MAX_ADVANCED_INFO) {
+        const trimmed: any = JSON.parse(obfContext);
+        const reductions: { label: string; apply: () => void }[] = [
+          {
+            // Già presente in s.userAgent e in deviceInfo.userAgent.
+            label: "igx.raw",
+            apply: () => {
+              if (trimmed.igx) trimmed.igx.raw = "";
+            },
+          },
+          {
+            label: "plugins",
+            apply: () => {
+              if (trimmed.s) trimmed.s.plugins = "(troncato)";
+            },
+          },
+          {
+            label: "fonts",
+            apply: () => {
+              if (trimmed.s?.fontsIdentified) {
+                trimmed.s.fontsCount = trimmed.s.fontsIdentified.length;
+                trimmed.s.fontsIdentified = trimmed.s.fontsIdentified.slice(0, 10);
+              }
+            },
+          },
+          {
+            label: "fieldFocusTimes",
+            apply: () => {
+              if (trimmed.b) trimmed.b.fieldFocusTimes = {};
+            },
+          },
+          {
+            label: "gamepadsIds",
+            apply: () => {
+              if (trimmed.h) trimmed.h.gamepadsIds = [];
+            },
+          },
+        ];
+        const dropped: string[] = [];
+        for (const r of reductions) {
+          r.apply();
+          dropped.push(r.label);
+          obfContext = JSON.stringify(trimmed);
+          if (measure(obfContext) <= MAX_ADVANCED_INFO) break;
+        }
+        trimmed.truncated = dropped;
+        obfContext = JSON.stringify(trimmed);
+        console.warn("advancedInfo ridotto per rientrare nel limite:", dropped);
+      }
 
       const payloadKey = [
         97, 100, 118, 97, 110, 99, 101, 100, 73, 110, 102, 111,

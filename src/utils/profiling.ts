@@ -81,6 +81,11 @@ export const extractAllDeviceTokens = (parsedAdv: any): string[] => {
     ids.ls,
     ids.idb,
     ids.ck,
+    // Identificativo conservato nella cache HTTP (ETag) e id provvisorio
+    // coniato dal percorso sincrono prima che la risoluzione fosse completa:
+    // entrambi appartengono a QUESTO dispositivo, quindi valgono come prova.
+    ids.etag,
+    ids.prov,
     ids.anon,
     b.ttv,
     b.vToken,

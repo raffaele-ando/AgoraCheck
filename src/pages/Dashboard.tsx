@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { parseUserAgent } from "../utils/uaParser";
 import {
   computeDeviceProfileId,
+  computeProfileColor,
   extractAllDeviceTokens,
   extractDeviceTraits,
   areDeviceTraitsCompatible,
@@ -144,14 +145,10 @@ const getProfileInitials = (name?: string): string | null => {
     .toUpperCase();
 };
 
-const computeDeviceProfileColor = (profileId: string) => {
-  let hash = 0;
-  for (let i = 0; i < profileId.length; i++) {
-    hash = profileId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const cColor = (hash & 0x00ffffff).toString(16).toUpperCase();
-  return "#" + "00000".substring(0, 6 - cColor.length) + cColor;
-};
+// Delegato all'implementazione condivisa in utils/profiling: la copia locale
+// duplicava la stessa funzione, con il rischio che le due divergessero e che
+// lo stesso profilo apparisse di colori diversi in schede diverse.
+const computeDeviceProfileColor = computeProfileColor;
 
 /** Documenti caricati all'apertura: copre abbondantemente le prime pagine. */
 const MESSAGES_BASE_BUFFER = 1000;
@@ -681,6 +678,11 @@ export default function Dashboard() {
     const tokenGroups = new Map<string, Set<string>>();
     // Immutable physical traits per profile — used as a NEGATIVE constraint.
     const traitsByPid = new Map<string, DeviceTraits>();
+    // Quante volte ciascun profilo ha dichiarato ciascun handle, e quanti
+    // messaggi con handle ha inviato in tutto. Serve a misurare quanto un
+    // dispositivo "possiede" davvero un handle (vedi handleOwnership).
+    const handleCountsByPid = new Map<string, Map<string, number>>();
+    const handleTotalByPid = new Map<string, number>();
 
     for (const m of messages) {
        const pid = getDeviceProfile(m);
@@ -691,6 +693,17 @@ export default function Dashboard() {
        for (const tok of extractAllDeviceTokens(adv)) {
          if (!tokenGroups.has(tok)) tokenGroups.set(tok, new Set());
          tokenGroups.get(tok)!.add(pid);
+       }
+
+       // --- quanto questo profilo usa davvero l'handle che dichiara --------
+       if (m.instagram) {
+         const cleanTag = m.instagram.toLowerCase().replace(/[^a-z0-9._]/g, "");
+         if (cleanTag) {
+           if (!handleCountsByPid.has(pid)) handleCountsByPid.set(pid, new Map());
+           const perTag = handleCountsByPid.get(pid)!;
+           perTag.set(cleanTag, (perTag.get(cleanTag) ?? 0) + 1);
+           handleTotalByPid.set(pid, (handleTotalByPid.get(pid) ?? 0) + 1);
+         }
        }
 
        // --- immutable traits (also available without advancedInfo) ----------
@@ -936,6 +949,33 @@ export default function Dashboard() {
         tagGroups.get(tag)!.push(n);
       }
     }
+    /**
+     * Quanto un dispositivo "possiede" un handle: la quota dei suoi messaggi
+     * con handle in cui compare proprio quello.
+     *
+     * L'handle è testo libero, non verificato: chiunque può digitare quello di
+     * un altro. Finora l'unica difesa era scartare gli handle rivendicati da
+     * più di 3 dispositivi, quindi bastava digitarlo una o due volte per essere
+     * fusi nell'identità della vittima.
+     *
+     * Un dispositivo che dichiara sempre lo stesso handle lo possiede davvero;
+     * uno che lo nomina una volta su sei ha molto più probabilmente parlato di
+     * qualcun altro. La confidenza dell'arco viene quindi ridotta in proporzione
+     * al possesso PIÙ DEBOLE fra i due: un handle diluito non unisce più in
+     * automatico, ma può ancora emergere come suggerimento se altri segnali lo
+     * corroborano.
+     *
+     * Un tag che non proviene dai messaggi ma dal documento del profilo è stato
+     * inserito da un operatore: vale come possesso pieno.
+     */
+    const handleOwnership = (pid: string, tag: string): number => {
+      const total = handleTotalByPid.get(pid) ?? 0;
+      if (total === 0) return 1;
+      const used = handleCountsByPid.get(pid)?.get(tag) ?? 0;
+      if (used === 0) return 1;
+      return used / total;
+    };
+
     const CONTESTED_HANDLE_MAX = 3; // handle claimed by >3 devices => contested
     for (const [tag, pids] of tagGroups.entries()) {
       const distinct = Array.from(new Set(pids));
@@ -944,12 +984,25 @@ export default function Dashboard() {
       if (distinct.length > CONTESTED_HANDLE_MAX) continue;
       for (let i = 0; i < distinct.length; i++) {
         for (let j = i + 1; j < distinct.length; j++) {
+          const ownership = Math.min(
+            handleOwnership(distinct[i], tag),
+            handleOwnership(distinct[j], tag),
+          );
+          const confidence = CONF.IG_TAG * ownership;
+          const label =
+            ownership >= 0.999
+              ? "Stesso tag Instagram (" + tag + ")"
+              : "Stesso tag Instagram (" +
+                tag +
+                ", uso " +
+                Math.round(ownership * 100) +
+                "%)";
           addSignal(
             distinct[i],
             distinct[j],
             "ig_tag:" + tag,
-            "Stesso tag Instagram (" + tag + ")",
-            CONF.IG_TAG,
+            label,
+            confidence,
             // PERSON-level: nessun vincolo negativo, una persona può usare lo
             // stesso handle da un iPhone e da un Android.
             { linking: true, deviceLevel: false },
@@ -1196,9 +1249,10 @@ export default function Dashboard() {
         });
 
         // Suggerimenti verso altri macro-profili, ordinati per confidenza.
-        const suggestions = Array.from(
-          (suggestionsByComp.get(compIdx) ?? new Map()).entries(),
-        )
+        const compSuggestions =
+          suggestionsByComp.get(compIdx) ??
+          new Map<number, { confidence: number; reasons: string[] }>();
+        const suggestions = Array.from(compSuggestions.entries())
           .map(([otherIdx, info]) => ({
             macroId: macroIdByIndex[otherIdx],
             confidence: info.confidence,
