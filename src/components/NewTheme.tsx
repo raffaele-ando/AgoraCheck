@@ -709,19 +709,7 @@ export function ThemeCorkboard() {
 
         {/* MAIN CONTEXT FORM */}
         <div className="flex flex-col flex-1 drop-shadow-sm relative w-full h-full min-h-0">
-          {/*
-            In modalità sondaggio il pannello si adatta al contenuto invece di
-            stirarsi a tutta altezza: con quattro opzioni resta comunque una
-            fascia vuota sotto l'ultima, ed era quella lo "spazio di troppo".
-            Nella modalità spotted, dove il campo del racconto deve essere
-            grande, l'altezza piena serve e resta.
-          */}
-          <Squircle
-            cornerRadius={32}
-            className={`ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 ${
-              mode === "sondaggio" ? "h-auto" : "h-full"
-            }`}
-          >
+          <Squircle cornerRadius={32} className="ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 h-full">
              {mode === 'spotted' && (
                 <div key="spotted" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
@@ -740,12 +728,24 @@ export function ThemeCorkboard() {
              )}
   
              {mode === 'sondaggio' && (
-                <div key="sondaggio" className="flex flex-col gap-3 animate-in fade-in duration-200 relative z-10">
-                   <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden shrink-0 min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                /*
+                  Lo spazio in eccesso va DENTRO il campo della domanda, non
+                  lasciato vuoto.
+
+                  Prima le opzioni erano ancorate in alto e sotto restava una
+                  fascia di pannello vuota. Rimpicciolire il pannello ha solo
+                  spostato il vuoto sullo sfondo, che è peggio. La soluzione
+                  giusta è che il riquadro della domanda cresca fino a occupare
+                  quello che avanza: è anche il posto dove serve davvero, perché
+                  una domanda può essere lunga, mentre le risposte sono corte e
+                  di altezza fissa.
+                */
+                <div key="sondaggio" className="flex flex-col gap-3 h-full min-h-0 animate-in fade-in duration-200 relative z-10">
+                   <Squircle cornerRadius={24} className="ag-edge bg-[var(--ag-inset)] flex overflow-hidden flex-1 min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📊</div>
                       <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
-                   <div className="flex flex-col gap-2.5 min-h-0 justify-start pr-1 pb-1">
+                   <div className="flex flex-col gap-2.5 shrink-0 justify-start pr-1 pb-1">
                       {options.map((opt, i) => (
                         <Squircle key={opt.id} cornerRadius={18} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
                          {/*
