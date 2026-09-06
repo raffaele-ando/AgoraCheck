@@ -9,9 +9,19 @@
       Ora c'è un SVG vero, nitido a ogni densità.
     -->
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="apple-touch-icon" href="./favicon.svg" />
+    <!--
+      L'SVG da solo non basta, ed è il motivo per cui l'icona non compariva.
+      Chrome su Android IGNORA le icone SVG del manifest e Safari ignora un
+      apple-touch-icon in SVG: entrambi vogliono un PNG. Senza, la scheda di
+      condivisione e la schermata home mostrano il mappamondo generico.
+      I PNG qui sotto sono generati da icon-maskable.svg con `node scripts/generate-icons.mjs`,
+      così il marchio ha una sola fonte.
+    -->
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#DC5F00" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)" />
     <!--
       Apertura anticipata delle connessioni verso i servizi contattati subito
       all'avvio. Senza, il browser esegue DNS e handshake TLS solo quando il
@@ -59,16 +69,18 @@
     <meta property="og:title" content="Agorà" />
     <meta property="og:description" content="La bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />
     <!--
-      Le anteprime social richiedono un indirizzo ASSOLUTO: il precedente
-      ./logo.png era sia relativo sia inesistente, quindi ogni link condiviso
-      appariva senza immagine.
+      Anteprima social: indirizzo ASSOLUTO, come richiedono gli scrapers, e
+      servito da noi invece che da raw.githubusercontent (soggetto a limiti di
+      frequenza: l'anteprima spariva proprio quando il link girava molto).
     -->
-    <meta property="og:image" content="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/main/logo.png" />
+    <meta property="og:image" content="https://raffaele-ando.github.io/AgoraCheck/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
     <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Agorà" />
     <meta name="twitter:description" content="La bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/main/logo.png" />
+    <meta name="twitter:image" content="https://raffaele-ando.github.io/AgoraCheck/icon-512.png" />
   </head>
   <body>
     <div id="root"></div>

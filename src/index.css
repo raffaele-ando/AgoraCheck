@@ -52,19 +52,34 @@
    ------------------------------------------------------------------------- */
 .dark-theme {
   color-scheme: dark;       /* barre di scorrimento e controlli nativi scuri */
-  --ag-bg: #131110;         /* fondo pagina, near-black caldo */
-  --ag-surface: #241f1a;    /* pannelli, staccati dal fondo */
-  --ag-surface-2: #2f2822;  /* pannello alternativo / stato hover */
-  --ag-inset: #1a1614;      /* campi e pozzetti, incassati nel pannello */
-  --ag-text: #f2eade;
+  --ag-bg: #100e0c;         /* fondo pagina, il livello più profondo */
+  --ag-surface: #221d19;    /* pannelli */
+  --ag-surface-2: #2c251f;  /* pannello alternativo / stato hover */
+  --ag-inset: #322a23;      /* campi: PIÙ CHIARI del pannello, vedi sopra */
+  --ag-text: #f4ede2;
   --ag-text-strong: #ffffff;
-  --ag-muted: #b3a594;      /* 6,9:1 sul pannello */
+  --ag-muted: #bdb0a0;      /* 7,4:1 sul pannello */
   --ag-accent: #ff7a1a;     /* arancio più luminoso, leggibile sullo scuro */
   --ag-accent-hover: #ff9040;
   --ag-on-accent: #1a1207;  /* testo scuro sull'arancio: 8,1:1 */
   --ag-ring: #ff7a1a;
-  --ag-border: #3a322b;     /* definisce i bordi dove la luminanza non basta */
+  --ag-border: #453b32;     /* definisce i bordi dove la luminanza non basta */
 }
+
+/*
+  Filo di contorno per pannelli e campi (classe "ag-edge").
+
+  Non è definito qui come `border` né come ombra interna: questi elementi sono
+  ritagliati da una maschera SVG, che taglierebbe il bordo agli angoli e lo
+  farebbe sparire proprio dove serve. Lo disegna il componente Squircle come
+  tracciato, con la stessa forma del contorno di messa a fuoco che già
+  gestisce — vedi src/components/Squircle.tsx.
+
+  Il colore viene da qui, così il tema chiaro (dove i livelli si distinguono
+  da soli) lo lascia trasparente e nulla cambia.
+*/
+:root { --ag-edge-color: transparent; }
+.dark-theme { --ag-edge-color: var(--ag-border); }
 
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {

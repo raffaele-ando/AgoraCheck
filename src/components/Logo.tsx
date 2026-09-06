@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "../lib/utils";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { readDocDataSafe } from "../utils/firestoreRead";
 
 /**
  * Logo di ripiego, mostrato quando Firestore non ha (ancora) restituito nulla.
@@ -17,8 +16,21 @@ import { db } from "../firebase";
  * Il resto del progetto usa già `raw.githubusercontent.com`, che serve il file
  * direttamente.
  */
-export const FALLBACK_LOGO_URL =
-  "https://raw.githubusercontent.com/raffaele-ando/Logo-vari/main/logo.png";
+/**
+ * Il ripiego ora è un file NOSTRO, servito dallo stesso indirizzo del sito.
+ *
+ * Prima puntava a raw.githubusercontent.com. Un ripiego che dipende da un
+ * host di terze parti non è un ripiego: interviene proprio quando la rete va
+ * male, cioè quando quell'host ha le stesse probabilità di non rispondere.
+ * Inoltre GitHub applica limiti di frequenza e alcune estensioni per la
+ * privacy bloccano il dominio: in quei casi il logo semplicemente non
+ * compariva, come si vede nelle segnalazioni.
+ *
+ * Il file è già nel repository (è lo stesso marchio usato da Agorà Orbite),
+ * quindi viene servito dal medesimo dominio, entra nella cache del browser
+ * con il resto del sito e non ha alcun punto di rottura esterno.
+ */
+export const FALLBACK_LOGO_URL = `${import.meta.env.BASE_URL}agora-logo.png`;
 
 /**
  * Riscrive gli indirizzi GitHub salvati nella forma "pagina" verso quella
@@ -94,21 +106,20 @@ export const fetchLogoScales = async () => {
       scalesListeners.forEach(cb => cb(scalesCache));
     }
   } catch {}
-  try {
-    const snap = await getDoc(doc(db, "settings", "logo_scales"));
-    if (snap.exists()) {
-      scalesCache = {
-        zoneScale: snap.data().zoneScale ?? 1,
-        agoraScale: snap.data().agoraScale ?? 1,
-        customLogoScale: snap.data().customLogoScale ?? 1,
-        spacing: snap.data().spacing ?? 8
-      };
-    } else {
-      scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 };
-    }
-  } catch (e) {
-    scalesCache = { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 };
-  }
+  // Anche questa lettura passa dalla versione con scadenza: era l'ultima che
+  // poteva restare appesa e bloccare le proporzioni dell'intestazione.
+  const d = await readDocDataSafe<{
+    zoneScale?: number;
+    agoraScale?: number;
+    customLogoScale?: number;
+    spacing?: number;
+  }>(["settings", "logo_scales"]);
+  scalesCache = {
+    zoneScale: d?.zoneScale ?? 1,
+    agoraScale: d?.agoraScale ?? 1,
+    customLogoScale: d?.customLogoScale ?? 1,
+    spacing: d?.spacing ?? 8,
+  };
   try {
     localStorage.setItem(LS_SCALES_KEY, JSON.stringify(scalesCache));
   } catch {}
@@ -156,24 +167,29 @@ const fetchLogo = async (name: string): Promise<string | null> => {
 
   const promise = (async () => {
     try {
-      const snap = await getDoc(doc(db, "logos", name));
-      const raw = snap.exists() && snap.data()?.dataUrl ? snap.data().dataUrl : null;
-      const url = normalizeLogoUrl(raw);
+      // readDocDataSafe si arrende dopo qualche secondo invece di restare
+      // appesa: getDoc NON rifiuta quando Firestore non riesce a collegarsi,
+      // e quell'attesa senza fine è ciò che lasciava il logo come rettangolo
+      // grigio pulsante finché non si ricaricava la pagina.
+      const data = await readDocDataSafe<{ dataUrl?: string }>(["logos", name]);
+      const url = normalizeLogoUrl(data?.dataUrl ?? null);
       revalidated.add(name);
-      const changed = logoCache[name] !== url;
       logoCache[name] = url;
       writeStoredLogo(name, url);
-      // Si avvisano gli ascoltatori solo se il valore è DIVERSO da quello già
-      // mostrato, per non far lampeggiare un logo già corretto.
-      if (changed && listeners[name]) {
-        listeners[name].forEach(cb => cb(url));
+      // Gli ascoltatori vanno avvisati SEMPRE, anche quando il valore non è
+      // cambiato: il messaggio non è solo "ecco il logo", è anche "ho finito
+      // di cercarlo". Senza, chi era in attesa restava sul segnaposto per
+      // sempre nel caso — comunissimo — in cui il valore coincide con quello
+      // già ricordato.
+      if (listeners[name]) {
+        listeners[name].forEach((cb) => cb(url));
       }
       return url;
     } catch {
       // Firestore irraggiungibile: si tiene quanto ricordato invece di
       // cancellarlo, così un problema di rete non fa sparire il logo.
-      if (cached === undefined && listeners[name]) {
-        listeners[name].forEach(cb => cb(null));
+      if (listeners[name]) {
+        listeners[name].forEach((cb) => cb(cached ?? null));
       }
       return cached ?? null;
     } finally {
@@ -195,6 +211,8 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
   const [loading, setLoading] = useState(!isImmediate);
   const [failed, setFailed] = useState(isImmediate && !logoCache[logoName]);
   const [timeoutText, setTimeoutText] = useState(false);
+  /** Attesa esaurita: si smette di mostrare il segnaposto grigio. */
+  const [gaveUp, setGaveUp] = useState(false);
   const [scales, setScales] = useState<{ zoneScale: number, agoraScale: number, customLogoScale: number, spacing: number }>(scalesCache || { zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 });
 
   useEffect(() => {
@@ -215,6 +233,7 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
     setUrl(logoCache[logoName] || null);
     setFailed(false);
     setTimeoutText(false);
+    setGaveUp(false);
 
     const known = logoName in logoCache;
 
@@ -228,11 +247,17 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
       setLoading(true);
     }
 
+    // Resa breve. Oltre questa soglia si smette di mostrare il segnaposto e si
+    // disegna il ripiego: un rettangolo grigio pulsante non dice nulla a chi
+    // guarda, mentre il marchio — anche se non è quello personalizzato — è
+    // esatto nove volte su dieci ed è comunque meglio di un buco.
     const t = known
       ? null
       : setTimeout(() => {
-          if (mounted && !(logoName in logoCache)) setTimeoutText(true);
-        }, 1000); // 1s fast text fallback if slow network
+          if (!mounted || logoName in logoCache) return;
+          setTimeoutText(true);   // usato quando c'è un testo di ripiego
+          setGaveUp(true);        // ...e negli altri casi: mostra il marchio
+        }, 1200);
 
     const cb = (newUrl: string | null) => {
       if (!mounted) return;
@@ -285,8 +310,13 @@ export function Logo({ className, logoName = "default", fallbackText, forceTextF
   
   const isActuallyFailing = !finalSrc && !showTextFallback;
 
-  if (loading && !finalSrc && !showTextFallback) {
-    return <div className={cn("flex items-center justify-center animate-pulse bg-gray-200/50 dark:bg-gray-800/50 rounded-lg", className, hasSizing ? "" : "w-56 h-20 md:w-64 md:h-24")} />
+  // Il segnaposto dura al massimo il tempo della resa (gaveUp). Prima la
+  // condizione era il solo `loading`, che veniva azzerato unicamente dalla
+  // risposta di Firestore: se quella non arrivava mai — e con getDoc succede,
+  // perché non rifiuta — il rettangolo grigio restava lì per sempre. È il
+  // riquadro vuoto al posto del logo nella schermata d'accesso.
+  if (loading && !gaveUp && !finalSrc && !showTextFallback) {
+    return <div className={cn("flex items-center justify-center animate-pulse bg-[var(--ag-surface-2)] rounded-lg", className, hasSizing ? "" : "w-56 h-20 md:w-64 md:h-24")} />
   }
 
   return (

@@ -58,6 +58,7 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
     return () => observer.disconnect();
   }, [cornerRadius, cornerSmoothing]);
 
+  const hasEdge = className.includes('ag-edge');
   const hasFocusRing = className.includes('focus-within:squircle-ring');
   let focusColor = 'transparent';
   if (hasFocusRing) {
@@ -105,6 +106,31 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
       }} 
       {...props}
     >
+      {/*
+        Filo di contorno permanente, richiesto dalla classe "ag-edge".
+
+        Nel tema scuro i livelli hanno luminanze troppo vicine perché la sola
+        differenza di colore li separi: alle basse luminanze la formula del
+        contrasto è dominata dalla costante additiva, quindi due grigi scuri
+        diversi restano quasi indistinguibili. Il rimedio è il bordo, come in
+        tutte le interfacce scure fatte bene.
+
+        Va disegnato come tracciato e non come CSS: l'elemento è ritagliato da
+        una maschera, che taglierebbe un `border` agli angoli. Il colore
+        arriva da --ag-edge-color, trasparente nel tema chiaro.
+      */}
+      {hasEdge && isReady && (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width={svgParams.w}
+          height={svgParams.h}
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{ width: '100%', height: '100%' }}
+          aria-hidden="true"
+        >
+          <path d={svgParams.path} fill="none" stroke="var(--ag-edge-color)" strokeWidth="2" />
+        </svg>
+      )}
       {hasFocusRing && isFocused && isReady && (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 

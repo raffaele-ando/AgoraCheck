@@ -10,11 +10,17 @@ import { AdminGuard } from "./components/AdminGuard";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
-// Home era un import statico, quindi finiva nel blocco iniziale insieme a
-// tutta la libreria di animazione e al codice di raccolta dei dati: chi
-// apriva /dashboard scaricava per intero la bacheca pubblica prima di poter
-// vedere la schermata d'accesso. Ora ogni rotta porta solo il proprio peso.
-const Home = lazy(() => import("./pages/Home"));
+// Home torna a essere un import statico.
+//
+// L'avevo resa differita per alleggerire /dashboard, ma il prezzo lo pagava
+// la pagina che vedono TUTTI: la bacheca si apriva su una rotella di
+// caricamento, perché il suo codice partiva solo dopo il primo disegno. Un
+// segnaposto sulla pagina d'ingresso è il peggior posto dove risparmiare
+// qualche decina di kB: chi arriva vede un'attesa invece del sito.
+//
+// Il guadagno su /dashboard si è comunque quasi tutto conservato per altre
+// vie — la libreria di animazione e Analytics restano in blocchi separati.
+import Home from "./pages/Home";
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
 const VideoPresentation = lazy(() => import("./pages/Video"));
 const Video2 = lazy(() => import("./pages/Video2"));
@@ -72,11 +78,8 @@ function RouteSpinner() {
 export default function App() {
   // Home serve quattro rotte diverse (la bacheca e le sue scorciatoie con
   // parametri): l'elemento è lo stesso, quindi si costruisce una volta sola.
-  const homeRoute = (
-    <Suspense fallback={<RouteSpinner />}>
-      <Home />
-    </Suspense>
-  );
+  // Nessun Suspense: l'import è statico, non c'è nulla da attendere.
+  const homeRoute = <Home />;
 
   return (
     <ErrorBoundary>
@@ -101,17 +104,11 @@ export default function App() {
             path="/dashboard"
             element={
               <AdminGuard>
-                <Suspense
-                  fallback={
-                    // Il fondo era fissato al crema del tema chiaro e la
-                    // rotella al nero: in tema scuro l'attesa era un lampo
-                    // bianco fra due schermate scure. Ora entrambi seguono
-                    // le variabili della palette.
-                    <div className="min-h-screen flex items-center justify-center bg-[var(--ag-bg)]">
-                      <div className="w-8 h-8 border-4 border-[var(--ag-accent)] border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  }
-                >
+                {/* Qui una rotella va bene: è dietro l'accesso riservato, la
+                    vedono solo gli amministratori e dura il tempo di scaricare
+                    un blocco già precaricato. Sulla bacheca pubblica, invece,
+                    un'attesa non ci deve essere affatto. */}
+                <Suspense fallback={<RouteSpinner />}>
                   <DashboardInfo />
                 </Suspense>
               </AdminGuard>

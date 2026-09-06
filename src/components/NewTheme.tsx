@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ChevronDown, Send, Instagram, ChevronRight, Moon, Sun } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { Squircle } from './Squircle';
+import { Portal } from './Portal';
+
+/** Agorà Orbite, servito dallo stesso dominio sotto /orbite/. */
+const ORBITE_URL = `${import.meta.env.BASE_URL}orbite/`;
 import { useSubmitSpotted } from '../pages/Home';
 import { useVisitAnalytics } from '../hooks/useVisitAnalytics';
 import { loadWhatsappLinksFromDB, loadEventWidgetConfigFromDB, EventWidgetConfig, DEFAULT_EVENT_WIDGET_CONFIG } from './AppSettings';
@@ -83,19 +87,17 @@ export function ThemeCorkboard() {
       localStorage.setItem("agora_theme", next ? "dark" : "light");
     } catch {}
   };
+  /** In viaggio verso Orbite: il portale è in scena e sta aprendo la porta. */
+  const [leaving, setLeaving] = useState(false);
   const defaultCity = Object.keys(locations)[0] || "Milano";
   const [city, setCity] = useState(defaultCity);
   const [zone, setZone] = useState(locations[defaultCity]?.[0] || "");
   const [waLinks, setWaLinks] = useState<Record<string, string>>({});
-  const [waLinksLoaded, setWaLinksLoaded] = useState(false);
   const [eventWidget, setEventWidget] = useState<EventWidgetConfig>(DEFAULT_EVENT_WIDGET_CONFIG);
   const [eventWidgetLoaded, setEventWidgetLoaded] = useState(false);
 
   useEffect(() => {
-    loadWhatsappLinksFromDB().then((data) => {
-      setWaLinks(data);
-      setWaLinksLoaded(true);
-    });
+    loadWhatsappLinksFromDB().then(setWaLinks);
     loadEventWidgetConfigFromDB().then(data => {
       if (data) setEventWidget(data);
       setEventWidgetLoaded(true);
@@ -310,14 +312,67 @@ export function ThemeCorkboard() {
 
   return (
     <div className="h-[100dvh] w-full bg-[var(--ag-bg)] text-[var(--ag-text-strong)] flex justify-center items-center font-sans selection:bg-[#DC5F00] selection:text-white pb-safe overflow-y-auto">
+      {/*
+        La porta si compone, si apre e SOLO ALLORA si cambia pagina: navigare
+        prima taglierebbe l'animazione a metà, che è il difetto che si voleva
+        togliere. Orbite riprende con la stessa porta, così il movimento
+        continua invece di ricominciare.
+      */}
+      {leaving && (
+        <Portal
+          open
+          onDone={() => {
+            window.location.href = ORBITE_URL;
+          }}
+        />
+      )}
       <div className="flex flex-col p-2.5 gap-2.5 relative w-full h-full max-w-md mx-auto">
         
         {/* HEADER LOGO + THEME TOGGLE */}
         <div className="relative flex justify-center items-center shrink-0 pt-1 pb-1">
           {/* Clicking the logo opens Agorà Orbite while staying on this domain
-              (served same-origin from /orbite/). */}
-          <a href={`${import.meta.env.BASE_URL}orbite/`} aria-label="Agorà" className="inline-flex active:scale-95 transition-transform">
-            <img src="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/refs/heads/main/logo%205.png" alt="Agorà" className="h-[2.5rem] object-contain drop-shadow-md dark:invert" />
+              (served same-origin from /orbite/).
+
+              Il passaggio non è più un salto secco: al clic si apre la porta
+              del marchio — la stessa animazione con cui Orbite si presenta —
+              e solo quando ha finito si naviga. Chi guarda vede un unico
+              movimento continuo fra i due siti invece di due pagine slegate.
+
+              Resta un vero <a>: tasto centrale, "apri in nuova scheda" e i
+              motori di ricerca continuano a vedere un collegamento normale.
+              L'animazione parte solo sul clic semplice. */}
+          <a
+            href={ORBITE_URL}
+            aria-label="Agorà"
+            className="inline-flex active:scale-95 transition-transform"
+            onClick={(e) => {
+              // Clic con modificatori o diverso dal primario: è la richiesta
+              // di aprire altrove, va lasciata al browser.
+              if (
+                e.defaultPrevented ||
+                e.button !== 0 ||
+                e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
+              ) {
+                return;
+              }
+              e.preventDefault();
+              setLeaving(true);
+            }}
+          >
+            {/*
+              Il logo era un indirizzo raw.githubusercontent fisso, senza
+              alcun ripiego: se GitHub non rispondeva — limiti di frequenza,
+              rete lenta, estensioni per la privacy che bloccano il dominio —
+              al centro dell'intestazione restava l'icona di immagine rotta.
+              Ora è un file nostro, servito dallo stesso dominio del sito.
+            */}
+            <img
+              src={`${import.meta.env.BASE_URL}agora-logo.png`}
+              alt="Agorà"
+              width={160}
+              height={40}
+              className="h-[2.5rem] w-auto object-contain drop-shadow-md dark:invert"
+            />
           </a>
           <button
             type="button"
@@ -345,7 +400,7 @@ export function ThemeCorkboard() {
 
               {/* COMPACT LOCATION */}
               <div className="flex flex-[1.5] h-full min-w-0" style={{ borderRadius: 18 }}>
-                 <Squircle cornerRadius={18} className="bg-[var(--ag-surface)] flex flex-1 items-center px-3 h-full shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-w-0 w-full overflow-hidden">
+                 <Squircle cornerRadius={18} className="ag-edge bg-[var(--ag-surface)] flex flex-1 items-center px-3 h-full shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-w-0 w-full overflow-hidden">
                     <MapPin className="w-3.5 h-3.5 text-[#DC5F00] shrink-0 mr-1.5" />
                     <span className="text-[11px] font-extrabold text-[var(--ag-text)] truncate leading-tight mt-[1px]">{city} • {zone}</span>
                  </Squircle>
@@ -354,8 +409,10 @@ export function ThemeCorkboard() {
               {/* COMPACT ACTIONS */}
               <div className="flex gap-2 h-full shrink-0">
                  {/* Compact WA Button */}
-                 {(!waLinksLoaded || waLinkToUse) && (
-                 <div className={`h-full aspect-square shrink-0 ${!waLinksLoaded ? 'opacity-50 animate-pulse' : ''}`}>
+                 {/* Stessa correzione della versione estesa: il collegamento
+                     esiste da subito, quindi niente stato "spento". */}
+                 {waLinkToUse && (
+                 <div className="h-full aspect-square shrink-0">
                    <Squircle as={waLinkToUse ? "a" : "div"} href={waLinkToUse || undefined} target={waLinkToUse ? "_blank" : undefined} rel={waLinkToUse ? "noreferrer" : undefined} cornerRadius={16} className="bg-[#25D366] text-white h-full w-full flex items-center justify-center shadow-[0_2px_8px_rgba(37,211,102,0.3)] active:scale-95 transition-transform hover:bg-[#20bd5a] group/wa relative overflow-hidden">
                       <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/wa:translate-y-0 transition-transform duration-300 ease-out" />
                       <FaWhatsapp className="w-5 h-5 relative z-10" />
@@ -393,7 +450,7 @@ export function ThemeCorkboard() {
                       <button 
                         key={m.id}
                         onClick={() => handleModeSwitch(m.id)}
-                        className={`flex-1 flex items-center justify-center h-full font-bold z-10 transition-colors duration-300 gap-2 text-[15px] ${mode === m.id ? 'text-white' : 'text-gray-500 hover:text-black'}`}
+                        className={`flex-1 flex items-center justify-center h-full font-bold z-10 transition-colors duration-300 gap-2 text-[15px] ${mode === m.id ? 'text-white' : 'text-[var(--ag-muted)] hover:text-[var(--ag-text-strong)]'}`}
                       >
                         <span className="text-[22px]" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))" }}>{m.icon}</span> {m.label}
                       </button>
@@ -403,10 +460,10 @@ export function ThemeCorkboard() {
 
                {/* EXPANDED LOCATION */}
                <div className="w-full shrink-0 drop-shadow-sm z-10" style={{ borderRadius: 32 }}>
-                  <Squircle cornerRadius={32} className="bg-[var(--ag-surface)] flex flex-col p-3 gap-2.5 w-full relative z-10 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
+                  <Squircle cornerRadius={32} className="ag-edge bg-[var(--ag-surface)] flex flex-col p-3 gap-2.5 w-full relative z-10 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                      {/* Top Row: Location Selectors */}
                      <div className="flex w-full min-w-0 h-[3.25rem] gap-2.5">
-                        <Squircle cornerRadius={20} className="relative flex-1 bg-[var(--ag-inset)] flex items-center h-full min-w-0 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-all duration-300">
+                        <Squircle cornerRadius={20} className="ag-edge relative flex-1 bg-[var(--ag-inset)] flex items-center h-full min-w-0 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-all duration-300">
                          <MapPin className="w-4 h-4 text-[#DC5F00] absolute left-3 pointer-events-none" />
                          <select 
                            value={city} onChange={handleCityChange} 
@@ -414,22 +471,35 @@ export function ThemeCorkboard() {
                          >
                             {Object.keys(locations).map(c => <option key={c} value={c}>{c}</option>)}
                          </select>
-                         <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
+                         <ChevronDown className="w-4 h-4 text-[var(--ag-muted)] absolute right-2.5 pointer-events-none" />
                       </Squircle>
-                      <Squircle cornerRadius={20} className="relative flex-[1.2] bg-[var(--ag-inset)] flex items-center h-full min-w-0 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-all duration-300">
+                      <Squircle cornerRadius={20} className="ag-edge relative flex-[1.2] bg-[var(--ag-inset)] flex items-center h-full min-w-0 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-all duration-300">
                          <select 
                            value={zone} onChange={(e)=>setZone(e.target.value)} 
                            className="w-full h-full bg-transparent pl-4 pr-8 text-[13px] font-bold appearance-none outline-none truncate cursor-pointer text-[#DC5F00] focus:outline-none"
                          >
                             {(locations[city] || []).map(z => <option key={z} value={z}>{z}</option>)}
                          </select>
-                         <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
+                         <ChevronDown className="w-4 h-4 text-[var(--ag-muted)] absolute right-2.5 pointer-events-none" />
                       </Squircle>
                      </div>
                      
                      {/* Bottom Row: WhatsApp Smart Banner */}
-                     {(!waLinksLoaded || waLinkToUse) && (
-                     <div className={`w-full drop-shadow-[0_4px_12px_rgba(37,211,102,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 relative group h-14 ${!waLinksLoaded ? 'opacity-50 animate-pulse' : ''}`}>
+                     {/*
+                       Il pulsante restava al 50% di opacità e pulsante finché
+                       la lettura da Firestore non tornava: sembrava
+                       disattivato, ed è la segnalazione ricevuta. Peggio, la
+                       lettura poteva non tornare MAI (getDoc non rifiuta se
+                       non riesce a collegarsi), quindi restava spento.
+
+                       Ma il collegamento c'è comunque: waLinkToUse ha sempre
+                       un valore, al peggio un link wa.me generico. Non c'era
+                       quindi nulla da attendere — il pulsante è funzionante
+                       fin dal primo istante e ora si mostra come tale. Quando
+                       il gruppo giusto arriva, cambia solo la destinazione.
+                     */}
+                     {waLinkToUse && (
+                     <div className="w-full drop-shadow-[0_4px_12px_rgba(37,211,102,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 relative group h-14">
                        <Squircle 
                          as={waLinkToUse ? "a" : "div"}
                          cornerRadius={20}
@@ -513,20 +583,20 @@ export function ThemeCorkboard() {
 
         {/* MAIN CONTEXT FORM */}
         <div className="flex flex-col flex-1 drop-shadow-sm relative w-full h-full min-h-0">
-          <Squircle cornerRadius={32} className="bg-[var(--ag-surface)] p-4 flex flex-col gap-3 h-full">
+          <Squircle cornerRadius={32} className="ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 h-full">
              {mode === 'spotted' && (
                 <div key="spotted" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
                       <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📍</div>
-                      <TypewriterTextarea words={whereWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={where} onChange={(e) => setWhere(e.target.value)} onFocus={() => handleInputFocus("where")} onBlur={() => handleInputBlur("where")} />
+                      <TypewriterTextarea words={whereWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={where} onChange={(e) => setWhere(e.target.value)} onFocus={() => handleInputFocus("where")} onBlur={() => handleInputBlur("where")} />
                    </Squircle>
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
                       <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🗓️</div>
-                      <TypewriterTextarea words={whenWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={when} onChange={(e) => setWhen(e.target.value)} onFocus={() => handleInputFocus("when")} onBlur={() => handleInputBlur("when")}/>
+                      <TypewriterTextarea words={whenWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={when} onChange={(e) => setWhen(e.target.value)} onFocus={() => handleInputFocus("when")} onBlur={() => handleInputBlur("when")}/>
                    </Squircle>
                    <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden flex-1 focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🔍</div>
-                      <TypewriterTextarea words={lookingForWordsSpotted} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
+                      <TypewriterTextarea words={lookingForWordsSpotted} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                 </div>
              )}
@@ -535,16 +605,16 @@ export function ThemeCorkboard() {
                 <div key="sondaggio" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
                    <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden shrink-0 min-h-[4rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📊</div>
-                      <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-gray-500 placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
+                      <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                    <div className="flex flex-col gap-2.5 flex-1 min-h-0 justify-start overflow-y-auto pr-1 pb-1">
                       {options.map((opt, i) => (
                         <Squircle key={opt.id} cornerRadius={18} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
-                         <div className="w-[3rem] text-center font-bold text-gray-400 text-[10px] flex flex-col justify-center items-center h-full border-r border-[var(--ag-border)] bg-white/20 group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
+                         <div className="w-[3rem] text-center font-bold text-[var(--ag-muted)] text-[10px] flex flex-col justify-center items-center h-full border-r border-[var(--ag-border)] bg-[var(--ag-surface-2)] group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
                            OPZ<br/>{i+1}
                          </div>
                          <input 
-                           className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-gray-500 placeholder:font-normal px-3" 
+                           className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-[var(--ag-muted)] placeholder:font-normal px-3" 
                            placeholder={i < 2 ? "Risposta obbligatoria *" : "Risposta opzionale"} value={opt.value} onChange={(e) => { const newOpts = [...options]; newOpts[i] = {...newOpts[i], value: e.target.value}; setOptions(newOpts); }}
                            onFocus={() => handleInputFocus(`option_${opt.id}`)} onBlur={() => handleInputBlur(`option_${opt.id}`)}
                          />
@@ -564,17 +634,17 @@ export function ThemeCorkboard() {
         {/* FOOTER ACTION AREA */}
         <div className="flex gap-2.5 shrink-0 h-[3.5rem] relative z-10 w-full mb-1">
           <motion.div animate={{ x: igShake ? [-5, 5, -5, 5, 0] : 0 }} transition={{ duration: 0.4 }} className="flex-1 drop-shadow-sm min-w-0">
-            <Squircle cornerRadius={24} className="bg-[var(--ag-surface)] flex items-center pl-1.5 pr-2 h-full w-full overflow-hidden focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-all group/ig relative">
+            <Squircle cornerRadius={24} className="ag-edge bg-[var(--ag-surface)] flex items-center pl-1.5 pr-2 h-full w-full overflow-hidden focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-all group/ig relative">
                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#DC5F00]/0 to-[#DC5F00]/0 group-focus-within/ig:from-transparent group-focus-within/ig:via-[#DC5F00]/5 group-focus-within/ig:to-[#DC5F00]/10 transition-colors duration-500 pointer-events-none" />
                <div className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.05)] w-[2.75rem] h-[2.75rem] shrink-0 relative z-10 transition-transform duration-300 group-focus-within/ig:scale-[1.02]">
-                 <Squircle cornerRadius={20} className="w-full h-full bg-[var(--ag-inset)] flex items-center justify-center group-focus-within/ig:bg-white transition-colors duration-300">
+                 <Squircle cornerRadius={20} className="w-full h-full bg-[var(--ag-inset)] flex items-center justify-center group-focus-within/ig:bg-[var(--ag-surface-2)] transition-colors duration-300">
                     <Instagram className="w-[18px] h-[18px] text-pink-600 group-focus-within/ig:scale-110 group-focus-within/ig:text-pink-500 transition-all duration-300" />
                  </Squircle>
                </div>
                <div className="flex items-center flex-1 h-full pl-2.5 relative z-10 min-w-0">
-                 <span className={`text-[15px] font-bold transition-all duration-300 shrink-0 ${instagram ? 'text-[#DC5F00]' : 'text-gray-400 group-focus-within/ig:text-[#DC5F00]/60'}`}>@</span>
+                 <span className={`text-[15px] font-bold transition-all duration-300 shrink-0 ${instagram ? 'text-[#DC5F00]' : 'text-[var(--ag-muted)] group-focus-within/ig:text-[var(--ag-accent)]/60'}`}>@</span>
                  <input 
-                   className="bg-transparent flex-1 h-full pl-0.5 pr-2 text-[14px] font-bold outline-none placeholder:text-gray-500 placeholder:font-normal min-w-0 text-[var(--ag-text)] selection:bg-[#DC5F00]/20" 
+                   className="bg-transparent flex-1 h-full pl-0.5 pr-2 text-[14px] font-bold outline-none placeholder:text-[var(--ag-muted)] placeholder:font-normal min-w-0 text-[var(--ag-text)] selection:bg-[#DC5F00]/20" 
                    placeholder={isIt ? "Il tuo username IG" : "Your IG username"}
                    value={instagram} 
                    onChange={e => handleIgChange(e.target.value)} 

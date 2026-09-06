@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Agorà">
+  <!--
+    Icona dell'applicazione, versione "maskable".
+
+    Diversa da favicon.svg di proposito. La favicon si disegna gli angoli
+    tondi da sé, perché nella scheda del browser nessuno la ritaglia. Qui è
+    il contrario: Android applica la PROPRIA maschera (cerchio, goccia,
+    squircle a seconda del produttore), quindi il fondo deve arrivare fino al
+    bordo — un quadrato con gli angoli già arrotondati verrebbe ritagliato una
+    seconda volta e apparirebbe come un francobollo bianco.
+
+    Per la stessa ragione il marchio sta nell'80% centrale, la "zona sicura"
+    prevista dalla specifica: fuori di lì una maschera circolare taglierebbe
+    le gambe degli archi.
+  -->
+  <rect width="64" height="64" fill="#DC5F00"/>
+  <g fill="none" stroke="#F7F1E6" stroke-linecap="butt" transform="translate(32 32) scale(0.78) translate(-32 -32)">
+    <path d="M14 50V32a18 18 0 0 1 36 0v18" stroke-width="6"/>
+    <path d="M26 50V32a6 6 0 0 1 12 0v18" stroke-width="5.5"/>
+  </g>
+</svg>
