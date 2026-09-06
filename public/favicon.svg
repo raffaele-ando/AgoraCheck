@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Agorà">
+  <!--
+    Marchio Agorà: l'arco del portico, lo stesso segno che sostituisce la O nel
+    logotipo. Volutamente ridotto a DUE archi invece dei tre del logotipo: a
+    16-20px, la dimensione reale di una favicon, tre tratti concentrici si
+    impastano e diventano una macchia. Formato SVG così resta nitido a qualsiasi
+    densità di schermo, al posto del PNG che il documento richiamava e che non
+    esisteva.
+  -->
+  <rect width="64" height="64" rx="15" fill="#DC5F00"/>
+  <g fill="none" stroke="#F7F1E6" stroke-linecap="butt">
+    <path d="M14 50V32a18 18 0 0 1 36 0v18" stroke-width="6"/>
+    <path d="M26 50V32a6 6 0 0 1 12 0v18" stroke-width="5.5"/>
+  </g>
+</svg>

@@ -2,21 +2,35 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="./logo.png" />
+    <!--
+      L'icona puntava a ./logo.png, un file che non esiste in public/: era un
+      404, quindi la scheda mostrava l'icona generica del browser finché (e se)
+      Firestore non restituiva quella caricata dalle impostazioni.
+      Ora c'è un SVG vero, nitido a ogni densità.
+    -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./favicon.svg" />
+    <meta name="theme-color" content="#DC5F00" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Agorà</title>
+    <meta name="description" content="Agorà — la bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />
     <meta property="og:title" content="Agorà" />
-    <meta property="og:description" content="" />
-    <meta property="og:image" content="./logo.png" />
+    <meta property="og:description" content="La bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />
+    <!--
+      Le anteprime social richiedono un indirizzo ASSOLUTO: il precedente
+      ./logo.png era sia relativo sia inesistente, quindi ogni link condiviso
+      appariva senza immagine.
+    -->
+    <meta property="og:image" content="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/main/logo.png" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Agorà" />
-    <meta name="twitter:description" content="" />
-    <meta name="twitter:image" content="./logo.png" />
+    <meta name="twitter:description" content="La bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/raffaele-ando/Logo-vari/main/logo.png" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

@@ -540,7 +540,7 @@ export function ThemeCorkboard() {
                    <div className="flex flex-col gap-2.5 flex-1 min-h-0 justify-start overflow-y-auto pr-1 pb-1">
                       {options.map((opt, i) => (
                         <Squircle key={opt.id} cornerRadius={18} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 h-[3rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] group">
-                         <div className="w-[3rem] text-center font-bold text-gray-400 text-[10px] flex flex-col justify-center items-center h-full border-r border-[var(--ag-surface)] bg-white/20 group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
+                         <div className="w-[3rem] text-center font-bold text-gray-400 text-[10px] flex flex-col justify-center items-center h-full border-r border-[var(--ag-border)] bg-white/20 group-focus-within:bg-[#DC5F00]/10 group-focus-within:text-[#DC5F00] transition-colors">
                            OPZ<br/>{i+1}
                          </div>
                          <input 

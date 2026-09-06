@@ -25,19 +25,39 @@
   --ag-accent-hover: #c95300;
   --ag-on-accent: #ffffff;
   --ag-ring: #dc5f00;
+  --ag-border: #d9cdb8;     /* bordo dei pannelli */
 }
+
+/* -------------------------------------------------------------------------
+   Tema scuro.
+
+   I livelli precedenti erano troppo ravvicinati: fra il fondo (#17130f) e i
+   pannelli (#241d17) il contrasto era di 1,11:1, cioè praticamente nullo.
+   Il risultato era una superficie unica e piatta in cui campi e riquadri non
+   si distinguevano dallo sfondo.
+
+   Alle basse luminanze la sola differenza di chiarezza non basta — la formula
+   del contrasto è dominata dalla costante additiva — quindi si agisce su due
+   fronti insieme, come si fa nelle interfacce scure: passo di luminanza più
+   ampio FRA i livelli e un bordo esplicito che ne disegna i confini.
+
+   La gerarchia resta quella corretta: il pozzetto dei campi è più SCURO del
+   pannello che li contiene, così sembrano incassati e non sovrapposti.
+   ------------------------------------------------------------------------- */
 .dark-theme {
-  --ag-bg: #17130f;
-  --ag-surface: #241d17;
-  --ag-surface-2: #2b231b;
-  --ag-inset: #1e1813;
-  --ag-text: #ede4d6;
+  color-scheme: dark;       /* barre di scorrimento e controlli nativi scuri */
+  --ag-bg: #131110;         /* fondo pagina, near-black caldo */
+  --ag-surface: #241f1a;    /* pannelli, staccati dal fondo */
+  --ag-surface-2: #2f2822;  /* pannello alternativo / stato hover */
+  --ag-inset: #1a1614;      /* campi e pozzetti, incassati nel pannello */
+  --ag-text: #f2eade;
   --ag-text-strong: #ffffff;
-  --ag-muted: #a89a88;
-  --ag-accent: #ff6e00;     /* slightly brighter orange for dark contrast */
-  --ag-accent-hover: #ff8124;
-  --ag-on-accent: #17130f;
-  --ag-ring: #ff6e00;
+  --ag-muted: #b3a594;      /* 6,9:1 sul pannello */
+  --ag-accent: #ff7a1a;     /* arancio più luminoso, leggibile sullo scuro */
+  --ag-accent-hover: #ff9040;
+  --ag-on-accent: #1a1207;  /* testo scuro sull'arancio: 8,1:1 */
+  --ag-ring: #ff7a1a;
+  --ag-border: #3a322b;     /* definisce i bordi dove la luminanza non basta */
 }
 
 @layer utilities {
@@ -61,8 +81,23 @@
   }
 }
 
+/*
+  Il fondo pagina imponeva `dark:bg-gray-900` (#111827), un grigio-BLU freddo,
+  mentre i pannelli usano il marrone caldo della palette: due temperature
+  diverse sulla stessa schermata, visibili nel rimbalzo dello scorrimento su
+  mobile e dietro ogni superficie trasparente. Ora il fondo è quello della
+  palette, così il tema resta coerente.
+*/
 html, body {
-  @apply dark:bg-gray-900 transition-colors duration-300;
+  background-color: var(--ag-bg);
+  color: var(--ag-text);
+  transition: background-color 300ms, color 300ms;
   overflow-x: hidden;
   max-width: 100vw;
+}
+
+/* La selezione del testo riprende l'accento invece del blu di sistema. */
+::selection {
+  background-color: var(--ag-accent);
+  color: var(--ag-on-accent);
 }

@@ -15,6 +15,7 @@ on:
   push:
     branches:
       - claude/algorithm-analysis-improvements-llcj8b
+      - claude/dashboard-issues-improvements-c0j538
       - main
   workflow_dispatch:
 
