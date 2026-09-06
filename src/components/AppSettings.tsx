@@ -146,25 +146,73 @@ export const saveEventWidgetConfigToDB = async (config: EventWidgetConfig) => {
   }
 };
 
+/**
+ * Avvisa prima di abbandonare la pagina con modifiche non salvate.
+ *
+ * In questa scheda convivono riquadri che salvano automaticamente (template)
+ * e riquadri che richiedono un click su "Salva" (link WhatsApp, eventi, link
+ * widget). Nulla segnalava la differenza: si potevano modificare dieci link e
+ * perderli cambiando scheda.
+ */
+function useUnsavedGuard(isDirty: boolean) {
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+}
+
+/** Indicatore riutilizzabile di stato di salvataggio. */
+function DirtyBadge({ isDirty, isSaved }: { isDirty: boolean; isSaved: boolean }) {
+  if (isSaved) {
+    return (
+      <span className="text-[11px] font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
+        Salvato
+      </span>
+    );
+  }
+  if (!isDirty) return null;
+  return (
+    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+      Modifiche non salvate
+    </span>
+  );
+}
+
 function WhatsappSettings() {
   const [links, setLinks] = useState<Record<string, string>>({});
+  const [savedLinks, setSavedLinks] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [newZone, setNewZone] = useState("");
 
   useEffect(() => {
-    loadWhatsappLinksFromDB().then(setLinks);
+    loadWhatsappLinksFromDB().then((data) => {
+      setLinks(data);
+      setSavedLinks(data);
+    });
   }, []);
 
+  const isDirty = JSON.stringify(links) !== JSON.stringify(savedLinks);
+  useUnsavedGuard(isDirty);
+
   const handleSave = async () => {
+    setSaveError("");
     try {
       // Puliamo i link vuoti (tranne _title e _subtitle)
       const cleaned = Object.fromEntries(Object.entries(links).filter(([k, v]) => (k.startsWith("_") ? true : v && v.trim() !== "")));
       await saveWhatsappLinksToDB(cleaned);
       setLinks(cleaned);
+      setSavedLinks(cleaned);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-    } catch (e) {
-      alert("Errore durante il salvataggio.");
+    } catch (e: any) {
+      setSaveError("Salvataggio non riuscito: " + (e?.message || "errore sconosciuto"));
     }
   };
 
@@ -187,6 +235,8 @@ function WhatsappSettings() {
           <MessageCircle className="w-5 h-5 text-green-500" />
           Gruppi WhatsApp per Zona
         </h3>
+        <div className="flex items-center gap-3">
+        <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
         <button
           onClick={handleSave}
           className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20" }`}
@@ -194,7 +244,13 @@ function WhatsappSettings() {
           <Save className="w-4 h-4" />
           {isSaved ? "Salvato!" : "Salva Link"}
         </button>
+        </div>
       </div>
+      {saveError && (
+        <div className="mb-4 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-3 rounded-lg border border-red-100 dark:border-red-800">
+          {saveError}
+        </div>
+      )}
       <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed dark:text-gray-400">
         Associa il link di un gruppo WhatsApp a ciascuna zona (città o sotto-zona).
         Puoi usare "default" se non c'è una zona specifica.
@@ -260,25 +316,30 @@ function WhatsappSettings() {
 
 function EventWidgetSettings() {
   const [config, setConfig] = useState<EventWidgetConfig>(DEFAULT_EVENT_WIDGET_CONFIG);
+  const [savedConfig, setSavedConfig] = useState<EventWidgetConfig>(DEFAULT_EVENT_WIDGET_CONFIG);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     loadEventWidgetConfigFromDB().then(data => {
-      if (data && data.events) {
-        setConfig(data);
-      } else {
-        setConfig({ events: [] });
-      }
+      const next = data && data.events ? data : { events: [] };
+      setConfig(next);
+      setSavedConfig(next);
     });
   }, []);
 
+  const isDirty = JSON.stringify(config) !== JSON.stringify(savedConfig);
+  useUnsavedGuard(isDirty);
+
   const handleSave = async () => {
+    setSaveError("");
     try {
       await saveEventWidgetConfigToDB(config);
+      setSavedConfig(config);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-    } catch (e) {
-      alert("Errore durante il salvataggio.");
+    } catch (e: any) {
+      setSaveError("Salvataggio non riuscito: " + (e?.message || "errore sconosciuto"));
     }
   };
 
@@ -323,6 +384,8 @@ function EventWidgetSettings() {
           <span className="text-xl">🪩</span>
           Widget Eventi Multisala
         </h3>
+        <div className="flex items-center gap-3">
+        <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
         <button
           onClick={handleSave}
           className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-[#DC5F00] hover:bg-[#c95300] text-white shadow-md shadow-[#DC5F00]/20" }`}
@@ -330,7 +393,13 @@ function EventWidgetSettings() {
           <Save className="w-4 h-4" />
           {isSaved ? "Salvato!" : "Salva Eventi"}
         </button>
+        </div>
       </div>
+      {saveError && (
+        <div className="mb-4 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-3 rounded-lg border border-red-100 dark:border-red-800">
+          {saveError}
+        </div>
+      )}
 
       <div className="space-y-6">
         {config.events.map((ev, index) => (
@@ -391,7 +460,9 @@ function EventWidgetSettings() {
 
 export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSuperAdmin?: boolean; mockMode?: boolean }) {
   const [linkConfig, setLinkConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
+  const [savedLinkConfig, setSavedLinkConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);
   const [isSaved, setIsSaved] = useState(false);
+  const [linkSaveError, setLinkSaveError] = useState("");
   
   // Admins state
   const [admins, setAdmins] = useState<string[]>([]);
@@ -411,6 +482,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
     try {
       const config = await loadLinkConfigFromDB();
       setLinkConfig(config);
+      setSavedLinkConfig(config);
       
       if (isSuperAdmin) {
         try {
@@ -426,13 +498,21 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
     }
   };
 
+  const isLinkDirty =
+    JSON.stringify(linkConfig) !== JSON.stringify(savedLinkConfig);
+  useUnsavedGuard(isLinkDirty);
+
   const handleSaveLink = async () => {
+    setLinkSaveError("");
     try {
       await saveLinkConfigToDB(linkConfig);
+      setSavedLinkConfig(linkConfig);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-    } catch (e) {
-      alert("Errore durante il salvataggio.");
+    } catch (e: any) {
+      setLinkSaveError(
+        "Salvataggio non riuscito: " + (e?.message || "errore sconosciuto"),
+      );
     }
   };
 
@@ -441,8 +521,10 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
     setAdminError("");
     const email = newAdmin.trim().toLowerCase();
     
-    if (!email || !email.includes("@")) {
-      setAdminError("Inserisci un'email valida.");
+    // La verifica precedente si limitava a includes("@"), quindi accettava
+    // stringhe come "a@b" o "@" che non possono corrispondere ad alcun account.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setAdminError("Inserisci un indirizzo email valido.");
       return;
     }
     
@@ -460,13 +542,27 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
     }
   };
 
+  const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
+
   const handleRemoveAdmin = async (emailToRemove: string) => {
-    if (!confirm(`Sei sicuro di voler rimuovere l'accesso a ${emailToRemove}?`)) return;
+    // Conferma a due tempi nella riga stessa, invece di un confirm() bloccante.
+    if (pendingRemoval !== emailToRemove) {
+      setPendingRemoval(emailToRemove);
+      setTimeout(
+        () => setPendingRemoval((cur) => (cur === emailToRemove ? null : cur)),
+        4000,
+      );
+      return;
+    }
+    setPendingRemoval(null);
+    setAdminError("");
     try {
       await deleteDoc(doc(db, "admins", emailToRemove));
       setAdmins(admins.filter(a => a !== emailToRemove));
-    } catch (e) {
-      alert("Errore durante la rimozione dell'amministratore.");
+    } catch (e: any) {
+      setAdminError(
+        "Rimozione non riuscita: " + (e?.message || "errore sconosciuto"),
+      );
     }
   };
 
@@ -498,10 +594,17 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
               />
             </div>
             
-            <div className="pt-2">
+            {linkSaveError && (
+              <div className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-3 rounded-lg border border-red-100 dark:border-red-800">
+                {linkSaveError}
+              </div>
+            )}
+
+            <div className="pt-2 flex items-center gap-3">
+              <DirtyBadge isDirty={isLinkDirty} isSaved={isSaved} />
               <button
                 onClick={handleSaveLink}
-                className={`flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20" }`}
+                className={`flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20" }`}
               >
                 <Save className="w-4 h-4" />
                 {isSaved ? "Salvato!" : "Salva Testo"}
@@ -572,10 +675,16 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                       </span>
                       <button
                         onClick={() => handleRemoveAdmin(adminEmail)}
-                        className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                        title="Rimuovi Accesso"
+                        className={`shrink-0 transition-colors text-xs font-bold flex items-center gap-1 ${
+                          pendingRemoval === adminEmail
+                            ? "text-red-600"
+                            : "text-gray-400 hover:text-red-500"
+                        }`}
+                        title="Rimuovi accesso"
+                        aria-label={`Rimuovi accesso a ${adminEmail}`}
                       >
                         <Trash2 className="w-4 h-4" />
+                        {pendingRemoval === adminEmail && <span>Conferma</span>}
                       </button>
                     </div>
                   ))}

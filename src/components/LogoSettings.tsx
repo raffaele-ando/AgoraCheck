@@ -31,7 +31,19 @@ export function LogoSettings() {
   const [saving, setSaving] = useState(false);
   
   const [scales, setScales] = useState({ zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 });
+  const [savedScales, setSavedScales] = useState({ zoneScale: 1, agoraScale: 1, customLogoScale: 1, spacing: 8 });
   const [savingScales, setSavingScales] = useState(false);
+  // Messaggi inline al posto degli alert(), che bloccano il thread e non
+  // seguono il tema della pagina.
+  const [statusMsg, setStatusMsg] = useState<{ text: string; kind: "ok" | "error" } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  const scalesDirty = JSON.stringify(scales) !== JSON.stringify(savedScales);
+
+  const flash = (text: string, kind: "ok" | "error") => {
+    setStatusMsg({ text, kind });
+    setTimeout(() => setStatusMsg(null), kind === "error" ? 6000 : 2500);
+  };
 
   const loadLogos = async () => {
     setLoading(true);
@@ -61,12 +73,14 @@ export function LogoSettings() {
       const scalesSnap = await getDoc(doc(db, "settings", "logo_scales"));
       if (scalesSnap.exists()) {
         const sc = scalesSnap.data();
-        setScales({
+        const loaded = {
            zoneScale: sc.zoneScale ?? 1,
            agoraScale: sc.agoraScale ?? 1,
            customLogoScale: sc.customLogoScale ?? 1,
            spacing: sc.spacing ?? 8
-        });
+        };
+        setScales(loaded);
+        setSavedScales(loaded);
       }
     } catch (e) {
       console.error(e);
@@ -84,11 +98,13 @@ export function LogoSettings() {
     try {
       await setDoc(doc(db, "settings", "logo_scales"), scales);
       updateLogoScalesCache(scales);
+      setSavedScales(scales);
       setSavingScales(false);
-    } catch(err) {
+      flash("Grandezze salvate", "ok");
+    } catch(err: any) {
       console.error(err);
       setSavingScales(false);
-      alert("Errore nel salvataggio delle grandezze");
+      flash("Errore nel salvataggio delle grandezze: " + (err?.message || ""), "error");
     }
   };
 
@@ -97,7 +113,7 @@ export function LogoSettings() {
     if (!file) return;
 
     if (!selectedSlot) {
-      alert("Seleziona prima il tipo di logo da caricare.");
+      flash("Seleziona prima il tipo di logo da caricare.", "error");
       return;
     }
 
@@ -135,7 +151,7 @@ export function LogoSettings() {
         loadLogos();
       } catch (err: any) {
         console.error(err);
-        alert("Errore durante il salvataggio: " + err.message);
+        flash("Errore durante il salvataggio: " + err.message, "error");
       } finally {
         setSaving(false);
       }
@@ -144,14 +160,20 @@ export function LogoSettings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Sei sicuro di voler eliminare questo logo?")) return;
+    if (pendingDelete !== id) {
+      setPendingDelete(id);
+      setTimeout(() => setPendingDelete((cur) => (cur === id ? null : cur)), 4000);
+      return;
+    }
+    setPendingDelete(null);
     try {
       await deleteDoc(doc(db, "logos", id));
       clearLogoCache();
       loadLogos();
+      flash("Logo eliminato", "ok");
     } catch (e) {
       console.error(e);
-      alert("Errore durante l'eliminazione.");
+      flash("Errore durante l'eliminazione del logo.", "error");
     }
   };
 
@@ -170,13 +192,34 @@ export function LogoSettings() {
         Seleziona quale logo o icona vuoi caricare. Le modifiche verranno applicate automaticamente su tutta la piattaforma (es. aggiornamento favicon).
       </p>
 
+      {statusMsg && (
+        <div
+          role="status"
+          className={`mb-4 p-3 rounded-lg border text-xs font-bold ${
+            statusMsg.kind === "ok"
+              ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300"
+              : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+          }`}
+        >
+          {statusMsg.text}
+        </div>
+      )}
+
       {/* Impostazioni scala loghi */}
       <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/30 rounded-xl space-y-4">
         <div className="flex items-center justify-between">
             <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Grandezze Loghi/Scritte (Bacheca)</h4>
-            <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors">
-               {savingScales ? "Salvataggio..." : "Salva Grandezze"}
-            </button>
+            <div className="flex items-center gap-2">
+              {scalesDirty && !savingScales && (
+                <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Non salvate
+                </span>
+              )}
+              <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-xs font-bold rounded-lg transition-colors">
+                 {savingScales ? "Salvataggio..." : "Salva Grandezze"}
+              </button>
+            </div>
         </div>
         
         {/* Anteprima in tempo reale */}
@@ -285,10 +328,16 @@ export function LogoSettings() {
                 <span className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate pr-2" title={logo.name}>{logo.name}</span>
                 <button
                   onClick={() => handleDelete(logo.id)}
-                  className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                  title="Elimina"
+                  className={`transition-colors p-1 text-xs font-bold flex items-center gap-1 shrink-0 ${
+                    pendingDelete === logo.id
+                      ? "text-red-600"
+                      : "text-gray-400 hover:text-red-500"
+                  }`}
+                  title="Elimina logo"
+                  aria-label={`Elimina ${logo.name}`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
+                  {pendingDelete === logo.id && <span>Conferma</span>}
                 </button>
               </div>
             </div>
