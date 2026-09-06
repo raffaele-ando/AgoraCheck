@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { parseUserAgent } from "../utils/uaParser";
-import { computeDeviceProfileId } from "../utils/profiling";
+import {
+  computeDeviceProfileId,
+  extractAllDeviceTokens,
+  extractDeviceTraits,
+  areDeviceTraitsCompatible,
+  getProfileIdConfidence,
+  type DeviceTraits,
+} from "../utils/profiling";
 import { motion } from "motion/react";
 import {
   collection,
@@ -110,6 +117,33 @@ interface ProfileRecord {
   manualMergeProfileId?: string;
   ignoredFromAnalytics?: boolean;
 }
+/**
+ * Iniziali da mostrare dentro il cerchio colorato del profilo.
+ *
+ * Il colore da solo non basta a distinguere i profili: è un hash, quindi due
+ * profili possono avere tinte quasi identiche, e chi ha una ridotta percezione
+ * dei colori perde del tutto l'informazione. Le iniziali restano leggibili in
+ * ogni caso; l'icona generica resta come ripiego per i profili senza nome.
+ */
+const getProfileInitials = (name?: string): string | null => {
+  const clean = (name || "").trim();
+  if (
+    !clean ||
+    clean === "Sconosciuto" ||
+    clean === "Profilo" ||
+    clean === "Profilo Aggregato" ||
+    clean.startsWith("Non identificato")
+  ) {
+    return null;
+  }
+  return clean
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+};
+
 const computeDeviceProfileColor = (profileId: string) => {
   let hash = 0;
   for (let i = 0; i < profileId.length; i++) {
@@ -118,6 +152,14 @@ const computeDeviceProfileColor = (profileId: string) => {
   const cColor = (hash & 0x00ffffff).toString(16).toUpperCase();
   return "#" + "00000".substring(0, 6 - cColor.length) + cColor;
 };
+
+/** Documenti caricati all'apertura: copre abbondantemente le prime pagine. */
+const MESSAGES_BASE_BUFFER = 1000;
+/**
+ * Tetto assoluto di documenti sottoscritti. Le schede che analizzano l'intero
+ * storico si fermano qui invece di scaricare la collezione senza limite.
+ */
+const MESSAGES_HARD_CAP = 8000;
 
 export default function Dashboard() {
   const [isAdminTrackingIgnored, setIsAdminTrackingIgnored] = useState(
@@ -138,6 +180,69 @@ export default function Dashboard() {
   const [isStuckLoading, setIsStuckLoading] = useState(false);
   const [snapshotsError, setSnapshotsError] = useState<string | null>(null);
 
+  // --- Notifiche non bloccanti -------------------------------------------
+  // Sostituiscono gli alert(): non bloccano il thread, non sono tematizzabili
+  // e soprattutto permettono di riportare l'esito reale delle operazioni di
+  // massa (che possono riuscire solo in parte).
+  type Toast = { id: number; text: string; kind: "ok" | "error" | "info" };
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const toastSeqRef = useRef(0);
+  const notify = useCallback(
+    (text: string, kind: Toast["kind"] = "info") => {
+      const id = ++toastSeqRef.current;
+      setToasts((prev) => [...prev.slice(-3), { id, text, kind }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, kind === "error" ? 7000 : 3500);
+    },
+    [],
+  );
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  /**
+   * Esegue N scritture rispettando il limite di 500 operazioni per batch
+   * imposto da Firestore, e restituisce l'esito reale invece di limitarsi a un
+   * console.error: le operazioni di massa possono riuscire solo in parte e
+   * l'operatore deve saperlo.
+   */
+  const commitOperations = useCallback(
+    async (ops: ((b: ReturnType<typeof writeBatch>) => void)[]) => {
+      const BATCH_LIMIT = 500;
+      let done = 0;
+      let failed = 0;
+      for (let i = 0; i < ops.length; i += BATCH_LIMIT) {
+        const chunk = ops.slice(i, i + BATCH_LIMIT);
+        const batchOp = writeBatch(db);
+        for (const apply of chunk) apply(batchOp);
+        try {
+          await batchOp.commit();
+          done += chunk.length;
+        } catch (e) {
+          console.error("Batch commit error:", e);
+          failed += chunk.length;
+        }
+      }
+      return { done, failed, total: ops.length };
+    },
+    [],
+  );
+
+  const reportBulkOutcome = useCallback(
+    (res: { done: number; failed: number; total: number }, label: string) => {
+      if (res.total === 0) return;
+      if (res.failed === 0) {
+        notify(`${res.done} ${label}`, "ok");
+      } else if (res.done === 0) {
+        notify(`Operazione non riuscita su ${res.failed} elementi`, "error");
+      } else {
+        notify(`${res.done} ${label}, ${res.failed} non riusciti`, "error");
+      }
+    },
+    [notify],
+  );
+
   useEffect(() => {
     let timeout = setTimeout(() => {
       if (loading || !profilesLoaded) {
@@ -147,10 +252,36 @@ export default function Dashboard() {
     return () => clearTimeout(timeout);
   }, [loading, profilesLoaded]);
   const [messages, setMessages] = useState<Message[]>([]);
+  // Elenco zone DEDUPLICATO: due città possono avere una zona con lo stesso
+  // nome (es. "Centro"), il che produceva chiavi React duplicate e voci doppie
+  // nel menu, con un filtro che poi confondeva le due città.
+  const zoneOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          Object.entries(LOCATIONS).flatMap(([city, areas]) => [
+            city,
+            ...areas.filter((a) => a !== city),
+          ]),
+        ),
+      ),
+    [],
+  );
+  const [fetchLimit, setFetchLimit] = useState(MESSAGES_BASE_BUFFER);
+  // true quando il tetto è stato raggiunto: lo storico potrebbe essere parziale
+  // e va detto all'operatore invece di mostrare conteggi falsamente completi.
+  const [historyTruncated, setHistoryTruncated] = useState(false);
   const [carouselValidatedMessages, setCarouselValidatedMessages] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  // Il numero di elementi per pagina è indipendente per ciascuna scheda:
+  // cambiarlo nei Messaggi non deve riconfigurare anche i Profili.
+  const [pageSizeByTab, setPageSizeByTab] = useState<Record<string, number>>({
+    messages: 20,
+    profiles: 20,
+  });
+  // Ricerca libera sui messaggi (testo, @instagram, risoluzione, zona).
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [exportingMessage, setExportingMessage] = useState<Message | null>(null);
@@ -174,6 +305,13 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<
     "messages" | "profiles" | "analytics" | "story_template" | "settings" | "carousel"
   >("messages");
+  const pageSize = pageSizeByTab[activeTab] ?? 20;
+  const setPageSize = useCallback(
+    (size: number) => {
+      setPageSizeByTab((prev) => ({ ...prev, [activeTab]: size }));
+    },
+    [activeTab],
+  );
   const [isDarkMode, setIsDarkMode] = useState(
     () => localStorage.getItem("theme") === "dark",
   );
@@ -206,20 +344,26 @@ export default function Dashboard() {
         area: locationInputArea.trim() || deleteField(),
       });
       setEditingMessageId(null);
+      notify("Zona salvata", "ok");
     } catch (e: any) {
       console.error(e);
-      alert("Errore durante il salvataggio della zona: " + e.message);
+      notify("Errore durante il salvataggio della zona: " + e.message, "error");
     }
   };
   const saveMessageResolution = async (msgId: string) => {
     try {
       await updateDoc(doc(db, "messages", msgId), {
-        resolution: resolutionInput.trim() || null,
+        // deleteField() invece di null: svuotare il campo deve rimuoverlo dal
+        // documento, come già fa il salvataggio della zona. Con `null` i
+        // messaggi "senza risoluzione" restavano indistinguibili da quelli mai
+        // compilati e il campo sporcava ogni documento.
+        resolution: resolutionInput.trim() || deleteField(),
       });
       setEditingMessageId(null);
+      notify("Risoluzione salvata", "ok");
     } catch (e: any) {
       console.error(e);
-      alert("Errore salvataggio risoluzione: " + e.message);
+      notify("Errore salvataggio risoluzione: " + e.message, "error");
     }
   };
   useEffect(() => {
@@ -334,10 +478,10 @@ export default function Dashboard() {
           },
         };
         console.error("Firestore Error: ", JSON.stringify(errInfo));
-        alert("Errore salvataggio profilo");
+        notify("Errore nel salvataggio del profilo", "error");
       } else {
         console.error(err);
-        alert("Errore salvataggio profilo");
+        notify("Errore nel salvataggio del profilo", "error");
       }
     }
   };
@@ -539,10 +683,37 @@ export default function Dashboard() {
     const igInstallIdGroups = new Map<string, Set<string>>();
     const ipGroups = new Map<string, Set<string>>();
 
+    // Every persistent token ever co-observed on a message, per profile. Two
+    // profiles sharing one of these are the same device with certainty.
+    const tokenGroups = new Map<string, Set<string>>();
+    // Immutable physical traits per profile — used as a NEGATIVE constraint.
+    const traitsByPid = new Map<string, DeviceTraits>();
+
     for (const m of messages) {
        const pid = getDeviceProfile(m);
        if (profiles[pid]?.isolateFromAutoGrouping) continue;
        const adv = m.parsedAdvanced || null;
+
+       // --- deterministic evidence: co-observed persistent tokens ------------
+       for (const tok of extractAllDeviceTokens(adv)) {
+         if (!tokenGroups.has(tok)) tokenGroups.set(tok, new Set());
+         tokenGroups.get(tok)!.add(pid);
+       }
+
+       // --- immutable traits (also available without advancedInfo) ----------
+       const traits = extractDeviceTraits(adv, m.deviceInfo);
+       const knownTraits = traitsByPid.get(pid);
+       if (!knownTraits) {
+         traitsByPid.set(pid, traits);
+       } else {
+         // Keep the most specific view we have seen for this profile.
+         traitsByPid.set(pid, {
+           platform:
+             knownTraits.platform !== "unknown" ? knownTraits.platform : traits.platform,
+           model: knownTraits.model || traits.model,
+         });
+       }
+
        if (adv) {
          const tt = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken;
          if (tt) {
@@ -596,20 +767,35 @@ export default function Dashboard() {
          const isAppleDevice = gpu.toLowerCase().includes("apple")
            || ua.includes("iPhone") || ua.includes("iPad") || ua.includes("Mac OS");
 
-         if (!deviceFootprints.has(pid)) {
-           deviceFootprints.set(pid, {
-             canvas, audio, gpu, screen, cores, rects, math,
-             hwSeed, hwSeedExtended,
-             // `seed` is the field the report/UI reads (previously undefined).
-             seed: tt || hwSeedExtended || "-",
-             token: tt || "",
-             pixelRatio, colorDepth, webglVendor, maxTexture,
-             webglScene, fontMetrics, timerRes,
-             igMeta: igMetaRaw,
-             userAgent: ua,
-             vToken: tt || "",
-             isApple: isAppleDevice,
-           });
+         // Footprint of the profile. Messages arrive newest-first, so the first
+         // one seen wins; later (older) messages only FILL IN fields the newer
+         // ones left empty, instead of being discarded outright as before —
+         // otherwise one message with a blocked signal hid data we do have.
+         const incomingFootprint: Record<string, any> = {
+           canvas, audio, gpu, screen, cores, rects, math,
+           hwSeed, hwSeedExtended,
+           // `seed` is the field the report/UI reads (previously undefined).
+           seed: tt || hwSeedExtended || "-",
+           token: tt || "",
+           pixelRatio, colorDepth, webglVendor, maxTexture,
+           webglScene, fontMetrics, timerRes,
+           igMeta: igMetaRaw,
+           userAgent: ua,
+           vToken: tt || "",
+           isApple: isAppleDevice,
+         };
+         const existingFootprint = deviceFootprints.get(pid);
+         if (!existingFootprint) {
+           deviceFootprints.set(pid, incomingFootprint);
+         } else {
+           for (const [k, v] of Object.entries(incomingFootprint)) {
+             const cur = existingFootprint[k];
+             const curEmpty =
+               cur === undefined || cur === null || cur === "" || cur === "-";
+             if (curEmpty && v !== undefined && v !== null && v !== "") {
+               existingFootprint[k] = v;
+             }
+           }
          }
 
          if (!isAppleDevice) {
@@ -665,37 +851,88 @@ export default function Dashboard() {
     }
 
     const CONF = {
+      TOKEN_UNION:  1.00,  // token persistente condiviso: deterministico
       MANUAL:       1.00,  // merge manuale: definitivo
       VTOKEN:       0.98,  // stesso session token: quasi definitivo
-      HW_ANDROID:   0.93,  // seed HW Android identico: molto forte
       IG_TAG:       0.88,  // stesso handle Instagram: forte
-      IG_INSTALL:   0.72,  // stesso IG Install ID: medio-forte
-      HW_IOS:       0.58,  // seed HW iOS: medio (più falsi positivi)
-      IP_PUBLIC:    0.35,  // stesso IP pubblico: debole
+      // --- segnali CORROBORANTI: non collegano mai da soli (vedi sotto) ---
+      HW_ANDROID:   0.45,
+      IG_INSTALL:   0.35,
+      HW_IOS:       0.20,
+      IP_PUBLIC:    0.12,
     } as const;
 
     const CONF_THRESHOLD = 0.55;
-    const edgeConfidence = new Map<string, number>();
+    // Una coppia sostenuta SOLO da segnali corroboranti non viene mai unita in
+    // automatico: viene proposta all'operatore (vedi mergeSuggestions).
+    const SUGGEST_THRESHOLD = 0.40;
 
-    const addEdge = (u: string, v: string, reason: string, confidence: number) => {
+    const edgeConfidence = new Map<string, number>();
+    // key -> (reasonKey -> confidence). Un Map interno perché lo stesso segnale
+    // osservato N volte è UNA sola prova, non N prove indipendenti.
+    const edgeSignals = new Map<
+      string,
+      Map<string, { conf: number; label: string; linking: boolean }>
+    >();
+
+    /**
+     * Combinazione noisy-OR di prove indipendenti:  P = 1 - Π(1 - pᵢ)
+     *
+     * Sostituisce il precedente `max`, che buttava via ogni prova successiva
+     * alla più forte: due indizi da 0.45 restavano 0.45 invece di valere 0.70.
+     */
+    const combineConfidence = (
+      sigs: Map<string, { conf: number; label: string; linking: boolean }>,
+    ) => {
+      let inverse = 1;
+      for (const s of sigs.values()) inverse *= 1 - s.conf;
+      return 1 - inverse;
+    };
+
+    /**
+     * Registra una prova su una coppia di profili.
+     *
+     * `linking`  : la prova può, da sola, giustificare l'unione (token, merge
+     *              manuale, handle Instagram).
+     * `deviceLevel`: la prova afferma «stesso dispositivo fisico», quindi è
+     *              soggetta al VINCOLO NEGATIVO — viene scartata se i due
+     *              profili hanno tratti hardware incompatibili (un iPhone14,5
+     *              non può essere anche un SM-G991B). Le prove a livello di
+     *              PERSONA (handle, merge manuale) non lo applicano: una persona
+     *              possiede legittimamente sia un iPhone sia un Android.
+     */
+    const addSignal = (
+      u: string,
+      v: string,
+      reasonKey: string,
+      label: string,
+      confidence: number,
+      opts: { linking: boolean; deviceLevel: boolean },
+    ) => {
+      if (u === v) return;
       if (profiles[u]?.isolateFromAutoGrouping || profiles[v]?.isolateFromAutoGrouping) return;
       if (!adj.has(u) || !adj.has(v)) return;
-      if (confidence < CONF_THRESHOLD) return;
+      if (confidence <= 0) return;
+
+      if (opts.deviceLevel) {
+        const ta = traitsByPid.get(u);
+        const tb = traitsByPid.get(v);
+        if (ta && tb && !areDeviceTraitsCompatible(ta, tb)) return;
+      }
+
       const key = [u, v].sort().join("|");
-      if (!edgeReasons.has(key)) edgeReasons.set(key, []);
-      const label = reason + " (conf:" + Math.round(confidence * 100) + "%)";
-      if (!edgeReasons.get(key)!.includes(label)) edgeReasons.get(key)!.push(label);
-      const prev = edgeConfidence.get(key) ?? 0;
-      if (confidence > prev) {
-        edgeConfidence.set(key, confidence);
-        adj.get(u)!.add(v);
-        adj.get(v)!.add(u);
+      if (!edgeSignals.has(key)) edgeSignals.set(key, new Map());
+      const sigs = edgeSignals.get(key)!;
+      const prev = sigs.get(reasonKey);
+      if (!prev || confidence > prev.conf) {
+        sigs.set(reasonKey, {
+          conf: confidence,
+          label: label + " (conf:" + Math.round(confidence * 100) + "%)",
+          linking: opts.linking,
+        });
       }
     };
 
-    // Retrocompatibilità con eventuali chiamate esistenti a addEdgeReason
-    const addEdgeReason = (u: string, v: string, reason: string) =>
-      addEdge(u, v, reason, CONF.IG_TAG);
 
     for (const n of nodes) {
       const prof = profiles[n];
@@ -714,39 +951,149 @@ export default function Dashboard() {
       if (distinct.length > CONTESTED_HANDLE_MAX) continue;
       for (let i = 0; i < distinct.length; i++) {
         for (let j = i + 1; j < distinct.length; j++) {
-          addEdge(distinct[i], distinct[j], "Stesso tag Instagram (" + tag + ")", CONF.IG_TAG);
+          addSignal(
+            distinct[i],
+            distinct[j],
+            "ig_tag:" + tag,
+            "Stesso tag Instagram (" + tag + ")",
+            CONF.IG_TAG,
+            // PERSON-level: nessun vincolo negativo, una persona può usare lo
+            // stesso handle da un iPhone e da un Android.
+            { linking: true, deviceLevel: false },
+          );
         }
       }
     }
+
+    // -----------------------------------------------------------------------
+    // PROVA DETERMINISTICA: token persistenti condivisi.
+    //
+    // resolveIdentity fotografa OGNI backend prima di riseminarli tutti con il
+    // token primario, quindi un messaggio inviato durante una transizione
+    // (compare il cookie di server mentre localStorage ha ancora il vecchio id,
+    // una cancellazione parziale ITP, un handoff fra browser) trasporta sia il
+    // valore vecchio sia quello nuovo. Due profili che condividono uno di questi
+    // valori sono lo stesso dispositivo: nessuna probabilità, nessun
+    // fingerprint. È ciò che ricongiunge un dispositivo che altrimenti si
+    // spezzerebbe in due profili quando il suo token primario cambia.
+    // -----------------------------------------------------------------------
+    for (const [tok, pidsSet] of tokenGroups.entries()) {
+      const pids = Array.from(pidsSet);
+      if (pids.length < 2) continue;
+      for (let i = 0; i < pids.length; i++) {
+        for (let j = i + 1; j < pids.length; j++) {
+          addSignal(
+            pids[i],
+            pids[j],
+            "token:" + tok,
+            "Token di dispositivo condiviso (…" + tok.slice(-6) + ")",
+            CONF.TOKEN_UNION,
+            { linking: true, deviceLevel: false },
+          );
+        }
+      }
+    }
+
     for (const [, pidsSet] of vTokenGroups.entries()) {
       const pids = Array.from(pidsSet);
       for (let i = 0; i < pids.length; i++)
         for (let j = i + 1; j < pids.length; j++)
-          addEdge(pids[i], pids[j], "Stesso token di sessione (vToken)", CONF.VTOKEN);
+          addSignal(
+            pids[i],
+            pids[j],
+            "vtoken",
+            "Stesso token di sessione (vToken)",
+            CONF.VTOKEN,
+            { linking: true, deviceLevel: true },
+          );
     }
-    // ---------------------------------------------------------------------
-    // DEVICE-FINGERPRINT edges are intentionally DISABLED.
-    //
-    // The device identity is now the persistent token (see profiling.ts): two
-    // messages from the same device already share the same profile id, so these
-    // groups are redundant for real linking. Worse, keeping them as positive
-    // edges is exactly what merged DIFFERENT people who happen to own the same
-    // phone model (identical iOS canvas/audio, identical Android hw seed) or
-    // share the same IG app build — the mass false-positive problem.
-    //
-    // hwGroups / hwGroupsiOS / igInstallIdGroups / ipGroups remain COMPUTED
-    // (for display in the technical panels and as future NEGATIVE constraints)
-    // but never create a link. Person-level linking now comes only from the
-    // Instagram handle (below) and manual merges.
-    void hwGroups; void hwGroupsiOS; void igInstallIdGroups; void ipGroups;
 
-    // Merge manuale aggiornato — usa addEdge con confidenza massima
+    // -----------------------------------------------------------------------
+    // SEGNALI CORROBORANTI (fingerprint hardware, IG install id, IP pubblico).
+    //
+    // Non creano MAI un collegamento da soli: è esattamente ciò che in passato
+    // fondeva persone diverse che possiedono lo stesso modello di telefono
+    // (canvas/audio identici su iOS, seed hardware identico su Android) o la
+    // stessa build dell'app Instagram.
+    //
+    // Ora vengono registrati come prove deboli: alzano la confidenza di una
+    // coppia già sostenuta da una prova vera e, quando da soli non bastano,
+    // diventano un SUGGERIMENTO DI UNIONE mostrato all'operatore invece di una
+    // fusione silenziosa. Sono inoltre soggetti al vincolo negativo, quindi non
+    // possono nemmeno essere proposti fra dispositivi fisicamente incompatibili.
+    // -----------------------------------------------------------------------
+    const addCorroborating = (
+      groups: Map<string, Set<string>>,
+      reasonPrefix: string,
+      label: (k: string) => string,
+      confidence: number,
+    ) => {
+      for (const [k, pidsSet] of groups.entries()) {
+        const pids = Array.from(pidsSet);
+        if (pids.length < 2) continue;
+        // Un valore condiviso da moltissimi profili non è un indizio di
+        // identità (es. NAT di ateneo, build dell'app diffusa): è rumore.
+        if (pids.length > 8) continue;
+        for (let i = 0; i < pids.length; i++) {
+          for (let j = i + 1; j < pids.length; j++) {
+            addSignal(pids[i], pids[j], reasonPrefix, label(k), confidence, {
+              linking: false,
+              deviceLevel: true,
+            });
+          }
+        }
+      }
+    };
+
+    addCorroborating(hwGroups, "hw_android", () => "Seed hardware identico (Android/Desktop)", CONF.HW_ANDROID);
+    addCorroborating(hwGroupsiOS, "hw_ios", () => "Seed hardware identico (iOS)", CONF.HW_IOS);
+    addCorroborating(igInstallIdGroups, "ig_install", () => "Stesso Instagram Install ID", CONF.IG_INSTALL);
+    addCorroborating(ipGroups, "ip_public", (ip) => "Stesso IP pubblico (" + ip + ")", CONF.IP_PUBLIC);
+
+    // Merge manuale — prova a livello di PERSONA: l'operatore ha già deciso,
+    // quindi nessun vincolo negativo può annullarla.
     for (const n of nodes) {
       const prof = profiles[n];
       if (prof?.manualMergeProfileId && adj.has(prof.manualMergeProfileId)) {
-        addEdge(n, prof.manualMergeProfileId, "Merge manuale", CONF.MANUAL);
+        addSignal(n, prof.manualMergeProfileId, "manual", "Merge manuale", CONF.MANUAL, {
+          linking: true,
+          deviceLevel: false,
+        });
       }
     }
+
+    // -----------------------------------------------------------------------
+    // MATERIALIZZAZIONE: dalle prove agli archi.
+    //
+    // Una coppia diventa un arco solo se possiede almeno una prova capace di
+    // collegare da sola E la confidenza combinata supera la soglia. Le coppie
+    // sostenute unicamente da segnali corroboranti non vengono fuse: diventano
+    // suggerimenti per l'operatore, che decide con il merge manuale.
+    // -----------------------------------------------------------------------
+    const suggestedPairs: {
+      a: string;
+      b: string;
+      confidence: number;
+      reasons: string[];
+    }[] = [];
+
+    for (const [key, sigs] of edgeSignals.entries()) {
+      const [u, v] = key.split("|");
+      if (!adj.has(u) || !adj.has(v)) continue;
+      const combined = combineConfidence(sigs);
+      const hasLinkingProof = Array.from(sigs.values()).some((s) => s.linking);
+      const reasons = Array.from(sigs.values()).map((s) => s.label);
+
+      if (hasLinkingProof && combined >= CONF_THRESHOLD) {
+        edgeConfidence.set(key, combined);
+        edgeReasons.set(key, reasons);
+        adj.get(u)!.add(v);
+        adj.get(v)!.add(u);
+      } else if (combined >= SUGGEST_THRESHOLD) {
+        suggestedPairs.push({ a: u, b: v, confidence: combined, reasons });
+      }
+    }
+
     const visited = new Set<string>();
     const components: string[][] = [];
     for (const n of nodes) {
@@ -770,8 +1117,36 @@ export default function Dashboard() {
         components.push(comp);
       }
     }
+
+    // Suggerimenti di unione, riportati dal livello profilo a quello macro.
+    const compIndexByPid = new Map<string, number>();
+    components.forEach((comp, idx) =>
+      comp.forEach((p) => compIndexByPid.set(p, idx)),
+    );
+    const macroIdByIndex = components.map((comp) => [...comp].sort().join("_"));
+    const suggestionsByComp = new Map<
+      number,
+      Map<number, { confidence: number; reasons: string[] }>
+    >();
+    for (const s of suggestedPairs) {
+      const ia = compIndexByPid.get(s.a);
+      const ib = compIndexByPid.get(s.b);
+      // Se sono già finiti nello stesso macro-profilo il suggerimento è inutile.
+      if (ia === undefined || ib === undefined || ia === ib) continue;
+      const record = (from: number, to: number) => {
+        if (!suggestionsByComp.has(from)) suggestionsByComp.set(from, new Map());
+        const m = suggestionsByComp.get(from)!;
+        const prev = m.get(to);
+        if (!prev || s.confidence > prev.confidence) {
+          m.set(to, { confidence: s.confidence, reasons: s.reasons });
+        }
+      };
+      record(ia, ib);
+      record(ib, ia);
+    }
+
     return components
-      .map((comp) => {
+      .map((comp, compIdx) => {
         comp.sort();
         const id = comp.join("_");
         const compMsgs = messages.filter((m) =>
@@ -827,6 +1202,25 @@ export default function Dashboard() {
           }
         });
 
+        // Suggerimenti verso altri macro-profili, ordinati per confidenza.
+        const suggestions = Array.from(
+          (suggestionsByComp.get(compIdx) ?? new Map()).entries(),
+        )
+          .map(([otherIdx, info]) => ({
+            macroId: macroIdByIndex[otherIdx],
+            confidence: info.confidence,
+            reasons: info.reasons,
+          }))
+          .filter((s) => !!s.macroId)
+          .sort((a, b) => b.confidence - a.confidence);
+
+        // Un macro-profilo è affidabile solo se OGNI profilo che lo compone
+        // deriva da un token. Se anche uno solo proviene da un seed hardware
+        // legacy, potrebbe aggregare persone diverse: va segnalato.
+        const isLegacyIdentity = comp.some(
+          (p) => getProfileIdConfidence(p) === "legacy",
+        );
+
         return {
           id,
           profileIds: comp,
@@ -839,6 +1233,8 @@ export default function Dashboard() {
           mostRecentMsg,
           compEdgeReasons,
           compFootprints,
+          suggestions,
+          isLegacyIdentity,
         };
       })
       .sort((a, b) => b.msgCount - a.msgCount);
@@ -858,6 +1254,47 @@ export default function Dashboard() {
     }
     return map;
   }, [macroProfiles]);
+
+  // --- Dati per la scheda Analytics ---------------------------------------
+  // Erano tre useMemo scritti DENTRO le props JSX di <Analytics>: funzionavano
+  // solo perché quel ramo è sempre montato, ma bastava racchiuderlo in una
+  // condizione per rompere l'ordine degli hook. Inoltre ogni messaggio faceva
+  // un macroProfiles.find() lineare (costo quadratico): ora si usa la mappa
+  // profilo→macro già disponibile, con accesso costante.
+  const ignoredProfileIds = useMemo(() => {
+    const ignored = new Set<string>();
+    for (const [pid, prof] of Object.entries(profiles)) {
+      if (prof?.ignoredFromAnalytics) ignored.add(pid);
+    }
+    // Se anche un solo profilo del macro è escluso, lo è l'intero macro.
+    for (const macro of macroProfiles) {
+      if (macro.profileIds.some((id) => ignored.has(id))) {
+        for (const id of macro.profileIds) ignored.add(id);
+      }
+    }
+    return ignored;
+  }, [profiles, macroProfiles]);
+
+  const analyticsMessages = useMemo(
+    () => messages.filter((m) => !ignoredProfileIds.has(getDeviceProfile(m))),
+    [messages, ignoredProfileIds, getDeviceProfile],
+  );
+
+  const analyticsProfiles = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(profiles).filter(([pid]) => !ignoredProfileIds.has(pid)),
+      ),
+    [profiles, ignoredProfileIds],
+  );
+
+  const analyticsMacroProfiles = useMemo(
+    () =>
+      macroProfiles.filter(
+        (m) => !m.profileIds.some((pid) => ignoredProfileIds.has(pid)),
+      ),
+    [macroProfiles, ignoredProfileIds],
+  );
 
   const viewingMacro = useMemo(() => {
     if (!viewingMacroId) return null;
@@ -988,7 +1425,9 @@ export default function Dashboard() {
       setProfilesLoaded(true);
     }, (error) => {
       console.error("Firestore profiles error:", error);
-      setSnapshotsError((err) => (err ? err + " | " : "") + "Profiles error: " + error.message);
+      // In precedenza il messaggio veniva concatenato a ogni errore, crescendo
+      // senza limite ad ogni tentativo di riconnessione.
+      setSnapshotsError("Profili: " + error.message);
       setProfilesLoaded(true);
     });
 
@@ -1020,22 +1459,22 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // 3. MESSAGES (Dynamic based on pagination / filters)
+    // 3. MESSAGES
+    //
+    // La sottoscrizione dipende SOLO da quanti documenti servono. In passato
+    // dipendeva anche da viewFilter / onlySpottedFilter / selectedZoneFilter e
+    // da currentPage: filtri applicati interamente lato client, che quindi non
+    // cambiano la query. Ogni click su un filtro o su "pagina successiva"
+    // distruggeva e ricreava l'onSnapshot, riscaricando e ri-parsificando
+    // (base64 + JSON) migliaia di documenti.
     setLoading(true);
-    // Increase limit linearly based on pagesize and current page.
-    // If the active tab is somehow unrelated or selective filters are active, retrieve all documents.
-    let q;
-    if (activeTab === "analytics" || activeTab === "profiles" || viewingMacroId !== null) {
-      q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-    } else {
-      // retrieve a generous buffer to account for client-side filtering
-      const bufferLimit = Math.max(5000, pageSize * currentPage * 10);
-      q = query(
-        collection(db, "messages"), 
-        orderBy("createdAt", "desc"), 
-        limit(bufferLimit)
-      );
-    }
+    const q = query(
+      collection(db, "messages"),
+      orderBy("createdAt", "desc"),
+      // Nessuna query senza limite: prima le schede Analytics/Profili e
+      // l'apertura di un macro-profilo scaricavano l'INTERA collezione.
+      limit(fetchLimit),
+    );
 
     const unsubscribeMessages = onSnapshot(q, (msgsSnap) => {
       const msgs = msgsSnap.docs.map((doc) => {
@@ -1086,16 +1525,35 @@ export default function Dashboard() {
         computedProfileColor: string;
       })[];
       setMessages(msgs);
+      setHistoryTruncated(msgs.length >= fetchLimit);
       setLoading(false);
       setSnapshotsError(null);
     }, (error) => {
       console.error("Firestore messages error:", error);
-      setSnapshotsError((err) => (err ? err + " | " : "") + "Messages error: " + error.message);
+      setSnapshotsError("Messaggi: " + error.message);
       setLoading(false);
     });
 
     return () => unsubscribeMessages();
-  }, [pageSize, currentPage, activeTab, viewingMacroId, onlySpottedFilter, selectedZoneFilter, viewFilter]);
+  }, [fetchLimit]);
+
+  // Il tetto di documenti cresce solo quando serve davvero (schede che
+  // analizzano l'intero storico, apertura di un macro-profilo, o navigazione
+  // oltre il buffer già caricato) e non torna mai indietro: così cambiare
+  // scheda o pagina non provoca una nuova sottoscrizione se i dati bastano.
+  useEffect(() => {
+    const needsFullHistory =
+      activeTab === "analytics" ||
+      activeTab === "profiles" ||
+      viewingMacroId !== null;
+    const needed = needsFullHistory
+      ? MESSAGES_HARD_CAP
+      : Math.min(
+          MESSAGES_HARD_CAP,
+          Math.max(MESSAGES_BASE_BUFFER, pageSize * currentPage * 3),
+        );
+    setFetchLimit((prev) => (needed > prev ? needed : prev));
+  }, [activeTab, viewingMacroId, pageSize, currentPage]);
 
   useEffect(() => {
     // 4. VISITS (Only when analytics is requested)
@@ -1111,9 +1569,17 @@ export default function Dashboard() {
       });
     }
   }, [activeTab, visits.length]);
-  /* Reset pagination when view filter or active tab changes */ useEffect(() => {
+  /* Reset pagination when any filter, the page size or the tab changes */
+  useEffect(() => {
     setCurrentPage(1);
-  }, [viewFilter, pageSize, activeTab]);
+  }, [
+    viewFilter,
+    pageSize,
+    activeTab,
+    searchQuery,
+    onlySpottedFilter,
+    selectedZoneFilter,
+  ]);
   /* Handle selected messages sync */ useEffect(() => {
     setSelectedMessages((prev) => {
       if (prev.length === 0) return prev;
@@ -1128,8 +1594,18 @@ export default function Dashboard() {
     profilesRef.current = profiles;
   }, [profiles]);
   /* Auto-sync discovered instagram tags to the persistent profile records */ useEffect(() => {
+    // Senza i profili già caricati, `profilesRef.current` è vuoto: il controllo
+    // su removedInstagrams non troverebbe nulla e i tag rimossi a mano
+    // verrebbero re-inseriti da arrayUnion. Lo snapshot dei messaggi arriva
+    // spesso prima di quello dei profili, quindi la condizione era reale.
+    if (!profilesLoaded) return;
+
     const syncInstagrams = async () => {
       const updatesByPid = new Map<string, Set<string>>();
+      // Le chiavi marcate in questo giro: vengono confermate come "processate"
+      // solo se la scrittura va a buon fine, altrimenti un errore di rete
+      // farebbe perdere il tag per sempre (nessun nuovo tentativo).
+      const pendingSyncKeys: string[] = [];
       for (const msg of messages) {
         if (msg.instagram) {
           const cleanInsta = msg.instagram
@@ -1155,7 +1631,7 @@ export default function Dashboard() {
             processedSyncsRef.current.add(syncKey);
             continue;
           }
-          processedSyncsRef.current.add(syncKey);
+          pendingSyncKeys.push(syncKey);
           if (!updatesByPid.has(pid)) {
             updatesByPid.set(pid, new Set());
           }
@@ -1173,14 +1649,18 @@ export default function Dashboard() {
             );
           }
           await batchOp.commit();
+          for (const k of pendingSyncKeys) processedSyncsRef.current.add(k);
         } catch (e: any) {
           console.error("Batch auto-sync error:", e);
+          // Nessuna chiave marcata: al prossimo snapshot si riprova.
         }
       }
     };
     const timeoutId = setTimeout(syncInstagrams, 1000);
     return () => clearTimeout(timeoutId);
-  }, [messages]);
+    // `profiles` resta volutamente fuori dalle dipendenze (si legge via ref)
+    // per non innescare un ciclo: la sincronizzazione scrive sui profili.
+  }, [messages, profilesLoaded]);
   /* Removed profiles from deps to avoid infinite loops */ const handleLogout =
     () => {
       signOut(auth);
@@ -1201,64 +1681,62 @@ export default function Dashboard() {
     try {
       if (confirmModalState.type === "delete") {
         await deleteDoc(doc(db, "messages", confirmModalState.messageId));
+        notify("Messaggio eliminato", "ok");
       } else if (confirmModalState.type === "ungroup") {
         await updateDoc(doc(db, "messages", confirmModalState.messageId), {
           profileGroupId: deleteField(),
         });
+        notify("Messaggio rimosso dal gruppo", "ok");
       } else if (confirmModalState.type === "delete-bulk") {
-        const batchSize = 500;
-        for (let i = 0; i < selectedMessages.length; i += batchSize) {
-          const chunk = selectedMessages.slice(i, i + batchSize);
-          const batchOp = writeBatch(db);
-          for (const id of chunk) {
-            batchOp.delete(doc(db, "messages", id));
-          }
-          try {
-            await batchOp.commit();
-          } catch (e) {
-            console.error("Batch delete error:", e);
-          }
-        }
+        const ops = selectedMessages.map(
+          (id) => (b: ReturnType<typeof writeBatch>) =>
+            b.delete(doc(db, "messages", id)),
+        );
+        const res = await commitOperations(ops);
+        reportBulkOutcome(res, "messaggi eliminati");
         setSelectedMessages([]);
         setIsSelectMode(false);
       } else if (confirmModalState.type === "delete-profile-bulk") {
-        const batchSize = 500;
-        for (let i = 0; i < selectedProfiles.length; i += batchSize) {
-          const chunk = selectedProfiles.slice(i, i + batchSize);
-          const batchOp = writeBatch(db);
-          const pidsToDelete = new Set<string>();
-          for (const macroId of chunk) {
-            const macro = macroProfiles.find((m) => m.id === macroId);
-            if (macro) {
-              for (const pid of macro.profileIds) {
-                batchOp.delete(doc(db, "profiles", pid));
-                pidsToDelete.add(pid);
-              }
-            }
-          }
-          Object.entries(profiles).forEach(([childPid, childProf]) => {
-            if (
-              childProf.manualMergeProfileId &&
-              pidsToDelete.has(childProf.manualMergeProfileId) &&
-              !pidsToDelete.has(childPid)
-            ) {
-              batchOp.update(doc(db, "profiles", childPid), {
-                manualMergeProfileId: deleteField(),
-              });
-            }
-          });
-          try {
-            await batchOp.commit();
-          } catch (e) {
-            console.error("Batch delete profile error:", e);
-          }
+        // Prima si costruisce l'elenco COMPLETO delle operazioni, poi lo si
+        // spezza in blocchi da 500. In precedenza si spezzavano i macro-profili
+        // (500 macro per blocco), ma ciascuno contiene N profili PIÙ gli update
+        // di pulizia: un solo blocco poteva superare di molto il limite di 500
+        // operazioni imposto da Firestore e fallire per intero.
+        const pidsToDelete = new Set<string>();
+        for (const macroId of selectedProfiles) {
+          const macro = macroProfiles.find((m) => m.id === macroId);
+          if (macro) for (const pid of macro.profileIds) pidsToDelete.add(pid);
         }
+        const ops: ((b: ReturnType<typeof writeBatch>) => void)[] = [];
+        for (const pid of pidsToDelete) {
+          ops.push((b) => b.delete(doc(db, "profiles", pid)));
+        }
+        // Pulizia dei riferimenti pendenti verso i profili eliminati. Si usa
+        // set(merge) e non update(): update su un documento già cancellato in
+        // un blocco precedente farebbe fallire l'intero blocco successivo.
+        Object.entries(profiles).forEach(([childPid, childProf]) => {
+          if (
+            childProf.manualMergeProfileId &&
+            pidsToDelete.has(childProf.manualMergeProfileId) &&
+            !pidsToDelete.has(childPid)
+          ) {
+            ops.push((b) =>
+              b.set(
+                doc(db, "profiles", childPid),
+                { manualMergeProfileId: deleteField() },
+                { merge: true },
+              ),
+            );
+          }
+        });
+        const res = await commitOperations(ops);
+        reportBulkOutcome(res, "profili eliminati");
         setSelectedProfiles([]);
         setIsProfileSelectMode(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Errore durante l'operazione.");
+      notify("Errore durante l'operazione: " + (error?.message || ""), "error");
     } finally {
       setConfirmModalState({ isOpen: false, messageId: null, type: null });
     }
@@ -1276,40 +1754,33 @@ export default function Dashboard() {
       });
     } catch (e) {
       console.error(e);
-      alert("Errore durante l'operazione.");
+      notify("Errore durante l'operazione", "error");
     }
   };
   const handleBulkArchive = async () => {
     if (selectedMessages.length === 0) return;
-    try {
-      /* Determiniamo in quale tab ci troviamo (new o archived) e invertirne lo stato per la selezione */ const targetStatus =
-        viewFilter === "new" ? true : false;
-      const batchSize = 500;
-      for (let i = 0; i < selectedMessages.length; i += batchSize) {
-        const chunk = selectedMessages.slice(i, i + batchSize);
-        const batchOp = writeBatch(db);
-        for (const id of chunk) {
-          batchOp.update(doc(db, "messages", id), { isArchived: targetStatus });
-        }
-        await batchOp.commit();
-      }
-      setIsSelectMode(false);
-      setSelectedMessages([]);
-    } catch (e) {
-      console.error(e);
-      alert("Errore durante l'operazione di massa.");
-    }
+    /* Determiniamo in quale tab ci troviamo (new o archived) e invertirne lo stato per la selezione */
+    const targetStatus = viewFilter === "new";
+    const ops = selectedMessages.map(
+      (id) => (b: ReturnType<typeof writeBatch>) =>
+        b.update(doc(db, "messages", id), { isArchived: targetStatus }),
+    );
+    const res = await commitOperations(ops);
+    reportBulkOutcome(res, targetStatus ? "messaggi archiviati" : "messaggi ripristinati");
+    setIsSelectMode(false);
+    setSelectedMessages([]);
   };
   const toggleSelection = (id: string) => {
     setSelectedMessages((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
+
   const [showGroupPrompt, setShowGroupPrompt] = useState(false);
   const [groupNameInput, setGroupNameInput] = useState("");
   const handleGroupDevices = () => {
     if (selectedMessages.length < 2) {
-      alert("Seleziona almeno 2 messaggi per raggrupparli.");
+      notify("Seleziona almeno 2 messaggi per raggrupparli", "info");
       return;
     }
     setGroupNameInput("");
@@ -1319,27 +1790,19 @@ export default function Dashboard() {
     const newProfileGroupId =
       groupNameInput.trim() ||
       `MANUAL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    try {
-      const batchSize = 500;
-      for (let i = 0; i < selectedMessages.length; i += batchSize) {
-        const chunk = selectedMessages.slice(i, i + batchSize);
-        const batchOp = writeBatch(db);
-        for (const id of chunk) {
-          batchOp.update(doc(db, "messages", id), {
-            profileGroupId: newProfileGroupId,
-          });
-        }
-        await batchOp.commit();
-      }
-      setSelectedMessages([]);
-      setIsSelectMode(false);
-      setShowGroupPrompt(
-        false,
-      ); /* alert(`Messaggi raggruppati con successo nel profilo: ${newProfileGroupId}`); */
-    } catch (e) {
-      console.error(e);
-      alert("Errore durante il raggruppamento.");
+    const ops = selectedMessages.map(
+      (id) => (b: ReturnType<typeof writeBatch>) =>
+        b.update(doc(db, "messages", id), { profileGroupId: newProfileGroupId }),
+    );
+    const res = await commitOperations(ops);
+    if (res.failed === 0) {
+      notify(`${res.done} messaggi raggruppati in "${newProfileGroupId}"`, "ok");
+    } else {
+      reportBulkOutcome(res, "messaggi raggruppati");
     }
+    setSelectedMessages([]);
+    setIsSelectMode(false);
+    setShowGroupPrompt(false);
   };
   const handleUngroupDevice = (messageId: string) => {
     setConfirmModalState({ isOpen: true, messageId, type: "ungroup" });
@@ -1395,10 +1858,10 @@ export default function Dashboard() {
   const handleCopyMacroLog = async (macro: any) => {
     try {
       await navigator.clipboard.writeText(generateMacroLogReport(macro));
-      alert("Log copiato negli appunti!");
+      notify("Log copiato negli appunti", "ok");
     } catch (err) {
       console.error("Failed to copy log", err);
-      alert("Errore durante la copia del log.");
+      notify("Errore durante la copia del log", "error");
     }
   };
 
@@ -1414,41 +1877,115 @@ export default function Dashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const filteredMessages = messages.filter((m) => {
-    // 1. Archive status filter
-    const matchesArchive = viewFilter === "archived" ? !!m.isArchived : !m.isArchived;
-    if (!matchesArchive) return false;
+  const filteredMessages = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return messages.filter((m) => {
+      // 1. Archive status filter
+      const matchesArchive = viewFilter === "archived" ? !!m.isArchived : !m.isArchived;
+      if (!matchesArchive) return false;
 
-    // 2. Only Spotted filter
-    if (onlySpottedFilter) {
-      const isSpotted = !m.type || m.type === "spotted";
-      if (!isSpotted) return false;
-    }
-
-    // 3. Zone filter
-    if (selectedZoneFilter) {
-      const filterLower = selectedZoneFilter.trim().toLowerCase();
-      const matchCity = m.city && m.city.trim().toLowerCase() === filterLower;
-      const matchArea = m.area && m.area.trim().toLowerCase() === filterLower;
-      const matchWhere = m.where && m.where.trim().toLowerCase() === filterLower;
-      
-      if (!matchCity && !matchArea && !matchWhere) {
-        return false;
+      // 2. Only Spotted filter
+      if (onlySpottedFilter) {
+        const isSpotted = !m.type || m.type === "spotted";
+        if (!isSpotted) return false;
       }
-    }
 
-    return true;
-  });
+      // 3. Zone filter
+      if (selectedZoneFilter) {
+        const filterLower = selectedZoneFilter.trim().toLowerCase();
+        const matchCity = m.city && m.city.trim().toLowerCase() === filterLower;
+        const matchArea = m.area && m.area.trim().toLowerCase() === filterLower;
+        const matchWhere = m.where && m.where.trim().toLowerCase() === filterLower;
+
+        if (!matchCity && !matchArea && !matchWhere) {
+          return false;
+        }
+      }
+
+      // 4. Ricerca libera su testo, handle, risoluzione e luoghi.
+      if (q) {
+        const haystack = [
+          m.lookingFor,
+          m.instagram,
+          m.resolution,
+          m.city,
+          m.area,
+          m.where,
+          m.when,
+          ...(m.pollOptions || []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [messages, viewFilter, onlySpottedFilter, selectedZoneFilter, searchQuery]);
+
+  const hasActiveFilters =
+    onlySpottedFilter || selectedZoneFilter !== "" || searchQuery.trim() !== "";
+  const clearAllFilters = useCallback(() => {
+    setOnlySpottedFilter(false);
+    setSelectedZoneFilter("");
+    setSearchQuery("");
+    setCurrentPage(1);
+  }, []);
+
+  // Contatori per i badge delle schede: quanti spotted sono ancora da leggere.
+  const unreadCount = useMemo(
+    () => messages.reduce((n, m) => (m.isArchived ? n : n + 1), 0),
+    [messages],
+  );
+
   const totalPagesMsg = Math.ceil(filteredMessages.length / pageSize) || 1;
+  // La pagina corrente può eccedere il totale dopo un filtro più restrittivo:
+  // in quel caso si mostra l'ultima pagina utile invece di una lista vuota.
+  const safePageMsg = Math.min(currentPage, totalPagesMsg);
   const paginatedMessages = filteredMessages.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+    (safePageMsg - 1) * pageSize,
+    safePageMsg * pageSize,
   );
   const totalPagesProf = Math.ceil(macroProfiles.length / pageSize) || 1;
+  const safePageProf = Math.min(currentPage, totalPagesProf);
   const paginatedProfiles = macroProfiles.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+    (safePageProf - 1) * pageSize,
+    safePageProf * pageSize,
   );
+  /**
+   * Selezione di massa.
+   *
+   * "Tutti" selezionava l'INTERO risultato filtrato nei Messaggi ma solo la
+   * pagina corrente nei Profili: chi vedeva 20 schede e premeva Tutti + Elimina
+   * poteva cancellare migliaia di documenti credendo di eliminarne venti.
+   * Ora il comportamento è uniforme e il comando che agisce su tutto dichiara
+   * esplicitamente quanti elementi coinvolge.
+   */
+  const selectCurrentPage = useCallback(() => {
+    if (activeTab === "messages") {
+      setSelectedMessages(paginatedMessages.map((m) => m.id));
+    } else {
+      setSelectedProfiles(paginatedProfiles.map((p) => p.id));
+    }
+  }, [activeTab, paginatedMessages, paginatedProfiles]);
+
+  const selectAllFiltered = useCallback(() => {
+    if (activeTab === "messages") {
+      setSelectedMessages(filteredMessages.map((m) => m.id));
+    } else {
+      setSelectedProfiles(macroProfiles.map((p) => p.id));
+    }
+  }, [activeTab, filteredMessages, macroProfiles]);
+
+  const clearSelection = useCallback(() => {
+    if (activeTab === "messages") setSelectedMessages([]);
+    else setSelectedProfiles([]);
+  }, [activeTab]);
+
+  const selectableTotal =
+    activeTab === "messages" ? filteredMessages.length : macroProfiles.length;
+
   const isAnySelectMode =
     (activeTab === "messages" && isSelectMode) ||
     (activeTab === "profiles" && isProfileSelectMode);
@@ -1459,7 +1996,10 @@ export default function Dashboard() {
       showGroupPrompt ||
       showMergeModal.isOpen ||
       !!editingProfileId ||
-      !!viewingMacroId;
+      !!viewingMacroId ||
+      // Mancava: con l'anteprima di esportazione aperta la pagina sottostante
+      // continuava a scorrere.
+      !!exportingMessage;
 
     if (isAnyModalOpen) {
       document.body.style.overflow = "hidden";
@@ -1475,6 +2015,49 @@ export default function Dashboard() {
     showMergeModal.isOpen,
     editingProfileId,
     viewingMacroId,
+    exportingMessage,
+  ]);
+
+  /**
+   * Esc chiude il livello modale più esterno. Nessuna finestra era chiudibile
+   * da tastiera: l'unico modo era centrare il pulsante di chiusura.
+   */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (exportingMessage) return setExportingMessage(null);
+      if (confirmModalState.isOpen)
+        return setConfirmModalState({ isOpen: false, messageId: null, type: null });
+      if (showGroupPrompt) return setShowGroupPrompt(false);
+      if (showMergeModal.isOpen) {
+        setShowMergeModal({ isOpen: false, sourceMacroId: null });
+        setMergeSelectedProfiles([]);
+        setMergeSearchQuery("");
+        return;
+      }
+      if (editingProfileId) return setEditingProfileId(null);
+      if (viewingMacroId) return setViewingMacroId(null);
+      // Fuori dai modali, Esc annulla la modalità selezione.
+      if (isSelectMode) {
+        setIsSelectMode(false);
+        setSelectedMessages([]);
+      }
+      if (isProfileSelectMode) {
+        setIsProfileSelectMode(false);
+        setSelectedProfiles([]);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    exportingMessage,
+    confirmModalState.isOpen,
+    showGroupPrompt,
+    showMergeModal.isOpen,
+    editingProfileId,
+    viewingMacroId,
+    isSelectMode,
+    isProfileSelectMode,
   ]);
 
   return (
@@ -1501,6 +2084,17 @@ export default function Dashboard() {
                   <h1 className="text-base sm:text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden md:flex items-center shrink-0">
                     Dashboard
                   </h1>
+                  {/* Contatore globale: veniva letto da Firestore a ogni
+                      montaggio ma non era mostrato da nessuna parte. */}
+                  {totalGlobalMessages !== null && (
+                    <span
+                      className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700"
+                      title="Messaggi totali ricevuti dall'inizio"
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      {totalGlobalMessages.toLocaleString("it-IT")} totali
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">
@@ -1527,7 +2121,8 @@ export default function Dashboard() {
                     <button
                       onClick={() => setIsDarkMode(!isDarkMode)}
                       className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 rounded-xl transition-all"
-                      title="Toggle Theme"
+                      title="Cambia tema"
+                      aria-label="Cambia tema chiaro/scuro"
                     >
                       {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
@@ -1538,6 +2133,7 @@ export default function Dashboard() {
                       onClick={handleLogout}
                       className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
                       title="Disconnetti"
+                      aria-label="Disconnetti"
                     >
                       <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
@@ -1619,7 +2215,8 @@ export default function Dashboard() {
                       }
                     }}
                     className="p-2 sm:p-2 bg-white/10 hover:bg-red-500/80 rounded-full text-white transition-colors flex items-center justify-center shrink-0 border border-white/10 dark:bg-gray-900"
-                    title="Annulla Selezione"
+                    title="Annulla selezione"
+                    aria-label="Annulla selezione"
                   >
 
                     <X className="w-5 h-5 sm:w-4 sm:h-4 text-white" />
@@ -1638,23 +2235,23 @@ export default function Dashboard() {
                 <div className="flex md:hidden items-center gap-1 bg-white/10 rounded-xl p-1 border border-white/10 shadow-inner dark:bg-gray-900">
 
                   <button
-                    onClick={() => {
-                      if (activeTab === "messages")
-                        setSelectedMessages(filteredMessages.map((m) => m.id));
-                      else
-                        setSelectedProfiles(paginatedProfiles.map((p) => p.id));
-                    }}
+                    onClick={selectCurrentPage}
                     className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
-                    Tutti
+                    Pagina
                   </button>
                   <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
                   <button
-                    onClick={() => {
-                      if (activeTab === "messages") setSelectedMessages([]);
-                      else setSelectedProfiles([]);
-                    }}
+                    onClick={selectAllFiltered}
+                    className="px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
+                    title={`Seleziona tutti i ${selectableTotal} elementi che corrispondono ai filtri`}
+                  >
+                    Tutti ({selectableTotal})
+                  </button>
+                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
+                  <button
+                    onClick={clearSelection}
                     className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
@@ -1669,23 +2266,23 @@ export default function Dashboard() {
                 <div className="hidden md:flex items-center gap-1 bg-white/10 rounded-xl p-1 border border-white/10 shadow-inner mr-2 dark:bg-gray-900">
 
                   <button
-                    onClick={() => {
-                      if (activeTab === "messages")
-                        setSelectedMessages(filteredMessages.map((m) => m.id));
-                      else
-                        setSelectedProfiles(paginatedProfiles.map((p) => p.id));
-                    }}
+                    onClick={selectCurrentPage}
                     className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
-                    Tutti
+                    Pagina
                   </button>
                   <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
                   <button
-                    onClick={() => {
-                      if (activeTab === "messages") setSelectedMessages([]);
-                      else setSelectedProfiles([]);
-                    }}
+                    onClick={selectAllFiltered}
+                    className="px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
+                    title={`Seleziona tutti i ${selectableTotal} elementi che corrispondono ai filtri`}
+                  >
+                    Tutti ({selectableTotal})
+                  </button>
+                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
+                  <button
+                    onClick={clearSelection}
                     className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
                   >
 
@@ -1776,22 +2373,9 @@ export default function Dashboard() {
         </header>
         <div className={activeTab === "analytics" ? "block" : "hidden"}>
           <Analytics
-            messages={useMemo(() => messages.filter((m) => {
-              const pid = getDeviceProfile(m);
-              if (profiles[pid]?.ignoredFromAnalytics) return false;
-              const macro = macroProfiles.find((mac) => mac.profileIds.includes(pid));
-              if (macro && macro.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics)) return false;
-              return true;
-            }), [messages, profiles, macroProfiles])}
-            profiles={useMemo(() => Object.fromEntries(
-              Object.entries(profiles).filter(([pid, _]) => {
-                if (profiles[pid]?.ignoredFromAnalytics) return false;
-                const macro = macroProfiles.find((mac) => mac.profileIds.includes(pid));
-                if (macro && macro.profileIds.some((id) => profiles[id]?.ignoredFromAnalytics)) return false;
-                return true;
-              })
-            ), [profiles, macroProfiles])}
-            macroProfiles={useMemo(() => macroProfiles.filter((m) => !m.profileIds.some((pid) => profiles[pid]?.ignoredFromAnalytics)), [macroProfiles, profiles])}
+            messages={analyticsMessages}
+            profiles={analyticsProfiles}
+            macroProfiles={analyticsMacroProfiles}
             visits={visits}
           />
         </div>
@@ -1836,37 +2420,6 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mt-auto">
-                    <button
-                      onClick={() => {
-                        setOnlySpottedFilter(!onlySpottedFilter);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border whitespace-nowrap uppercase flex-1 sm:flex-none justify-center ${
-                        onlySpottedFilter 
-                          ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300" 
-                          : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${onlySpottedFilter ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`} />
-                      Solo Spotted
-                    </button>
-
-                    <select
-                      value={selectedZoneFilter}
-                      onChange={(e) => {
-                        setSelectedZoneFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className={`bg-gray-50 dark:bg-gray-800/50 text-[10px] uppercase font-bold rounded-lg px-2 py-1.5 border transition-all outline-none flex-1 sm:flex-none ${selectedZoneFilter !== "" ? "border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30" : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400"}`}
-                    >
-                      <option value="">Tutte le Zone</option>
-                      {Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)]).map(zone => (
-                        <option key={zone} value={zone}>{zone}</option>
-                      ))}
-                    </select>
-                  </div>
-
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setActiveTab("carousel")}
@@ -1878,19 +2431,6 @@ export default function Dashboard() {
                         <>Apri Editor <Settings className="w-3.5 h-3.5 shrink-0" /></>
                       )}
                     </button>
-                    {(onlySpottedFilter || selectedZoneFilter !== "") && (
-                       <button
-                         onClick={() => {
-                           setOnlySpottedFilter(false);
-                           setSelectedZoneFilter("");
-                           setCurrentPage(1);
-                         }}
-                         className="px-3 py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
-                         title="Rimuovi Filtri"
-                       >
-                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                       </button>
-                    )}
                   </div>
                 </div>
               )}
@@ -1908,6 +2448,11 @@ export default function Dashboard() {
                     className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
                   >
                     <InboxIcon className="w-4 h-4" /> Spotted Nuovi
+                    {unreadCount > 0 && (
+                      <span className="ml-1 min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black leading-none flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
                   </button>
                   <button
                     onClick={() => {
@@ -1937,9 +2482,82 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            {/* Barra filtri della LISTA.
+                Prima "Solo Spotted" e il filtro zona vivevano dentro la scheda
+                "Carosello IG", visibile solo al super admin: gli altri
+                amministratori non potevano filtrare affatto, e concettualmente
+                non sono strumenti del carosello ma della lista. */}
+            {!isSelectMode && (
+              <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-6">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cerca nel testo, @instagram, risoluzione, zona…"
+                    aria-label="Cerca fra i messaggi"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setOnlySpottedFilter((v) => !v)}
+                    aria-pressed={onlySpottedFilter}
+                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border whitespace-nowrap ${
+                      onlySpottedFilter
+                        ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300"
+                        : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${onlySpottedFilter ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`} />
+                    Solo Spotted
+                  </button>
+
+                  <select
+                    value={selectedZoneFilter}
+                    onChange={(e) => setSelectedZoneFilter(e.target.value)}
+                    aria-label="Filtra per zona"
+                    className={`text-xs font-bold rounded-xl px-3 py-2.5 border transition-all outline-none ${
+                      selectedZoneFilter !== ""
+                        ? "border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30"
+                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800"
+                    }`}
+                  >
+                    <option value="">Tutte le zone</option>
+                    {zoneOptions.map((zone) => (
+                      <option key={zone} value={zone}>{zone}</option>
+                    ))}
+                  </select>
+
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="px-3 py-2.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                    >
+                      <X className="w-3.5 h-3.5" /> Rimuovi filtri
+                    </button>
+                  )}
+
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap px-1">
+                    {filteredMessages.length} risultati
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {historyTruncated && (
+              <div className="mb-6 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs font-medium">
+                Sono caricati i {messages.length} messaggi più recenti: i
+                conteggi e la ricerca riguardano solo questi. Restringi il
+                periodo o usa i filtri per analizzare lo storico più vecchio.
+              </div>
+            )}
             {loading || !profilesLoaded ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
                 {(isStuckLoading || snapshotsError) && (
                   <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2 dark:text-gray-400">
                     {snapshotsError ? (
@@ -1951,15 +2569,55 @@ export default function Dashboard() {
                 )}
               </div>
             ) : filteredMessages.length === 0 ? (
-              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-white/20">
-
-                <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
-                  Nessun messaggio
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 ">
-                  I messaggi in questa sezione appariranno qui.
-                </p>
+              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
+                {/* L'errore veniva mostrato SOLO nel ramo di caricamento: con
+                    loading già a false e lista vuota l'operatore leggeva
+                    "Nessun messaggio" mentre in realtà la connessione era
+                    fallita. */}
+                {snapshotsError ? (
+                  <>
+                    <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      Impossibile caricare i dati
+                    </h3>
+                    <p className="text-red-500 text-sm max-w-md mx-auto mt-2 px-4">
+                      {snapshotsError}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold"
+                    >
+                      Ricarica
+                    </button>
+                  </>
+                ) : hasActiveFilters ? (
+                  <>
+                    <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      Nessun risultato per i filtri attivi
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                      Ci sono {messages.length} messaggi caricati, ma nessuno
+                      corrisponde alla ricerca.
+                    </p>
+                    <button
+                      onClick={clearAllFilters}
+                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold"
+                    >
+                      Rimuovi i filtri
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
+                      Nessun messaggio
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 ">
+                      I messaggi in questa sezione appariranno qui.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
@@ -1968,6 +2626,26 @@ export default function Dashboard() {
                   const profileId = getDeviceProfile(msg);
                   const profileColor = getProfileColor(profileId);
                   const isSelected = selectedMessages.includes(msg.id);
+                  const msgMacro = profileToMacroMap.get(profileId);
+                  const displayName = (() => {
+                    if (
+                      msgMacro?.name &&
+                      msgMacro.name !== "Sconosciuto" &&
+                      msgMacro.name !== "Profilo" &&
+                      msgMacro.name !== "Profilo Aggregato"
+                    ) {
+                      return msgMacro.name;
+                    }
+                    // Il prefisso "AUTO-" apparteneva a uno schema di id
+                    // precedente e non viene più generato: il test era sempre
+                    // falso, così OGNI profilo automatico senza nome veniva
+                    // etichettato "Profilo manuale", l'esatto contrario del vero.
+                    if (profiles[profileId]?.name) return profiles[profileId]!.name;
+                    if (msg.profileGroupId) return "Gruppo manuale";
+                    return getProfileIdConfidence(profileId) === "legacy"
+                      ? "Non identificato (storico)"
+                      : "Non identificato";
+                  })();
                   return (
                     <motion.div
                       key={msg.id}
@@ -2013,22 +2691,18 @@ export default function Dashboard() {
                               >
 
                                 <div
-                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0"
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0 text-[11px]"
                                   style={{ backgroundColor: profileColor }}
+                                  aria-hidden="true"
                                 >
-
-                                  <UserIcon className="w-4 h-4" />
+                                  {getProfileInitials(displayName) ?? (
+                                    <UserIcon className="w-4 h-4" />
+                                  )}
                                 </div>
                                 <div className="flex flex-col">
 
                                   <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
-                                    {(() => {
-                                      const msgMacro = profileToMacroMap.get(profileId);
-                                      if (msgMacro && msgMacro.name && msgMacro.name !== "Sconosciuto" && msgMacro.name !== "Profilo" && msgMacro.name !== "Profilo Aggregato") {
-                                        return msgMacro.name;
-                                      }
-                                      return profiles[profileId]?.name || (profileId.startsWith("AUTO-") ? "Non identificato" : "Profilo manuale");
-                                    })()}
+                                    {displayName}
                                   </span>
                                   <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
 
@@ -2105,7 +2779,8 @@ export default function Dashboard() {
                                 handleDeleteMessage(msg.id);
                               }}
                               className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-full transition-colors"
-                              title="Elimina Messaggio"
+                              title="Elimina messaggio"
+                              aria-label="Elimina messaggio"
                             >
 
                               <Trash2 className="w-4 h-4" />
@@ -2221,7 +2896,6 @@ export default function Dashboard() {
                         )}
 
                         {isSuperAdmin ? (() => {
-                          const msgMacro = profileToMacroMap.get(profileId);
                           const tags = msgMacro ? msgMacro.instagrams : getProfileInstagrams(profileId).tags;
                           const hasMultiple = tags.length > 1;
                           if (tags.length === 0) return null;
@@ -2310,11 +2984,11 @@ export default function Dashboard() {
                           )}
                         {/* Location / Zone Edit Section */}
                         <div
-                          className={`p-3.5 rounded-2xl border ${(msg.city || msg.area) ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-100 dark:border-indigo-800 text-indigo-900 shadow-sm" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 border-dashed"}`}
+                          className={`p-3.5 rounded-2xl border ${(msg.city || msg.area) ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-100 dark:border-indigo-800 text-indigo-900 dark:text-indigo-100 shadow-sm" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 border-dashed"}`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div
-                              className={`flex items-center gap-2 ${(msg.city || msg.area) ? "text-indigo-600" : "text-gray-500 dark:text-gray-400 "}`}
+                              className={`flex items-center gap-2 ${(msg.city || msg.area) ? "text-indigo-600 dark:text-indigo-300" : "text-gray-500 dark:text-gray-400 "}`}
                             >
                               <MapPin className="w-4 h-4 shrink-0" />
                               <span className="text-xs font-black uppercase tracking-wider">
@@ -2390,13 +3064,13 @@ export default function Dashboard() {
                         </div>
                         {/* Resolution Section */}
                         <div
-                          className={`p-3.5 rounded-2xl border ${msg.resolution ? "bg-sky-50 dark:bg-sky-900/40 border-sky-100 dark:border-sky-800 text-sky-900 shadow-sm" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 border-dashed"}`}
+                          className={`p-3.5 rounded-2xl border ${msg.resolution ? "bg-sky-50 dark:bg-sky-900/40 border-sky-100 dark:border-sky-800 text-sky-900 dark:text-sky-100 shadow-sm" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500 border-dashed"}`}
                         >
 
                           <div className="flex items-center justify-between mb-2">
 
                             <div
-                              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600" : "text-gray-500 dark:text-gray-400 "}`}
+                              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600 dark:text-sky-300" : "text-gray-500 dark:text-gray-400 "}`}
                             >
 
                               <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -2530,7 +3204,7 @@ export default function Dashboard() {
                                   </div>
                                   <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
 
-                                    {msg.deviceInfo?.language || "N/A"} •
+                                    {msg.deviceInfo?.language || "N/A"} •{" "}
                                     {msg.deviceInfo?.timezone
                                       ?.split("/")[1]
                                       ?.replace("_", " ") || "N/A"}
@@ -2565,38 +3239,38 @@ export default function Dashboard() {
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           IP PUB:
-                                        </span>
+                                        </span>{" "}
                                         {adv.network?.ip || "N/A"}
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           IP LOC:
-                                        </span>
+                                        </span>{" "}
                                         {adv.network?.localIp || "N/A"}
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           GEO:
-                                        </span>
-                                        {adv.network?.city},
+                                        </span>{" "}
+                                        {adv.network?.city},{" "}
                                         {adv.network?.region}
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           ISP:
-                                        </span>
+                                        </span>{" "}
                                         {adv.network?.isp}
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           REF:
-                                        </span>
+                                        </span>{" "}
                                         {adv.network?.referer || "N/A"}
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           NET:
-                                        </span>
+                                        </span>{" "}
                                         {adv.network?.connectionType ===
                                           "Nascosto/Non Supportato" ||
                                         adv.network?.connectionType ===
@@ -2621,36 +3295,36 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           GPU:
-                                        </span>
+                                        </span>{" "}
                                         {adv.hardware?.detailedWebGL
                                           ?.renderer || adv.hardware?.gpu}
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           CPU/RAM:
-                                        </span>
-                                        {adv.hardware?.cores}C /
+                                        </span>{" "}
+                                        {adv.hardware?.cores}C /{" "}
                                         {adv.hardware?.ram}GB
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           RES:
-                                        </span>
+                                        </span>{" "}
                                         {adv.hardware?.screen} (
                                         {adv.hardware?.pixelRatio}x)
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           TCH/MEDIA:
-                                        </span>
-                                        {adv.hardware?.maxTouchPoints} pt /
+                                        </span>{" "}
+                                        {adv.hardware?.maxTouchPoints} pt /{" "}
                                         {adv.hardware?.mediaDevicesCount || 0}
                                         dev
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           BAT:
-                                        </span>
+                                        </span>{" "}
                                         {adv.hardware?.battery?.level ===
                                           "Unknown" ||
                                         adv.hardware?.battery?.level ===
@@ -2662,7 +3336,7 @@ export default function Dashboard() {
                                         <div className="break-words whitespace-pre-wrap">
                                           <span className="text-gray-400 dark:text-gray-500 ">
                                             GPAD:
-                                          </span>
+                                          </span>{" "}
                                           {adv.hardware.gamepadsCount} (
                                           {adv.hardware.gamepadsIds?.join(
                                             ", ",
@@ -2676,7 +3350,7 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           SENS:
-                                        </span>
+                                        </span>{" "}
                                         {adv.hardware?.advancedSensors || "N/A"}
                                       </div>
                                     </div>
@@ -2689,21 +3363,21 @@ export default function Dashboard() {
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           TIME/SCL:
-                                        </span>
-                                        {adv.behavior?.sessionTimeSeconds}s /
+                                        </span>{" "}
+                                        {adv.behavior?.sessionTimeSeconds}s /{" "}
                                         {adv.behavior?.maxScrollDepth}% MAX
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           CLK/RAGE:
-                                        </span>
-                                        {adv.behavior?.clicks} /
+                                        </span>{" "}
+                                        {adv.behavior?.clicks} /{" "}
                                         {adv.behavior?.rageClicks || 0}
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           DIST:
-                                        </span>
+                                        </span>{" "}
                                         {adv.behavior?.mouseDistance
                                           ? `${adv.behavior.mouseDistance}px`
                                           : "0px"}
@@ -2711,7 +3385,7 @@ export default function Dashboard() {
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           KEY/BACK:
-                                        </span>
+                                        </span>{" "}
                                         {adv.behavior?.keyStrokes}
                                         {adv.behavior?.typingCadenceMs
                                           ? `(~${adv.behavior.typingCadenceMs}ms)`
@@ -2738,7 +3412,7 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           FOC/BLR/PST/CP/CT:
-                                        </span>
+                                        </span>{" "}
                                         {adv.behavior?.fieldFocusTimes &&
                                         Object.keys(
                                           adv.behavior.fieldFocusTimes,
@@ -2747,9 +3421,9 @@ export default function Dashboard() {
                                               adv.behavior.fieldFocusTimes,
                                             ).length
                                           : 0}
-                                        flds / {adv.behavior?.blurCount} /
-                                        {adv.behavior?.pastes || 0} /
-                                        {adv.behavior?.copies || 0} /
+                                        flds / {adv.behavior?.blurCount} /{" "}
+                                        {adv.behavior?.pastes || 0} /{" "}
+                                        {adv.behavior?.copies || 0} /{" "}
                                         {adv.behavior?.cuts || 0}
                                       </div>
                                       {adv.behavior?.autofillUsed && (
@@ -2783,7 +3457,7 @@ export default function Dashboard() {
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           PR:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.platform}
                                         {adv.software?.historyLength
                                           ? `(Hist: ${adv.software.historyLength})`
@@ -2792,7 +3466,7 @@ export default function Dashboard() {
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           CSS:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.advancedMedia
                                           ? `Dark:${adv.software.advancedMedia.darkMode ? "S" : "N"}, Ctrst:${adv.software.advancedMedia.highContrast ? "+" : "N"}, Mot:${adv.software.advancedMedia.reducedMotion ? "-" : "N"}, ${adv.software.advancedMedia.colorGamut}`
                                           : "N/A"}
@@ -2800,8 +3474,8 @@ export default function Dashboard() {
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           BOT/INC:
-                                        </span>
-                                        {adv.software?.botStatus || "N/A"} /
+                                        </span>{" "}
+                                        {adv.software?.botStatus || "N/A"} /{" "}
                                         {adv.software?.incognito || "N/A"}
                                       </div>
                                       <div
@@ -2814,7 +3488,7 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           MEM:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.performanceMemory
                                           ? `${adv.software.performanceMemory.usedJSHeapSize} / ${adv.software.performanceMemory.totalJSHeapSize}`
                                           : "N/A"}
@@ -2829,7 +3503,7 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           PERMESSI:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.permissions
                                           ? `Geo: ${adv.software.permissions.geolocation?.slice(0, 3)}, Notif: ${adv.software.permissions.notifications?.slice(0, 3)}, Cam: ${adv.software.permissions.camera?.slice(0, 3)}`
                                           : "N/A"}
@@ -2897,7 +3571,7 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           FONTS:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.fontsIdentified?.length}
                                         Identificati
                                       </div>
@@ -2907,7 +3581,7 @@ export default function Dashboard() {
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           PLUGS:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.plugins
                                           ?.split(",")
                                           .slice(0, 3)
@@ -2917,17 +3591,17 @@ export default function Dashboard() {
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           STORAGE:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.storage || "N/A"}
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           PDF/DNT:
-                                        </span>
+                                        </span>{" "}
                                         {adv.software?.pdfViewerEnabled
                                           ? "Si"
                                           : "No"}
-                                        /
+                                        /{" "}
                                         {adv.software?.doNotTrack ? "Si" : "No"}
                                       </div>
                                     </div>
@@ -2958,7 +3632,7 @@ export default function Dashboard() {
 
             {loading || !profilesLoaded ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
                 {(isStuckLoading || snapshotsError) && (
                   <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2 dark:text-gray-400">
                     {snapshotsError ? (
@@ -2970,15 +3644,34 @@ export default function Dashboard() {
                 )}
               </div>
             ) : macroProfiles.length === 0 ? (
-              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-white/20">
-
-                <UserIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
-                  Nessun profilo identificato
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 ">
-                  I profili analizzati dal tracker appariranno qui.
-                </p>
+              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
+                {snapshotsError ? (
+                  <>
+                    <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      Impossibile caricare i profili
+                    </h3>
+                    <p className="text-red-500 text-sm max-w-md mx-auto mt-2 px-4">
+                      {snapshotsError}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold"
+                    >
+                      Ricarica
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <UserIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
+                      Nessun profilo identificato
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 ">
+                      I profili analizzati dal tracker appariranno qui.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max items-start">
@@ -3025,11 +3718,13 @@ export default function Dashboard() {
                       >
 
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-sm"
                           style={{ backgroundColor: profileColor }}
+                          aria-hidden="true"
                         >
-
-                          <UserIcon className="w-5 h-5" />
+                          {getProfileInitials(macro.name) ?? (
+                            <UserIcon className="w-5 h-5" />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
 
@@ -3042,13 +3737,66 @@ export default function Dashboard() {
                           </h3>
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
 
-                            {macro.msgCount}
+                            {macro.msgCount}{" "}
                             {macro.msgCount === 1
                               ? "Spotted Creato"
                               : "Spotted Creati"}
                           </div>
+                          {/* Un profilo ricostruito da un seed hardware (dati
+                              storici, prima dei token) può aggregare persone
+                              diverse con lo stesso modello di telefono: va
+                              detto, non presentato come identità certa. */}
+                          {macro.isLegacyIdentity && (
+                            <div
+                              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide"
+                              title="Identità dedotta da dati storici senza token: potrebbe raggruppare persone diverse con lo stesso modello di dispositivo."
+                            >
+                              <ShieldAlert className="w-3 h-3" /> Identità incerta
+                            </div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Suggerimenti di unione: segnali deboli (hardware, IP,
+                          install id) che NON uniscono da soli, proposti
+                          all'operatore invece di essere applicati in silenzio. */}
+                      {macro.suggestions.length > 0 && (
+                        <div className="mb-4 p-3 rounded-2xl bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800">
+                          <div className="text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 mb-2 flex items-center gap-1.5">
+                            <Layers className="w-3.5 h-3.5" />
+                            Possibili corrispondenze ({macro.suggestions.length})
+                          </div>
+                          <div className="space-y-1.5">
+                            {macro.suggestions.slice(0, 3).map((sug) => {
+                              const other = macroProfiles.find((x) => x.id === sug.macroId);
+                              if (!other) return null;
+                              return (
+                                <button
+                                  key={sug.macroId}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewingMacroId(sug.macroId);
+                                  }}
+                                  className="w-full text-left px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-sky-100 dark:border-sky-900 hover:border-sky-300 transition-colors"
+                                  title={sug.reasons.join(" · ")}
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                                      {other.name}
+                                    </span>
+                                    <span className="text-[10px] font-black text-sky-600 dark:text-sky-400 shrink-0">
+                                      {Math.round(sug.confidence * 100)}%
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                                    {sug.reasons[0]}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-2 gap-2 mb-4">
 
@@ -3291,7 +4039,7 @@ export default function Dashboard() {
                                               e.stopPropagation();
                                               handleRiabilitaAutoGroup(pid);
                                             }}
-                                            className="bg-green-50 hover:bg-green-100 text-green-600 font-bold px-2 py-1 rounded text-[10px] transition-colors"
+                                            className="bg-green-50 dark:bg-green-900/40 hover:bg-green-100 dark:hover:bg-green-900/60 text-green-600 dark:text-green-400 font-bold px-2 py-1 rounded text-[10px] transition-colors"
                                             title="Riabilita Auto-Join"
                                           >
                                             Reset Join
@@ -3376,7 +4124,7 @@ export default function Dashboard() {
               </button>
               <span className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 order-first sm:order-none">
 
-                Pagina {currentPage} di
+                Pagina {currentPage} di{" "}
                 {activeTab === "messages" ? totalPagesMsg : totalPagesProf}
               </span>
               <button
@@ -3645,7 +4393,7 @@ export default function Dashboard() {
         </div>
       )}
       {editingProfileId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[1100]">
 
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -3755,7 +4503,7 @@ export default function Dashboard() {
                   </h2>
                   <div className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5 sm:mt-1">
 
-                    {viewingMacro.profileIds.length}
+                    {viewingMacro.profileIds.length}{" "}
                     {viewingMacro.profileIds.length === 1
                       ? "Dispositivo"
                       : "Dispositivi"}
@@ -3767,6 +4515,7 @@ export default function Dashboard() {
                 onClick={() => setViewingMacroId(null)}
                 className="p-2 sm:p-3 bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/60 text-gray-500 dark:text-gray-400 hover:text-red-500 rounded-xl transition-colors"
                 title="Chiudi"
+                aria-label="Chiudi finestra"
               >
 
                 <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -3891,7 +4640,7 @@ export default function Dashboard() {
                                       <MapPin className="w-3 h-3" />
                                       {msg.deviceInfo.location.city ||
                                         "Città ignota"}
-                                      ,
+                                      ,{" "}
                                       {msg.deviceInfo.location.country ||
                                         "Nazione ignota"}
                                     </div>
@@ -4110,7 +4859,7 @@ export default function Dashboard() {
                       </h4>
                       <div className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
 
-                        Formato da {viewingMacro.profileIds.length}
+                        Formato da {viewingMacro.profileIds.length}{" "}
                         dispositivi
                       </div>
                     </div>
@@ -4457,6 +5206,37 @@ export default function Dashboard() {
           onClose={() => setExportingMessage(null)}
         />
       )}
+
+      {/* Notifiche non bloccanti (sostituiscono gli alert). */}
+      <div
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[3000] flex flex-col items-center gap-2 w-[min(92vw,28rem)] pointer-events-none"
+        role="status"
+        aria-live="polite"
+      >
+        {toasts.map((t) => (
+          <motion.div
+            key={t.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`pointer-events-auto w-full flex items-start gap-3 px-4 py-3 rounded-2xl shadow-lg border text-sm font-semibold ${
+              t.kind === "ok"
+                ? "bg-emerald-600 border-emerald-500 text-white"
+                : t.kind === "error"
+                  ? "bg-red-600 border-red-500 text-white"
+                  : "bg-gray-900 dark:bg-gray-700 border-gray-700 text-white"
+            }`}
+          >
+            <span className="flex-1 break-words">{t.text}</span>
+            <button
+              onClick={() => dismissToast(t.id)}
+              aria-label="Chiudi notifica"
+              className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
