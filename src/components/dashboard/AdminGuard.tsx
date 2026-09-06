@@ -16,8 +16,8 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import { db, auth, googleProvider } from "../firebase";
-import { Logo } from "./Logo";
+import { db, auth, googleProvider } from "../../firebase";
+import { Logo } from "../ui/Logo";
 import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -143,7 +143,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   // Chi non è amministratore ha scaricato un file che resta in cache: nessun
   // dato riservato, quelli restano protetti dalle regole di Firestore.
   const prefetchDashboard = React.useCallback(() => {
-    void import("../pages/Dashboard").catch(() => {
+    void import("../../pages/Dashboard").catch(() => {
       /* la rotta lo richiederà di nuovo mostrando il proprio errore */
     });
   }, []);

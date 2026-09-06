@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Download, Image as ImageIcon } from "lucide-react";
 import { toPng } from "html-to-image";
-import { downloadDataUrl } from "../utils/download";
+import { downloadDataUrl } from "../../utils/download";
 import { motion } from "framer-motion";
 import {
   TemplateConfig,

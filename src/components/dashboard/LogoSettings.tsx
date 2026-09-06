@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, Trash2, Plus, RefreshCw } from "lucide-react";
 import { doc, getDoc, getDocs, collection, setDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 
 export interface CustomLogo {
   id: string;
@@ -9,9 +9,9 @@ export interface CustomLogo {
   dataUrl: string;
 }
 
-import { LOCATIONS } from "./HeaderVariations";
-import { Logo, clearLogoCache, updateLogoScalesCache } from "./Logo";
-import { uploadMedia } from "../utils/media";
+import { LOCATIONS } from "../../data/locations";
+import { Logo, clearLogoCache, updateLogoScalesCache } from "../ui/Logo";
+import { uploadMedia } from "../../utils/media";
 
 const getBaseLogos = () => {
   const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];

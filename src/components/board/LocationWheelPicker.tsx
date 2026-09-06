@@ -1,29 +1,22 @@
+/**
+ * Selettore a rotelle per citta', zona e tipo di messaggio.
+ *
+ * ATTENZIONE: al momento non e' importato da nessuna parte. E' rimasto da una
+ * versione precedente dell'intestazione della bacheca, che oggi usa dei menu a
+ * tendina normali (vedi Board.tsx). Non viene quindi compilato in nessun
+ * pacchetto.
+ *
+ * E' stato tenuto invece che cancellato perche' e' lavoro finito e funzionante,
+ * ma va trattato come tale: se serve, va ricollegato; se non serve piu', si puo'
+ * eliminare il file senza toccare altro.
+ *
+ * Prima stava nello stesso file dell'elenco delle localita' (LOCATIONS), che
+ * invece serve quasi ovunque: cosi' finiva nel pacchetto di ogni pagina che
+ * aveva bisogno solo di quei dati.
+ */
 import React, { useState, useRef, useEffect } from "react";
+import { LOCATIONS, CITIES, formatCity, formatArea } from "../../data/locations";
 
-export const LOCATIONS: Record<string, string[]> = {
-  "MILANO": ["MILANO", "POLIMI", "HUNIMED", "BOCCONI", "UNIMI", "BICOCCA", "IULM", "UNISR", "CATTOLICA"],
-  "TORINO": ["TORINO", "UNITO", "POLITO"],
-  "GENOVA": ["GENOVA", "UNIGE"]
-};
-
-export const CITIES = Object.keys(LOCATIONS);
-
-export const formatCity = (city: string) => city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-
-export const formatArea = (area: string, city: string) => {
-  if (area === city) return "Tutta la città";
-  if (area === "POLIMI") return "PoliMi";
-  if (area === "UNIMI") return "UniMi";
-  if (area === "POLITO") return "PoliTo";
-  if (area === "UNITO") return "UniTo";
-  if (area === "UNIGE") return "UniGe";
-  if (area === "BICOCCA") return "Bicocca";
-  if (area === "BOCCONI") return "Bocconi";
-  if (area === "CATTOLICA") return "Cattolica";
-  if (area === "HUNIMED") return "Hunimed";
-  if (area === "UNISR") return "UniSR";
-  return area;
-};
 
 interface Props {
   city: string;
@@ -348,3 +341,4 @@ export function HeaderVariations({ city, setCity, area, setArea, type, setType, 
         </div>
   );
 }
+

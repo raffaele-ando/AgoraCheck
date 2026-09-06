@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { computeProfileColor } from "../utils/profiling";
+import { computeProfileColor } from "../../utils/profiling";
 import {
   AreaChart,
   Area,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { parseUserAgent } from "../utils/uaParser";
+import { parseUserAgent } from "../utils/userAgent";
 import {
   computeDeviceProfileId,
   computeProfileColor,
@@ -35,7 +35,7 @@ import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Logo } from "../components/Logo";
+import { Logo } from "../components/ui/Logo";
 import {
   LogOut,
   Monitor,
@@ -85,17 +85,17 @@ import { lazy, Suspense } from "react";
  * parte, richiesto al primo utilizzo.
  */
 const Analytics = lazy(() =>
-  import("../components/Analytics").then((m) => ({ default: m.Analytics })),
+  import("../components/dashboard/Analytics").then((m) => ({ default: m.Analytics })),
 );
-const StoryExportBeta = lazy(() => import("../components/StoryExportBeta"));
-const StoryTemplateConfig = lazy(() => import("../components/StoryTemplateConfig"));
-const CarouselTemplateConfig = lazy(() => import("../components/CarouselTemplateConfig"));
-const AppSettings = lazy(() => import("../components/AppSettings"));
+const StoryExportBeta = lazy(() => import("../components/dashboard/StoryExport"));
+const StoryTemplateConfig = lazy(() => import("../components/dashboard/StoryTemplateConfig"));
+const CarouselTemplateConfig = lazy(() => import("../components/dashboard/CarouselTemplateConfig"));
+const AppSettings = lazy(() => import("../components/dashboard/AppSettings"));
 // Le utilità di configurazione restano statiche: sono poche righe e servono
 // subito, senza trascinare l'interfaccia delle impostazioni.
-import { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../components/AppSettings";
-import { LinkWidgetCard } from "../components/LinkWidgetCard";
-import { LOCATIONS } from "../components/HeaderVariations";
+import { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../data/settings";
+import { LinkWidgetCard } from "../components/dashboard/LinkWidgetCard";
+import { LOCATIONS } from "../data/locations";
 interface Message {
   id: string;
   lookingFor: string;

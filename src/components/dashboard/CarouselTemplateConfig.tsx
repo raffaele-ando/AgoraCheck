@@ -34,10 +34,10 @@ import {
   updateDoc,
   writeBatch 
 } from "firebase/firestore";
-import { db } from "../firebase";
-import { uploadMedia } from "../utils/media";
-import { downloadDataUrl } from "../utils/download";
-import { LOCATIONS } from "./HeaderVariations";
+import { db } from "../../firebase";
+import { uploadMedia } from "../../utils/media";
+import { downloadDataUrl } from "../../utils/download";
+import { LOCATIONS } from "../../data/locations";
 
 export interface BoxConfig {
   top: number;

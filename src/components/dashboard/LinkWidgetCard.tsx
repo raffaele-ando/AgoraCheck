@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Copy, Check, Link } from "lucide-react";
-import { LinkWidgetConfig, loadLinkConfigFromDB, DEFAULT_LINK_CONFIG } from "./AppSettings";
-import { LOCATIONS, CITIES, formatCity, formatArea } from "./HeaderVariations";
+import { LinkWidgetConfig, loadLinkConfigFromDB, DEFAULT_LINK_CONFIG } from "../../data/settings";
+import { LOCATIONS, CITIES, formatCity, formatArea } from "../../data/locations";
 
 export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
   const [config, setConfig] = useState<LinkWidgetConfig>(DEFAULT_LINK_CONFIG);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { cn } from "../lib/utils";
-import { readDocDataSafe } from "../utils/firestoreRead";
+import { cn } from "../../utils/cn";
+import { readDocDataSafe } from "../../utils/firestoreRead";
 
 /**
  * Logo di ripiego, mostrato quando Firestore non ha (ancora) restituito nulla.

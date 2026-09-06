@@ -32,8 +32,8 @@ export const DEFAULT_CONFIG: TemplateConfig = {
 };
 
 import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
-import { uploadMedia } from "../utils/media";
+import { db } from "../../firebase";
+import { uploadMedia } from "../../utils/media";
 
 export const saveImageToDB = async (dataUrl: string, target: string, mode: string) => {
   try {
@@ -233,7 +233,7 @@ export const AutoScalingText = ({ text, config, showBorders, isActive, label }: 
   );
 };
 
-import { LOCATIONS } from "./HeaderVariations";
+import { LOCATIONS } from "../../data/locations";
 
 export default function StoryTemplateConfig() {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);

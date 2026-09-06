@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ChevronDown, Send, Instagram, ChevronRight, Moon, Sun } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
-import { Squircle } from './Squircle';
-import { Portal } from './Portal';
+import { Squircle } from '../ui/Squircle';
+import { Portal } from '../ui/Portal';
 
 /** Agorà Orbite, servito dallo stesso dominio sotto /orbite/. */
 const ORBITE_URL = `${import.meta.env.BASE_URL}orbite/`;
-import { useSubmitSpotted } from '../pages/Home';
-import { useVisitAnalytics } from '../hooks/useVisitAnalytics';
-import { loadWhatsappLinksFromDB, loadEventWidgetConfigFromDB, EventWidgetConfig, DEFAULT_EVENT_WIDGET_CONFIG } from './AppSettings';
+import { useSubmitSpotted } from '../../pages/Home';
+import { useVisitAnalytics } from '../../hooks/useVisitAnalytics';
+import { loadWhatsappLinksFromDB, loadEventWidgetConfigFromDB, EventWidgetConfig, DEFAULT_EVENT_WIDGET_CONFIG } from '../../data/settings';
 
 /**
  * Testo che si scrive e si cancella da solo, usato per i suggerimenti nei campi.
@@ -104,7 +104,7 @@ const MODES = [
   { id: 'gruppi', label: 'Persone', icon: '🤝', active: false }
 ];
 
-import { LOCATIONS, CITIES, formatCity, formatArea } from './HeaderVariations';
+import { LOCATIONS, CITIES, formatCity, formatArea } from '../../data/locations';
 
 const locations: Record<string, string[]> = {};
 for (const city of CITIES) {
@@ -138,7 +138,15 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
   );
 }
 
-export function ThemeCorkboard() {
+/**
+ * La bacheca pubblica: la schermata che vedono tutti, con il modulo per
+ * pubblicare uno spotted o un sondaggio.
+ *
+ * Il file si chiamava NewTheme.tsx e il componente ThemeCorkboard: nomi
+ * rimasti da un rifacimento grafico di anni fa, che dicevano da dove venivano
+ * invece di che cosa sono. Non c'e' nessun altro "tema" con cui confondersi.
+ */
+export function Board() {
   const { handleFocus, handleBlur, markSubmitted } = useVisitAnalytics();
   const { submit, isSubmitting, isSuccess, error, cooldown } = useSubmitSpotted();
   const navigate = useNavigate();

@@ -11,7 +11,7 @@ import {
   getDoc
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { Logo } from "../components/Logo";
+import { Logo } from "../components/ui/Logo";
 import {
   Send,
   CheckCircle2,
@@ -22,7 +22,7 @@ import {
   Instagram,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { cn } from "../lib/utils";
+import { cn } from "../utils/cn";
 import {
   resolveIdentity,
   getPrimaryTokenSync,
@@ -33,7 +33,7 @@ import {
   isInstagramBrowser,
   type DeviceTokens,
 } from "../utils/identity";
-const ThemeCorkboard = React.lazy(() => import("../components/NewTheme").then(m => ({ default: m.ThemeCorkboard })));
+const Board = React.lazy(() => import("../components/board/Board").then(m => ({ default: m.Board })));
 
 // --- INSTAGRAM BLOCKER ---
 function useInstagramEscape() {
@@ -1658,7 +1658,7 @@ export default function Home() {
         lunga, davanti c'è l'apertura del marchio.
       */}
       <React.Suspense fallback={<div className="absolute inset-0 bg-[var(--ag-bg)]" />}>
-        <ThemeCorkboard />
+        <Board />
       </React.Suspense>
     </div>
   );

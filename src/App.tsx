@@ -5,9 +5,9 @@
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { AdminGuard } from "./components/AdminGuard";
-import { Portal } from "./components/Portal";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
+import { AdminGuard } from "./components/dashboard/AdminGuard";
+import { Portal } from "./components/ui/Portal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -24,7 +24,7 @@ import { db } from "./firebase";
 import Home from "./pages/Home";
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
 const VideoPresentation = lazy(() => import("./pages/Video"));
-const Video2 = lazy(() => import("./pages/Video2"));
+const Video2 = lazy(() => import("./pages/VideoExport"));
 
 function DynamicBrand() {
   useEffect(() => {

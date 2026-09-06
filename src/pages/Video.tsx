@@ -9,8 +9,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import { Squircle } from "../components/Squircle";
-import { Logo } from "../components/Logo";
+import { Squircle } from "../components/ui/Squircle";
+import { Logo } from "../components/ui/Logo";
 import confetti from "canvas-confetti";
 
 const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
