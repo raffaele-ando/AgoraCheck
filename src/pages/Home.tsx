@@ -1650,7 +1650,14 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-[var(--ag-bg)] transition-colors duration-300">
-      <React.Suspense fallback={<div className="absolute inset-0 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-4 border-[#333] border-t-[#DC5F00] animate-spin"></div></div>}>
+      {/*
+        Era una rotella, ed è l'ultima rimasta sulla bacheca: compariva per una
+        frazione di secondo appena, quel tanto che basta per farla notare come
+        uno sfarfallio. Ora è una superficie del colore del fondo — invisibile
+        quando l'attesa è breve, che è sempre — e nel caso raro in cui sia
+        lunga, davanti c'è l'apertura del marchio.
+      */}
+      <React.Suspense fallback={<div className="absolute inset-0 bg-[var(--ag-bg)]" />}>
         <ThemeCorkboard />
       </React.Suspense>
     </div>

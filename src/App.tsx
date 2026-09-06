@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AdminGuard } from "./components/AdminGuard";
+import { Portal } from "./components/Portal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -65,14 +66,66 @@ function DynamicBrand() {
   return null;
 }
 
-/* Attesa fra una rotta e l'altra, nei colori della palette: prima il
-   segnaposto era crema fisso e in tema scuro faceva lampeggiare la pagina. */
-function RouteSpinner() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--ag-bg)]">
-      <div className="w-8 h-8 border-4 border-[var(--ag-accent)] border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  );
+/*
+  Attesa fra una rotta e l'altra: una superficie vuota, non una rotella.
+
+  La rotella che gira è stata tolta ovunque. Non comunica niente — nessuno sa
+  quanto durerà — e sulle attese brevi, che sono la norma qui perché i blocchi
+  sono già precaricati, lampeggia per un istante e infastidisce e basta. Un
+  fondo del colore giusto è invisibile quando l'attesa è breve, che è come
+  deve essere; quando è lunga, davanti c'è l'apertura del marchio.
+*/
+function RouteFallback() {
+  return <div className="min-h-screen bg-[var(--ag-bg)]" />;
+}
+
+/** L'apertura è già stata mostrata in questa scheda? */
+const INTRO_KEY = "agora_intro";
+function introAlreadyPlayed() {
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+    return sessionStorage.getItem(INTRO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * L'apertura del marchio al posto del caricamento iniziale.
+ *
+ * La copertura d'inchiostro esiste già dal primo fotogramma (vedi #ag-boot in
+ * index.html); questo componente ci disegna sopra gli archi che si compongono
+ * e poi aprono la porta sul sito. Una volta sola per scheda: rivederla a ogni
+ * navigazione interna sarebbe un pedaggio, non un benvenuto.
+ */
+function BootIntro() {
+  const [playing, setPlaying] = useState(() => !introAlreadyPlayed());
+
+  const finish = () => {
+    try {
+      sessionStorage.setItem(INTRO_KEY, "1");
+    } catch {
+      /* archiviazione bloccata: si rivedrà, non è un danno */
+    }
+    document.documentElement.classList.add("ag-booted");
+    setPlaying(false);
+  };
+
+  // Rete di sicurezza: se l'animazione non arrivasse in fondo (scheda in
+  // secondo piano, quindi nessun fotogramma) la copertura resterebbe sullo
+  // schermo e il sito sarebbe inutilizzabile. Meglio scoprirlo comunque.
+  useEffect(() => {
+    if (!playing) {
+      document.documentElement.classList.add("ag-booted");
+      return;
+    }
+    const t = setTimeout(finish, 4000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing]);
+
+  if (!playing) return null;
+  return <Portal open onDone={finish} />;
 }
 
 export default function App() {
@@ -83,6 +136,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      {/* Sopra ogni cosa finché la porta non si è aperta. */}
+      <BootIntro />
       <DynamicBrand />
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
@@ -104,11 +159,11 @@ export default function App() {
             path="/dashboard"
             element={
               <AdminGuard>
-                {/* Qui una rotella va bene: è dietro l'accesso riservato, la
-                    vedono solo gli amministratori e dura il tempo di scaricare
-                    un blocco già precaricato. Sulla bacheca pubblica, invece,
-                    un'attesa non ci deve essere affatto. */}
-                <Suspense fallback={<RouteSpinner />}>
+                {/* Il blocco della Dashboard è già stato precaricato dal
+                    controllo d'accesso, quindi qui non c'è quasi mai nulla da
+                    attendere: una superficie del colore giusto passa
+                    inosservata, una rotella no. */}
+                <Suspense fallback={<RouteFallback />}>
                   <DashboardInfo />
                 </Suspense>
               </AdminGuard>

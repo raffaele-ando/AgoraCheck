@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <!--
-      L'icona puntava a ./logo.png, un file che non esiste in public/: era un
-      404, quindi la scheda mostrava l'icona generica del browser finché (e se)
-      Firestore non restituiva quella caricata dalle impostazioni.
-      Ora c'è un SVG vero, nitido a ogni densità.
+      I percorsi partono dalla RADICE, non da "./", ed è la correzione che fa
+      ricomparire l'icona. Un href relativo si risolve rispetto all'indirizzo
+      della pagina: su /AgoraCheck/dashboard "./favicon.svg" dava
+      /AgoraCheck/favicon.svg e funzionava, ma su /AgoraCheck/milano/spotted
+      dava /AgoraCheck/milano/favicon.svg, cioè un 404 — ed è esattamente il
+      motivo per cui l'icona si vedeva nella Dashboard e non sulla bacheca o
+      sulle pagine delle città. In compilazione Vite antepone da sé la base
+      del sito ai percorsi che iniziano con "/".
     -->
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <!--
       L'SVG da solo non basta, ed è il motivo per cui l'icona non compariva.
       Chrome su Android IGNORA le icone SVG del manifest e Safari ignora un
@@ -17,9 +21,16 @@
       I PNG qui sotto sono generati da icon-maskable.svg con `node scripts/generate-icons.mjs`,
       così il marchio ha una sola fonte.
     -->
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
-    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!--
+      Il logotipo è la prima cosa che si guarda, quindi si chiede subito, con
+      priorità alta: senza, il browser lo scopre solo dopo aver interpretato il
+      JavaScript e lo dipinge mentre arriva — l'effetto "a strisce orizzontali".
+      Insieme al ridimensionamento (23 kB invece di 123) arriva in un colpo solo.
+    -->
+    <link rel="preload" as="image" href="/agora-logo.png" fetchpriority="high" />
     <meta name="theme-color" content="#DC5F00" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)" />
     <!--
@@ -63,7 +74,23 @@
         href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@800;900&family=Anton&display=swap"
       />
     </noscript>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!--
+      interactive-widget=resizes-content è la chiave del problema "quando tocco
+      un campo devo scorrere per vedere il resto".
+
+      Per difetto la tastiera virtuale su Android NON ridimensiona la pagina:
+      si limita a coprirla, sovrapponendosi. Il documento continua a credere di
+      essere alto quanto lo schermo intero, quindi 100dvh resta invariato e
+      metà interfaccia finisce sotto i tasti — da cui l'obbligo di scorrere per
+      raggiungere quello che si voleva toccare.
+
+      Con questo valore la tastiera riduce davvero il viewport: 100dvh diventa
+      lo spazio effettivamente visibile e il contenuto si ricompone per entrarci.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <title>Agorà</title>
     <meta name="description" content="Agorà — la bacheca di quartiere: spotted, sondaggi e messaggi della tua zona." />
     <meta property="og:title" content="Agorà" />
@@ -83,6 +110,45 @@
     <meta name="twitter:image" content="https://raffaele-ando.github.io/AgoraCheck/icon-512.png" />
   </head>
   <body>
+    <!--
+      Copertura d'avvio.
+
+      Prima, alla prima visita, si vedeva una rotella di caricamento: brutta e
+      soprattutto inutile, perché non dice nulla a chi guarda. Al suo posto c'è
+      l'apertura del marchio, la stessa di Agorà Orbite.
+
+      Questo riquadro è QUI e non in React di proposito: deve esistere dal primo
+      fotogramma, prima ancora che il JavaScript venga interpretato, altrimenti
+      resterebbe scoperto proprio l'istante che si vuole coprire. È inchiostro
+      pieno, dello stesso colore del velo del portale, così quando React monta
+      l'animazione il passaggio non si vede.
+
+      Chi ha già visto l'apertura in questa scheda, o ha chiesto meno
+      animazioni, salta tutto: la classe viene messa subito qui sotto e il
+      riquadro non compare affatto.
+    -->
+    <style>
+      #ag-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        background: #111111;
+      }
+      html.ag-booted #ag-boot { display: none; }
+    </style>
+    <script>
+      try {
+        if (
+          sessionStorage.getItem("agora_intro") === "1" ||
+          matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+          document.documentElement.className += " ag-booted";
+        }
+      } catch (e) {
+        /* archiviazione bloccata: si mostra l'apertura, non è un danno */
+      }
+    </script>
+    <div id="ag-boot"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

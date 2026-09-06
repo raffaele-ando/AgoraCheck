@@ -79,14 +79,34 @@ export function ThemeCorkboard() {
       return false;
     }
   });
+  const themeAnimTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
     try {
-      document.documentElement.classList.toggle("dark-theme", next);
+      const root = document.documentElement;
+      // Durata unica per tutto ciò che cambia colore, per la sola durata dello
+      // scambio: senza, ogni elemento finiva con i propri tempi (200, 300,
+      // 500, 700 ms) e la schermata sembrava sfaldarsi a pezzi. La regola è in
+      // index.css. Il timer viene riavviato se si preme di nuovo prima della
+      // fine, così due click ravvicinati non lasciano la classe appesa.
+      root.classList.add("ag-theme-switching");
+      if (themeAnimTimer.current) clearTimeout(themeAnimTimer.current);
+      themeAnimTimer.current = setTimeout(() => {
+        root.classList.remove("ag-theme-switching");
+        themeAnimTimer.current = null;
+      }, 300);
+
+      root.classList.toggle("dark-theme", next);
       localStorage.setItem("agora_theme", next ? "dark" : "light");
     } catch {}
   };
+  useEffect(
+    () => () => {
+      if (themeAnimTimer.current) clearTimeout(themeAnimTimer.current);
+    },
+    [],
+  );
   /** In viaggio verso Orbite: il portale è in scena e sta aprendo la porta. */
   const [leaving, setLeaving] = useState(false);
   const defaultCity = Object.keys(locations)[0] || "Milano";
@@ -320,9 +340,9 @@ export function ThemeCorkboard() {
       */}
       {leaving && (
         <Portal
-          open
-          onDone={() => {
-            window.location.href = ORBITE_URL;
+          open={false}
+          onComposed={() => {
+            window.location.href = `${ORBITE_URL}?p=1`;
           }}
         />
       )}
@@ -388,7 +408,7 @@ export function ThemeCorkboard() {
         <div className="relative w-full shrink-0">
           {isFormFocused ? (
             /* COMPACT STATE */
-            <div className="flex gap-2 h-[3.25rem] pb-2 w-full">
+            <div className="ag-swap-in flex gap-2 h-[3.25rem] pb-2 w-full">
               
               {/* COMPACT MODE */}
               <div className="flex flex-1 h-full min-w-0" style={{ borderRadius: 18 }}>
@@ -432,7 +452,7 @@ export function ThemeCorkboard() {
             </div>
           ) : (
             /* EXPANDED STATE */
-            <div className="flex flex-col gap-2.5 pb-2 w-full">
+            <div className="ag-swap-in flex flex-col gap-2.5 pb-2 w-full">
                
                {/* EXPANDED MODE */}
                <div className="w-full h-14 shrink-0 drop-shadow-sm z-10" style={{ borderRadius: 24 }}>

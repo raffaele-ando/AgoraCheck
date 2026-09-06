@@ -306,7 +306,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   if (authLoading || verifying) {
     return (
       <div className="min-h-screen bg-[var(--ag-bg)] flex flex-col gap-4 items-center justify-center transition-colors">
-        <div className="w-8 h-8 border-4 border-[var(--ag-accent)] border-t-transparent rounded-full animate-spin"></div>
+        {/* Gli archi del marchio che respirano, non una rotella: dice la
+            stessa cosa senza il fastidio di un oggetto che gira. */}
+        <div className="ag-wait" role="status" aria-label="Caricamento" />
         {isStuck && (
           <div className="text-center text-sm text-[var(--ag-muted)] px-4 max-w-sm mt-4">
             Il controllo dell'accesso sta impiegando più del previsto.

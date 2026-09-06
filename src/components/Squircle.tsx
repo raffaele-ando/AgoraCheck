@@ -97,10 +97,23 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
         maskImage: isReady ? svgParams.mask : undefined,
         WebkitMaskPosition: "center",
         WebkitMaskRepeat: "no-repeat",
-        WebkitMaskSize: "contain",
+        // "100% 100%" e non "contain": è la causa del riquadro tagliato di
+        // lato durante i cambi di dimensione.
+        //
+        // La maschera viene rigenerata da un ResizeObserver, cioè SEMPRE dopo
+        // che l'elemento ha già cambiato misura. Per quel fotogramma la
+        // maschera è di dimensioni vecchie e con "contain" viene rimpicciolita
+        // per starci dentro e centrata: su un elemento diventato più basso, una
+        // maschera 300x50 su una scatola 300x40 si riduce a 240x40 e lascia
+        // 30px scoperti per lato — che è esattamente il contenuto tagliato e
+        // spostato che si vede aprendo la tastiera.
+        //
+        // Stirandola invece al 100% per entrambi i lati, nel fotogramma di
+        // ritardo la forma è appena deformata negli angoli e nulla sparisce.
+        WebkitMaskSize: "100% 100%",
         maskPosition: "center",
         maskRepeat: "no-repeat",
-        maskSize: "contain",
+        maskSize: "100% 100%",
         transform: 'translateZ(0)',
         isolation: 'isolate'
       }} 

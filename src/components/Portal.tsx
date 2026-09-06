@@ -106,6 +106,16 @@ export interface PortalProps {
   open: boolean;
   /** Chiamata a animazione conclusa: qui si naviga, o si smonta il portale. */
   onDone?: () => void;
+  /**
+   * Chiamata quando gli archi hanno finito di comporsi, cioè quando lo schermo
+   * è interamente coperto dall'inchiostro e il marchio si legge.
+   *
+   * È il momento in cui si può cambiare pagina senza che si veda: la cucitura
+   * fra i due siti cade sotto una copertura totale. Serve per la transizione
+   * verso Orbite, che riprende da questa stessa posa e fa solo l'apertura —
+   * così le due metà sono un movimento solo invece di due animazioni in fila.
+   */
+  onComposed?: () => void;
   /** Colore del velo. Per difetto l'inchiostro di Orbite: vedi sotto. */
   veil?: string;
 }
@@ -120,16 +130,19 @@ export interface PortalProps {
 const VEIL_INK = "#111111";
 const ARCH_CREAM = "#F4F1EA";
 
-export function Portal({ open, onDone, veil }: PortalProps) {
+export function Portal({ open, onDone, onComposed, veil }: PortalProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const veilRef = useRef<SVGPathElement>(null);
   const plugRef = useRef<SVGPathElement>(null);
   const barsRef = useRef<(SVGPathElement | null)[]>([]);
   const openRef = useRef(open);
   const doneRef = useRef(false);
+  const composedRef = useRef(false);
   const onDoneRef = useRef(onDone);
+  const onComposedRef = useRef(onComposed);
   openRef.current = open;
   onDoneRef.current = onDone;
+  onComposedRef.current = onComposed;
 
   useEffect(() => {
     // Chi ha chiesto meno animazioni non deve attraversare nessuna porta.
@@ -192,6 +205,12 @@ export function Portal({ open, onDone, veil }: PortalProps) {
       if (elapsed < T_GROW) {
         s = sStart + (sLogo - sStart) * easeOut(elapsed / T_GROW);
       } else if (openedAt === null) {
+        // Composizione conclusa: lo schermo è interamente coperto e il marchio
+        // si legge. Chi sta cambiando pagina lo fa adesso, sotto la copertura.
+        if (!composedRef.current) {
+          composedRef.current = true;
+          onComposedRef.current?.();
+        }
         // Attesa: un respiro appena percettibile, così si capisce che il sito
         // sta lavorando e non che si è bloccato.
         const pulse = 1 + 0.02 * Math.sin((elapsed - T_GROW) / 260);

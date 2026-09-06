@@ -81,6 +81,45 @@
 :root { --ag-edge-color: transparent; }
 .dark-theme { --ag-edge-color: var(--ag-border); }
 
+/*
+  Cambio di tema: TUTTO si muove insieme.
+
+  Il difetto era che ogni elemento portava la propria durata — 200, 300, 500,
+  700, perfino 1000 ms — perché quelle transizioni erano state scritte per le
+  interazioni (passaggio del dito, pressione), non per lo scambio di tema. Al
+  click sulla lunetta partivano quindi tutte insieme ma finivano in momenti
+  diversi, e la schermata sembrava sfaldarsi a pezzi. I contorni disegnati in
+  SVG, per giunta, cambiavano di scatto perché non avevano transizione affatto.
+
+  Qui si impone una durata unica a tutto ciò che cambia colore, ma SOLO per la
+  frazione di secondo dello scambio: la classe viene messa e tolta da
+  toggleTheme. Fuori da quel momento ogni elemento torna alle proprie
+  transizioni, che per le interazioni vanno benissimo.
+
+  Le proprietà elencate sono solo quelle cromatiche: mettere `all` animerebbe
+  anche posizioni e dimensioni, facendo strisciare il layout.
+*/
+html.ag-theme-switching,
+html.ag-theme-switching *,
+html.ag-theme-switching *::before,
+html.ag-theme-switching *::after {
+  transition-property: background-color, color, border-color, fill, stroke,
+    box-shadow, opacity !important;
+  transition-duration: 260ms !important;
+  transition-timing-function: ease !important;
+  transition-delay: 0s !important;
+}
+
+/* Chi ha chiesto meno animazioni cambia tema di scatto, che è corretto. */
+@media (prefers-reduced-motion: reduce) {
+  html.ag-theme-switching,
+  html.ag-theme-switching *,
+  html.ag-theme-switching *::before,
+  html.ag-theme-switching *::after {
+    transition-duration: 0s !important;
+  }
+}
+
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
@@ -130,8 +169,54 @@ html, body {
 .ag-fade-in {
   animation: ag-fade-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/*
+  Scambio fra la barra estesa e quella compatta (quando si tocca un campo).
+
+  I due stati sono rami diversi dello stesso JSX, quindi React smonta l'uno e
+  monta l'altro: senza nulla, il cambio è uno scatto secco. Una comparsa breve
+  e appena accennata lo rende un passaggio invece di un salto. Volutamente
+  corta — 170 ms — perché sta fra il tocco e la tastiera che sale: più lunga
+  darebbe la sensazione di un ritardo.
+*/
+@keyframes ag-swap-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.ag-swap-in {
+  animation: ag-swap-in 170ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ag-fade-in { animation: none; }
+  .ag-fade-in,
+  .ag-swap-in { animation: none; }
+}
+
+/*
+  Attesa col marchio, al posto della rotella che gira.
+
+  Sono i cinque archi del brandmark — lo stesso file SVG usato da Agorà Orbite,
+  quindi una sola fonte per la forma. Arriva come maschera e non come immagine
+  perché così prende il colore dell'accento e segue il tema; un <img> non è
+  ricolorabile dall'esterno.
+
+  Il respiro è lento e di ampiezza ridotta: deve dire "sto lavorando" senza
+  attirare l'occhio, che è il difetto della rotella.
+*/
+.ag-wait {
+  width: 4rem;
+  height: 3.3rem;
+  background-color: var(--ag-accent);
+  -webkit-mask: url("/brandmark.svg") no-repeat center / contain;
+  mask: url("/brandmark.svg") no-repeat center / contain;
+  animation: ag-wait-breathe 1600ms ease-in-out infinite;
+}
+@keyframes ag-wait-breathe {
+  0%, 100% { opacity: 0.35; transform: scale(0.97); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ag-wait { animation: none; opacity: 0.8; }
 }
 
 /* La selezione del testo riprende l'accento invece del blu di sistema. */

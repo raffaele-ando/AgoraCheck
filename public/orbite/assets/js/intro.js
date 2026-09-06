@@ -95,7 +95,17 @@
   function easeIn(t) { return Math.pow(t, 2.4); }
   function clamp01(t) { return t < 0 ? 0 : (t > 1 ? 1 : t); }
 
-  var elapsed = 0, last = 0, speed = 1, raf = 0, cleared = false, plugGone = false;
+  // Arrivo dalla bacheca: la porta si è già composta di là.
+  //
+  // Senza questo, chi clicca il logo su Agorà vedeva DUE animazioni in fila —
+  // gli archi si componevano e si aprivano sulla bacheca, poi qui si
+  // ricomponevano da capo. Con ?p=1 si salta la crescita e la posa e si parte
+  // dall'apertura: le due metà diventano un movimento solo, con il cambio di
+  // pagina nascosto sotto la copertura d'inchiostro.
+  var continuing = /(?:^|[?&])p=1(?:&|$)/.test(location.search);
+
+  var elapsed = continuing ? T_GROW + T_HOLD : 0;
+  var last = 0, speed = 1, raf = 0, cleared = false, plugGone = false;
   var barDone = [false, false, false, false, false];
 
   // Frazione di apertura già percorsa (0 durante crescita e posa).
@@ -183,6 +193,16 @@
   ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
     window.addEventListener(ev, hurry, { once: true, passive: true });
   });
+
+  // Il contrassegno ?p=1 ha fatto il suo lavoro: si toglie dall'indirizzo, così
+  // un ricaricamento o un link condiviso rivedono l'apertura per intero.
+  if (continuing && window.history && history.replaceState) {
+    try {
+      var u = new URL(location.href);
+      u.searchParams.delete('p');
+      history.replaceState(null, '', u.pathname + u.search + u.hash);
+    } catch (e) { /* indirizzo non manipolabile: nessun danno */ }
+  }
 
   document.documentElement.classList.add('is-opening');
   raf = requestAnimationFrame(frame);
