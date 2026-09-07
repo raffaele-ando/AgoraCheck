@@ -132,13 +132,20 @@ function BootIntro() {
     () => !introAlreadyPlayed() || cameFromHistory(),
   );
   /**
-   * Si parte dal marchio già composto quando si arriva dalla cronologia.
+   * Tornando indietro si rifà l'apertura INTERA, come all'ingresso.
    *
-   * Tornando indietro da Orbite, la crescita degli archi è già stata vista
-   * andando: rifarla sarebbe la stessa animazione due volte. Resta la sola
-   * apertura, che è il movimento che racconta "sei rientrato".
+   * Avevo fatto partire il ritorno dal marchio già composto, per non ripetere
+   * la crescita vista all'andata. Sbagliato: senza la crescita il marchio
+   * compare di colpo, a piena dimensione e piena opacità, e poi vola via —
+   * non è un movimento, è uno scatto, e accanto alle altre due stonava
+   * ("l'animazione delle porte è più brutta rispetto alle altre").
+   *
+   * All'andata evitare il doppione aveva senso, perché le due metà sono un
+   * movimento solo a cavallo del cambio di pagina. Al ritorno non c'è nessuna
+   * seconda metà: c'è una sola animazione, e allora tanto vale che sia quella
+   * giusta.
    */
-  const [composed] = useState(() => cameFromHistory());
+  const [back] = useState(() => cameFromHistory());
   /**
    * L'animazione non parte finché l'app non ha finito di avviarsi.
    *
@@ -177,17 +184,17 @@ function BootIntro() {
     // davvero svuotata. Il conteggio riparte da zero appena una finestra
     // risulta stretta o scaduta.
     //
-    // Al RITORNO da Orbite l'attesa è però molto più corta: là c'è solo la
-    // posa e l'apertura, mezzo movimento invece di uno intero, e chi ha
-    // premuto "indietro" vuole rientrare, non guardare. Due secondi di
-    // inchiostro prima ancora che l'animazione cominci sono un'attesa, non
-    // una presentazione: basta una finestra di quiete e un tetto breve.
-    const needCalm = composed ? 1 : 2;
+    // Al RITORNO da Orbite l'attesa prima di COMINCIARE è però più corta: la
+    // pagina è già stata costruita una volta in questa scheda, i file sono
+    // nella cache e la coda si svuota prima. Chi ha premuto "indietro" vuole
+    // rientrare: due secondi di inchiostro prima ancora che l'animazione parta
+    // sarebbero un'attesa, non una presentazione.
+    const needCalm = back ? 1 : 2;
     let calm = 0;
     const waitCalm = () => {
       if (done) return;
       if (typeof requestIdleCallback !== "function") {
-        handle = setTimeout(go, composed ? 120 : 400) as unknown as number;
+        handle = setTimeout(go, back ? 120 : 400) as unknown as number;
         return;
       }
       handle = requestIdleCallback(
@@ -202,7 +209,7 @@ function BootIntro() {
 
     // Tetto assoluto: su una rete o un telefono molto lenti la quiete potrebbe
     // non arrivare mai, e la copertura non può restare all'infinito.
-    const cap = setTimeout(go, composed ? 700 : 2000);
+    const cap = setTimeout(go, back ? 700 : 2000);
     waitCalm();
 
     return () => {
@@ -210,7 +217,7 @@ function BootIntro() {
       if (typeof cancelIdleCallback === "function") cancelIdleCallback(handle);
       else clearTimeout(handle);
     };
-  }, [playing, composed]);
+  }, [playing, back]);
 
   const finish = () => {
     try {
@@ -260,7 +267,6 @@ function BootIntro() {
   return (
     <Portal
       open
-      startComposed={composed}
       // La copertura statica di index.html va tolta appena il velo del portale
       // copre lo schermo. Restava invece fino alla fine dell'animazione, e
       // siccome sta SOTTO il portale, il vano della porta si apriva su altro

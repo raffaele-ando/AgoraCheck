@@ -231,13 +231,20 @@ html, body {
   il browser, per portare in vista il campo appena toccato, faceva scorrere
   quel contenitore, e il contenuto si spostava da solo.
 
-  La soglia non è scelta a occhio: misurata riga per riga, il pannello comincia
-  a debordare a 471 px di altezza visibile. Sopra non cambia niente. Sotto si
-  toglie il logotipo — che mentre si scrive è decorazione, e chi scrive guarda
-  i campi — e, più giù ancora, si stringono margini e righe. La regola vale
-  solo con un campo attivo (.ag-typing): a riposo il logotipo c'è sempre.
+  La prima volta avevo messo la soglia a 472 px, cioè al punto esatto in cui il
+  pannello cominciava a debordare. Troppo tardi: sopra quella soglia il
+  pannello NON deborda, ma solo perché comprime — le risposte scendevano da 48
+  a 41 px e il campo della domanda restava un filo. Entrava, ma stretto, ed è
+  la segnalazione "è troppo piccolo e brutto la gestione degli spazi delle
+  opzioni e del box domanda".
+
+  La soglia è ora 600 px, che con la tastiera aperta su un telefono è sempre
+  vera e a tastiera chiusa non lo è mai. Le 48 px delle risposte tornano intere
+  e quello che avanza va nel campo della domanda. Il logotipo torna appena si
+  smette di scrivere. Più giù ancora si stringono margini e righe. La regola
+  vale solo con un campo attivo (.ag-typing).
 */
-@media (max-height: 472px) {
+@media (max-height: 600px) {
   .ag-typing .ag-brandbar { display: none; }
   /* Il campo della domanda è il primo a stringersi, e con la spaziatura
      originale la seconda riga del segnaposto restava tagliata a metà. */

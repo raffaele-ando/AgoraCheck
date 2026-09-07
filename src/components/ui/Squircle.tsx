@@ -84,7 +84,17 @@ export const Squircle = React.forwardRef<any, SquircleProps>(({
       // rimetteva nello stato di React e obbligava il browser a ridecodificare
       // la maschera: il riquadro lampeggiava. Ora, a parità di misura, non si
       // fa nulla.
-      if (lastSize.current.w === width && lastSize.current.h === height) return;
+      //
+      // La tolleranza non è pigrizia: la maschera è stirata al 100% su
+      // entrambi i lati (vedi maskSize più sotto), quindi due o tre pixel di
+      // differenza la deformano di una frazione di percento negli angoli e
+      // non si vedono. Rigenerarla invece si vede eccome — è una nuova
+      // immagine SVG da decodificare, ed è il "rigenerarsi" segnalato quando
+      // la barra del browser compare e sparisce e tutte le altezze ballano di
+      // un paio di pixel.
+      const dw = Math.abs(lastSize.current.w - width);
+      const dh = Math.abs(lastSize.current.h - height);
+      if (lastSize.current.w > 0 && dw <= 3 && dh <= 3) return;
       lastSize.current = { w: width, h: height };
 
       const radius = cornerRadius === 'full' ? Math.min(width, height) / 2 : Number(cornerRadius);

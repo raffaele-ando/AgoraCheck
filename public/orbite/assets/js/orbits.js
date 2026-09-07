@@ -428,6 +428,16 @@
   applyLayout();
   start();
 
+  // La scena è disposta: da qui in poi i loghi stanno in orbita e non sono più
+  // un elenco incolonnato.
+  //
+  // Il segnale serve all'apertura (intro.js), che senza si apriva su questo
+  // elenco. I due file sono due richieste separate: intro.js può arrivare per
+  // primo e cominciare ad aprire la porta mentre questo non è ancora partito —
+  // e arrivando dalla bacheca con ?p=1 la porta si apre SUBITO, quindi la
+  // finestra in cui si vedeva il grezzo era garantita, non rara.
+  document.documentElement.classList.add('scene-ready');
+
   if (window.ResizeObserver) new ResizeObserver(relayout).observe(scene);
   else window.addEventListener('resize', relayout);
   window.addEventListener('orientationchange', relayout);

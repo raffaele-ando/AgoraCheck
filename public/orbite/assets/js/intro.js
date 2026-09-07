@@ -115,6 +115,68 @@
   var last = 0, speed = 1, raf = 0, cleared = false, plugGone = false;
   var barDone = [false, false, false, false, false];
 
+  // --- la porta non si apre su una scena non pronta ------------------------
+  //
+  // Segnalazione: "quando passo alla schermata orbite si mostra un elenco di
+  // tutti i blocchi con i loghi delle uni e poi carica il sito".
+  //
+  // I loghi diventano orbite solo quando orbits.js applica la disposizione;
+  // prima sono un elenco incolonnato. Ma orbits.js è una richiesta separata e
+  // parte DOPO questo file: arrivando dalla bacheca con ?p=1 la porta si apre
+  // dal primo fotogramma, e su una rete lenta si apriva regolarmente
+  // sull'elenco grezzo.
+  //
+  // Qui il tempo si ferma alla fine della posa finché la scena non è pronta:
+  // disposizione applicata e immagini arrivate. Sotto il velo non si vede
+  // nulla di questa attesa — si vede il marchio composto, che è già quello che
+  // si deve guardare. Il tetto esiste perché su una rete pessima le immagini
+  // potrebbero non arrivare mai: passato quello si apre comunque.
+  // Due attese diverse, con due tetti diversi, perché costano diversamente.
+  //
+  // La DISPOSIZIONE è calcolo locale: arriva appena orbits.js è stato scaricato
+  // ed eseguito, e senza di lei si aprirebbe sull'elenco incolonnato — il
+  // difetto vero. Vale la pena aspettarla a lungo.
+  //
+  // Le IMMAGINI sono rete: su una connessione lenta possono metterci parecchio,
+  // e nel frattempo si vedrebbero i contenitori bianchi vuoti. Aspettarle un
+  // momento evita quello, ma aspettarle sempre trasformerebbe l'apertura in una
+  // schermata nera che non finisce. Mezzo secondo e poi si va: al peggio i
+  // loghi si accendono dentro una scena già disposta, che è un dettaglio, non
+  // una pagina grezza.
+  var LAYOUT_CAP = 2000;
+  var IMG_CAP = 500;
+  var heldLayout = 0, heldImg = 0;
+  var layoutDone = false, imgsDone = false;
+
+  function laidOut() {
+    if (layoutDone) return true;
+    layoutDone = document.documentElement.classList.contains('scene-ready');
+    return layoutDone;
+  }
+
+  function imagesIn() {
+    if (imgsDone) return true;
+    var imgs = document.querySelectorAll('.token:not([hidden]) img');
+    for (var i = 0; i < imgs.length; i++) {
+      if (!imgs[i].complete) return false;
+    }
+    imgsDone = true;
+    return true;
+  }
+
+  /** Si può aprire? Oppure si è già aspettato abbastanza. */
+  function mayOpen(dt) {
+    if (!laidOut()) {
+      heldLayout += dt;
+      return heldLayout >= LAYOUT_CAP;
+    }
+    if (!imagesIn()) {
+      heldImg += dt;
+      return heldImg >= IMG_CAP;
+    }
+    return true;
+  }
+
   // Frazione di apertura già percorsa (0 durante crescita e posa).
   function openProgress(t) {
     return clamp01((t - T_GROW - T_HOLD) / T_OPEN);
@@ -143,8 +205,16 @@
   function frame(now) {
     if (!host) return;
     if (!last) last = now;
-    elapsed += (now - last) * speed;
+    var dt = (now - last) * speed;
     last = now;
+
+    // Fine della posa: si aspetta la scena, e l'attesa non consuma
+    // l'animazione — il marchio resta composto invece di aprirsi a vuoto.
+    if (elapsed + dt > T_GROW + T_HOLD && !mayOpen(dt)) {
+      elapsed = Math.min(elapsed + dt, T_GROW + T_HOLD);
+    } else {
+      elapsed += dt;
+    }
 
     var W = window.innerWidth, H = window.innerHeight;
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);

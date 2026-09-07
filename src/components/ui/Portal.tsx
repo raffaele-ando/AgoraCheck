@@ -156,15 +156,6 @@ export interface PortalProps {
    * inchiostro e non c'è nulla da dissolvere.
    */
   fadeIn?: boolean;
-  /**
-   * Si parte dal marchio già composto, saltando la crescita: resta la sola
-   * apertura.
-   *
-   * Serve quando si ARRIVA da un'altra pagina che la crescita l'ha già fatta:
-   * Orbite quando si torna indietro, o Agorà quando ci si va. Rifarla sarebbe
-   * la stessa animazione due volte, che è il difetto che si voleva togliere.
-   */
-  startComposed?: boolean;
   /** Colore del velo. Per difetto l'inchiostro di Orbite: vedi sotto. */
   veil?: string;
 }
@@ -211,7 +202,6 @@ export function Portal({
   onComposed,
   onVeiled,
   fadeIn,
-  startComposed,
   veil,
 }: PortalProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -245,19 +235,15 @@ export function Portal({
 
     let raf = 0;
     let last = 0;
-    // Partendo da composti si salta la CRESCITA, ma non la posa.
+    // L'animazione parte sempre dall'inizio: crescita, posa, apertura.
     //
-    // È la correzione di "mi riparte la porta senza logo". Il tempo partiva da
-    // T_GROW + T_HOLD, cioè esattamente dall'istante dell'apertura: al primo
-    // fotogramma `openedAt` veniva già fissato e la porta cominciava subito a
-    // volare via. Il marchio composto c'era — per due o tre fotogrammi — ma
-    // non restava fermo abbastanza da vedersi: si vedeva solo il vano che si
-    // allargava, cioè una porta senza logo.
-    //
-    // Partendo da T_GROW il marchio è già intero (gli archi finiscono di
-    // comparire a 540 ms) e ha davanti i 300 ms di posa, gli stessi
-    // dell'ingresso. Chi torna indietro rivede il marchio, poi la porta.
-    let elapsed = startComposed ? T_GROW : 0;
+    // Avevo previsto una partenza "a marchio già composto" per il ritorno da
+    // Orbite, dove la crescita era già stata vista all'andata. Ma senza la
+    // crescita il marchio compare di colpo, a piena dimensione e piena
+    // opacità: non è un movimento, è uno scatto, e accanto alle altre due
+    // aperture stonava. Al ritorno c'è una sola animazione, quindi si fa
+    // quella giusta per intero.
+    let elapsed = 0;
     // Istante in cui è stato dato il via libera all'apertura: prima di allora
     // il tempo scorre solo per la fase di crescita.
     let openedAt: number | null = null;
