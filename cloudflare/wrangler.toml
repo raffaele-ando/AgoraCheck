@@ -1,8 +1,12 @@
 # Cloudflare Worker config for the Agorà edge (identity + media).
 # Deploy:  cd cloudflare && npx wrangler deploy
 # Secret:  npx wrangler secret put ID_SECRET   (any long random string)
+#
+# main è worker.ts, non worker.js: Wrangler compila TypeScript da sé con il
+# proprio esbuild interno al momento del deploy, quindi non serve alcun passo
+# di compilazione a monte per questo file.
 name = "agora-edge"
-main = "worker.js"
+main = "worker.ts"
 compatibility_date = "2024-11-01"
 
 # Bind the resources already provisioned in this account:

@@ -16,6 +16,11 @@
 //   (everything else)   -> proxied to the origin unchanged.
 //
 // Bindings (see wrangler.toml): MEDIA (R2), IDENTITY (KV), ID_SECRET (secret).
+//
+// Tipizzato con i tipi minimi in cloudflare/types/workers-lite.d.ts, non con
+// il pacchetto ufficiale @cloudflare/workers-types — vedi quel file per il
+// motivo. `wrangler deploy` accetta questo file direttamente: bundlizza da sé
+// con esbuild, non serve alcuna compilazione a monte.
 // ===========================================================================
 
 const COOKIE = "aid";
@@ -24,7 +29,7 @@ const MAX_AGE = Math.round(1.1 * YEAR); // ~400 days
 
 const enc = new TextEncoder();
 
-async function hmac(secret, msg) {
+async function hmac(secret: string, msg: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     "raw",
     enc.encode(secret),
@@ -39,13 +44,13 @@ async function hmac(secret, msg) {
     .replace(/=+$/, "");
 }
 
-function readCookie(req, name) {
+function readCookie(req: Request, name: string): string | null {
   const c = req.headers.get("Cookie") || "";
   const m = c.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-function cors(req, extra = {}) {
+function cors(req: Request, extra: Record<string, string> = {}): Record<string, string> {
   const origin = req.headers.get("Origin") || "";
   return {
     "Access-Control-Allow-Origin": origin || "*",
@@ -57,7 +62,7 @@ function cors(req, extra = {}) {
 }
 
 export default {
-  async fetch(req, env, ctx) {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname;
 
@@ -68,7 +73,7 @@ export default {
     // --- /id : durable HttpOnly device token ---------------------------------
     if (path === "/id") {
       let aid = readCookie(req, COOKIE);
-      let setCookie = null;
+      let setCookie: string | null = null;
       if (!aid) {
         aid = crypto.randomUUID();
         setCookie =
@@ -107,9 +112,9 @@ export default {
     // --- /px.gif : ETag persistence -----------------------------------------
     if (path === "/px.gif") {
       const cookieAid = readCookie(req, COOKIE);
-      let aid =
-        cookieAid || req.headers.get("If-None-Match")?.replace(/"/g, "");
-      let setCookie = null;
+      let aid: string | null =
+        cookieAid || req.headers.get("If-None-Match")?.replace(/"/g, "") || null;
+      let setCookie: string | null = null;
       if (!aid) {
         aid = crypto.randomUUID();
       }
@@ -123,7 +128,7 @@ export default {
         atob("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"),
         (c) => c.charCodeAt(0),
       );
-      const headers = {
+      const headers: Record<string, string> = {
         "Content-Type": "image/gif",
         "Cache-Control": "private, max-age=31536000, immutable",
         ETag: `"${aid}"`,

@@ -136,32 +136,14 @@
       }
       html.ag-booted #ag-boot { display: none; }
     </style>
-    <script>
-      try {
-        // Il tasto "indietro" NON è più un caso speciale: si torna e basta.
-        //
-        // Avevo tenuto la copertura anche sul ritorno, per poterci disegnare
-        // sopra l'apertura della porta. Non funziona, e non per come era
-        // scritto: premendo indietro il browser mostra per primo il PROPRIO
-        // ritratto della pagina di destinazione, che ha già in memoria, e solo
-        // dopo lascia spazio al documento vero. Qualunque cosa disegniamo noi
-        // arriva per forza dopo quel ritratto — quindi si vedeva la bacheca,
-        // poi il nero, poi l'animazione. Non è un difetto di sincronia da
-        // aggiustare: è l'ordine imposto dal browser, e contro quello si perde
-        // sempre.
-        //
-        // Indietro significa "torna com'era", e com'era è già sullo schermo:
-        // la cosa giusta è arrivarci subito, senza interruzioni.
-        if (
-          sessionStorage.getItem("agora_intro") === "1" ||
-          matchMedia("(prefers-reduced-motion: reduce)").matches
-        ) {
-          document.documentElement.className += " ag-booted";
-        }
-      } catch (e) {
-        /* archiviazione bloccata: si mostra l'apertura, non è un danno */
-      }
-    </script>
+    <!--
+      Il codice qui sotto viene GENERATO da src/bootstrap/inkCover.ts (vedi il
+      plugin in vite.config.ts) e non va modificato a mano: la modifica
+      sparirebbe alla prossima compilazione. Il ragionamento — perché il tasto
+      "indietro" non è più un caso speciale — sta in quel file.
+    -->
+    <!-- ag-boot-script -->
+    <script></script>
     <div id="ag-boot"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

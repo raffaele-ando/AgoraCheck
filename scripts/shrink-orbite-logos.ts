@@ -1,12 +1,12 @@
 // Riduce i loghi degli atenei alla misura in cui vengono davvero mostrati.
 //
 // Nella scena di Orbite ogni logo sta dentro una pastiglia larga al massimo
-// 152 px (vedi il clamp in assets/js/orbits.js) e alta 65, quindi l'immagine
-// non supera mai ~130x57 px. I file però erano gli originali del marchio:
-// Polimi.svg da 98 kB su disco e 32 kB compressi, per disegnare un rettangolo
-// da 130 px. Sommati, i loghi visibili pesavano quasi 200 kB in rete — ed è la
-// segnalazione "ci mette un sacco a caricare tutti i loghi": su rete mobile
-// quel peso è il motivo per cui le pastiglie restano bianche.
+// 152 px (vedi il clamp in src/brand/orbiteScene.ts) e alta 65, quindi
+// l'immagine non supera mai ~130x57 px. I file però erano gli originali del
+// marchio: Polimi.svg da 98 kB su disco e 32 kB compressi, per disegnare un
+// rettangolo da 130 px. Sommati, i loghi visibili pesavano quasi 200 kB in
+// rete — ed è la segnalazione "ci mette un sacco a caricare tutti i loghi":
+// su rete mobile quel peso è il motivo per cui le pastiglie restano bianche.
 //
 // Qui vengono ridisegnati a 3x della misura massima di visualizzazione e
 // salvati in WebP, che tiene la trasparenza e comprime molto meglio. Gli SVG
@@ -15,12 +15,13 @@
 //
 // Si esegue a mano quando cambia un logo:
 //
-//     node scripts/shrink-orbite-logos.mjs
+//     npx tsx scripts/shrink-orbite-logos.ts
 //
 // Il risultato è versionato: né la compilazione né la pubblicazione dipendono
-// da questo script (e quindi da playwright, che non è fra le dipendenze).
+// da questo script (e quindi da playwright, che non è fra le dipendenze —
+// vedi scripts/types/playwright-lite.d.ts per il motivo).
 import { chromium } from "playwright";
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { basename, extname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 
@@ -35,7 +36,7 @@ const MAX_H = 171;
 // di tutti: 1385x512 px per 123 kB, cioè il 44% dell'intera pagina, scaricato
 // con priorità alta e quindi in concorrenza con gli script da cui dipende
 // l'apertura. Viene mostrato larghissimo 330 px (il clamp di logoW in
-// orbits.js), quindi 3x sono 990.
+// src/brand/orbiteScene.ts), quindi 3x sono 990.
 const WORDMARK = {
   src: "assets/img/agora-logo.png",
   out: "public/orbite/assets/img/agora-logo.webp",
@@ -43,6 +44,19 @@ const WORDMARK = {
   maxW: 990,
   maxH: 9999,
 };
+
+interface Job {
+  rel: string;
+  maxW: number;
+  maxH: number;
+  out: typeof WORDMARK | null;
+}
+
+interface ShrinkResult {
+  data: string;
+  w: number;
+  h: number;
+}
 
 const html = readFileSync(HTML, "utf8");
 const srcs = [
@@ -65,9 +79,9 @@ await page.goto("about:blank");
 mkdirSync(OUT_DIR, { recursive: true });
 let before = 0;
 let after = 0;
-const done = [];
+const done: Array<{ rel: string; next: string; w: number; h: number }> = [];
 
-const jobs = [
+const jobs: Job[] = [
   ...srcs.map((rel) => ({ rel, maxW: MAX_W, maxH: MAX_H, out: null })),
   { rel: WORDMARK.src, maxW: WORDMARK.maxW, maxH: WORDMARK.maxH, out: WORDMARK },
 ];
@@ -83,28 +97,28 @@ for (const job of jobs) {
   const mime = extname(file).toLowerCase() === ".svg" ? "image/svg+xml" : "image/png";
   const dataUrl = `data:${mime};base64,${bytes.toString("base64")}`;
 
-  const out = await page.evaluate(
-    async ({ dataUrl, MAX_W, MAX_H }) => {
-      const img = new Image();
-      img.src = dataUrl;
-      await img.decode();
-      // Un SVG senza width/height intrinseci riporta 0: si ripiega sul
-      // riquadro massimo, tanto il rapporto lo impone il viewBox.
-      const iw = img.naturalWidth || MAX_W;
-      const ih = img.naturalHeight || MAX_H;
-      const k = Math.min(MAX_W / iw, MAX_H / ih, 1);
-      const w = Math.max(1, Math.round(iw * k));
-      const h = Math.max(1, Math.round(ih * k));
-      const c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      const g = c.getContext("2d");
-      g.imageSmoothingQuality = "high";
-      g.drawImage(img, 0, 0, w, h);
-      return { data: c.toDataURL("image/webp", 0.92).split(",")[1], w, h };
-    },
-    { dataUrl, MAX_W: job.maxW, MAX_H: job.maxH },
-  );
+  const out = await page.evaluate<
+    ShrinkResult,
+    { dataUrl: string; MAX_W: number; MAX_H: number }
+  >(async ({ dataUrl, MAX_W, MAX_H }) => {
+    const img = new Image();
+    img.src = dataUrl;
+    await img.decode();
+    // Un SVG senza width/height intrinseci riporta 0: si ripiega sul
+    // riquadro massimo, tanto il rapporto lo impone il viewBox.
+    const iw = img.naturalWidth || MAX_W;
+    const ih = img.naturalHeight || MAX_H;
+    const k = Math.min(MAX_W / iw, MAX_H / ih, 1);
+    const w = Math.max(1, Math.round(iw * k));
+    const h = Math.max(1, Math.round(ih * k));
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const g = c.getContext("2d")!;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(img, 0, 0, w, h);
+    return { data: c.toDataURL("image/webp", 0.92).split(",")[1], w, h };
+  }, { dataUrl, MAX_W: job.maxW, MAX_H: job.maxH });
 
   // Si confronta il peso IN RETE, non su disco: gli SVG sono testo e il
   // server li comprime, quindi un vettore semplice puo' benissimo battere

@@ -8,10 +8,11 @@
 //
 // Si esegue a mano quando il logotipo cambia:
 //
-//     node scripts/resize-logo.mjs
+//     npx tsx scripts/resize-logo.ts
 //
 // Il risultato è versionato: né la compilazione né la pubblicazione dipendono
-// da questo script (e quindi da playwright, che non è fra le dipendenze).
+// da questo script (e quindi da playwright, che non è fra le dipendenze —
+// vedi scripts/types/playwright-lite.d.ts per il motivo).
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync } from "node:fs";
 

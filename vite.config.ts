@@ -47,9 +47,16 @@ function inlineOrbiteCriticalPath(): Plugin {
 
       const css = read('assets/css/style.css');
       if (css) {
+        // Minificato con esbuild prima di finire dentro il documento: 242
+        // righe scritte a mano, spazi e commenti compresi, sulla PRIMA
+        // richiesta. Misurato: 1,5 kB compressi in meno.
+        const minCss = esbuild.transformSync(css, {
+          loader: 'css',
+          minify: true,
+        }).code;
         html = html.replace(
           '<link rel="stylesheet" href="assets/css/style.css">',
-          `<style>${css}</style>`,
+          `<style>${minCss}</style>`,
         );
       }
 
@@ -98,6 +105,33 @@ function inlineOrbiteCriticalPath(): Plugin {
 }
 
 /**
+ * Genera lo script della copertura d'avvio dentro l'HTML dell'applicazione.
+ *
+ * Il file sorgente (src/bootstrap/inkCover.ts) importa INTRO_KEY da
+ * src/brand/introKey.ts — la STESSA costante che legge App.tsx. Prima
+ * "agora_intro" era scritto a mano in due punti, senza nulla che garantisse
+ * che restassero uguali: la stessa classe di difetto già chiusa per i tempi
+ * della porta (vedi brand/portal.ts). Un refuso in una delle due copie avrebbe
+ * fatto ripartire l'apertura a ogni visita, o non fermarla mai, in silenzio.
+ *
+ * `transformIndexHtml` è il meccanismo nativo di Vite per index.html: gira sia
+ * in sviluppo (il server lo applica servendo la pagina) sia in compilazione
+ * (sull'HTML finale), quindi qui non serve un middleware a mano come per
+ * Orbite — index.html è un vero ingresso Vite, la pagina di Orbite no.
+ */
+function inlineBootCover(): Plugin {
+  return {
+    name: 'inline-boot-cover',
+    transformIndexHtml(html) {
+      return html.replace(
+        /<!-- ag-boot-script -->\s*<script><\/script>/,
+        `<!-- ag-boot-script --><script>${buildBundle('src/bootstrap/inkCover.ts')}</script>`,
+      );
+    },
+  };
+}
+
+/**
  * Compila un pezzo di Orbite da TypeScript a un file che il browser esegue.
  *
  * Orbite è una pagina statica servita così com'è, quindi non passa dalla
@@ -129,7 +163,7 @@ export default defineConfig(({mode}) => {
     // Base path. Root ('/') for the Cloud Run / custom-domain build; set
     // VITE_BASE=/AgoraCheck/ for the GitHub Pages project-site build.
     base: process.env.VITE_BASE || env.VITE_BASE || '/',
-    plugins: [react(), tailwindcss(), inlineOrbiteCriticalPath()],
+    plugins: [react(), tailwindcss(), inlineBootCover(), inlineOrbiteCriticalPath()],
     define: {},
     resolve: {
       alias: {

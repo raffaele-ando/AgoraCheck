@@ -9,7 +9,7 @@ Provisioned in your account (ready to use):
 
 ## What the Worker adds
 
-`worker.js` is meant to run **in front of** `agora.theproject.world` and pass
+`worker.ts` is meant to run **in front of** `agora.theproject.world` and pass
 everything through to the current origin, adding only:
 
 - **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` session token valid for rate-limiting and anti-abuse protection.
@@ -33,7 +33,7 @@ npx wrangler deploy
 
 You already have a `polimiagora` Worker on the account; you can either deploy
 this as a second Worker (`agora-edge`) on the route, or paste the endpoint
-handlers from `worker.js` into that existing Worker.
+handlers from `worker.ts` into that existing Worker.
 
 ## Firebase vs Cloudflare — division of responsibility
 

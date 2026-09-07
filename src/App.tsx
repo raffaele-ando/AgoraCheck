@@ -10,6 +10,7 @@ import { AdminGuard } from "./components/dashboard/AdminGuard";
 import { Portal } from "./components/ui/Portal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
+import { INTRO_KEY } from "./brand/introKey";
 
 // Home torna a essere un import statico.
 //
@@ -79,8 +80,6 @@ function RouteFallback() {
   return <div className="min-h-screen bg-[var(--ag-bg)]" />;
 }
 
-/** L'apertura è già stata mostrata in questa scheda? */
-const INTRO_KEY = "agora_intro";
 function reducedMotion() {
   try {
     return matchMedia("(prefers-reduced-motion: reduce)").matches;

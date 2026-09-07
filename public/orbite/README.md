@@ -13,10 +13,13 @@ assets/img/brandmark.svg  la "o" di Agorà come vettore autonomo
 assets/img/brandmark.md   geometria misurata del brandmark, con i numeri
 assets/loghi/             loghi degli atenei (originali + versioni corrette)
 assets/loghi/fonti/       marchi scaricati, sorgente delle versioni corrette
-strumenti/                rigenera le versioni corrette dei loghi
-project/                  bundle originale di Claude Design (sorgente del design)
-chats/                    trascrizioni della progettazione
 ```
+
+Tutto qui dentro (`public/orbite/`) viene **pubblicato**: Vite copia `public/`
+tale e quale nel sito servito. Per questo il materiale di progettazione — export
+del tool di design, script "usa e getta", trascrizioni delle chat — NON sta qui:
+sta in `design-archive/` alla radice del repository, che il sito non copia mai.
+Vedi "Bundle originale" più sotto.
 
 Per vederlo basta un server statico qualsiasi dalla radice del progetto:
 
@@ -78,12 +81,13 @@ affatto: la pagina si presenta già aperta.
 
 ## Loghi
 
-I file caricati dall'utente (`project/uploads/loghi_universita/`) sono il punto
-di partenza e restano nel repo intatti. Cinque però non andavano bene, e per
-tre di loro il chip era stato fatto nero per rimediare. Ora **i chip sono tutti
-bianchi** e i cinque file sono stati sostituiti o corretti. Le versioni nuove
-stanno accanto agli originali, non al loro posto, e `strumenti/loghi-positivi.js`
-le rigenera: rilanciandolo si riottengono gli stessi byte.
+I file caricati dall'utente (`design-archive/orbite-project/uploads/loghi_universita/`)
+sono il punto di partenza e restano nel repo intatti. Cinque però non andavano
+bene, e per tre di loro il chip era stato fatto nero per rimediare. Ora **i chip
+sono tutti bianchi** e i cinque file sono stati sostituiti o corretti. Le
+versioni nuove stanno accanto agli originali, non al loro posto, e
+`design-archive/orbite-strumenti/loghi-positivi.js` le rigenera: rilanciandolo
+si riottengono gli stessi byte.
 
 ### Cosa non andava, e cosa c'è ora
 
@@ -195,10 +199,17 @@ guadagna — i due PNG (Bicocca e IULM) sono già compressi.
 
 # Bundle originale (Claude Design)
 
-`project/` e `chats/` sono l'export di Claude Design da cui è nata questa
-implementazione e restano invariati come riferimento. `project/Agorà Orbite.dc.html`
-è il prototipo: caricava React e ReactDOM da CDN più 69 KB di runtime, ed è la
-ragione dei rallentamenti segnalati durante la progettazione.
+`design-archive/orbite-project/` e `design-archive/orbite-chats/` sono l'export
+di Claude Design da cui è nata questa implementazione e restano invariati come
+riferimento — sono materiale storico, non parte del sito. `orbite-project/Agorà
+Orbite.dc.html` è il prototipo: caricava React e ReactDOM da CDN più 69 KB di
+runtime, ed è la ragione dei rallentamenti segnalati durante la progettazione.
+
+Erano dentro `public/orbite/` (`project/`, `chats/`, `strumenti/`), che Vite
+pubblica per intero: bozze, upload e trascrizioni delle chat finivano scaricabili
+da chiunque conoscesse l'indirizzo — verificato, `/orbite/chats/chat1.md`
+rispondeva 200 in produzione. Spostati fuori da `public/`, in `design-archive/`
+alla radice: restano nel repository come riferimento, ma non nel sito.
 
 
 ## Dove sta il codice di questa pagina

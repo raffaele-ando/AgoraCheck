@@ -27,7 +27,7 @@ Li ho già creati io:
 3. Dai il nome **`agora-edge`**.
 4. Ora premi **Edit code** (in alto a destra).
 5. **Cancella tutto** il codice che vedi e **incolla** il contenuto del file
-   `cloudflare/worker.js` di questo repository
+   `cloudflare/worker.ts` di questo repository
    (lo trovi su GitHub: apri il file, premi il tasto **Copy raw file**).
 6. Premi **Deploy** in alto a destra.
 
