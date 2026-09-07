@@ -423,8 +423,24 @@ export function Board() {
   const handleInputBlur = (field: string) => {
     handleBlur(field);
     focusTimeoutRef.current = setTimeout(() => {
+      // Se il fuoco è finito su un ALTRO campo del modulo, la barra non si
+      // riapre: si sta ancora compilando.
+      //
+      // È il "refresh" segnalato passando fra le opzioni del sondaggio e il
+      // campo Instagram. La barra in alto ha due forme, estesa e compatta, che
+      // sono rami diversi del JSX: passare dall'una all'altra smonta e rimonta
+      // una quindicina di riquadri, ognuno dei quali rigenera la propria
+      // maschera. Toccando un secondo campo, il tempo fra il rilascio del primo
+      // e la presa del secondo poteva superare questa attesa — su un telefono
+      // succede spesso — e la barra faceva chiudi-e-riapri per niente:
+      // l'interfaccia si ricomponeva identica a com'era.
+      const a = document.activeElement;
+      const stillInForm =
+        a instanceof HTMLElement &&
+        ["INPUT", "TEXTAREA", "SELECT"].includes(a.tagName);
+      if (stillInForm) return;
       setIsFormFocused(false);
-    }, 150);
+    }, 250);
   };
 
   const isIt = (() => {

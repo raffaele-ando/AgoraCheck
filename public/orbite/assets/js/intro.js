@@ -104,10 +104,14 @@
   // pagina nascosto sotto la copertura d'inchiostro.
   var continuing = /(?:^|[?&])p=1(?:&|$)/.test(location.search);
 
-  // Si riprende dalla POSA, non dall'apertura: la crescita e' gia' avvenuta
-  // sulla bacheca, ma la pausa in cui il marchio si legge deve esserci, e cade
-  // qui. Saltandola anche, il marchio composto non si vedeva mai fermo.
-  var elapsed = continuing ? T_GROW : 0;
+  // Si riprende direttamente dall'APERTURA.
+  //
+  // Avevo provato a far riprendere dalla posa, per dare al marchio composto un
+  // momento in cui si legge. Sbagliato: nel PASSAGGIO fra i due siti quella
+  // pausa non e' un respiro, e' un'attesa in piu' a schermo nero, in mezzo a un
+  // movimento che deve essere continuo. La posa serve all'INGRESSO, dove non si
+  // sta aspettando nient'altro, e li' c'e'.
+  var elapsed = continuing ? T_GROW + T_HOLD : 0;
   var last = 0, speed = 1, raf = 0, cleared = false, plugGone = false;
   var barDone = [false, false, false, false, false];
 

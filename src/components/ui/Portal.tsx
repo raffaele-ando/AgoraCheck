@@ -216,7 +216,7 @@ export function Portal({
 }: PortalProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const veilRef = useRef<SVGPathElement>(null);
-  const markRef = useRef<HTMLDivElement>(null);
+  const markRef = useRef<SVGGElement>(null);
   const plugRef = useRef<SVGPathElement>(null);
   const barsRef = useRef<(SVGPathElement | null)[]>([]);
   const openRef = useRef(open);
@@ -256,9 +256,6 @@ export function Portal({
     let barsSettled = false;
     let lastW = -1;
     let lastH = -1;
-    // Scala a cui il marchio è stato disegnato una volta per tutte. Si fissa al
-    // primo fotogramma, sulla misura che avrà da composto.
-    let refScale = 0;
     let lastVeilW = -1;
     let lastVeilH = -1;
 
@@ -303,13 +300,6 @@ export function Portal({
       const target = Math.max(150, Math.min(Math.min(W, H) * 0.3, 340));
       const sLogo = target / MARK_W;
 
-      // Il marchio si disegna una volta sola, alla misura che ha da composto.
-      // Da lì in poi lo si scala soltanto.
-      if (refScale === 0) {
-        refScale = sLogo;
-        const g = markEl.firstElementChild as SVGGElement | null;
-        if (g) g.setAttribute("transform", `scale(${refScale})`);
-      }
       const sStart = sLogo * 0.05;
       const need = Math.max(
         Math.sqrt(W * W + H * H) / 2 / DOOR.ri,
@@ -352,8 +342,10 @@ export function Portal({
       // crescita si rimpicciolisce un disegno più grande (nitido), alla posa si
       // è esattamente 1:1, e solo nell'apertura si ingrandisce — quando gli
       // archi corrono fuori schermo e nessuno li guarda più.
-      markEl.style.transform =
-        `translate(${n2(px)}px, ${n2(py)}px) scale(${(s / refScale).toFixed(5)})`;
+      markEl.setAttribute(
+        "transform",
+        `translate(${n2(px)} ${n2(py)}) scale(${s})`,
+      );
 
       // Il velo si ridisegna SOLO mentre la porta si apre.
       //
@@ -477,53 +469,46 @@ export function Portal({
           fillRule="evenodd"
           opacity={fadeIn ? 0 : 1}
         />
-      </svg>
+        {/*
+          Marchio e tappo tornano DENTRO l'SVG del velo.
 
-      {/*
-        Il marchio sta FUORI dall'SVG del velo, in un livello proprio.
+          Li avevo spostati in un livello CSS a parte, convinto che il costo
+          fosse la rasterizzazione degli archi. La misura ha detto di no — il
+          numero di fotogrammi non cambiava — e quella struttura ha invece
+          introdotto un difetto vero: un <svg> di dimensioni 0x0 che lasciava
+          traboccare il contenuto funzionava sul browser di prova ma non su
+          Android, dove gli archi sparivano del tutto e restava solo il vano
+          della porta. È la segnalazione "non si caricano tutte le porte".
 
-        Dentro l'SVG veniva ridisegnato a ogni fotogramma perché cambiava di
-        scala: cinque tracciati grandi da rasterizzare sessanta volte al
-        secondo, misurati in dodici fotogrammi ogni secondo e mezzo. Qui invece
-        e' un livello promosso (will-change), disegnato una volta alla misura
-        del marchio composto e poi solo spostato e scalato dalla scheda grafica.
-
-        L'SVG interno non ha dimensioni e lascia traboccare il disegno: serve
-        solo da contenitore per i tracciati, il posizionamento lo fa la
-        trasformazione CSS del div.
-      */}
-      <div
-        ref={markRef}
-        className="absolute top-0 left-0"
-        style={{ transformOrigin: "0 0", willChange: "transform" }}
-      >
-        <svg width="0" height="0" style={{ overflow: "visible" }}>
-          <g>
-            {/* Il tappo tiene chiuso il vano durante la composizione; il
-                contorno dello stesso colore copre la cucitura col velo. */}
-            <path
-              ref={plugRef}
-              d={DOOR_D}
-              fill={veil ?? VEIL_INK}
-              stroke={veil ?? VEIL_INK}
-              strokeWidth="2"
-              vectorEffect="non-scaling-stroke"
-            />
-            <g fill={ARCH_CREAM}>
-              {ARCH_D.map((d, i) => (
-                <path
-                  key={i}
-                  d={d}
-                  ref={(el) => {
-                    barsRef.current[i] = el;
-                  }}
-                  opacity="0"
-                />
-              ))}
-            </g>
+          Qui i tracciati sono scritti una volta sola in coordinate unitarie e
+          l'animazione è una sola trasformazione sul gruppo: il risparmio che
+          contava davvero resta, senza la fragilità.
+        */}
+        <g ref={markRef}>
+          {/* Il tappo tiene chiuso il vano durante la composizione; il
+              contorno dello stesso colore copre la cucitura col velo. */}
+          <path
+            ref={plugRef}
+            d={DOOR_D}
+            fill={veil ?? VEIL_INK}
+            stroke={veil ?? VEIL_INK}
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+          <g fill={ARCH_CREAM}>
+            {ARCH_D.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                ref={(el) => {
+                  barsRef.current[i] = el;
+                }}
+                opacity="0"
+              />
+            ))}
           </g>
-        </svg>
-      </div>
+        </g>
+      </svg>
     </div>
   );
 }
