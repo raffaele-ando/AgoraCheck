@@ -44,8 +44,11 @@ const T_GROW = 620; // comparsa e crescita fino alla misura del marchio
  * stesse fermo abbastanza da leggersi: si vedevano gli archi comparire e subito
  * volare via, e l'impressione era che alcuni non ci fossero proprio.
  *
- * Orbite questa posa ce l'ha (T_HOLD = 240 in intro.js); portandola qui le due
- * animazioni tornano anche a durare uguale.
+ * ATTENZIONE: T_GROW, T_HOLD, T_OPEN, STAGGER e T_APPEAR devono restare
+ * IDENTICI a quelli di public/orbite/assets/js/intro.js. Le due metà della
+ * transizione fra i siti sono la stessa animazione tagliata in due: se i tempi
+ * divergono, il marchio si compone con un ritmo di qua e la porta si apre con
+ * un altro di là, e il passaggio non sembra più lo stesso movimento.
  */
 const T_HOLD = 300;
 const T_OPEN = 900; // apertura accelerata oltre i bordi
@@ -313,10 +316,20 @@ export function Portal({
           composedRef.current = true;
           onComposedRef.current?.();
         }
-        // Attesa: un respiro appena percettibile, così si capisce che il sito
-        // sta lavorando e non che si è bloccato.
-        const pulse = 1 + 0.02 * Math.sin((elapsed - T_GROW) / 260);
-        s = sLogo * pulse;
+        // Il marchio composto resta FERMO. Niente respiro.
+        //
+        // Il respiro era un ±2% di scala, per far capire che il sito stava
+        // lavorando. Ma questo è esattamente l'istante in cui si cambia
+        // pagina, e il cambio non è istantaneo: la bacheca continua a
+        // disegnare mentre il browser scarica Orbite, quindi l'ULTIMO
+        // fotogramma di qua aveva una scala qualunque fra 0,98 e 1,02 —
+        // mentre Orbite riparte esattamente da 1,00. Il marchio faceva un
+        // salto di un paio di punti percentuali proprio sulla cucitura: è lo
+        // scatto segnalato nel passaggio.
+        //
+        // Fermo, i due fotogrammi combaciano al pixel e il cambio di pagina
+        // diventa invisibile.
+        s = sLogo;
       } else {
         s = sLogo + (sEnd - sLogo) * easeIn(openProgress);
       }

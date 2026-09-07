@@ -31,11 +31,21 @@
   var DOOR_DOWN = 91.2;         // quanto scende il vano sotto il proprio centro
 
   // --- tempi (ms) ----------------------------------------------------------
-  var T_GROW = 780;             // comparsa e crescita fino alla dimensione del marchio
-  var T_HOLD = 240;             // pausa: il marchio si legge
-  var T_OPEN = 1120;            // apertura accelerata oltre i bordi
+  //
+  // DEVONO restare identici a quelli di src/components/ui/Portal.tsx.
+  //
+  // Non lo erano: qui 780/240/1120, di là 620/300/900. Le due metà della
+  // stessa transizione si muovevano quindi a due velocità diverse — il marchio
+  // si componeva con un ritmo sulla bacheca e la porta si apriva con un altro
+  // qui, ed è la segnalazione "non sembra molto una transizione uguale". La
+  // cucitura fra i due siti regge solo se le due parti sono la stessa
+  // animazione, non due animazioni somiglianti.
+  var T_GROW = 620;             // comparsa e crescita fino alla dimensione del marchio
+  var T_HOLD = 300;             // pausa: il marchio si legge
+  var T_OPEN = 900;             // apertura accelerata oltre i bordi
   var TOTAL = T_GROW + T_HOLD + T_OPEN;
-  var STAGGER = 90;             // ritardo fra un arco e il successivo
+  var STAGGER = 70;             // ritardo fra un arco e il successivo
+  var T_APPEAR = 260;           // durata della comparsa di un singolo arco
 
   var host = document.getElementById('portal');
   var svg  = document.getElementById('portal-svg');
@@ -250,7 +260,7 @@
       if (barDone[i]) continue;
       if (ARCHES[i].ri * s > reach) { barEls[i].setAttribute('d', ''); barDone[i] = true; continue; }
       barEls[i].setAttribute('d', archPath(ARCHES[i], b));
-      var appear = clamp01((elapsed - (ARCHES.length - 1 - i) * STAGGER) / 320);
+      var appear = clamp01((elapsed - (ARCHES.length - 1 - i) * STAGGER) / T_APPEAR);
       barEls[i].setAttribute('opacity', easeOut(appear).toFixed(3));
     }
 
@@ -271,16 +281,32 @@
     window.addEventListener(ev, hurry, { once: true, passive: true });
   });
 
-  // Il contrassegno ?p=1 ha fatto il suo lavoro: si toglie dall'indirizzo, così
-  // un ricaricamento o un link condiviso rivedono l'apertura per intero.
-  if (continuing && window.history && history.replaceState) {
-    try {
-      var u = new URL(location.href);
-      u.searchParams.delete('p');
-      history.replaceState(null, '', u.pathname + u.search + u.hash);
-    } catch (e) { /* indirizzo non manipolabile: nessun danno */ }
+  function begin() {
+    // Il contrassegno ?p=1 ha fatto il suo lavoro: si toglie dall'indirizzo,
+    // così un ricaricamento o un link condiviso rivedono l'apertura per intero.
+    if (continuing && window.history && history.replaceState) {
+      try {
+        var u = new URL(location.href);
+        u.searchParams.delete('p');
+        history.replaceState(null, '', u.pathname + u.search + u.hash);
+      } catch (e) { /* indirizzo non manipolabile: nessun danno */ }
+    }
+    document.documentElement.classList.add('is-opening');
+    raf = requestAnimationFrame(frame);
   }
 
-  document.documentElement.classList.add('is-opening');
-  raf = requestAnimationFrame(frame);
+  // Se la bacheca ha chiesto di preparare questa pagina in anticipo, qui si sta
+  // girando in un secondo piano invisibile: nessuno sta guardando, e far
+  // partire adesso l'apertura significherebbe consumarla prima di mostrarla —
+  // all'arrivo si vedrebbe la porta già aperta, o mezza.
+  //
+  // Si aspetta il momento in cui la pagina viene davvero mostrata. Nel
+  // frattempo tutto il resto (disposizione della scena, immagini) è già
+  // successo: all'attivazione l'apertura parte su una pagina completa, senza
+  // un solo istante di rete.
+  if (document.prerendering) {
+    document.addEventListener('prerenderingchange', begin, { once: true });
+  } else {
+    begin();
+  }
 })();

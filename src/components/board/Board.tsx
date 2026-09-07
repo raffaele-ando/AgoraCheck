@@ -6,11 +6,80 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { Squircle } from '../ui/Squircle';
 import { Portal } from '../ui/Portal';
 
-/** Agorà Orbite, servito dallo stesso dominio sotto /orbite/. */
-const ORBITE_URL = `${import.meta.env.BASE_URL}orbite/`;
 import { useSubmitSpotted } from '../../pages/Home';
 import { useVisitAnalytics } from '../../hooks/useVisitAnalytics';
 import { loadWhatsappLinksFromDB, loadEventWidgetConfigFromDB, EventWidgetConfig, DEFAULT_EVENT_WIDGET_CONFIG } from '../../data/settings';
+
+/** Agorà Orbite, servito dallo stesso dominio sotto /orbite/. */
+const ORBITE_URL = `${import.meta.env.BASE_URL}orbite/`;
+/** L'indirizzo esatto verso cui si naviga: il contrassegno fa parte della chiave. */
+const ORBITE_NEXT = `${ORBITE_URL}?p=1`;
+
+/**
+ * Prepara Orbite prima che serva.
+ *
+ * Si dichiara al browser che quella pagina verrà aperta: se sa farlo la
+ * costruisce per intero in un secondo piano invisibile — scarica, interpreta,
+ * dispone la scena, carica le immagini — e al momento della navigazione la
+ * mostra e basta, senza rete di mezzo. È il motivo per cui certi passaggi
+ * sembrano istantanei sui siti fatti bene: la pagina era già pronta.
+ *
+ * Chi non conosce le regole di speculazione (Firefox, Safari) le ignora e
+ * ricade sul semplice prefetch del documento, che è comunque un vantaggio.
+ * Si esegue una volta sola per pagina.
+ */
+let warmed = false;
+function warmOrbite() {
+  if (warmed || typeof document === "undefined") return;
+  warmed = true;
+  // Il prefetch si fa SEMPRE, anche dove esiste il prerender.
+  //
+  // Il prerender è la cosa migliore ma non è garantita: il browser può
+  // rifiutarlo — risparmio dati attivo, memoria scarsa, troppe pagine già in
+  // preparazione — e quando lo rifiuta non lo dice. Dipendere solo da quello
+  // significherebbe che su quei telefoni il vantaggio non c'è e il difetto
+  // torna identico.
+  //
+  // Questi quattro file sono una trentina di kB e sono il minimo per
+  // DISEGNARE Orbite: senza il documento, il foglio di stile e i due script,
+  // di là l'apertura non può nemmeno cominciare. Le immagini restano fuori:
+  // pesano, e per quelle c'è già l'attesa breve dentro l'animazione. Dove il
+  // prerender funziona questi arrivano dalla cache e non costano due volte.
+  try {
+    for (const href of [
+      ORBITE_NEXT,
+      `${ORBITE_URL}assets/css/style.css`,
+      `${ORBITE_URL}assets/js/intro.js`,
+      `${ORBITE_URL}assets/js/orbits.js`,
+    ]) {
+      const l = document.createElement("link");
+      l.rel = "prefetch";
+      l.href = href;
+      document.head.appendChild(l);
+    }
+  } catch {
+    /* niente prefetch: si naviga come sempre, senza vantaggio */
+  }
+
+  // In più, dove il browser lo sa fare, si chiede di preparare la pagina per
+  // intero in un secondo piano invisibile: al momento della navigazione non
+  // resta nulla da scaricare né da interpretare, si mostra e basta.
+  try {
+    if (
+      HTMLScriptElement.supports &&
+      HTMLScriptElement.supports("speculationrules")
+    ) {
+      const s = document.createElement("script");
+      s.type = "speculationrules";
+      s.textContent = JSON.stringify({
+        prerender: [{ source: "list", urls: [ORBITE_NEXT] }],
+      });
+      document.head.appendChild(s);
+    }
+  } catch {
+    /* niente regole di speculazione: resta il prefetch qui sopra */
+  }
+}
 
 /**
  * Testo che si scrive e si cancella da solo, usato per i suggerimenti nei campi.
@@ -526,7 +595,7 @@ export function Board() {
           // anziché da qui.
           fadeIn
           onComposed={() => {
-            window.location.href = `${ORBITE_URL}?p=1`;
+            window.location.href = ORBITE_NEXT;
           }}
         />
       )}
@@ -549,6 +618,22 @@ export function Board() {
             href={ORBITE_URL}
             aria-label="Agorà"
             className="inline-flex active:scale-95 transition-transform"
+            // Orbite si scalda appena il dito tocca il logo.
+            //
+            // Il passaggio non scattava per come è disegnato, ma per quello
+            // che succede DOPO: la porta finisce di comporsi in 920 ms, si
+            // cambia pagina, e solo allora il browser comincia a scaricare
+            // Orbite — HTML, CSS, due script e ventisette immagini. Su rete
+            // mobile quel momento è un'attesa a schermo coperto, e quando
+            // finisce l'animazione riparte invece di continuare.
+            //
+            // Toccando il logo si dichiara al browser che quella pagina
+            // servirà: la prepara in un secondo piano invisibile, e quando si
+            // naviga davvero è già pronta. Fra il tocco e il cambio di pagina
+            // passa circa un secondo — la composizione della porta — che
+            // adesso è tempo di lavoro utile invece che tempo perso.
+            onPointerDown={warmOrbite}
+            onPointerEnter={warmOrbite}
             onClick={(e) => {
               // Clic con modificatori o diverso dal primario: è la richiesta
               // di aprire altrove, va lasciata al browser.
@@ -560,6 +645,16 @@ export function Board() {
                 return;
               }
               e.preventDefault();
+              // La bacheca smette di lavorare: da qui in poi è coperta.
+              //
+              // I suggerimenti animati si riscrivono sedici volte al secondo, e
+              // se nessuno ha ancora toccato il modulo stanno girando proprio
+              // adesso — cioè durante la dissolvenza del velo e la crescita
+              // degli archi, che sono i 620 ms in cui l'animazione deve essere
+              // impeccabile. Ridisegnare tre campi di testo sotto una copertura
+              // opaca è lavoro speso per qualcosa che nessuno può vedere, ed è
+              // una delle sorgenti di scatto nel passaggio.
+              markFormTouched();
               setLeaving(true);
             }}
           >

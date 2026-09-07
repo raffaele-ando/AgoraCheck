@@ -97,27 +97,22 @@ function introAlreadyPlayed() {
   }
 }
 
-/**
- * Si è arrivati qui col tasto "indietro" (o "avanti")?
- *
- * Serve a dare un'animazione anche al ritorno: si torna da Orbite e la porta
- * si riapre sulla bacheca, come all'andata. Senza, il ritorno era l'unico
- * passaggio secco rimasto fra i due siti.
- *
- * Il tipo di navigazione è quello dichiarato dal browser; quando la pagina
- * viene invece ripescata dalla memoria (bfcache) non c'è nessuna navigazione
- * da leggere e se ne accorge l'evento pageshow, gestito più sotto.
- */
-function cameFromHistory() {
-  try {
-    const nav = performance.getEntriesByType("navigation")[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-    return nav?.type === "back_forward";
-  } catch {
-    return false;
-  }
-}
+/*
+  Perché NON c'è un'apertura sul tasto "indietro".
+
+  L'avevo messa, e per due volte è risultata peggiore del niente: si vedeva la
+  bacheca, poi il nero, poi l'animazione. La causa non è nel nostro codice.
+  Premendo indietro il browser mostra per primo il proprio ritratto della
+  pagina di destinazione — ce l'ha già in memoria, è il motivo per cui indietro
+  sembra istantaneo ovunque — e solo dopo lascia disegnare il documento vero.
+  Qualunque cosa mettiamo davanti arriva DOPO quel ritratto, quindi qualunque
+  copertura è per forza un'interruzione in mezzo, non un inizio.
+
+  Indietro vuol dire "torna com'era", e com'era è già sullo schermo: la cosa
+  giusta è non mettersi in mezzo. L'apertura resta dove ha senso — la prima
+  visita e il passaggio verso Orbite, dove è il movimento a portare da una
+  pagina all'altra invece di interromperlo.
+*/
 
 /**
  * L'apertura del marchio al posto del caricamento iniziale.
@@ -128,24 +123,7 @@ function cameFromHistory() {
  * navigazione interna sarebbe un pedaggio, non un benvenuto.
  */
 function BootIntro() {
-  const [playing, setPlaying] = useState(
-    () => !introAlreadyPlayed() || cameFromHistory(),
-  );
-  /**
-   * Tornando indietro si rifà l'apertura INTERA, come all'ingresso.
-   *
-   * Avevo fatto partire il ritorno dal marchio già composto, per non ripetere
-   * la crescita vista all'andata. Sbagliato: senza la crescita il marchio
-   * compare di colpo, a piena dimensione e piena opacità, e poi vola via —
-   * non è un movimento, è uno scatto, e accanto alle altre due stonava
-   * ("l'animazione delle porte è più brutta rispetto alle altre").
-   *
-   * All'andata evitare il doppione aveva senso, perché le due metà sono un
-   * movimento solo a cavallo del cambio di pagina. Al ritorno non c'è nessuna
-   * seconda metà: c'è una sola animazione, e allora tanto vale che sia quella
-   * giusta.
-   */
-  const [back] = useState(() => cameFromHistory());
+  const [playing, setPlaying] = useState(() => !introAlreadyPlayed());
   /**
    * L'animazione non parte finché l'app non ha finito di avviarsi.
    *
@@ -183,18 +161,12 @@ function BootIntro() {
     // pause di seguito con tempo libero davanti significano che la coda si è
     // davvero svuotata. Il conteggio riparte da zero appena una finestra
     // risulta stretta o scaduta.
-    //
-    // Al RITORNO da Orbite l'attesa prima di COMINCIARE è però più corta: la
-    // pagina è già stata costruita una volta in questa scheda, i file sono
-    // nella cache e la coda si svuota prima. Chi ha premuto "indietro" vuole
-    // rientrare: due secondi di inchiostro prima ancora che l'animazione parta
-    // sarebbero un'attesa, non una presentazione.
-    const needCalm = back ? 1 : 2;
+    const needCalm = 2;
     let calm = 0;
     const waitCalm = () => {
       if (done) return;
       if (typeof requestIdleCallback !== "function") {
-        handle = setTimeout(go, back ? 120 : 400) as unknown as number;
+        handle = setTimeout(go, 400) as unknown as number;
         return;
       }
       handle = requestIdleCallback(
@@ -209,7 +181,7 @@ function BootIntro() {
 
     // Tetto assoluto: su una rete o un telefono molto lenti la quiete potrebbe
     // non arrivare mai, e la copertura non può restare all'infinito.
-    const cap = setTimeout(go, back ? 700 : 2000);
+    const cap = setTimeout(go, 2000);
     waitCalm();
 
     return () => {
@@ -217,7 +189,7 @@ function BootIntro() {
       if (typeof cancelIdleCallback === "function") cancelIdleCallback(handle);
       else clearTimeout(handle);
     };
-  }, [playing, back]);
+  }, [playing]);
 
   const finish = () => {
     try {
@@ -249,11 +221,9 @@ function BootIntro() {
     const onShow = (e: PageTransitionEvent) => {
       if (!e.persisted) return;
       // Ritorno dalla MEMORIA del browser: la pagina ricompare istantanea,
-      // già disegnata, senza ricaricare nulla. Qui NON si anima: coprire con
-      // l'inchiostro una schermata che è già sotto gli occhi, per poi
-      // scoprirla, sarebbe un lampo aggiunto a un passaggio che era già
-      // immediato. L'apertura al ritorno vale per il caso in cui la pagina si
-      // ricarica davvero, gestito da cameFromHistory().
+      // già disegnata, senza ricaricare nulla. Non c'è nulla da animare e la
+      // copertura, se per qualche motivo fosse ancora in scena, va tolta —
+      // altrimenti si resterebbe all'inchiostro senza via d'uscita.
       document.documentElement.classList.add("ag-booted");
       setPlaying(false);
     };
