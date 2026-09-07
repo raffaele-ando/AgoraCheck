@@ -7,8 +7,7 @@ dipendenza da CDN.
 ```
 index.html
 assets/css/style.css
-assets/js/orbits.js       motore delle orbite (vanilla JS, ~9 KB)
-assets/js/intro.js        apertura: la porta del brandmark scopre il sito
+assets/js/                (vuota: i sorgenti sono in TypeScript, vedi sotto)
 assets/img/agora-logo.png
 assets/img/brandmark.svg  la "o" di Agorà come vettore autonomo
 assets/img/brandmark.md   geometria misurata del brandmark, con i numeri
@@ -39,7 +38,7 @@ tutto. Su desktop 1440×900 vengono fuori 3 orbite e 20 posizioni; su un telefon
 390×844 due orbite (atenei fuori, bandiere dentro) e 14 posizioni.
 
 Le sovrapposizioni non sono stimate a occhio. `fitsOnRing` e `ringsCompatible`
-in `assets/js/orbits.js` verificano numericamente che due riquadri non si
+in `src/brand/orbiteScene.ts` verificano numericamente che due riquadri non si
 incontrino mai, campionando tutte le posizioni relative possibili; il layout
 scarta i raggi che non superano la verifica. Un'orbita che reggerebbe meno di
 tre token viene eliminata.
@@ -200,3 +199,27 @@ guadagna — i due PNG (Bicocca e IULM) sono già compressi.
 implementazione e restano invariati come riferimento. `project/Agorà Orbite.dc.html`
 è il prototipo: caricava React e ReactDOM da CDN più 69 KB di runtime, ed è la
 ragione dei rallentamenti segnalati durante la progettazione.
+
+
+## Dove sta il codice di questa pagina
+
+Lo stile è qui, in `assets/css/style.css`. Il JavaScript no: è TypeScript, e
+sta nell'applicazione.
+
+    src/brand/portal.ts        geometria, tempi e matematica della porta
+    src/brand/orbiteIntro.ts   l'apertura: la porta del marchio scopre il sito
+    src/brand/orbiteScene.ts   il motore delle orbite
+
+Il motivo è la porta. La stessa animazione esiste anche sulla bacheca
+(`src/components/ui/Portal.tsx`), perché il passaggio fra i due siti è un solo
+movimento tagliato a metà: si compone di là e si apre di qua. Finché erano due
+copie di codice tenute allineate da un commento, si sono scollate davvero — i
+tempi erano 620/300/900 da una parte e 780/240/1120 dall'altra, e infatti le
+due metà si muovevano a velocità diverse. Ora i numeri stanno scritti una volta
+sola e li importano entrambe.
+
+Un plugin in `vite.config.ts` compila quei file e li mette dove servono:
+l'apertura finisce DENTRO l'HTML pubblicato (così il marchio si disegna appena
+il documento arriva, senza un giro di rete in più), la scena resta un file a sé
+in `assets/js/orbits.js`. In sviluppo li serve lo stesso plugin al volo, quindi
+aprire `/orbite/` funziona come sempre.

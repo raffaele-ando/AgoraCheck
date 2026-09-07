@@ -29,7 +29,7 @@ di taglio:
 |    5 |   −0.339 |  −94.476 | 40.294 | 32.453 |    7.841 |
 
 Il vano dell'arco 5 è la "porta" usata dall'animazione d'ingresso
-(`assets/js/intro.js`).
+(`src/brand/portal.ts`).
 
 **Fedeltà** — rasterizzando questi tracciati e confrontandoli col PNG
 originale pixel per pixel: errore medio sul canale alpha **0,9 %**, area

@@ -1,127 +1,38 @@
 import { useEffect, useRef } from "react";
+import {
+  ARCHES,
+  ARCH_CREAM,
+  T_GROW,
+  T_HOLD,
+  T_OPEN,
+  VEIL_INK,
+  anchorAt,
+  archOpacity,
+  archPath,
+  builder,
+  clamp01,
+  doorPath,
+  easeIn,
+  easeOut,
+  endScale,
+  logoScale,
+  n2,
+  startScale,
+} from "../../brand/portal";
 
 /**
  * Il portale del marchio: gli archi concentrici di "Agorà" si aprono come una
  * porta e scoprono ciò che c'è dietro.
  *
- * È la stessa animazione che apre Agorà Orbite (public/orbite/assets/js/intro.js),
- * portata qui perché il passaggio fra i due siti non sembri uno stacco: la
- * porta comincia ad aprirsi su questa pagina e si finisce di attraversarla
- * sull'altra.
+ * È la stessa animazione che apre Agorà Orbite, ed è la stessa nel senso
+ * letterale: geometria, tempi e matematica arrivano da brand/portal.ts, che è
+ * anche la sorgente di brand/orbiteIntro.ts. Prima erano due copie tenute
+ * allineate da un commento, e si erano scollate davvero — le due metà della
+ * transizione si muovevano a velocità diverse. Ora cambiarne una sola non è
+ * possibile.
  *
- * La geometria non è ridisegnata a occhio: è misurata dal marchio e riprodotta
- * con archi di cerchio esatti. Una unità = un pixel del PNG originale;
- * l'origine è dove il cerchio che taglia le gambe degli archi tocca la linea
- * di base del logotipo. I numeri arrivano tali e quali da intro.js, così le
- * due animazioni combaciano davvero invece di somigliarsi.
+ * Qui la porta comincia ad aprirsi; di là si finisce di attraversarla.
  */
-
-const CUT_R = 164.319;
-const CUT_CY = -164.319;
-
-const ARCHES = [
-  { cx: -0.004, cy: -97.725, ro: 144.008, ri: 136.116 },
-  { cx: -0.108, cy: -96.286, ro: 117.483, ri: 109.534 },
-  { cx: 0.187, cy: -96.716, ro: 90.429, ri: 82.566 },
-  { cx: 0.185, cy: -96.026, ro: 65.143, ri: 57.311 },
-  { cx: -0.339, cy: -94.476, ro: 40.294, ri: 32.453 },
-];
-
-const MARK_W = 288.02;
-const MARK_CX = -0.004;
-const MARK_CY = -122.451;
-const DOOR = ARCHES[4];
-const DOOR_DOWN = 91.2;
-
-const T_GROW = 620; // comparsa e crescita fino alla misura del marchio
-/**
- * Posa: il marchio composto resta fermo prima di aprirsi.
- *
- * Mancava, ed e' il motivo della segnalazione "non si caricano tutte le porte
- * del brandmark". Tracciando le opacita' fotogramma per fotogramma: l'arco piu'
- * esterno arrivava a piena opacita' a 620 ms, cioe' nell'istante esatto in cui
- * cominciava l'apertura. Non esisteva un momento in cui il marchio completo
- * stesse fermo abbastanza da leggersi: si vedevano gli archi comparire e subito
- * volare via, e l'impressione era che alcuni non ci fossero proprio.
- *
- * ATTENZIONE: T_GROW, T_HOLD, T_OPEN, STAGGER e T_APPEAR devono restare
- * IDENTICI a quelli di public/orbite/assets/js/intro.js. Le due metà della
- * transizione fra i siti sono la stessa animazione tagliata in due: se i tempi
- * divergono, il marchio si compone con un ritmo di qua e la porta si apre con
- * un altro di là, e il passaggio non sembra più lo stesso movimento.
- */
-const T_HOLD = 300;
-const T_OPEN = 900; // apertura accelerata oltre i bordi
-/**
- * Ritardo fra un arco e il successivo, e durata della loro comparsa.
- *
- * Calcolati perche' l'ULTIMO arco sia gia' pieno prima che la crescita finisca:
- * 4 x 70 + 260 = 540 ms, contro i 620 della crescita. Con i valori precedenti
- * (4 x 80 + 300 = 620) l'ultimo arco finiva di comparire nello stesso istante
- * in cui partiva l'apertura.
- */
-const STAGGER = 70;
-const T_APPEAR = 260;
-
-const cutY = (dx: number) =>
-  CUT_CY + Math.sqrt(Math.max(0, CUT_R * CUT_R - dx * dx));
-const n2 = (v: number) => Math.round(v * 100) / 100;
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-const easeIn = (t: number) => Math.pow(t, 2.4);
-const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);
-
-function builder(s: number, px: number, py: number) {
-  const X = (x: number) => n2(px + x * s);
-  const Y = (y: number) => n2(py + y * s);
-  const R = (r: number) => n2(r * s);
-  return {
-    M: (x: number, y: number) => `M${X(x)} ${Y(y)}`,
-    L: (x: number, y: number) => `L${X(x)} ${Y(y)}`,
-    // semicerchio superiore in due quarti: evita l'ambiguità dei 180°
-    top: (cx: number, cy: number, r: number, dir: number) => {
-      const f = dir > 0 ? "1" : "0";
-      return (
-        `A${R(r)} ${R(r)} 0 0 ${f} ${X(cx)} ${Y(cy - r)}` +
-        `A${R(r)} ${R(r)} 0 0 ${f} ${X(cx + dir * r)} ${Y(cy)}`
-      );
-    },
-    cut: (x: number, y: number) =>
-      `A${R(CUT_R)} ${R(CUT_R)} 0 0 0 ${X(x)} ${Y(y)}`,
-  };
-}
-type B = ReturnType<typeof builder>;
-
-function archPath(a: (typeof ARCHES)[number], b: B) {
-  const xoL = a.cx - a.ro,
-    xoR = a.cx + a.ro,
-    xiL = a.cx - a.ri,
-    xiR = a.cx + a.ri;
-  return (
-    b.M(xoL, cutY(xoL)) +
-    b.L(xoL, a.cy) +
-    b.top(a.cx, a.cy, a.ro, +1) +
-    b.L(xoR, cutY(xoR)) +
-    b.cut(xiR, cutY(xiR)) +
-    b.L(xiR, a.cy) +
-    b.top(a.cx, a.cy, a.ri, -1) +
-    b.L(xiL, cutY(xiL)) +
-    b.cut(xoL, cutY(xoL)) +
-    "Z"
-  );
-}
-
-function doorPath(b: B) {
-  const xL = DOOR.cx - DOOR.ri,
-    xR = DOOR.cx + DOOR.ri;
-  return (
-    b.M(xL, cutY(xL)) +
-    b.L(xL, DOOR.cy) +
-    b.top(DOOR.cx, DOOR.cy, DOOR.ri, +1) +
-    b.L(xR, cutY(xR)) +
-    b.cut(xL, cutY(xL)) +
-    "Z"
-  );
-}
 
 export interface PortalProps {
   /**
@@ -172,16 +83,6 @@ export interface PortalProps {
  * nero che si voleva togliere. Lineare la bacheca svanisce con regolarità.
  */
 const T_VEIL_IN = 320;
-
-/*
-  I colori NON seguono il tema chiaro/scuro, ed è voluto: sono quelli con cui
-  Orbite si apre (inchiostro #111111, archi crema #F4F1EA). Il senso di questa
-  animazione è che il passaggio fra i due siti sembri un solo movimento; se
-  qui la porta fosse arancione su crema e di là crema su nero, lo stacco che
-  si voleva togliere ricomparirebbe proprio nel momento del salto.
-*/
-const VEIL_INK = "#111111";
-const ARCH_CREAM = "#F4F1EA";
 
 /*
   I tracciati si costruiscono UNA VOLTA SOLA, in coordinate unitarie.
@@ -289,25 +190,15 @@ export function Portal({
       const openProgress =
         openedAt === null ? 0 : clamp01((elapsed - openedAt) / T_OPEN);
 
-      // Il punto che resta al centro dello schermo: a riposo il centro ottico
-      // del marchio, aprendosi il centro del vano, così la finestra cresce
-      // simmetrica.
-      const k = easeOut(clamp01(openProgress / 0.28));
-      const ax = MARK_CX + (DOOR.cx - MARK_CX) * k;
-      const ay = MARK_CY + (DOOR.cy - MARK_CY) * k;
-
-      const target = Math.max(150, Math.min(Math.min(W, H) * 0.3, 340));
-      const sLogo = target / MARK_W;
-
-      const sStart = sLogo * 0.05;
-      const need = Math.max(
-        Math.sqrt(W * W + H * H) / 2 / DOOR.ri,
-        H / 2 / DOOR_DOWN,
-      );
-      const sEnd = need * 1.35;
+      // Ancoraggio e scale arrivano dal modulo condiviso: sono esattamente le
+      // stesse formule che usa Orbite, quindi il marchio che lascia questa
+      // pagina e quello che riparte di là combaciano al pixel.
+      const { x: ax, y: ay } = anchorAt(openProgress);
+      const sLogo = logoScale(W, H);
 
       let s: number;
       if (elapsed < T_GROW) {
+        const sStart = startScale(W, H);
         s = sStart + (sLogo - sStart) * easeOut(elapsed / T_GROW);
       } else if (openedAt === null) {
         // Composizione conclusa: lo schermo è interamente coperto e il marchio
@@ -331,7 +222,7 @@ export function Portal({
         // diventa invisibile.
         s = sLogo;
       } else {
-        s = sLogo + (sEnd - sLogo) * easeIn(openProgress);
+        s = sLogo + (endScale(W, H) - sLogo) * easeIn(openProgress);
       }
 
       const px = W / 2 - ax * s;
@@ -410,11 +301,9 @@ export function Portal({
         for (let i = 0; i < ARCHES.length; i++) {
           const el = barsRef.current[i];
           if (!el) continue;
-          const appear = clamp01(
-            (elapsed - (ARCHES.length - 1 - i) * STAGGER) / T_APPEAR,
-          );
-          el.setAttribute("opacity", easeOut(appear).toFixed(3));
-          if (appear < 1) allOpaque = false;
+          const op = archOpacity(i, elapsed);
+          el.setAttribute("opacity", op.toFixed(3));
+          if (op < 1) allOpaque = false;
         }
         barsSettled = allOpaque;
       }

@@ -40,16 +40,18 @@ function warmOrbite() {
   // significherebbe che su quei telefoni il vantaggio non c'è e il difetto
   // torna identico.
   //
-  // Questi quattro file sono una trentina di kB e sono il minimo per
-  // DISEGNARE Orbite: senza il documento, il foglio di stile e i due script,
-  // di là l'apertura non può nemmeno cominciare. Le immagini restano fuori:
-  // pesano, e per quelle c'è già l'attesa breve dentro l'animazione. Dove il
-  // prerender funziona questi arrivano dalla cache e non costano due volte.
+  // Sono pochi kB e sono il minimo per DISEGNARE Orbite: il documento (che si
+  // porta dentro stile e apertura) e il motore che dispone la scena, senza il
+  // quale la porta si aprirebbe su un elenco incolonnato di loghi. Le immagini
+  // restano fuori: pesano, e per quelle c'è già l'attesa breve dentro
+  // l'animazione. Dove il prerender funziona questi arrivano dalla cache e non
+  // costano una seconda volta.
   try {
     for (const href of [
       ORBITE_NEXT,
-      `${ORBITE_URL}assets/css/style.css`,
-      `${ORBITE_URL}assets/js/intro.js`,
+      // Solo il documento e il motore della scena. Stile e apertura NON sono
+      // in questo elenco perché stanno DENTRO il documento: arrivano col primo
+      // file, e chiederli a parte sarebbe una richiesta sprecata.
       `${ORBITE_URL}assets/js/orbits.js`,
     ]) {
       const l = document.createElement("link");
