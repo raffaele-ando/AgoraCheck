@@ -31,6 +31,19 @@ const OUT_DIR = "public/orbite/assets/loghi/min";
 const MAX_W = 456;
 const MAX_H = 171;
 
+// Il logotipo AGORÀ al centro della scena è un caso a parte, e il più pesante
+// di tutti: 1385x512 px per 123 kB, cioè il 44% dell'intera pagina, scaricato
+// con priorità alta e quindi in concorrenza con gli script da cui dipende
+// l'apertura. Viene mostrato larghissimo 330 px (il clamp di logoW in
+// orbits.js), quindi 3x sono 990.
+const WORDMARK = {
+  src: "assets/img/agora-logo.png",
+  out: "public/orbite/assets/img/agora-logo.webp",
+  ref: "assets/img/agora-logo.webp",
+  maxW: 990,
+  maxH: 9999,
+};
+
 const html = readFileSync(HTML, "utf8");
 const srcs = [
   ...new Set(
@@ -54,7 +67,13 @@ let before = 0;
 let after = 0;
 const done = [];
 
-for (const rel of srcs) {
+const jobs = [
+  ...srcs.map((rel) => ({ rel, maxW: MAX_W, maxH: MAX_H, out: null })),
+  { rel: WORDMARK.src, maxW: WORDMARK.maxW, maxH: WORDMARK.maxH, out: WORDMARK },
+];
+
+for (const job of jobs) {
+  const rel = job.rel;
   const file = join("public/orbite", rel);
   if (!existsSync(file)) {
     console.warn("manca:", file);
@@ -84,7 +103,7 @@ for (const rel of srcs) {
       g.drawImage(img, 0, 0, w, h);
       return { data: c.toDataURL("image/webp", 0.92).split(",")[1], w, h };
     },
-    { dataUrl, MAX_W, MAX_H },
+    { dataUrl, MAX_W: job.maxW, MAX_H: job.maxH },
   );
 
   // Si confronta il peso IN RETE, non su disco: gli SVG sono testo e il
@@ -103,10 +122,15 @@ for (const rel of srcs) {
     continue;
   }
   const name = basename(file, extname(file)) + ".webp";
-  const dest = join(OUT_DIR, name);
+  const dest = job.out ? job.out.out : join(OUT_DIR, name);
   writeFileSync(dest, webp);
   after += webp.length;
-  done.push({ rel, next: `assets/loghi/min/${name}`, w: out.w, h: out.h });
+  done.push({
+    rel,
+    next: job.out ? job.out.ref : `assets/loghi/min/${name}`,
+    w: out.w,
+    h: out.h,
+  });
   console.log(
     `  ${basename(file).padEnd(24)} ${String(wire).padStart(6)} -> ` +
       `${String(webp.length).padStart(6)} byte in rete  (${out.w}x${out.h})`,
@@ -117,6 +141,8 @@ await browser.close();
 // Riscrive i riferimenti e le misure dichiarate nell'HTML.
 let next = html;
 for (const d of done) {
+  // Il logotipo compare anche nel <link rel="preload">, non solo nell'<img>.
+  next = next.split(`href="${d.rel}"`).join(`href="${d.next}"`);
   const re = new RegExp(
     `src="${d.rel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"([^>]*?)width="\\d+" height="\\d+"`,
   );

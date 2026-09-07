@@ -164,12 +164,18 @@
     return layoutDone;
   }
 
+  // Si aspetta SOLO il logotipo al centro, non i venti loghi in orbita.
+  //
+  // Aspettarli tutti era sbagliato: sono venti richieste, il vano si apre su
+  // di loro solo di sfuggita, e stanno comunque su ellissi in movimento —
+  // vederne comparire uno mentre gira non è un difetto, è una scena che si
+  // popola. Il logotipo AGORÀ invece è fermo al centro, esattamente dietro la
+  // porta: se manca lui, il vano si apre sul vuoto. Quello vale l'attesa, gli
+  // altri no.
   function imagesIn() {
     if (imgsDone) return true;
-    var imgs = document.querySelectorAll('.token:not([hidden]) img');
-    for (var i = 0; i < imgs.length; i++) {
-      if (!imgs[i].complete) return false;
-    }
+    var brand = document.querySelector('.brand img');
+    if (brand && !brand.complete) return false;
     imgsDone = true;
     return true;
   }

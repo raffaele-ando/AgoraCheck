@@ -7,7 +7,12 @@
 <meta name="description" content="Agorà — la rete degli atenei italiani.">
 <meta name="theme-color" content="#F4F1EA">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F4F1EA'/%3E%3Cpath d='M7 25V16a9 9 0 0 1 18 0v9' fill='none' stroke='%23111' stroke-width='3'/%3E%3Cpath d='M13 25v-9a3 3 0 0 1 6 0v9' fill='none' stroke='%23111' stroke-width='3'/%3E%3C/svg%3E">
-<link rel="preload" as="image" href="assets/img/agora-logo.png" fetchpriority="high">
+<link rel="preload" as="image" href="assets/img/agora-logo.webp" fetchpriority="high">
+<!-- orbits.js decide dove vanno i loghi, e l'apertura aspetta quella
+     decisione: misurato, arrivava a 1349 ms perche' si metteva in coda
+     dietro venti immagini che non servono per disegnare la copertura.
+     Dichiarato qui passa davanti. -->
+<link rel="preload" as="script" href="assets/js/orbits.js" fetchpriority="high">
 
 <script>
 /* Il velo d'apertura esiste solo se c'è JavaScript e il movimento è consentito:
@@ -67,28 +72,28 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
        bande verde, rosso e azzurro con la caravella, non è la croce. -->
   <div class="field" id="field">
 
-    <div class="token token--logo" data-kind="logo" data-h="0.50"><img src="assets/loghi/min/Polimi.webp" alt="Politecnico di Milano" width="131" height="43" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.40"><img src="assets/loghi/Bocconi.svg" alt="Università Bocconi" width="188" height="40" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.62"><img src="assets/loghi/min/Unimi-positivo.webp" alt="Università degli Studi di Milano — La Statale" width="193" height="113" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.52"><img src="assets/loghi/min/Cattolica.webp" alt="Università Cattolica del Sacro Cuore" width="189" height="77" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.34"><img src="assets/loghi/LUISS-ufficiale.svg" alt="LUISS Guido Carli" width="348" height="64" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.56"><img src="assets/loghi/min/Polito.webp" alt="Politecnico di Torino" width="248" height="109" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.52"><img src="assets/loghi/Unito-nuovo.svg" alt="Università di Torino" width="1335" height="543" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.44"><img src="assets/loghi/min/Unige-colore.webp" alt="Università di Genova" width="300" height="76" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.68"><img src="assets/loghi/min/Unimib.webp" alt="Università degli Studi di Milano-Bicocca" width="159" height="171" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.30"><img src="assets/loghi/min/IULM-positivo.webp" alt="Università IULM" width="456" height="70" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.46"><img src="assets/loghi/La_Sapienza.svg" alt="Sapienza Università di Roma" width="201" height="60" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.54"><img src="assets/loghi/min/UniSR.webp" alt="Università Vita-Salute San Raffaele" width="210" height="80" decoding="async"></div>
-    <div class="token token--logo" data-kind="logo" data-h="0.40"><img src="assets/loghi/Hunimed.svg" alt="Humanitas University" width="192" height="40" decoding="async"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.50"><img src="assets/loghi/min/Polimi.webp" alt="Politecnico di Milano" width="131" height="43" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.40"><img src="assets/loghi/Bocconi.svg" alt="Università Bocconi" width="188" height="40" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.62"><img src="assets/loghi/min/Unimi-positivo.webp" alt="Università degli Studi di Milano — La Statale" width="193" height="113" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.52"><img src="assets/loghi/min/Cattolica.webp" alt="Università Cattolica del Sacro Cuore" width="189" height="77" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.34"><img src="assets/loghi/LUISS-ufficiale.svg" alt="LUISS Guido Carli" width="348" height="64" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.56"><img src="assets/loghi/min/Polito.webp" alt="Politecnico di Torino" width="248" height="109" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.52"><img src="assets/loghi/Unito-nuovo.svg" alt="Università di Torino" width="1335" height="543" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.44"><img src="assets/loghi/min/Unige-colore.webp" alt="Università di Genova" width="300" height="76" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.68"><img src="assets/loghi/min/Unimib.webp" alt="Università degli Studi di Milano-Bicocca" width="159" height="171" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.30"><img src="assets/loghi/min/IULM-positivo.webp" alt="Università IULM" width="456" height="70" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.46"><img src="assets/loghi/La_Sapienza.svg" alt="Sapienza Università di Roma" width="201" height="60" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.54"><img src="assets/loghi/min/UniSR.webp" alt="Università Vita-Salute San Raffaele" width="210" height="80" decoding="async" fetchpriority="low"></div>
+    <div class="token token--logo" data-kind="logo" data-h="0.40"><img src="assets/loghi/Hunimed.svg" alt="Humanitas University" width="192" height="40" decoding="async" fetchpriority="low"></div>
 
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Lombardy.png" width="120" height="80" alt="Lombardia" decoding="async"></div>
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Lazio.png" width="120" height="81" alt="Lazio" decoding="async"></div>
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Piedmont.png" width="120" height="80" alt="Piemonte" decoding="async"></div>
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Liguria.png" width="120" height="80" alt="Liguria" decoding="async"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Lombardy.png" width="120" height="80" alt="Lombardia" decoding="async" fetchpriority="low"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Lazio.png" width="120" height="81" alt="Lazio" decoding="async" fetchpriority="low"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Piedmont.png" width="120" height="80" alt="Piemonte" decoding="async" fetchpriority="low"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Liguria.png" width="120" height="80" alt="Liguria" decoding="async" fetchpriority="low"></div>
 
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Milan.png" width="120" height="60" alt="Milano" decoding="async"></div>
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Rome.png" width="120" height="80" alt="Roma" decoding="async"></div>
-    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Turin.png" width="120" height="80" alt="Torino" decoding="async"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Milan.png" width="120" height="60" alt="Milano" decoding="async" fetchpriority="low"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Rome.png" width="120" height="80" alt="Roma" decoding="async" fetchpriority="low"></div>
+    <div class="token token--flag" data-kind="flag"><img src="assets/bandiere/Flag_of_Turin.png" width="120" height="80" alt="Torino" decoding="async" fetchpriority="low"></div>
 
   </div>
 
@@ -96,7 +101,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   <div class="veil" id="veil" aria-hidden="true"></div>
 
   <h1 class="brand" id="brand">
-    <img src="assets/img/agora-logo.png" alt="Agorà" width="1385" height="512" fetchpriority="high" decoding="async">
+    <img src="assets/img/agora-logo.webp" alt="Agorà" width="990" height="366" fetchpriority="high" decoding="async">
   </h1>
 
 </main>

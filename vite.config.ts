@@ -1,7 +1,69 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
-import {defineConfig, loadEnv} from 'vite';
+import {defineConfig, loadEnv, Plugin} from 'vite';
+
+/**
+ * Orbite arriva in UNA richiesta: stile e apertura finiscono dentro l'HTML.
+ *
+ * Sulla prima visita, su rete mobile, la sequenza era questa: il documento
+ * arriva, il foglio di stile arriva e dipinge lo schermo di nero — ma il
+ * marchio su Orbite lo disegna il JavaScript, e intro.js arrivava quasi un
+ * secondo dopo, in coda dietro venti immagini. In mezzo c'era quindi un tratto
+ * di nero SENZA marchio, e subito dopo il marchio ricompariva e restava fermo
+ * ad aspettare il resto: è la segnalazione "si blocca mostrandomi il logo sul
+ * nero e resta fermo lì per un po'".
+ *
+ * Con stile e apertura scritti dentro il documento non c'è più nulla da
+ * attendere per disegnare: appena l'HTML arriva, lo schermo è inchiostro col
+ * marchio già composto, che è esattamente il fotogramma che stava sulla
+ * bacheca un istante prima. La cucitura fra i due siti scompare, e sono anche
+ * due richieste di rete in meno sul percorso critico.
+ *
+ * I file sorgente restano separati in public/orbite/: si continua a lavorarli
+ * come sempre, e in sviluppo la pagina li carica normalmente. L'unione avviene
+ * solo nella copia pubblicata.
+ */
+function inlineOrbiteCriticalPath(): Plugin {
+  return {
+    name: 'inline-orbite-critical-path',
+    apply: 'build',
+    closeBundle() {
+      const dir = path.resolve(__dirname, 'dist/orbite');
+      const htmlPath = path.join(dir, 'index.html');
+      if (!fs.existsSync(htmlPath)) return;
+      let html = fs.readFileSync(htmlPath, 'utf8');
+
+      const read = (rel: string) => {
+        const f = path.join(dir, rel);
+        return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : null;
+      };
+
+      const css = read('assets/css/style.css');
+      if (css) {
+        html = html.replace(
+          '<link rel="stylesheet" href="assets/css/style.css">',
+          `<style>${css}</style>`,
+        );
+      }
+
+      // Solo intro.js: è quello che disegna il marchio, e deve girare al primo
+      // fotogramma. orbits.js dispone la scena e resta un file a parte —
+      // pesa di più, non serve per disegnare la copertura, e tenerlo fuori
+      // lascia il documento leggero.
+      const intro = read('assets/js/intro.js');
+      if (intro) {
+        html = html.replace(
+          '<script src="assets/js/intro.js" defer></script>',
+          `<script>${intro}</script>`,
+        );
+      }
+
+      fs.writeFileSync(htmlPath, html);
+    },
+  };
+}
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
@@ -9,7 +71,7 @@ export default defineConfig(({mode}) => {
     // Base path. Root ('/') for the Cloud Run / custom-domain build; set
     // VITE_BASE=/AgoraCheck/ for the GitHub Pages project-site build.
     base: process.env.VITE_BASE || env.VITE_BASE || '/',
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), inlineOrbiteCriticalPath()],
     define: {},
     resolve: {
       alias: {
