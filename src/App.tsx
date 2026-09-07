@@ -176,17 +176,24 @@ function BootIntro() {
     // pause di seguito con tempo libero davanti significano che la coda si è
     // davvero svuotata. Il conteggio riparte da zero appena una finestra
     // risulta stretta o scaduta.
+    //
+    // Al RITORNO da Orbite l'attesa è però molto più corta: là c'è solo la
+    // posa e l'apertura, mezzo movimento invece di uno intero, e chi ha
+    // premuto "indietro" vuole rientrare, non guardare. Due secondi di
+    // inchiostro prima ancora che l'animazione cominci sono un'attesa, non
+    // una presentazione: basta una finestra di quiete e un tetto breve.
+    const needCalm = composed ? 1 : 2;
     let calm = 0;
     const waitCalm = () => {
       if (done) return;
       if (typeof requestIdleCallback !== "function") {
-        handle = setTimeout(go, 400) as unknown as number;
+        handle = setTimeout(go, composed ? 120 : 400) as unknown as number;
         return;
       }
       handle = requestIdleCallback(
         (dl) => {
           calm = !dl.didTimeout && dl.timeRemaining() > 8 ? calm + 1 : 0;
-          if (calm >= 2) go();
+          if (calm >= needCalm) go();
           else waitCalm();
         },
         { timeout: 300 },
@@ -195,7 +202,7 @@ function BootIntro() {
 
     // Tetto assoluto: su una rete o un telefono molto lenti la quiete potrebbe
     // non arrivare mai, e la copertura non può restare all'infinito.
-    const cap = setTimeout(go, 2000);
+    const cap = setTimeout(go, composed ? 700 : 2000);
     waitCalm();
 
     return () => {
@@ -203,7 +210,7 @@ function BootIntro() {
       if (typeof cancelIdleCallback === "function") cancelIdleCallback(handle);
       else clearTimeout(handle);
     };
-  }, [playing]);
+  }, [playing, composed]);
 
   const finish = () => {
     try {

@@ -138,9 +138,26 @@
     </style>
     <script>
       try {
+        // Si torna indietro da Orbite? Allora la copertura RESTA.
+        //
+        // È la causa di "mi fa arrivare prima alla home e poi fa partire
+        // l'animazione". Tornando indietro il contrassegno in sessione dice
+        // che l'apertura è già stata vista, quindi qui si toglieva subito la
+        // copertura: la bacheca compariva nuda, e solo un attimo dopo React
+        // ci metteva sopra il portale e cominciava ad aprire la porta. Prima
+        // l'arrivo, poi l'animazione — cioè l'ordine sbagliato.
+        //
+        // La condizione è la stessa che usa cameFromHistory() in App.tsx, e
+        // deve stare QUI perché il primo fotogramma viene dipinto molto prima
+        // che il JavaScript dell'applicazione esista.
+        var back = false;
+        try {
+          var nav = performance.getEntriesByType("navigation")[0];
+          back = !!nav && nav.type === "back_forward";
+        } catch (e2) {}
         if (
-          sessionStorage.getItem("agora_intro") === "1" ||
-          matchMedia("(prefers-reduced-motion: reduce)").matches
+          matchMedia("(prefers-reduced-motion: reduce)").matches ||
+          (!back && sessionStorage.getItem("agora_intro") === "1")
         ) {
           document.documentElement.className += " ag-booted";
         }

@@ -220,3 +220,33 @@ html, body {
   background-color: var(--ag-accent);
   color: var(--ag-on-accent);
 }
+
+/*
+  Schermo corto con la tastiera aperta: si ritrae il superfluo.
+
+  Con la tastiera lo spazio visibile si dimezza, e sotto una certa altezza le
+  cinque righe del sondaggio non ci stanno più. Prima comparivano dentro il
+  pannello una barra di scorrimento e il salto che ne seguiva a ogni tocco —
+  che è la segnalazione "succede qualcosa quando passo da un punto all'altro":
+  il browser, per portare in vista il campo appena toccato, faceva scorrere
+  quel contenitore, e il contenuto si spostava da solo.
+
+  La soglia non è scelta a occhio: misurata riga per riga, il pannello comincia
+  a debordare a 471 px di altezza visibile. Sopra non cambia niente. Sotto si
+  toglie il logotipo — che mentre si scrive è decorazione, e chi scrive guarda
+  i campi — e, più giù ancora, si stringono margini e righe. La regola vale
+  solo con un campo attivo (.ag-typing): a riposo il logotipo c'è sempre.
+*/
+@media (max-height: 472px) {
+  .ag-typing .ag-brandbar { display: none; }
+  /* Il campo della domanda è il primo a stringersi, e con la spaziatura
+     originale la seconda riga del segnaposto restava tagliata a metà. */
+  .ag-typing .ag-poll-q { padding-top: 0.25rem; }
+  .ag-typing .ag-poll-q textarea { padding-bottom: 0; }
+}
+@media (max-height: 420px) {
+  .ag-typing .ag-panel { padding: 0.625rem; }
+  .ag-typing .ag-poll { gap: 0.5rem; }
+  .ag-typing .ag-poll-opts { gap: 0.375rem; }
+  .ag-typing .ag-poll-opt { min-height: 1.875rem; }
+}

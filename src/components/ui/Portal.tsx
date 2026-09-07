@@ -245,9 +245,19 @@ export function Portal({
 
     let raf = 0;
     let last = 0;
-    // Partendo da composti si salta la fase di crescita: il tempo comincia
-    // dove quella sarebbe finita.
-    let elapsed = startComposed ? T_GROW + T_HOLD : 0;
+    // Partendo da composti si salta la CRESCITA, ma non la posa.
+    //
+    // È la correzione di "mi riparte la porta senza logo". Il tempo partiva da
+    // T_GROW + T_HOLD, cioè esattamente dall'istante dell'apertura: al primo
+    // fotogramma `openedAt` veniva già fissato e la porta cominciava subito a
+    // volare via. Il marchio composto c'era — per due o tre fotogrammi — ma
+    // non restava fermo abbastanza da vedersi: si vedeva solo il vano che si
+    // allargava, cioè una porta senza logo.
+    //
+    // Partendo da T_GROW il marchio è già intero (gli archi finiscono di
+    // comparire a 540 ms) e ha davanti i 300 ms di posa, gli stessi
+    // dell'ingresso. Chi torna indietro rivede il marchio, poi la porta.
+    let elapsed = startComposed ? T_GROW : 0;
     // Istante in cui è stato dato il via libera all'apertura: prima di allora
     // il tempo scorre solo per la fase di crescita.
     let openedAt: number | null = null;
@@ -359,7 +369,12 @@ export function Portal({
       // Durante crescita e posa il velo è quindi un rettangolo pieno, scritto
       // una volta e mai più toccato: zero ridisegni. Il vano compare solo
       // quando serve, cioè quando comincia ad aprirsi.
-      if (openedAt !== null) {
+      //
+      // La condizione guarda l'AVANZAMENTO, non il via libera: tornando
+      // indietro da Orbite il via libera c'è già al primo fotogramma, ma
+      // finché la posa non è finita il vano non si muove e ridisegnarlo
+      // sarebbe un ridipingere l'intero schermo per nulla.
+      if (openProgress > 0) {
         veilEl.setAttribute(
           "d",
           `M-1 -1H${W + 1}V${H + 1}H-1Z` + doorPath(builder(s, px, py)),
