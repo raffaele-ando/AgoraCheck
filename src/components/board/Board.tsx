@@ -154,36 +154,34 @@ function useTypewriter(
 }
 
 /**
- * I suggerimenti animati si fermano per SEMPRE al primo tocco sul modulo.
+ * Il modulo sta per essere abbandonato: si passa a Orbite.
  *
- * Servono a chi arriva e non sa cosa scrivere. Da quando ha toccato il primo
- * campo, quella spiegazione l'ha avuta: continuare a riscriverli significa
- * ridisegnare i campi sedici volte al secondo per tutto il tempo in cui sta
- * compilando. E siccome mettere in pausa e riprendere fa RIPARTIRE il testo da
- * zero, passando da un campo all'altro si vedeva ogni segnaposto azzerarsi:
- * sono i lampeggi segnalati.
+ * Serve SOLO a fermare tutti i suggerimenti insieme un istante prima di
+ * lasciare la pagina, perché continuare a riscriverli sedici volte al
+ * secondo durante la transizione (dissolvenza del velo, crescita degli
+ * archi) è lavoro speso per un testo che nessuno vedrà mai più.
  *
- * È un modulo condiviso e non uno stato di React di proposito: i campi sono
- * fratelli, e questo deve fermarli tutti insieme senza farli ridisegnare.
+ * NON va confuso con "questo campo è stato toccato" — vedi più sotto perché
+ * erano la stessa cosa, ed era il difetto.
  */
-let formTouched = false;
-const touchListeners = new Set<() => void>();
-function markFormTouched() {
-  if (formTouched) return;
-  formTouched = true;
-  touchListeners.forEach((cb) => cb());
+let appLeaving = false;
+const leavingListeners = new Set<() => void>();
+function markAppLeaving() {
+  if (appLeaving) return;
+  appLeaving = true;
+  leavingListeners.forEach((cb) => cb());
 }
-function useFormTouched() {
-  const [touched, setTouched] = useState(formTouched);
+function useAppLeaving() {
+  const [leaving, setLeaving] = useState(appLeaving);
   useEffect(() => {
-    if (touched) return;
-    const cb = () => setTouched(true);
-    touchListeners.add(cb);
+    if (leaving) return;
+    const cb = () => setLeaving(true);
+    leavingListeners.add(cb);
     return () => {
-      touchListeners.delete(cb);
+      leavingListeners.delete(cb);
     };
-  }, [touched]);
-  return touched;
+  }, [leaving]);
+  return leaving;
 }
 
 /**
@@ -249,17 +247,33 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
   const [focused, setFocused] = useState(false);
   const visible = usePageVisible();
 
-  // Il suggerimento si ferma quando non serve più: se il campo è in uso — a
-  // fuoco o già scritto — il segnaposto non si vede nemmeno, e continuare a
-  // riscriverlo significa ridisegnare il campo sedici volte al secondo
-  // esattamente mentre qualcuno ci sta digitando dentro.
-  const touched = useFormTouched();
+  /**
+   * Una volta toccato QUESTO campo, non ha più bisogno del suo suggerimento:
+   * chi lo stava usando ha già capito cosa scriverci. Fermo per SEMPRE, ma
+   * solo per sé — non per i campi vicini.
+   *
+   * Prima questo interruttore era condiviso da tutti e tre i campi insieme
+   * (un unico modulo esterno a React, "i campi sono fratelli"): toccare
+   * "dove" spegneva anche "quando" e "cosa cerchi", che nessuno aveva ancora
+   * sfiorato. Ed è la segnalazione "a volte i suggerimenti non si vedono o si
+   * bloccano": lo spegnimento arriva a metà della loro animazione, non alla
+   * fine, quindi restavano fermi per sempre a un fotogramma qualunque — a
+   * volte vuoto (non avevano ancora scritto niente), a volte una parola
+   * tagliata a metà ("Es: 12 Ot", verificato). Ogni campo ora si ferma solo
+   * quando È LUI a essere toccato: gli altri continuano finché non tocca a
+   * loro.
+   */
+  const [ownTouched, setOwnTouched] = useState(false);
+  // Fermata unica per TUTTI i campi insieme: solo quando si sta per lasciare
+  // la pagina (vedi useAppLeaving), non quando si tocca un campo qualsiasi.
+  const leaving = useAppLeaving();
   const introOver = useIntroOver();
   const inUse = focused || !!props.value;
   // Fermo: mentre l'apertura del marchio copre lo schermo, per sempre dopo il
-  // primo tocco sul modulo, e mentre la scheda è in secondo piano.
+  // primo tocco su QUESTO campo, mentre la pagina sta per essere lasciata, e
+  // mentre la scheda è in secondo piano.
   const placeholderText = useTypewriter(words, {
-    paused: !introOver || touched || inUse || !visible,
+    paused: !introOver || ownTouched || leaving || inUse || !visible,
   });
 
   return (
@@ -268,7 +282,7 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
       {...props}
       onFocus={(e) => {
         setFocused(true);
-        markFormTouched();
+        setOwnTouched(true);
         props.onFocus?.(e);
       }}
       onBlur={(e) => {
@@ -650,13 +664,13 @@ export function Board() {
               // La bacheca smette di lavorare: da qui in poi è coperta.
               //
               // I suggerimenti animati si riscrivono sedici volte al secondo, e
-              // se nessuno ha ancora toccato il modulo stanno girando proprio
-              // adesso — cioè durante la dissolvenza del velo e la crescita
-              // degli archi, che sono i 620 ms in cui l'animazione deve essere
+              // se non erano ancora stati toccati stanno girando proprio adesso
+              // — cioè durante la dissolvenza del velo e la crescita degli
+              // archi, che sono i 620 ms in cui l'animazione deve essere
               // impeccabile. Ridisegnare tre campi di testo sotto una copertura
               // opaca è lavoro speso per qualcosa che nessuno può vedere, ed è
               // una delle sorgenti di scatto nel passaggio.
-              markFormTouched();
+              markAppLeaving();
               setLeaving(true);
             }}
           >
