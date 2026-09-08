@@ -44,9 +44,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Build (GitHub Pages base)
+      - name: Build (dominio proprio: agora.theproject.world)
+        # Niente VITE_BASE: il default in vite.config.ts è '/', giusto per un
+        # sito che vive alla radice di un dominio — non più sotto
+        # github.io/AgoraCheck/. Il file public/CNAME (copiato tale e quale in
+        # dist/) dice a GitHub Pages quale dominio personalizzato servire.
         env:
-          VITE_BASE: /AgoraCheck/
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
@@ -54,6 +57,10 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_DATABASE_ID: ${{ secrets.VITE_FIREBASE_DATABASE_ID }}
+          # Stesso dominio, non un segreto: senza questa il sito continuerebbe
+          # a caricare i media con la vecchia via (GitHub / dataURL in
+          # Firestore) invece di passare dal Worker su R2. Vedi cloudflare/README.md.
+          VITE_MEDIA_UPLOAD_URL: https://agora.theproject.world/media
         run: |
           npx vite build
           # SPA deep-link fallback for GitHub Pages

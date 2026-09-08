@@ -9,8 +9,10 @@ Provisioned in your account (ready to use):
 
 ## What the Worker adds
 
-`worker.ts` is meant to run **in front of** `agora.theproject.world` and pass
-everything through to the current origin, adding only:
+`agora.theproject.world` ora punta, via DNS, direttamente ad AgoraCheck su
+GitHub Pages: quello serve tutte le pagine del sito. `worker.ts` **non** sta
+più davanti all'intero dominio — è instradato solo su questi quattro
+percorsi, che un sito statico non può servire da sé:
 
 - **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` session token valid for rate-limiting and anti-abuse protection.
   and returns a signed token. This is the **iOS durability fix**: Safari/
@@ -24,16 +26,30 @@ everything through to the current origin, adding only:
 
 ## Deploy
 
+Le quattro Route (`/id`, `/px.gif`, `/media`, `/media/*`) sono già scritte in
+`wrangler.toml`, attive (non più commentate). Restano da fare, nell'ordine:
+
 ```bash
 cd cloudflare
 npx wrangler secret put ID_SECRET     # paste any long random string
-# edit wrangler.toml -> uncomment the [[routes]] block with your zone
 npx wrangler deploy
 ```
 
-You already have a `polimiagora` Worker on the account; you can either deploy
-this as a second Worker (`agora-edge`) on the route, or paste the endpoint
-handlers from `worker.ts` into that existing Worker.
+**Prima del deploy**, nel pannello Cloudflare della zona `theproject.world`:
+
+1. **DNS** — il record per `agora` deve puntare a `raffaele-ando.github.io`
+   (tipo CNAME), **proxato** (nuvoletta arancione): senza il proxy le Route
+   del Worker non si attivano mai.
+2. **SSL/TLS → Overview** — modalità **Full** o **Full (strict)**: GitHub
+   Pages serve HTTPS con un certificato valido, e la modalità "Flexible"
+   darebbe un ciclo di redirect (GitHub forza sempre HTTPS).
+
+Dopo il deploy, verifica in **Workers & Pages → agora-edge → Triggers** che le
+quattro Route compaiano attive sulla zona giusta.
+
+Hai già un Worker `polimiagora` sull'account; questo (`agora-edge`) resta un
+Worker separato, scelta più semplice da tracciare che incollare questi
+handler dentro un altro progetto.
 
 ## Firebase vs Cloudflare — division of responsibility
 
@@ -60,19 +76,22 @@ handlers from `worker.ts` into that existing Worker.
   append-only events are far cheaper in D1 than as Firestore documents. Keep
   aggregates in Firestore for the dashboard.
 
-## Client wiring for media (DONE — activate with an env var)
+## Client wiring for media (DONE — attivo automaticamente in compilazione)
 
-`src/utils/media.ts` exposes `uploadMedia(file)`. It posts to
-`import.meta.env.VITE_MEDIA_UPLOAD_URL` (e.g. `https://agora.theproject.world/media`)
-when set, else returns `null` so callers keep their current path.
+`src/utils/media.ts` espone `uploadMedia(file)`. Chiama
+`import.meta.env.VITE_MEDIA_UPLOAD_URL` quando è impostata, altrimenti
+restituisce `null` e chi chiama resta sulla via precedente.
 
-`LogoSettings`, `StoryTemplateConfig` and `CarouselTemplateConfig` already call
-`uploadMedia` first and only fall back to the old path (GitHub upload for logos,
-Firestore dataURL for template/carousel images) when it returns `null`. So:
+`.github/workflows/deploy-pages.yml` la imposta già a
+`https://agora.theproject.world/media` a ogni compilazione: non c'è nessun
+passo manuale da fare qui, **a patto che il Worker sia stato distribuito**
+(sezione "Deploy" sopra) — finché non lo è, quell'indirizzo risponde 522/523
+e `uploadMedia` fallisce silenziosamente, ricadendo sulla via precedente
+(niente si rompe, semplicemente i nuovi media non passano ancora da R2).
 
-1. Deploy the Worker (above).
-2. Set `VITE_MEDIA_UPLOAD_URL=https://agora.theproject.world/media` at build time.
-
-From then on all new images go to R2 and only their URL is stored in Firestore.
-Existing dataURLs keep working (they are still valid `<img src>` values), so no
-data migration is required — old assets can be re-uploaded lazily if desired.
+`LogoSettings`, `StoryTemplateConfig` e `CarouselTemplateConfig` chiamano già
+`uploadMedia` per primo e ricadono sulla via vecchia (upload su GitHub per i
+loghi, dataURL in Firestore per template/carosello) solo quando restituisce
+`null`. Da quando il Worker è attivo, tutte le nuove immagini vanno su R2 e in
+Firestore resta solo l'indirizzo. I dataURL esistenti continuano a funzionare
+(sono comunque `<img src>` validi): nessuna migrazione dei dati necessaria.

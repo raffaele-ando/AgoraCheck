@@ -18,9 +18,35 @@ bucket_name = "agora-media"
 binding = "IDENTITY"
 id = "14176b51077746ffb3e9ddc8bcf58e84"   # KV namespace "agora-identity"
 
-# Route it in front of the site so /id, /px.gif and /media work same-origin,
-# and everything else passes through to the origin unchanged.
-# Uncomment and set your zone, then run: npx wrangler deploy
-# [[routes]]
-# pattern = "agora.theproject.world/*"
-# zone_name = "theproject.world"
+# Route SOLO questi tre percorsi, non più tutto il dominio con "/*".
+#
+# Il dominio agora.theproject.world ora punta (via DNS) direttamente al sito
+# AgoraCheck pubblicato su GitHub Pages: quello serve tutte le pagine, e a
+# QUESTO Worker restano solo gli endpoint che non hanno equivalente su un sito
+# statico — identità del dispositivo e upload dei media. Un percorso non
+# coperto da nessuna di queste tre Route non passa mai dal Worker: Cloudflare
+# lo instrada direttamente all'origine del record DNS (GitHub Pages), senza
+# nemmeno invocare fetch(), quindi il ramo finale di worker.ts ("tutto il
+# resto passa all'origine") resta un ripiego difensivo, non il percorso
+# normale.
+#
+# Attivarle: togliere il cancelletto dalle righe sotto e lanciare
+# `npx wrangler deploy` da questa cartella. La modalità SSL/TLS della zona
+# deve essere "Full" o "Full (strict)" — GitHub Pages serve HTTPS con un
+# certificato valido, e "Flexible" darebbe un ciclo di redirect perché GitHub
+# forza sempre HTTPS.
+[[routes]]
+pattern = "agora.theproject.world/id"
+zone_name = "theproject.world"
+
+[[routes]]
+pattern = "agora.theproject.world/px.gif"
+zone_name = "theproject.world"
+
+[[routes]]
+pattern = "agora.theproject.world/media"
+zone_name = "theproject.world"
+
+[[routes]]
+pattern = "agora.theproject.world/media/*"
+zone_name = "theproject.world"

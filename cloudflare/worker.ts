@@ -1,9 +1,12 @@
 // ===========================================================================
 // Agorà edge Worker (Cloudflare)
 //
-// Deploy this in FRONT of agora.theproject.world (route: agora.theproject.world/*)
-// so it can add durable identity + serve media, and pass everything else through
-// to the existing origin. It intentionally does NOT change page content.
+// agora.theproject.world serve AgoraCheck direttamente da GitHub Pages (via
+// DNS): questo Worker non sta più davanti a TUTTO il dominio. È instradato
+// (vedi wrangler.toml) SOLO sui quattro percorsi qui sotto che un sito
+// statico non può servire da sé — identità del dispositivo e upload dei
+// media. Ogni altro indirizzo non passa mai da qui: Cloudflare lo consegna
+// direttamente a GitHub Pages, senza che questo file venga invocato.
 //
 // Endpoints:
 //   GET  /id            -> issues an HttpOnly, 400-day signed device token cookie
@@ -13,7 +16,9 @@
 //                          localStorage/IndexedDB clear via the HTTP cache).
 //   POST /media         -> stores an uploaded file in R2, returns its public URL.
 //   GET  /media/<key>   -> serves a file from R2 (immutable, cached).
-//   (everything else)   -> proxied to the origin unchanged.
+//   (everything else)   -> ripiego difensivo: con le Route scoped ai quattro
+//                          percorsi sopra, questo ramo in condizioni normali
+//                          non viene mai raggiunto (vedi wrangler.toml).
 //
 // Bindings (see wrangler.toml): MEDIA (R2), IDENTITY (KV), ID_SECRET (secret).
 //
