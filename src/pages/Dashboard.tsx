@@ -127,12 +127,12 @@ interface Message {
 interface ProfileRecord {
   id: string;
   name?: string;
-  suspects?: string[];
+  possibleAliases?: string[];
   instagram?: string;
   /* deprecated */ customInstagrams?: string[];
   removedInstagrams?: string[];
-  isolateFromAutoGrouping?: boolean;
-  manualMergeProfileId?: string;
+  excludeFromAutoGrouping?: boolean;
+  linkedToProfileId?: string;
   ignoredFromAnalytics?: boolean;
 }
 /**
@@ -314,7 +314,7 @@ export default function Dashboard() {
   );
   const [mergeSearchQuery, setMergeSearchQuery] = useState("");
   const [profileNameInput, setProfileNameInput] = useState("");
-  const [profileSuspectsInput, setProfileSuspectsInput] = useState("");
+  const [profilePossibleAliasesInput, setProfilePossibleAliasesInput] = useState("");
   const [profileCustomInstagramsInput, setProfileCustomInstagramsInput] =
     useState("");
   const [viewFilter, setViewFilter] = useState<"new" | "archived">("new");
@@ -389,8 +389,8 @@ export default function Dashboard() {
         profiles[editingProfileId]
       ) {
         setProfileNameInput(profiles[editingProfileId]?.name || "");
-        setProfileSuspectsInput(
-          profiles[editingProfileId]?.suspects?.join(", ") || "",
+        setProfilePossibleAliasesInput(
+          profiles[editingProfileId]?.possibleAliases?.join(", ") || "",
         );
         setProfileCustomInstagramsInput(
           profiles[editingProfileId]?.customInstagrams?.join(", ") || "",
@@ -433,7 +433,7 @@ export default function Dashboard() {
         doc(db, "profiles", editingProfileId),
         {
           name: profileNameInput.trim(),
-          suspects: profileSuspectsInput
+          possibleAliases: profilePossibleAliasesInput
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean),
@@ -505,7 +505,7 @@ export default function Dashboard() {
     try {
       await setDoc(
         doc(db, "profiles", pid),
-        { isolateFromAutoGrouping: true, manualMergeProfileId: deleteField() },
+        { excludeFromAutoGrouping: true, linkedToProfileId: deleteField() },
         { merge: true },
       );
     } catch (err: any) {
@@ -528,7 +528,7 @@ export default function Dashboard() {
     try {
       await setDoc(
         doc(db, "profiles", pid),
-        { isolateFromAutoGrouping: false },
+        { excludeFromAutoGrouping: false },
         { merge: true },
       );
     } catch (err: any) {
@@ -577,7 +577,7 @@ export default function Dashboard() {
         for (const targetPid of targetMacro.profileIds) {
           batch.set(
             doc(db, "profiles", targetPid),
-            { manualMergeProfileId: sourcePid, isolateFromAutoGrouping: false },
+            { linkedToProfileId: sourcePid, excludeFromAutoGrouping: false },
             { merge: true },
           );
         }
@@ -716,7 +716,7 @@ export default function Dashboard() {
 
     for (const m of messages) {
        const pid = getDeviceProfile(m);
-       if (profiles[pid]?.isolateFromAutoGrouping) continue;
+       if (profiles[pid]?.excludeFromAutoGrouping) continue;
        const adv = m.parsedAdvanced || null;
 
        // --- deterministic evidence: co-observed persistent tokens ------------
@@ -916,7 +916,7 @@ export default function Dashboard() {
       IP_PUBLIC:    0.12,
     } as const;
 
-    const CONF_THRESHOLD = 0.55;
+    const LINK_THRESHOLD = 0.55;
     // Una coppia sostenuta SOLO da segnali corroboranti non viene mai unita in
     // automatico: viene proposta all'operatore (vedi mergeSuggestions).
     const SUGGEST_THRESHOLD = 0.40;
@@ -964,7 +964,7 @@ export default function Dashboard() {
       opts: { linking: boolean; deviceLevel: boolean },
     ) => {
       if (u === v) return;
-      if (profiles[u]?.isolateFromAutoGrouping || profiles[v]?.isolateFromAutoGrouping) return;
+      if (profiles[u]?.excludeFromAutoGrouping || profiles[v]?.excludeFromAutoGrouping) return;
       if (!adj.has(u) || !adj.has(v)) return;
       if (confidence <= 0) return;
 
@@ -1000,7 +1000,7 @@ export default function Dashboard() {
 
     for (const n of nodes) {
       const prof = profiles[n];
-      if (prof?.isolateFromAutoGrouping) continue;
+      if (prof?.excludeFromAutoGrouping) continue;
       const { tags } = getProfileInstagrams(n);
       for (const tag of tags) {
         if (!tagGroups.has(tag)) tagGroups.set(tag, []);
@@ -1158,8 +1158,8 @@ export default function Dashboard() {
     // quindi nessun vincolo negativo può annullarla.
     for (const n of nodes) {
       const prof = profiles[n];
-      if (prof?.manualMergeProfileId && adj.has(prof.manualMergeProfileId)) {
-        addSignal(n, prof.manualMergeProfileId, "manual", "Merge manuale", CONF.MANUAL, {
+      if (prof?.linkedToProfileId && adj.has(prof.linkedToProfileId)) {
+        addSignal(n, prof.linkedToProfileId, "manual", "Merge manuale", CONF.MANUAL, {
           linking: true,
           deviceLevel: false,
         });
@@ -1188,7 +1188,7 @@ export default function Dashboard() {
       const hasLinkingProof = Array.from(sigs.values()).some((s) => s.linking);
       const reasons = Array.from(sigs.values()).map((s) => s.label);
 
-      if (hasLinkingProof && combined >= CONF_THRESHOLD) {
+      if (hasLinkingProof && combined >= LINK_THRESHOLD) {
         edgeConfidence.set(key, combined);
         edgeReasons.set(key, reasons);
         adj.get(u)!.add(v);
@@ -1266,9 +1266,9 @@ export default function Dashboard() {
           name = "Sconosciuto";
         }
         if (comp.length > 1 && names.length === 0) name = "Profilo Aggregato";
-        const suspects = new Set<string>();
+        const possibleAliases = new Set<string>();
         comp.forEach((p) => {
-          (profiles[p]?.suspects || []).forEach((s) => suspects.add(s));
+          (profiles[p]?.possibleAliases || []).forEach((s) => possibleAliases.add(s));
         });
         const instagrams = new Set<string>();
         comp.forEach((p) => {
@@ -1287,13 +1287,13 @@ export default function Dashboard() {
             mostRecentMsg.parsedAdvanced?.n?.ip ||
             "Sconosciuto"
           : "Sconosciuto";
-        const compEdgeReasons: Record<string, string[]> = {};
+        const linkReasons: Record<string, string[]> = {};
         comp.forEach(p1 => {
           comp.forEach(p2 => {
             if (p1 !== p2) {
               const key = [p1, p2].sort().join("|");
               if (edgeReasons.has(key)) {
-                compEdgeReasons[key] = edgeReasons.get(key)!;
+                linkReasons[key] = edgeReasons.get(key)!;
               }
             }
           });
@@ -1330,13 +1330,13 @@ export default function Dashboard() {
           id,
           profileIds: comp,
           name,
-          suspects: Array.from(suspects),
+          possibleAliases: Array.from(possibleAliases),
           instagrams: Array.from(instagrams),
           msgCount: compMsgs.length,
           totalTime,
           lastIp,
           mostRecentMsg,
-          compEdgeReasons,
+          linkReasons,
           compFootprints,
           suggestions,
           isLegacyIdentity,
@@ -1821,14 +1821,14 @@ export default function Dashboard() {
         // un blocco precedente farebbe fallire l'intero blocco successivo.
         Object.entries(profiles).forEach(([childPid, childProf]) => {
           if (
-            childProf.manualMergeProfileId &&
-            pidsToDelete.has(childProf.manualMergeProfileId) &&
+            childProf.linkedToProfileId &&
+            pidsToDelete.has(childProf.linkedToProfileId) &&
             !pidsToDelete.has(childPid)
           ) {
             ops.push((b) =>
               b.set(
                 doc(db, "profiles", childPid),
-                { manualMergeProfileId: deleteField() },
+                { linkedToProfileId: deleteField() },
                 { merge: true },
               ),
             );
@@ -1914,16 +1914,16 @@ export default function Dashboard() {
   };
 
   const generateMacroLogReport = (macro: any) => {
-    let report = `Report di Raggruppamento Dispositivi (Macro ID: ${macro.id})\n`;
+    let report = `Report Profili Collegati (Macro ID: ${macro.id})\n`;
     report += `Generato il: ${new Date().toLocaleString()}\n`;
     report += `Numero Dispositivi: ${macro.profileIds.length}\n\n`;
 
     report += `--- REGOLE DI MATCH ATTIVATE ---\n`;
-    const edgeKeys = Object.keys(macro.compEdgeReasons || {});
+    const edgeKeys = Object.keys(macro.linkReasons || {});
     if (edgeKeys.length === 0) {
       report += `Nessun match esplicito salvato (profilo singolo o generato in fallback).\n`;
     } else {
-      for (const [edgeKey, reasons] of Object.entries(macro.compEdgeReasons || {})) {
+      for (const [edgeKey, reasons] of Object.entries(macro.linkReasons || {})) {
         const [pid1, pid2] = edgeKey.split("|");
         const prof1 = profiles[pid1]?.name || pid1;
         const prof2 = profiles[pid2]?.name || pid2;
@@ -3067,21 +3067,21 @@ export default function Dashboard() {
                             </div>
                           ) : null
                         )}
-                        {isSuperAdmin && profiles[profileId]?.suspects &&
-                          profiles[profileId].suspects!.length > 0 && (
+                        {isSuperAdmin && profiles[profileId]?.possibleAliases &&
+                          profiles[profileId].possibleAliases!.length > 0 && (
                             <div className="bg-red-50 dark:bg-red-900/40 p-3.5 rounded-2xl border border-red-100 dark:border-red-800 flex flex-col gap-2">
 
                               <div className="flex items-center gap-2 text-red-600 dark:text-red-400 ">
 
                                 <ShieldAlert className="w-4 h-4 shrink-0" />
                                 <span className="text-xs font-black uppercase tracking-wider">
-                                  Sospetti (
-                                  {profiles[profileId].suspects!.length})
+                                  Possibili Alias (
+                                  {profiles[profileId].possibleAliases!.length})
                                 </span>
                               </div>
                               <div className="flex flex-wrap gap-2 mt-1">
 
-                                {profiles[profileId].suspects!.map((s) => (
+                                {profiles[profileId].possibleAliases!.map((s) => (
                                   <div
                                     key={s}
                                     className="px-2.5 py-1 bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-200 text-xs font-bold rounded-lg border border-red-200 dark:border-red-800 shadow-sm"
@@ -3955,16 +3955,16 @@ export default function Dashboard() {
                       </div>
                       <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex-1 flex flex-col justify-between">
 
-                        {/* Suspects */}
+                        {/* Possible aliases */}
                         <div>
 
                           <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <ShieldAlert className="w-3.5 h-3.5" /> Sospetti
+                            <ShieldAlert className="w-3.5 h-3.5" /> Possibili Alias
                           </div>
                           <div className="flex flex-wrap gap-1.5">
 
-                            {macro.suspects.length > 0 ? (
-                              macro.suspects.map((s) => (
+                            {macro.possibleAliases.length > 0 ? (
+                              macro.possibleAliases.map((s) => (
                                 <span
                                   key={s}
                                   className="px-2 py-0.5 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-800 rounded-md text-[10px] font-semibold"
@@ -4042,7 +4042,7 @@ export default function Dashboard() {
                                   }}
                                   className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-[10px] flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-md"
                                 >
-                                  Unisci
+                                  Accorpa
                                 </button>
                                 <svg
                                   className="w-4 h-4 text-gray-400 dark:text-gray-500 group-open:rotate-180 transition-transform"
@@ -4063,7 +4063,7 @@ export default function Dashboard() {
 
                               {macro.profileIds.map((pid: string) => {
                                 const isIso =
-                                  profiles[pid]?.isolateFromAutoGrouping;
+                                  profiles[pid]?.excludeFromAutoGrouping;
                                 const profileMsgs = messages.filter(
                                   (m) =>
                                     getDeviceProfile(m) === pid &&
@@ -4143,7 +4143,7 @@ export default function Dashboard() {
                                           </button>
                                         ) : isIso ||
                                           profiles[pid]
-                                            ?.manualMergeProfileId ? (
+                                            ?.linkedToProfileId ? (
                                           <button
                                             onClick={(e) => {
                                               e.preventDefault();
@@ -4355,7 +4355,7 @@ export default function Dashboard() {
           >
 
             <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-              Unisci Profili
+              Accorpa Profili
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium">
               Seleziona i profili che vuoi accorpare (questo diventerà il gruppo
@@ -4536,12 +4536,12 @@ export default function Dashboard() {
               <div>
 
                 <label className="block text-sm font-semibold mb-1">
-                  Potenziali Sospetti (Separati da virgola)
+                  Possibili Alias (Separati da virgola)
                 </label>
                 <input
                   type="text"
-                  value={profileSuspectsInput}
-                  onChange={(e) => setProfileSuspectsInput(e.target.value)}
+                  value={profilePossibleAliasesInput}
+                  onChange={(e) => setProfilePossibleAliasesInput(e.target.value)}
                   placeholder="Es. Mario Rossi, Luigi Bianchi"
                   className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
                 />
@@ -4876,7 +4876,7 @@ export default function Dashboard() {
                     <div className="space-y-6">
                       <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
                         <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Regole di Match Attivate</h5>
-                        {Object.entries(viewingMacro.compEdgeReasons || {}).map(([edgeKey, reasons]) => {
+                        {Object.entries(viewingMacro.linkReasons || {}).map(([edgeKey, reasons]) => {
                           const [pid1, pid2] = edgeKey.split("|");
                           const prof1 = profiles[pid1]?.name || pid1;
                           const prof2 = profiles[pid2]?.name || pid2;
@@ -4891,7 +4891,7 @@ export default function Dashboard() {
                             </div>
                           );
                         })}
-                        {Object.keys(viewingMacro.compEdgeReasons || {}).length === 0 && (
+                        {Object.keys(viewingMacro.linkReasons || {}).length === 0 && (
                           <div className="text-xs text-gray-500 italic">Nessun match esplicito salvato (profilo singolo o generato in fallback)</div>
                         )}
                       </div>

@@ -1249,7 +1249,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                 Macro Profilo Condiviso
                               </th>
                               <th className="px-6 py-4 w-1/2">
-                                Sub-Identità e IP Tracciati
+                                Profili Correlati e IP
                               </th>
                               <th className="px-6 py-4 text-right">
                                 Ultima Acquisizione
@@ -1293,12 +1293,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({
 
                                     <div className="font-black text-gray-900 dark:text-gray-100 text-base mb-2 flex items-center gap-2">
 
-                                      {m.name || "Identità Nascosta"}
+                                      {m.name || "Profilo Senza Nome"}
                                     </div>
                                     {m.profileIds.length > 1 && (
                                       <div className="text-[10px] font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2.5 py-1 rounded-lg inline-block uppercase tracking-wider border border-purple-100 dark:border-purple-800 ">
-                                        Unione di {m.profileIds.length} Modelli
-                                        Padrone
+                                        Unione di {m.profileIds.length} Profili
+                                        Base
                                       </div>
                                     )}
                                   </td>
@@ -1388,11 +1388,11 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                             <div className="flex flex-col border-b border-gray-50 dark:border-gray-800 pb-4">
 
                               <div className="font-black text-gray-900 dark:text-gray-100 text-xl">
-                                {m.name || "Identità Nascosta"}
+                                {m.name || "Profilo Senza Nome"}
                               </div>
                               {m.profileIds.length > 1 && (
                                 <div className="text-[10px] font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2.5 py-1.5 rounded-lg inline-block w-max border border-purple-100 dark:border-purple-800 mt-2.5 uppercase tracking-widest">
-                                  Condivide {m.profileIds.length} Identità
+                                  Condivide {m.profileIds.length} Profili
                                 </div>
                               )}
                             </div>
