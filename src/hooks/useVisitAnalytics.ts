@@ -18,10 +18,10 @@ export function useVisitAnalytics() {
   });
 
   const timeSpentRef = useRef({
-    timeSpentWhen: 0,
-    timeSpentWhere: 0,
-    timeSpentLookingFor: 0,
-    timeSpentInstagram: 0,
+    fieldTimeWhen: 0,
+    fieldTimeWhere: 0,
+    fieldTimeLookingFor: 0,
+    fieldTimeInstagram: 0,
   });
 
   const lastActiveFieldRef = useRef<string | null>(null);
@@ -112,11 +112,11 @@ export function useVisitAnalytics() {
         createdAt: serverTimestamp(),
         userAgent: navigator.userAgent.slice(0, 600),
         hasSubmitted: hasSubmittedRef.current,
-        timeSpentWhen: 0,
-        timeSpentWhere: 0,
-        timeSpentLookingFor: 0,
-        timeSpentInstagram: 0,
-        abandonedAfter: "none",
+        fieldTimeWhen: 0,
+        fieldTimeWhere: 0,
+        fieldTimeLookingFor: 0,
+        fieldTimeInstagram: 0,
+        exitField: "none",
         // Device linkage + display fields (were previously missing).
         deviceToken: getPrimaryTokenSync(),
         platform,
@@ -149,11 +149,11 @@ export function useVisitAnalytics() {
     // Convert ms to seconds
     const dataToUpdate = {
       hasSubmitted: hasSubmittedRef.current,
-      timeSpentWhen: Math.round(timeSpentRef.current.timeSpentWhen / 1000),
-      timeSpentWhere: Math.round(timeSpentRef.current.timeSpentWhere / 1000),
-      timeSpentLookingFor: Math.round(timeSpentRef.current.timeSpentLookingFor / 1000),
-      timeSpentInstagram: Math.round(timeSpentRef.current.timeSpentInstagram / 1000),
-      abandonedAfter: hasSubmittedRef.current ? "submitted" : (lastActiveFieldRef.current || "none"),
+      fieldTimeWhen: Math.round(timeSpentRef.current.fieldTimeWhen / 1000),
+      fieldTimeWhere: Math.round(timeSpentRef.current.fieldTimeWhere / 1000),
+      fieldTimeLookingFor: Math.round(timeSpentRef.current.fieldTimeLookingFor / 1000),
+      fieldTimeInstagram: Math.round(timeSpentRef.current.fieldTimeInstagram / 1000),
+      exitField: hasSubmittedRef.current ? "submitted" : (lastActiveFieldRef.current || "none"),
     };
 
     updateDoc(doc(db, "analytics_visits", sessionId), dataToUpdate).catch(() => {});
@@ -187,8 +187,8 @@ export function useVisitAnalytics() {
   const handleFocus = (field: string) => {
     createDocOnce();
     flushCurrentFocus();
-    if (!field.startsWith('timeSpent')) {
-        field = 'timeSpent' + field.charAt(0).toUpperCase() + field.slice(1);
+    if (!field.startsWith('fieldTime')) {
+        field = 'fieldTime' + field.charAt(0).toUpperCase() + field.slice(1);
     }
     lastActiveFieldRef.current = field;
     activeFocusStartRef.current = Date.now();

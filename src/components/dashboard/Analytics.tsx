@@ -294,12 +294,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         }
       }
 
-      if (v.timeSpentWhen > 0) { totalTimeWhen += v.timeSpentWhen; countWhen++; }
-      if (v.timeSpentWhere > 0) { totalTimeWhere += v.timeSpentWhere; countWhere++; }
-      if (v.timeSpentLookingFor > 0) { totalTimeLookingFor += v.timeSpentLookingFor; countLookingFor++; }
-      
-      if (!v.hasSubmitted && v.abandonedAfter && v.abandonedAfter !== 'none') {
-        let field = v.abandonedAfter.replace('timeSpent', ''); // strip 'timeSpent'
+      if (v.fieldTimeWhen > 0) { totalTimeWhen += v.fieldTimeWhen; countWhen++; }
+      if (v.fieldTimeWhere > 0) { totalTimeWhere += v.fieldTimeWhere; countWhere++; }
+      if (v.fieldTimeLookingFor > 0) { totalTimeLookingFor += v.fieldTimeLookingFor; countLookingFor++; }
+
+      if (!v.hasSubmitted && v.exitField && v.exitField !== 'none') {
+        let field = v.exitField.replace('fieldTime', ''); // strip 'fieldTime'
         field = field.charAt(0).toLowerCase() + field.slice(1);
         if (abandoned[field] !== undefined) abandoned[field]++;
       } else if (!v.hasSubmitted) {
@@ -1498,15 +1498,15 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                                   ) : (
                                     <div className="flex flex-col gap-1">
                                       <span className="px-2 py-1 text-xs font-bold bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg inline-block w-fit">Abbandonato</span>
-                                      {v.abandonedAfter && v.abandonedAfter !== 'none' && <span className="text-xs text-gray-500 dark:text-gray-400">dopo {v.abandonedAfter.replace('timeSpent', '')}</span>}
+                                      {v.exitField && v.exitField !== 'none' && <span className="text-xs text-gray-500 dark:text-gray-400">dopo {v.exitField.replace('fieldTime', '')}</span>}
                                     </div>
                                   )}
                                 </td>
                                 <td className="px-6 py-4">
                                   <div className="flex gap-2">
-                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">W: {v.timeSpentWhen || 0}s</span>
-                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">D: {v.timeSpentWhere || 0}s</span>
-                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">C: {v.timeSpentLookingFor || 0}s</span>
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">W: {v.fieldTimeWhen || 0}s</span>
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">D: {v.fieldTimeWhere || 0}s</span>
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">C: {v.fieldTimeLookingFor || 0}s</span>
                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
@@ -1543,9 +1543,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({
                           <div>
                             <span className="text-xs font-bold text-gray-500 mb-1 block dark:text-gray-400">Timings (s)</span>
                             <div className="flex gap-2">
-                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">When: {v.timeSpentWhen || 0}</span>
-                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Where: {v.timeSpentWhere || 0}</span>
-                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Who: {v.timeSpentLookingFor || 0}</span>
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">When: {v.fieldTimeWhen || 0}</span>
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Where: {v.fieldTimeWhere || 0}</span>
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Who: {v.fieldTimeLookingFor || 0}</span>
                             </div>
                           </div>
                         </div>

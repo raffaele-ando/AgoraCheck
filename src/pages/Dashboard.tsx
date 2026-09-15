@@ -3482,35 +3482,35 @@ export default function Dashboard() {
                                           CLK/RAGE:
                                         </span>{" "}
                                         {adv.behavior?.clicks} /{" "}
-                                        {adv.behavior?.rageClicks || 0}
+                                        {adv.behavior?.repeatClicks || 0}
                                       </div>
                                       <div className="break-words whitespace-pre-wrap">
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           DIST:
                                         </span>{" "}
-                                        {adv.behavior?.mouseDistance
-                                          ? `${adv.behavior.mouseDistance}px`
+                                        {adv.behavior?.pointerDistance
+                                          ? `${adv.behavior.pointerDistance}px`
                                           : "0px"}
                                       </div>
                                       <div>
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           KEY/BACK:
                                         </span>{" "}
-                                        {adv.behavior?.keyStrokes}
-                                        {adv.behavior?.typingCadenceMs
-                                          ? `(~${adv.behavior.typingCadenceMs}ms)`
+                                        {adv.behavior?.keyEvents}
+                                        {adv.behavior?.keyPaceMs
+                                          ? `(~${adv.behavior.keyPaceMs}ms)`
                                           : ""}
-                                        / {adv.behavior?.backspaces || 0} bs
+                                        / {adv.behavior?.corrections || 0} bs
                                       </div>
                                       <div
                                         className="break-words whitespace-pre-wrap"
                                         title={
-                                          adv.behavior?.fieldFocusTimes &&
+                                          adv.behavior?.fieldDurations &&
                                           Object.keys(
-                                            adv.behavior.fieldFocusTimes,
+                                            adv.behavior.fieldDurations,
                                           ).length > 0
                                             ? Object.entries(
-                                                adv.behavior.fieldFocusTimes,
+                                                adv.behavior.fieldDurations,
                                               )
                                                 .map(
                                                   ([k, v]) =>
@@ -3523,12 +3523,12 @@ export default function Dashboard() {
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           FOC/BLR/PST/CP/CT:
                                         </span>{" "}
-                                        {adv.behavior?.fieldFocusTimes &&
+                                        {adv.behavior?.fieldDurations &&
                                         Object.keys(
-                                          adv.behavior.fieldFocusTimes,
+                                          adv.behavior.fieldDurations,
                                         ).length > 0
                                           ? Object.keys(
-                                              adv.behavior.fieldFocusTimes,
+                                              adv.behavior.fieldDurations,
                                             ).length
                                           : 0}
                                         flds / {adv.behavior?.blurCount} /{" "}
@@ -3536,24 +3536,24 @@ export default function Dashboard() {
                                         {adv.behavior?.copies || 0} /{" "}
                                         {adv.behavior?.cuts || 0}
                                       </div>
-                                      {adv.behavior?.autofillUsed && (
+                                      {adv.behavior?.fieldAutoFilled && (
                                         <div>
                                           <span className="text-gray-400 dark:text-gray-500 text-orange-500 font-bold">
                                             AUTOFILL RILEVATO
                                           </span>
                                         </div>
                                       )}
-                                      {adv.behavior?.deviceOrientation && (
+                                      {adv.behavior?.orientationSample && (
                                         <div>
                                           <span className="text-gray-400 dark:text-gray-500 ">
-                                            GYRO:
+                                            TILT:
                                           </span>
                                           &alpha;:
-                                          {adv.behavior.deviceOrientation.alpha}
+                                          {adv.behavior.orientationSample.alpha}
                                           &deg;, &beta;:
-                                          {adv.behavior.deviceOrientation.beta}
+                                          {adv.behavior.orientationSample.beta}
                                           &deg;, &gamma;:
-                                          {adv.behavior.deviceOrientation.gamma}
+                                          {adv.behavior.orientationSample.gamma}
                                           &deg;
                                         </div>
                                       )}

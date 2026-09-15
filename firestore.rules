@@ -46,11 +46,11 @@ service cloud.firestore {
              data.createdAt is timestamp &&
              data.userAgent is string && data.userAgent.size() <= 600 &&
              data.hasSubmitted is bool &&
-             (!('timeSpentWhen' in data) || data.timeSpentWhen is number) &&
-             (!('timeSpentWhere' in data) || data.timeSpentWhere is number) &&
-             (!('timeSpentLookingFor' in data) || data.timeSpentLookingFor is number) &&
-             (!('timeSpentInstagram' in data) || data.timeSpentInstagram is number) &&
-             (!('abandonedAfter' in data) || data.abandonedAfter is string);
+             (!('fieldTimeWhen' in data) || data.fieldTimeWhen is number) &&
+             (!('fieldTimeWhere' in data) || data.fieldTimeWhere is number) &&
+             (!('fieldTimeLookingFor' in data) || data.fieldTimeLookingFor is number) &&
+             (!('fieldTimeInstagram' in data) || data.fieldTimeInstagram is number) &&
+             (!('exitField' in data) || data.exitField is string);
     }
 
     match /settings/{document=**} {
