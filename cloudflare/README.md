@@ -74,7 +74,7 @@ handler dentro un altro progetto.
   R2 has no egress fees and serves images cached at the edge. Migrate these to
   `POST /media` and store only the returned URL in Firestore.
 - **KV (`agora-identity`)** — the server device-token records and (future)
-  short-lived cross-browser handoff claim codes.
+  short-lived cross-browser relay claim codes.
 - **D1 (optional, at scale)** — if visit/behavioural telemetry volume grows,
   append-only events are far cheaper in D1 than as Firestore documents. Keep
   aggregates in Firestore for the dashboard.

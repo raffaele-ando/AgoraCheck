@@ -696,7 +696,7 @@ export default function Dashboard() {
     const hwGroups = new Map<string, Set<string>>();
     const clientMarkGroups = new Map<string, Set<string>>();
     const hwGroupsiOS = new Map<string, Set<string>>();
-    const igInstallIdGroups = new Map<string, Set<string>>();
+    const igTailIdGroups = new Map<string, Set<string>>();
     const ipGroups = new Map<string, Set<string>>();
 
     // Every persistent token ever co-observed on a message, per profile. Two
@@ -794,7 +794,7 @@ export default function Dashboard() {
          const webglScene  = String(adv.s?.webglSceneSample   || adv.software?.webglSceneSample   || "");
          const fontMetrics = String(adv.s?.fontMetricsSample  || adv.software?.fontMetricsSample  || "");
          const timerRes    = String(adv.s?.clockResolution         || adv.software?.clockResolution         || "");
-         const igMetaRaw   = adv.h?.igMeta || adv.hardware?.igMeta || null;
+         const igContextRaw = adv.h?.igContext || adv.hardware?.igContext || null;
          const ua = adv.browser?.userAgent || adv.network?.userAgent || adv.n?.ua || adv.s?.userAgent || m.deviceInfo?.userAgent || "";
          
          // SEED stabile: solo segnali hardware puri (rects rimosso — è DOM-volatile)
@@ -832,7 +832,7 @@ export default function Dashboard() {
            token: tt || "",
            pixelRatio, colorDepth, webglVendor, maxTexture,
            webglScene, fontMetrics, timerRes,
-           igMeta: igMetaRaw,
+           igContext: igContextRaw,
            userAgent: ua,
            clientMark: tt || "",
            isApple: isAppleDevice,
@@ -861,11 +861,11 @@ export default function Dashboard() {
          } else {
            // iOS / macOS: Apple omogenizza canvas e audio,
            // ma device model + physical resolution + GPU chip rimangono discriminativi
-           const igDeviceModel = igMetaRaw?.deviceModel || (() => {
+           const igDeviceModel = igContextRaw?.deviceModel || (() => {
              const mm = ua.match(/\(([A-Za-z]+\d+(?:,\d+)?);/);
              return mm?.[1] ?? "";
            })();
-           const igPhysRes = igMetaRaw?.physicalRes || (() => {
+           const igPhysRes = igContextRaw?.physicalRes || (() => {
              const matches = ua.match(/(\d{3,4}x\d{3,4})/g);
              return matches ? matches[matches.length - 1] : "";
            })();
@@ -878,12 +878,13 @@ export default function Dashboard() {
              hwGroupsiOS.get(iosSeed)!.add(pid);
            }
 
-           // Instagram Install ID: specifico per installazione, non per utente
-           // Cambia solo se l'utente disinstalla/reinstalla Instagram
-           const igInstId = igMetaRaw?.igInstallId || "";
-           if (igInstId && igInstId.length >= 6) {
-             if (!igInstallIdGroups.has(igInstId)) igInstallIdGroups.set(igInstId, new Set());
-             igInstallIdGroups.get(igInstId)!.add(pid);
+           // Campo numerico finale dell'UA Instagram: potrebbe essere specifico
+           // per installazione (cambia solo se l'utente disinstalla/reinstalla),
+           // ma non è accertato — potrebbe anche essere un id di build condiviso.
+           const igTailId = igContextRaw?.igTailId || "";
+           if (igTailId && igTailId.length >= 6) {
+             if (!igTailIdGroups.has(igTailId)) igTailIdGroups.set(igTailId, new Set());
+             igTailIdGroups.get(igTailId)!.add(pid);
            }
          }
 
@@ -910,7 +911,7 @@ export default function Dashboard() {
       IG_TAG:       0.88,  // stesso handle Instagram: forte
       // --- segnali CORROBORANTI: non collegano mai da soli (vedi sotto) ---
       HW_ANDROID:   0.45,
-      IG_INSTALL:   0.35,
+      IG_TAIL:      0.35,
       HW_IOS:       0.20,
       IP_PUBLIC:    0.12,
     } as const;
@@ -1074,7 +1075,7 @@ export default function Dashboard() {
     // resolveIdentity fotografa OGNI backend prima di riseminarli tutti con il
     // token primario, quindi un messaggio inviato durante una transizione
     // (compare il cookie di server mentre uno storage locale ha ancora il vecchio id,
-    // una cancellazione parziale dello storage, un handoff fra browser) trasporta sia il
+    // una cancellazione parziale dello storage, un relay fra browser) trasporta sia il
     // valore vecchio sia quello nuovo. Due profili che condividono uno di questi
     // valori sono lo stesso dispositivo: nessuna probabilità, nessun
     // segnale probabilistico. È ciò che ricongiunge un dispositivo che altrimenti si
@@ -1150,7 +1151,7 @@ export default function Dashboard() {
 
     addCorroborating(hwGroups, "hw_android", () => "Seed hardware identico (Android/Desktop)", CONF.HW_ANDROID);
     addCorroborating(hwGroupsiOS, "hw_ios", () => "Seed hardware identico (iOS)", CONF.HW_IOS);
-    addCorroborating(igInstallIdGroups, "ig_install", () => "Stesso Instagram Install ID", CONF.IG_INSTALL);
+    addCorroborating(igTailIdGroups, "ig_tail", () => "Stesso identificativo di coda Instagram", CONF.IG_TAIL);
     addCorroborating(ipGroups, "ip_public", (ip) => "Stesso IP pubblico (" + ip + ")", CONF.IP_PUBLIC);
 
     // Merge manuale — prova a livello di PERSONA: l'operatore ha già deciso,

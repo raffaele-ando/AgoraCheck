@@ -27,8 +27,8 @@ import { whenIntroOver, runIdleChain } from "../utils/intro";
 import {
   resolveIdentity,
   getPrimaryTokenSync,
-  ingestHandoffFromUrl,
-  primeHandoffUrl,
+  ingestRelayFromUrl,
+  primeRelayUrl,
   parseIgUA,
   computeDeviceClass,
   isInstagramBrowser,
@@ -128,12 +128,12 @@ const layoutValidationOpts = {
 };
 
 // Device identity is centralized in utils/identity.ts. As soon as this module
-// loads we (1) ingest any cross-browser handoff payload present in the URL, then
+// loads we (1) ingest any cross-browser relay payload present in the URL, then
 // (2) resolve/persist the device token across all backends — so a device is
 // identified on EVERY visit, not only when a message is submitted (this also
 // keeps the storage inactivity clock reset on every open).
 if (typeof window !== "undefined") {
-  try { ingestHandoffFromUrl(); } catch {}
+  try { ingestRelayFromUrl(); } catch {}
   resolveIdentity().catch(() => {});
 }
 
@@ -536,11 +536,11 @@ const getMathSample = () => {
 };
 
 /**
- * Metadati del browser interno di Instagram.
+ * Contesto del browser interno di Instagram.
  *
  * La versione precedente usava una regex propria che pretendeva il token
  * `IABMV/` ed era scritta solo per il formato iOS: su ANDROID non corrispondeva
- * mai e su iOS falliva per tutte le UA senza quel token, quindi `igMeta`
+ * mai e su iOS falliva per tutte le UA senza quel token, quindi `igContext`
  * risultava nullo proprio dove servirebbe di più (il modello di dispositivo e
  * la risoluzione fisica sono fra i segnali più discriminanti che abbiamo).
  *
@@ -548,7 +548,7 @@ const getMathSample = () => {
  * le stesse chiavi di prima per non rompere i consumatori esistenti,
  * aggiungendo i campi che solo Android espone (produttore, chipset, board, dpi).
  */
-const buildIgMeta = (ua: string) => {
+const buildIgContext = (ua: string) => {
   try {
     const ig = parseIgUA(ua);
     if (!ig.isInstagram) return null;
@@ -564,7 +564,7 @@ const buildIgMeta = (ua: string) => {
       // identificativo di installazione — potrebbe essere un id di build,
       // condiviso da tutti gli utenti della stessa versione dell'app. Viene
       // raccolto, ma non deve mai essere usato da solo per collegare profili.
-      igInstallId: ig.igField || "",
+      igTailId: ig.igField || "",
       // Solo Android:
       manufacturer: ig.manufacturer || "",
       chipset: ig.chipset || "",
@@ -1349,7 +1349,7 @@ export function useSubmitSpotted() {
           inputDeviceCount,
           inputDeviceIds,
           extraSensors: checkExtraSensors(),
-          igMeta: buildIgMeta(navigator.userAgent),
+          igContext: buildIgContext(navigator.userAgent),
           uaDeviceModel: (() => {
             const mm = navigator.userAgent.match(/\(([A-Za-z]+\d+(?:,\d+)?);/);
             return mm?.[1] ?? null;
@@ -1652,7 +1652,7 @@ export default function Home() {
   const isInstagram = useInstagramEscape();
   useLayoutValidation();
 
-  // Cross-browser handoff: while inside the Instagram in-app browser we keep the
+  // Cross-browser relay: while inside the Instagram in-app browser we keep the
   // collected identity + rich IG signals reflected into the URL, so that when the
   // user taps Instagram's native "Open in system browser" the current URL (with
   // the payload) opens in Safari/Chrome and that browser adopts the same device.
@@ -1665,10 +1665,10 @@ export default function Home() {
     resolveIdentity(auth.currentUser?.uid || null)
       .then((r) => {
         primary = r.primary;
-        primeHandoffUrl(primary, ig);
+        primeRelayUrl(primary, ig);
       })
       .catch(() => {});
-    const prime = () => primeHandoffUrl(primary, ig);
+    const prime = () => primeRelayUrl(primary, ig);
     prime();
     const onVis = () => {
       if (document.visibilityState === "hidden") prime();

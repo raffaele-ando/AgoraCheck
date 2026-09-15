@@ -60,7 +60,7 @@ export const extractDeviceToken = (parsedAdv: any): string => {
  * `resolveIdentity` snapshots each backend BEFORE re-seeding them all with the
  * primary, so a message sent during a transition (server cookie appears while
  * a local store still holds an older id, a partial storage clear, a cross-browser
- * handoff) carries BOTH the old and the new value. Two device profiles that
+ * relay) carries BOTH the old and the new value. Two device profiles that
  * share any one of these values are therefore the same physical device with
  * certainty — this is the deterministic evidence the L1 layer is built on, and
  * what lets the dashboard re-unite a device that would otherwise split when its
@@ -211,7 +211,7 @@ export const extractDeviceTraits = (
 ): DeviceTraits => {
   const h = parsedAdv?.hardware || parsedAdv?.h || {};
   const igx = parsedAdv?.igx || {};
-  const igMeta = h.igMeta || {};
+  const igContext = h.igContext || {};
   const ua = String(
     parsedAdv?.software?.userAgent ||
       parsedAdv?.s?.userAgent ||
@@ -220,7 +220,7 @@ export const extractDeviceTraits = (
   );
 
   const model = clean(
-    igx.deviceModel || igMeta.deviceModel || h.uaDeviceModel || h.deviceModel || "",
+    igx.deviceModel || igContext.deviceModel || h.uaDeviceModel || h.deviceModel || "",
   );
 
   let platform: DeviceTraits["platform"] = "unknown";
@@ -283,13 +283,13 @@ export const computeDeviceProfileId = (
       const model = clean(
         h.uaDeviceModel ||
           h.deviceModel ||
-          (h.igMeta && h.igMeta.deviceModel) ||
+          (h.igContext && h.igContext.deviceModel) ||
           "",
       );
       const gpu = clean(h.gpu || h.g || "");
       const screen = clean(h.screen || h.s || "");
       const physicalRes = clean(
-        (h.igMeta && h.igMeta.physicalRes) || h.physicalRes || "",
+        (h.igContext && h.igContext.physicalRes) || h.physicalRes || "",
       );
       const cores = clean(h.cores || h.c || "");
       const pixelRatio = clean(h.pixelRatio || "");

@@ -12,7 +12,7 @@
 // The Instagram in-app browser (IAB) exposes far richer UA data than Safari or
 // Chrome (exact device model, physical resolution, dpi, chipset, locale). We
 // capture it and, crucially, keep it available so that when the user leaves the
-// IAB for the system browser it can be carried across in the URL (handoff).
+// IAB for the system browser it can be carried across in the URL (relay).
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
@@ -157,7 +157,7 @@ export interface DeviceTokens {
   idb?: string | null; // IndexedDB
   ck?: string | null; // JS cookie
   anon?: string | null; // Firebase anonymous uid (set by caller)
-  ho?: string | null; // token received via cross-browser handoff URL
+  ho?: string | null; // token received via cross-browser relay URL
   cacheTag?: string | null; // HTTP cache validator pixel (survives storage clears)
   prov?: string | null; // provisional id minted synchronously before resolution
 }
@@ -241,8 +241,8 @@ export async function syncStores(v: string): Promise<void> {
 /**
  * Resolve the device identity across all backends.
  * - Collects every token found (storage-key aliases, secondary local store, cookie,
- *   server cookie, and any handoff token already ingested).
- * - Picks a stable primary (prefers server > handoff > existing client tokens).
+ *   server cookie, and any relay token already ingested).
+ * - Picks a stable primary (prefers server > relay > existing client tokens).
  * - Re-seeds every backend with the primary so future partial clears reconcile.
  * Returns the primary id plus the full map of what was found (all sent to the
  * backend so the server can union tokens into one device).
@@ -266,7 +266,7 @@ export async function resolveIdentity(
       fetchServerId(),
       idbGet(PID_KEY),
       fetchCacheTagId(),
-      Promise.resolve(getIngestedHandoffToken()),
+      Promise.resolve(getIngestedRelayToken()),
     ]);
 
     let ls: string | null = null;
@@ -292,7 +292,7 @@ export async function resolveIdentity(
       ho,
     };
 
-    // Primary selection priority: server (most durable) > handoff > client stores.
+    // Primary selection priority: server (most durable) > relay > client stores.
     const primary =
       srv ||
       ho ||
@@ -329,7 +329,7 @@ export function getPrimaryTokenSync(): string {
   if (_cache.primary) return _cache.primary;
   let ls: string | null = null;
   for (const k of STORAGE_KEYS) ls = ls || lsGet(k);
-  const existing = ls || ckGet(PID_KEY) || getIngestedHandoffToken();
+  const existing = ls || ckGet(PID_KEY) || getIngestedRelayToken();
   if (existing) {
     _cache.primary = existing;
     syncStores(existing).catch(() => {});
@@ -485,7 +485,7 @@ export function shortHash(seed: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Cross-browser handoff.
+// Cross-browser relay.
 //
 // The IAB and the system browser are separate storage containers, so the ONLY
 // channel that crosses them is the URL. We keep a compact, signed-ish payload of
@@ -495,9 +495,9 @@ export function shortHash(seed: string): string {
 // re-seed the client backends, then clean the URL (no user-visible artifact).
 // ---------------------------------------------------------------------------
 
-const HANDOFF_PARAM = "_ax";
-let _ingestedToken: string | null = null;
-let _ingestedPayload: Record<string, any> | null = null;
+const RELAY_PARAM = "_lx";
+let _relayToken: string | null = null;
+let _relayPayload: Record<string, any> | null = null;
 
 function b64urlEncode(obj: any): string {
   const json = JSON.stringify(obj);
@@ -520,8 +520,8 @@ function b64urlDecode(s: string): any {
   }
 }
 
-/** Build the compact handoff payload (IG-only signals + device token). */
-export function buildHandoffPayload(token: string, ig: IgMeta): any {
+/** Build the compact relay payload (IG-only signals + device token). */
+export function buildRelayPayload(token: string, ig: IgMeta): any {
   return {
     v: 2,
     t: token,
@@ -539,37 +539,37 @@ export function buildHandoffPayload(token: string, ig: IgMeta): any {
 }
 
 /**
- * Reflect the handoff payload into the current URL WITHOUT a navigation or any
+ * Reflect the relay payload into the current URL WITHOUT a navigation or any
  * visible flash, so IG's "open in browser" carries it. Safe to call repeatedly.
  */
-export function primeHandoffUrl(token: string, ig: IgMeta): void {
+export function primeRelayUrl(token: string, ig: IgMeta): void {
   try {
-    const payload = buildHandoffPayload(token, ig);
+    const payload = buildRelayPayload(token, ig);
     const enc = b64urlEncode(payload);
     if (!enc) return;
     const url = new URL(window.location.href);
-    if (url.searchParams.get(HANDOFF_PARAM) === enc) return;
-    url.searchParams.set(HANDOFF_PARAM, enc);
+    if (url.searchParams.get(RELAY_PARAM) === enc) return;
+    url.searchParams.set(RELAY_PARAM, enc);
     window.history.replaceState(window.history.state, "", url.toString());
   } catch {}
 }
 
 /**
- * On page load: if a handoff payload is present in the URL, ingest it (re-seed
+ * On page load: if a relay payload is present in the URL, ingest it (re-seed
  * the device token so this browser adopts the same identity), remember the IG
  * signals, then strip the param from the visible URL.
  */
-/** Un handoff più vecchio di questo intervallo non viene considerato. */
-const HANDOFF_MAX_AGE_MS = 10 * 60 * 1000;
+/** Un relay più vecchio di questo intervallo non viene considerato. */
+const RELAY_MAX_AGE_MS = 10 * 60 * 1000;
 
-export function ingestHandoffFromUrl(): Record<string, any> | null {
+export function ingestRelayFromUrl(): Record<string, any> | null {
   try {
     const url = new URL(window.location.href);
-    const enc = url.searchParams.get(HANDOFF_PARAM);
+    const enc = url.searchParams.get(RELAY_PARAM);
     if (!enc) return null;
     const payload = b64urlDecode(enc);
     // clean the URL regardless, so nothing is visible/shareable
-    url.searchParams.delete(HANDOFF_PARAM);
+    url.searchParams.delete(RELAY_PARAM);
     window.history.replaceState(
       window.history.state,
       "",
@@ -581,18 +581,18 @@ export function ingestHandoffFromUrl(): Record<string, any> | null {
     // costruirne uno e diffonderlo, e chi condivide un link copiato dal browser
     // interno di Instagram lo diffonde senza volerlo. Due difese:
     //
-    // 1) SCADENZA — un handoff serve nei secondi che separano il browser
+    // 1) SCADENZA — un relay serve nei secondi che separano il browser
     //    interno da quello di sistema; un `ts` vecchio o assente indica un link
     //    riutilizzato, non un passaggio reale. Il campo era già presente nel
     //    payload ma non veniva mai controllato.
     const ts = Number(payload.ts);
-    if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > HANDOFF_MAX_AGE_MS) {
+    if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > RELAY_MAX_AGE_MS) {
       return null;
     }
     if (!looksLikeToken(String(payload.t))) return null;
 
-    _ingestedToken = String(payload.t);
-    _ingestedPayload = payload;
+    _relayToken = String(payload.t);
+    _relayPayload = payload;
 
     // 2) NESSUNA SOVRASCRITTURA CIECA — prima si chiamava syncStores()
     //    subito, senza guardare se questo browser avesse già una propria
@@ -605,7 +605,7 @@ export function ingestHandoffFromUrl(): Record<string, any> | null {
     for (const k of STORAGE_KEYS) hasLocal = hasLocal || lsGet(k);
     hasLocal = hasLocal || ckGet(PID_KEY);
     if (!hasLocal) {
-      syncStores(_ingestedToken).catch(() => {});
+      syncStores(_relayToken).catch(() => {});
     }
     return payload;
   } catch {
@@ -613,9 +613,9 @@ export function ingestHandoffFromUrl(): Record<string, any> | null {
   }
 }
 
-export function getIngestedHandoffToken(): string | null {
-  return _ingestedToken;
+export function getIngestedRelayToken(): string | null {
+  return _relayToken;
 }
-export function getIngestedHandoffPayload(): Record<string, any> | null {
-  return _ingestedPayload;
+export function getIngestedRelayPayload(): Record<string, any> | null {
+  return _relayPayload;
 }
