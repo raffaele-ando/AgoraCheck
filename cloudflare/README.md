@@ -58,7 +58,7 @@ handler dentro un altro progetto.
 
 **Keep in Firebase**
 - **Firestore** — structured, queried, realtime data: `messages`, `profiles`,
-  `rate_limits`, `stats`, `admins`, and small JSON `settings` (widget/link/logo
+  `send_throttle`, `stats`, `admins`, and small JSON `settings` (widget/link/logo
   config, template box coordinates). Realtime listeners (`onSnapshot`) power the
   dashboard and stay on Firestore.
 - **Firebase Auth** — anonymous auth today, Google login for admins, and the

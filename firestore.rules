@@ -72,18 +72,18 @@ service cloud.firestore {
                     request.resource.data.createdAt == resource.data.createdAt;
       allow read, delete: if isAdmin();
     }
-    match /rate_limits/{userId} {
+    match /send_throttle/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && request.auth.uid == userId &&
         request.resource.data.lastMessageAt == request.time &&
         (
-          !exists(/databases/$(database)/documents/rate_limits/$(userId)) ||
-          request.time > get(/databases/$(database)/documents/rate_limits/$(userId)).data.lastMessageAt + duration.value(30, 's')
+          !exists(/databases/$(database)/documents/send_throttle/$(userId)) ||
+          request.time > get(/databases/$(database)/documents/send_throttle/$(userId)).data.lastMessageAt + duration.value(30, 's')
         );
     }
     match /messages/{messageId} {
       allow create: if isAuthenticated() && isValidMessage(request.resource.data) &&
-        getAfter(/databases/$(database)/documents/rate_limits/$(request.auth.uid)).data.lastMessageAt == request.time;
+        getAfter(/databases/$(database)/documents/send_throttle/$(request.auth.uid)).data.lastMessageAt == request.time;
       allow read, update, delete: if isAdmin();
     }
     match /profiles/{document=**} {

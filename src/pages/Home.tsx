@@ -485,21 +485,21 @@ const getPerformanceMemory = () => {
   }
 };
 
-const getBotStatus = () => {
-  const isWebdriver = navigator.webdriver || false;
+const getAutomationSignal = () => {
+  const hasAutomationFlag = navigator.webdriver || false;
   const hasPhantom =
     (window as any)._phantom || (window as any).callPhantom || false;
   const hasNightmare = (window as any).__nightmare || false;
-  const hasSelenium =
+  const hasDriverMarker =
     (document as any).$cdc_asdjflasutopfhvcZLmcfl_ ||
     document.documentElement.getAttribute("webdriver") ||
     false;
   const hasCypress = (window as any).Cypress || false;
 
-  if (isWebdriver) return "WebDriver/Bot";
+  if (hasAutomationFlag) return "WebDriver/Bot";
   if (hasPhantom) return "PhantomJS/Bot";
   if (hasNightmare) return "Nightmare/Bot";
-  if (hasSelenium) return "Selenium/Bot";
+  if (hasDriverMarker) return "Selenium/Bot";
   if (hasCypress) return "Cypress/Bot";
 
   return "Umano/Manuale";
@@ -588,7 +588,7 @@ const checkExtraSensors = () => {
   return sensors.length > 0 ? sensors.join(", ") : "Non supportate";
 };
 
-const getIncognitoStatusFallback = () => {
+const getPrivateModeGuess = () => {
   return new Promise<string>((resolve) => {
     try {
       if ((navigator as any).storage && (navigator as any).storage.estimate) {
@@ -1023,7 +1023,7 @@ export function useSubmitMessage() {
           netHint: "Unknown",
           storageEstimate: "Unknown",
           pluginsList: "N/A",
-          incognitoStatus: "Unknown",
+          privateModeGuess: "Unknown",
           permissionsState: {},
           // Impronte pesanti, calcolate a riposo (vedi sotto).
           heavy: null as null | Record<string, any>,
@@ -1150,8 +1150,8 @@ export function useSubmitMessage() {
         }
       }
 
-      getIncognitoStatusFallback().then(status => {
-         if (preFetchedDataRef.current) preFetchedDataRef.current.incognitoStatus = status;
+      getPrivateModeGuess().then(status => {
+         if (preFetchedDataRef.current) preFetchedDataRef.current.privateModeGuess = status;
       }).catch(() => {});
 
       getPermissionsState().then(state => {
@@ -1190,7 +1190,7 @@ export function useSubmitMessage() {
     const unsub = auth.onAuthStateChanged(async (user: any) => {
       if (user) {
         try {
-          const snap = await getDoc(doc(db, "rate_limits", user.uid));
+          const snap = await getDoc(doc(db, "send_throttle", user.uid));
           if (snap.exists()) {
              const data = snap.data();
              if (data.cooldownEnd) {
@@ -1274,7 +1274,7 @@ export function useSubmitMessage() {
       const netHint = collectedData?.netHint || "Unknown";
       const storageEstimate = collectedData?.storageEstimate || "Unknown";
       const pluginsList = collectedData?.pluginsList || "N/A";
-      const incognitoStatus = collectedData?.incognitoStatus || "Unknown";
+      const privateModeGuess = collectedData?.privateModeGuess || "Unknown";
       const permissionsState = collectedData?.permissionsState || {};
 
       // Impronte pesanti: già pronte dal calcolo a riposo. Se per qualunque
@@ -1384,9 +1384,9 @@ export function useSubmitMessage() {
           audioSample: audioConfig,
           mathSample: getMathSample(),
           permissions: permissionsState,
-          incognito: incognitoStatus,
+          incognito: privateModeGuess,
           historyLength: window.history.length,
-          botStatus: getBotStatus(),
+          automationSignal: getAutomationSignal(),
           performanceMemory: getPerformanceMemory(),
         },
         b: {
@@ -1590,7 +1590,7 @@ export function useSubmitMessage() {
       localStorage.setItem("_cooldownEnd", cooldownEnd.toString());
 
       if (currentUser) {
-        const rateLimitRef = doc(db, "rate_limits", currentUser.uid);
+        const rateLimitRef = doc(db, "send_throttle", currentUser.uid);
         batch.set(rateLimitRef, { history, cooldownEnd, lastMessageAt: serverTimestamp() }, { merge: true });
       }
 

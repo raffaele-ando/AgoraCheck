@@ -1420,7 +1420,7 @@ export default function Dashboard() {
     const clientMarks = new Set<string>();
     let totalSessionTime = 0;
     const ipAddresses = new Set<string>();
-    const botStatuses = new Set<string>();
+    const automationSignals = new Set<string>();
     const netHints = new Set<string>();
     const permissionsList = new Set<string>();
     const storageInfo = new Set<string>();
@@ -1468,10 +1468,10 @@ export default function Dashboard() {
         if (ip) ipAddresses.add(ip);
         const netHint = adv.network?.netHint || adv.n?.netHint;
         if (netHint) netHints.add(netHint);
-        const botStatus = adv.software?.botStatus || adv.s?.botStatus;
-        if (botStatus) botStatuses.add(botStatus);
+        const automationSignal = adv.software?.automationSignal || adv.s?.automationSignal;
+        if (automationSignal) automationSignals.add(automationSignal);
         const incognito = adv.software?.incognito || adv.s?.incognito;
-        if (incognito) botStatuses.add(`Incognito: ${incognito}`);
+        if (incognito) automationSignals.add(`Incognito: ${incognito}`);
         const perms = adv.software?.permissions || adv.s?.permissions;
         if (perms)
           permissionsList.add(
@@ -1497,7 +1497,7 @@ export default function Dashboard() {
       totalSessionTime,
       ipAddresses: Array.from(ipAddresses),
       netHints: Array.from(netHints),
-      botStatuses: Array.from(botStatuses),
+      automationSignals: Array.from(automationSignals),
       permissionsList: Array.from(permissionsList),
       storageInfo: Array.from(storageInfo),
     };
@@ -3586,7 +3586,7 @@ export default function Dashboard() {
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           BOT/INC:
                                         </span>{" "}
-                                        {adv.software?.botStatus || "N/A"} /{" "}
+                                        {adv.software?.automationSignal || "N/A"} /{" "}
                                         {adv.software?.incognito || "N/A"}
                                       </div>
                                       <div
@@ -5273,7 +5273,7 @@ export default function Dashboard() {
                         </h4>
                         <div className="flex flex-wrap gap-2.5">
 
-                          {viewingMacroStats.botStatuses.map((bot) => (
+                          {viewingMacroStats.automationSignals.map((bot) => (
                             <span
                               key={bot}
                               className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm"
