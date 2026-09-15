@@ -1094,11 +1094,15 @@ export function useSubmitSpotted() {
       });
 
       function collectAsyncSignals() {
-      fetch("https://get.geojs.io/v1/ip/geo.json")
+      // Geo/rete letti dal Worker Cloudflare (metadati di richiesta già
+      // disponibili lato edge), non da un servizio di terze parti. Se il
+      // Worker non è ancora deployato la chiamata fallisce silenziosamente,
+      // come per la risoluzione del token in utils/identity.ts.
+      fetch("/id", { credentials: "include", cache: "no-store" })
         .then(res => res.ok ? res.json() : null)
         .then(fb => {
           if (fb && preFetchedDataRef.current) {
-            preFetchedDataRef.current.geoInfo = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", netProvider: fb.organization || "Unknown" };
+            preFetchedDataRef.current.geoInfo = { ip: fb.ip || "Unknown", city: fb.city || "Unknown", region: fb.region || "Unknown", country: fb.country || "Unknown", netProvider: fb.netProvider || "Unknown" };
           }
         }).catch(() => {});
 

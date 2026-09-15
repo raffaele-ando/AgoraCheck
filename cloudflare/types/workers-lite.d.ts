@@ -51,6 +51,23 @@ interface ExecutionContext {
   waitUntil(promise: Promise<unknown>): void;
 }
 
+/**
+ * Sottoinsieme dei metadati che Cloudflare allega a ogni richiesta che
+ * attraversa la sua rete (`req.cf`). Sostituiscono una chiamata a un servizio
+ * di geolocalizzazione di terze parti: sono già disponibili, gratis, per ogni
+ * richiesta instradata su una Route di questo Worker.
+ */
+interface IncomingRequestCfProperties {
+  country?: string;
+  city?: string;
+  region?: string;
+  asOrganization?: string;
+}
+
+interface Request {
+  readonly cf?: IncomingRequestCfProperties;
+}
+
 /** I bind dichiarati in wrangler.toml. */
 interface Env {
   MEDIA?: R2Bucket;

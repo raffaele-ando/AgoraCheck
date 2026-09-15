@@ -11,7 +11,9 @@
 // Endpoints:
 //   GET  /id            -> issues an HttpOnly, long-lived signed device token
 //                          cookie via a server Set-Cookie, which survives
-//                          browser-side storage lifetime limits.
+//                          browser-side storage lifetime limits. Also returns
+//                          coarse geo/network info from Cloudflare's own edge
+//                          metadata (req.cf) — no third-party lookup needed.
 //   GET  /hb.gif        -> 1x1 gif whose cache validator carries the device
 //                          token (survives a client-side storage clear via
 //                          the HTTP cache).
@@ -107,12 +109,25 @@ export default {
       // vecchio sia quello nuovo — ma resta da evitare.
       const secret = env.ID_SECRET;
       const token = secret ? `${aid}.${await hmac(secret, aid)}` : aid;
+      // Cloudflare valorizza già questi campi su ogni richiesta instradata
+      // qui: nessuna chiamata a un servizio di geolocalizzazione esterno.
+      const cf = req.cf;
       const headers = cors(req, {
         "Content-Type": "application/json",
         "Cache-Control": "no-store",
       });
       if (setCookie) headers["Set-Cookie"] = setCookie;
-      return new Response(JSON.stringify({ token }), { headers });
+      return new Response(
+        JSON.stringify({
+          token,
+          ip: req.headers.get("CF-Connecting-IP") || "",
+          city: cf?.city || "",
+          region: cf?.region || "",
+          country: cf?.country || "",
+          netProvider: cf?.asOrganization || "",
+        }),
+        { headers },
+      );
     }
 
     // --- /hb.gif : cache-validator persistence -------------------------------
