@@ -694,7 +694,7 @@ export default function Dashboard() {
     
     // We group by identical hardware footprints that provide high confidence:
     const hwGroups = new Map<string, Set<string>>();
-    const vTokenGroups = new Map<string, Set<string>>();
+    const clientMarkGroups = new Map<string, Set<string>>();
     const hwGroupsiOS = new Map<string, Set<string>>();
     const igInstallIdGroups = new Map<string, Set<string>>();
     const ipGroups = new Map<string, Set<string>>();
@@ -768,10 +768,10 @@ export default function Dashboard() {
        }
 
        if (adv) {
-         const tt = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken;
+         const tt = adv.behavior?.cmk || adv.b?.cmk || adv.b?.clientMark;
          if (tt) {
-           if (!vTokenGroups.has(tt)) vTokenGroups.set(tt, new Set());
-           vTokenGroups.get(tt)!.add(pid);
+           if (!clientMarkGroups.has(tt)) clientMarkGroups.set(tt, new Set());
+           clientMarkGroups.get(tt)!.add(pid);
          }
 
          const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
@@ -816,7 +816,7 @@ export default function Dashboard() {
          // Only group by hardware seed if it's NOT an Apple device.
          // Apple devices heavily restrict fingerprinting and returns identical seeds
          // for thousands of users with the same model, causing massive false positives.
-         // iOS tracking will instead heavily rely on vToken (LocalStorage TTV) and Instagram Tags.
+         // iOS tracking will instead heavily rely on clientMark (local-store CMK) and Instagram Tags.
          const isAppleDevice = gpu.toLowerCase().includes("apple")
            || ua.includes("iPhone") || ua.includes("iPad") || ua.includes("Mac OS");
 
@@ -834,7 +834,7 @@ export default function Dashboard() {
            webglScene, fontMetrics, timerRes,
            igMeta: igMetaRaw,
            userAgent: ua,
-           vToken: tt || "",
+           clientMark: tt || "",
            isApple: isAppleDevice,
          };
          const existingFootprint = deviceFootprints.get(pid);
@@ -906,7 +906,7 @@ export default function Dashboard() {
     const CONF = {
       TOKEN_UNION:  1.00,  // token persistente condiviso: deterministico
       MANUAL:       1.00,  // merge manuale: definitivo
-      VTOKEN:       0.98,  // stesso session token: quasi definitivo
+      CLIENT_MARK:  0.98,  // stesso session token: quasi definitivo
       IG_TAG:       0.88,  // stesso handle Instagram: forte
       // --- segnali CORROBORANTI: non collegano mai da soli (vedi sotto) ---
       HW_ANDROID:   0.45,
@@ -1073,8 +1073,8 @@ export default function Dashboard() {
     //
     // resolveIdentity fotografa OGNI backend prima di riseminarli tutti con il
     // token primario, quindi un messaggio inviato durante una transizione
-    // (compare il cookie di server mentre localStorage ha ancora il vecchio id,
-    // una cancellazione parziale ITP, un handoff fra browser) trasporta sia il
+    // (compare il cookie di server mentre uno storage locale ha ancora il vecchio id,
+    // una cancellazione parziale dello storage, un handoff fra browser) trasporta sia il
     // valore vecchio sia quello nuovo. Due profili che condividono uno di questi
     // valori sono lo stesso dispositivo: nessuna probabilità, nessun
     // fingerprint. È ciò che ricongiunge un dispositivo che altrimenti si
@@ -1097,16 +1097,16 @@ export default function Dashboard() {
       }
     }
 
-    for (const [, pidsSet] of vTokenGroups.entries()) {
+    for (const [, pidsSet] of clientMarkGroups.entries()) {
       const pids = Array.from(pidsSet);
       for (let i = 0; i < pids.length; i++)
         for (let j = i + 1; j < pids.length; j++)
           addSignal(
             pids[i],
             pids[j],
-            "vtoken",
-            "Stesso token di sessione (vToken)",
-            CONF.VTOKEN,
+            "clientmark",
+            "Stesso token di sessione (clientMark)",
+            CONF.CLIENT_MARK,
             { linking: true, deviceLevel: true },
           );
     }
@@ -1416,7 +1416,7 @@ export default function Dashboard() {
       sortedMsgs[sortedMsgs.length - 1]?.createdAt?.toDate() || null;
     const newest = sortedMsgs[0]?.createdAt?.toDate() || null;
     const hardwareFingerprints = new Set<string>();
-    const vTokens = new Set<string>();
+    const clientMarks = new Set<string>();
     let totalSessionTime = 0;
     const ipAddresses = new Set<string>();
     const botStatuses = new Set<string>();
@@ -1478,8 +1478,8 @@ export default function Dashboard() {
           );
         const storage = adv.software?.storage || adv.s?.storage;
         if (storage) storageInfo.add(`Storage: ${storage}`);
-        const tt = adv.behavior?.ttv || adv.b?.ttv || adv.b?.vToken;
-        if (tt) vTokens.add(tt);
+        const tt = adv.behavior?.cmk || adv.b?.cmk || adv.b?.clientMark;
+        if (tt) clientMarks.add(tt);
       }
       if (m.deviceInfo?.userAgent) {
         hardwareFingerprints.add(
@@ -1492,7 +1492,7 @@ export default function Dashboard() {
       oldest,
       newest,
       hardwareFingerprints: Array.from(hardwareFingerprints),
-      vTokens: Array.from(vTokens),
+      clientMarks: Array.from(clientMarks),
       totalSessionTime,
       ipAddresses: Array.from(ipAddresses),
       localIps: Array.from(localIps),
@@ -1940,7 +1940,7 @@ export default function Dashboard() {
       const pname = profiles[pid]?.name || pid;
       report += `Dispositivo: ${pname} (ID: ${pid})\n`;
       if (fp) {
-        report += `  vToken:      ${fp.vToken || "-"}\n`;
+        report += `  clientMark:  ${fp.clientMark || "-"}\n`;
         report += `  Canvas:      ${fp.canvas || "-"}\n`;
         report += `  Audio:       ${fp.audio || "-"}\n`;
         report += `  GPU:         ${fp.gpu || "-"}\n`;
@@ -4907,8 +4907,8 @@ export default function Dashboard() {
                                 {fp ? (
                                   <div className="space-y-2 text-[10px] font-mono text-gray-600 dark:text-gray-400">
                                     <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
-                                      <span className="w-20 font-bold shrink-0">vToken:</span>
-                                      <span className="break-all">{fp.vToken || "-"}</span>
+                                      <span className="w-20 font-bold shrink-0">clientMark:</span>
+                                      <span className="break-all">{fp.clientMark || "-"}</span>
                                     </div>
                                     <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
                                       <span className="w-20 font-bold shrink-0">Canvas:</span>

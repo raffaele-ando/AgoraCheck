@@ -3,8 +3,9 @@
 //
 // Design (see project notes):
 //  L1 DEVICE  = deterministic. A device == a set of co-observed persistent
-//               tokens (cookie / localStorage / IndexedDB / ETag / anon uid).
-//               No fingerprint enters here.
+//               tokens (spread across several browser storage backends and
+//               an HTTP cache validator / anon uid). No fingerprint enters
+//               here.
 //  L2 PERSON  = probabilistic, handled server/dashboard side. Device class and
 //               OS are NEGATIVE constraints only, never positive links.
 //
@@ -111,12 +112,12 @@ const lsSet = (k: string, v: string) => {
 
 // ---------------------------------------------------------------------------
 // Token keys. We deliberately mirror the token across several keys/backends so
-// that a partial clear (e.g. iOS ITP purging localStorage after 30 days of
-// inactivity, while the cookie survives) can still be reconciled.
+// that a partial clear (e.g. one backend being purged after a period of
+// inactivity while another survives) can still be reconciled.
 // ---------------------------------------------------------------------------
 
-const PID_KEY = "agora_pid_v2";
-const LS_ALIASES = [PID_KEY, "app_state_hash", "vToken", "deviceId"];
+const PID_KEY = "ac_uid_v2";
+const STORAGE_KEYS = [PID_KEY, "ac_state", "ac_mark", "ac_cid"];
 
 const newId = (): string => {
   try {
@@ -157,7 +158,7 @@ export interface DeviceTokens {
   ck?: string | null; // JS cookie
   anon?: string | null; // Firebase anonymous uid (set by caller)
   ho?: string | null; // token received via cross-browser handoff URL
-  etag?: string | null; // HTTP cache / ETag pixel (survives storage clears)
+  cacheTag?: string | null; // HTTP cache validator pixel (survives storage clears)
   prov?: string | null; // provisional id minted synchronously before resolution
 }
 
@@ -194,29 +195,31 @@ const looksLikeToken = (v: string | null | undefined): boolean =>
   !!v && /^[0-9a-f-]{16,}(\.[A-Za-z0-9_-]{8,})?$/i.test(v.trim());
 
 /**
- * Identificativo conservato nella cache HTTP tramite l'ETag di un pixel.
+ * Identificativo conservato nella cache HTTP tramite il validatore di un pixel.
  *
- * L'endpoint `/px.gif` esisteva già lato worker — documentato come uno dei
- * canali più resistenti alla cancellazione dei dati su iOS — ma nessun client
- * lo interrogava: era un intero meccanismo di persistenza inattivo.
+ * L'endpoint `/hb.gif` esisteva già lato worker — documentato come uno dei
+ * canali più resistenti alla cancellazione dei dati su alcune piattaforme —
+ * ma nessun client lo interrogava: era un intero meccanismo di persistenza
+ * inattivo.
  */
-async function fetchEtagId(): Promise<string | null> {
+async function fetchCacheTagId(): Promise<string | null> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 2500);
-    const res = await fetch("/px.gif", { signal: ctrl.signal });
+    const res = await fetch("/hb.gif", { signal: ctrl.signal });
     clearTimeout(t);
     if (!res.ok) return null;
 
-    // Senza il worker davanti al dominio, /px.gif ricade sull'HTML della SPA.
-    // Quell'HTML è IDENTICO per tutti, quindi lo è anche il suo ETag: accettarlo
-    // significherebbe assegnare a ogni visitatore lo stesso identificativo di
-    // dispositivo e fondere l'intera utenza in un unico profilo. Si procede solo
-    // se la risposta è davvero l'immagine servita dal worker.
+    // Senza il worker davanti al dominio, /hb.gif ricade sull'HTML della SPA.
+    // Quell'HTML è IDENTICO per tutti, quindi lo è anche il suo validatore di
+    // cache: accettarlo significherebbe assegnare a ogni visitatore lo stesso
+    // identificativo di dispositivo e fondere l'intera utenza in un unico
+    // profilo. Si procede solo se la risposta è davvero l'immagine servita dal
+    // worker.
     const type = (res.headers.get("content-type") || "").toLowerCase();
     if (!type.startsWith("image/")) return null;
 
-    // Un ETag debole (W/"...") è una validazione di contenuto, non un
+    // Un validatore debole (W/"...") è una validazione di contenuto, non un
     // identificativo: il worker ne emette uno forte.
     const rawTag = res.headers.get("etag") || "";
     if (rawTag.startsWith("W/")) return null;
@@ -229,15 +232,15 @@ async function fetchEtagId(): Promise<string | null> {
 }
 
 /** Write the primary token to EVERY client backend. */
-export async function propagateToken(v: string): Promise<void> {
-  for (const k of LS_ALIASES) lsSet(k, v);
+export async function syncStores(v: string): Promise<void> {
+  for (const k of STORAGE_KEYS) lsSet(k, v);
   ckSet(PID_KEY, v, 365 * 3);
   await idbSet(PID_KEY, v);
 }
 
 /**
  * Resolve the device identity across all backends.
- * - Collects every token found (localStorage aliases, IndexedDB, cookie,
+ * - Collects every token found (storage-key aliases, secondary local store, cookie,
  *   server cookie, and any handoff token already ingested).
  * - Picks a stable primary (prefers server > handoff > existing client tokens).
  * - Re-seeds every backend with the primary so future partial clears reconcile.
@@ -259,15 +262,15 @@ export async function resolveIdentity(
   }
 
   _inflight = (async () => {
-    const [srv, idb, etag, ho] = await Promise.all([
+    const [srv, idb, cacheTag, ho] = await Promise.all([
       fetchServerId(),
       idbGet(PID_KEY),
-      fetchEtagId(),
+      fetchCacheTagId(),
       Promise.resolve(getIngestedHandoffToken()),
     ]);
 
     let ls: string | null = null;
-    for (const k of LS_ALIASES) {
+    for (const k of STORAGE_KEYS) {
       ls = ls || lsGet(k);
     }
     const ck = ckGet(PID_KEY);
@@ -283,7 +286,7 @@ export async function resolveIdentity(
       ls,
       idb,
       ck,
-      etag,
+      cacheTag,
       prov: prov && prov !== ls ? prov : null,
       anon: anonUid || null,
       ho,
@@ -296,7 +299,7 @@ export async function resolveIdentity(
       ls ||
       idb ||
       ck ||
-      etag ||
+      cacheTag ||
       prov ||
       anonUid ||
       (() => {
@@ -304,9 +307,9 @@ export async function resolveIdentity(
         return n;
       })();
 
-    const isNew = !(srv || ho || ls || idb || ck || etag || prov);
+    const isNew = !(srv || ho || ls || idb || ck || cacheTag || prov);
 
-    await propagateToken(primary);
+    await syncStores(primary);
 
     _cache.primary = primary;
     _cache.tokens = tokens;
@@ -325,17 +328,17 @@ export async function resolveIdentity(
 export function getPrimaryTokenSync(): string {
   if (_cache.primary) return _cache.primary;
   let ls: string | null = null;
-  for (const k of LS_ALIASES) ls = ls || lsGet(k);
+  for (const k of STORAGE_KEYS) ls = ls || lsGet(k);
   const existing = ls || ckGet(PID_KEY) || getIngestedHandoffToken();
   if (existing) {
     _cache.primary = existing;
-    propagateToken(existing).catch(() => {});
+    syncStores(existing).catch(() => {});
     return existing;
   }
 
   // Nessun token in locale. Può però esistere il cookie HttpOnly del server
-  // (che su iOS sopravvive alla pulizia di localStorage da parte di ITP): non
-  // possiamo leggerlo da qui perché richiede una richiesta di rete. Prima si
+  // (che sopravvive più a lungo di uno storage locale su alcune piattaforme):
+  // non possiamo leggerlo da qui perché richiede una richiesta di rete. Prima si
   // coniava un id nuovo e si dichiarava chiusa la questione: un messaggio
   // inviato in quella finestra nasceva con un token inventato mentre i
   // successivi usavano quello del server, spezzando il dispositivo in due
@@ -348,7 +351,7 @@ export function getPrimaryTokenSync(): string {
   const prov = _provisional;
   // Nota: NON si popola _cache.primary, così resolveIdentity resta libera di
   // scegliere il token del server quando arriva.
-  propagateToken(prov).catch(() => {});
+  syncStores(prov).catch(() => {});
   return prov;
 }
 
@@ -591,7 +594,7 @@ export function ingestHandoffFromUrl(): Record<string, any> | null {
     _ingestedToken = String(payload.t);
     _ingestedPayload = payload;
 
-    // 2) NESSUNA SOVRASCRITTURA CIECA — prima si chiamava propagateToken()
+    // 2) NESSUNA SOVRASCRITTURA CIECA — prima si chiamava syncStores()
     //    subito, senza guardare se questo browser avesse già una propria
     //    identità: aprire un link altrui cancellava la propria e la sostituiva
     //    con quella di chi lo aveva costruito. Ora il token in arrivo viene
@@ -599,10 +602,10 @@ export function ingestHandoffFromUrl(): Record<string, any> | null {
     //    (quindi il collegamento fra i due browser avviene comunque, in modo
     //    deterministico) e lo adotta come primario solo se qui non c'è nulla.
     let hasLocal: string | null = null;
-    for (const k of LS_ALIASES) hasLocal = hasLocal || lsGet(k);
+    for (const k of STORAGE_KEYS) hasLocal = hasLocal || lsGet(k);
     hasLocal = hasLocal || ckGet(PID_KEY);
     if (!hasLocal) {
-      propagateToken(_ingestedToken).catch(() => {});
+      syncStores(_ingestedToken).catch(() => {});
     }
     return payload;
   } catch {

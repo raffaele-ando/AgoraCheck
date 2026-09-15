@@ -79,7 +79,7 @@ Nel Worker `agora-edge` → **Settings** → **Domains & Routes**:
   | Route |
   |---|
   | `agora.theproject.world/id` |
-  | `agora.theproject.world/px.gif` |
+  | `agora.theproject.world/hb.gif` |
   | `agora.theproject.world/media` |
   | `agora.theproject.world/media/*` |
 
@@ -142,6 +142,6 @@ riverificarlo.
   è su Flexible invece che Full: cambiala.
 - **Vuoi tornare indietro** → togli le quattro Route del Passo 3: il sito
   resta comunque servito da GitHub Pages via DNS, semplicemente `/id`,
-  `/px.gif` e `/media` smettono di rispondere (il resto del sito non è
+  `/hb.gif` e `/media` smettono di rispondere (il resto del sito non è
   toccato). Per tornare del tutto al sito precedente, riporta anche il record
   DNS del Passo 2 alla destinazione di prima.

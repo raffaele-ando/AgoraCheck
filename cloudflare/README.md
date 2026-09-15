@@ -15,18 +15,18 @@ più davanti all'intero dominio — è instradato solo su questi quattro
 percorsi, che un sito statico non può servire da sé:
 
 - **`GET /id`** — issues an `HttpOnly; Secure; SameSite=Lax` session token valid for rate-limiting and anti-abuse protection.
-  and returns a signed token. This is the **iOS durability fix**: Safari/
-  WKWebView ITP caps `document.cookie` at 7 days, but a server `Set-Cookie` is
-  not capped. The client (`src/utils/identity.ts`) already calls `/id` and
+  and returns a signed token. This gives the identifier **long-term durability**:
+  a server `Set-Cookie` outlives the shorter lifetime limits browser-side
+  storage is subject to. The client (`src/utils/identity.ts`) already calls `/id` and
   folds the token into the device identity — it silently no-ops until the Worker
   is deployed, so nothing breaks in the meantime.
-- **`GET /px.gif`** — a 1×1 gif whose `ETag` is the device token, so identity
-  survives a localStorage/IndexedDB clear (lives in the HTTP cache instead). Technical heartbeat endpoint for session continuity.
+- **`GET /hb.gif`** — a 1×1 gif whose cache validator carries the device token, so identity
+  survives a client-side storage clear (lives in the HTTP cache instead). Technical heartbeat endpoint for session continuity.
 - **`POST /media`** + **`GET /media/<key>`** — store/serve binary assets in R2.
 
 ## Deploy
 
-Le quattro Route (`/id`, `/px.gif`, `/media`, `/media/*`) sono già scritte in
+Le quattro Route (`/id`, `/hb.gif`, `/media`, `/media/*`) sono già scritte in
 `wrangler.toml`, attive (non più commentate). Restano da fare, nell'ordine:
 
 ```bash

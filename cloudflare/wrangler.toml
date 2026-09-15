@@ -40,7 +40,7 @@ pattern = "agora.theproject.world/id"
 zone_name = "theproject.world"
 
 [[routes]]
-pattern = "agora.theproject.world/px.gif"
+pattern = "agora.theproject.world/hb.gif"
 zone_name = "theproject.world"
 
 [[routes]]

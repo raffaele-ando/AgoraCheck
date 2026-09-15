@@ -4,7 +4,7 @@ import { shortHash } from "./identity";
 // computeDeviceProfileId — the micro-profile (L1 DEVICE) identifier.
 //
 // Priority:
-//   1. Persistent device token (cookie/localStorage/IndexedDB/server/anon uid).
+//   1. Persistent device token (cookie/browser storage/server/anon uid).
 //      This is deterministic device identity — a device is its token. Same token
 //      => same profile, always. No fingerprint, no probability.
 //   2. Fallback for LEGACY messages with no token: a STABLE hardware seed.
@@ -48,8 +48,8 @@ export const extractDeviceToken = (parsedAdv: any): string => {
     clean(ids.idb) ||
     clean(ids.ck) ||
     clean(ids.anon) ||
-    clean(b.ttv) ||
-    clean(b.vToken) ||
+    clean(b.cmk) ||
+    clean(b.clientMark) ||
     ""
   );
 };
@@ -59,7 +59,7 @@ export const extractDeviceToken = (parsedAdv: any): string => {
  *
  * `resolveIdentity` snapshots each backend BEFORE re-seeding them all with the
  * primary, so a message sent during a transition (server cookie appears while
- * localStorage still holds an older id, a partial ITP clear, a cross-browser
+ * a local store still holds an older id, a partial storage clear, a cross-browser
  * handoff) carries BOTH the old and the new value. Two device profiles that
  * share any one of these values are therefore the same physical device with
  * certainty — this is the deterministic evidence the L1 layer is built on, and
@@ -81,14 +81,14 @@ export const extractAllDeviceTokens = (parsedAdv: any): string[] => {
     ids.ls,
     ids.idb,
     ids.ck,
-    // Identificativo conservato nella cache HTTP (ETag) e id provvisorio
+    // Identificativo conservato nella cache HTTP (validatore) e id provvisorio
     // coniato dal percorso sincrono prima che la risoluzione fosse completa:
     // entrambi appartengono a QUESTO dispositivo, quindi valgono come prova.
-    ids.etag,
+    ids.cacheTag,
     ids.prov,
     ids.anon,
-    b.ttv,
-    b.vToken,
+    b.cmk,
+    b.clientMark,
   ]) {
     const v = clean(raw);
     // Guard against degenerate values that would union unrelated devices.

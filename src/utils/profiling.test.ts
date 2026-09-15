@@ -15,9 +15,9 @@ test("computeDeviceProfileId: persistent token is the identity", (t) => {
 
   // Same token in different backend slots => SAME device id.
   const a = computeDeviceProfileId({ ids: { srv: "tok-123" } }, deviceInfo);
-  const b = computeDeviceProfileId({ b: { ttv: "tok-123" } }, deviceInfo);
+  const b = computeDeviceProfileId({ b: { cmk: "tok-123" } }, deviceInfo);
   const c = computeDeviceProfileId({ ids: { ls: "tok-123" } }, deviceInfo);
-  assert.strictEqual(a, b, "srv and ttv of same token must match");
+  assert.strictEqual(a, b, "srv and cmk of same token must match");
   assert.strictEqual(a, c, "srv and ls of same token must match");
   assert.ok(a.startsWith("DEV-"), "token-based id is prefixed DEV-");
 
@@ -80,15 +80,15 @@ test("extractAllDeviceTokens returns every co-observed token", (t) => {
       ls: "vecchio-token-bbbbbb",
       idb: null,
       ck: "Unknown",
-      etag: "etag-token-cccccc",
+      cacheTag: "cachetag-token-cccccc",
       prov: "provvisorio-dddddd",
     },
-    b: { ttv: "server-token-aaaaaa" },
+    b: { cmk: "server-token-aaaaaa" },
   });
 
   assert.ok(tokens.includes("server-token-aaaaaa"));
   assert.ok(tokens.includes("vecchio-token-bbbbbb"));
-  assert.ok(tokens.includes("etag-token-cccccc"));
+  assert.ok(tokens.includes("cachetag-token-cccccc"));
   assert.ok(tokens.includes("provvisorio-dddddd"));
   // I valori sentinella non devono creare unioni fra dispositivi estranei.
   assert.ok(!tokens.some((v) => v.toLowerCase() === "unknown"));

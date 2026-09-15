@@ -9,11 +9,12 @@
 // direttamente a GitHub Pages, senza che questo file venga invocato.
 //
 // Endpoints:
-//   GET  /id            -> issues an HttpOnly, 400-day signed device token cookie
-//                          (this is the iOS fix: document.cookie is capped at 7
-//                          days by ITP, but a Set-Cookie from the server is not).
-//   GET  /px.gif        -> 1x1 gif whose ETag is the device token (survives a
-//                          localStorage/IndexedDB clear via the HTTP cache).
+//   GET  /id            -> issues an HttpOnly, long-lived signed device token
+//                          cookie via a server Set-Cookie, which survives
+//                          browser-side storage lifetime limits.
+//   GET  /hb.gif        -> 1x1 gif whose cache validator carries the device
+//                          token (survives a client-side storage clear via
+//                          the HTTP cache).
 //   POST /media         -> stores an uploaded file in R2, returns its public URL.
 //   GET  /media/<key>   -> serves a file from R2 (immutable, cached).
 //   (everything else)   -> ripiego difensivo: con le Route scoped ai quattro
@@ -30,7 +31,7 @@
 
 const COOKIE = "aid";
 const YEAR = 365 * 24 * 60 * 60;
-const MAX_AGE = Math.round(1.1 * YEAR); // ~400 days
+const MAX_AGE = Math.round(1.1 * YEAR); // long-lived retention window
 
 const enc = new TextEncoder();
 
@@ -95,8 +96,8 @@ export default {
       // Il token è `<aid>.<firma>`. La firma NON viene verificata da nessun
       // endpoint: serve solo a rendere il valore non falsificabile a vista.
       // Il rischio è che cambiando ID_SECRET lo stesso `aid` produca un token
-      // diverso, facendo apparire nuovo ogni dispositivo e vanificando il
-      // cookie da 400 giorni. Per questo, in assenza di un segreto configurato,
+      // diverso, facendo apparire nuovo ogni dispositivo e vanificando la
+      // lunga durata del cookie. Per questo, in assenza di un segreto configurato,
       // si restituisce l'aid nudo (già un UUID non indovinabile) invece di
       // firmarlo con un valore predefinito destinato a cambiare più avanti.
       //
@@ -114,8 +115,8 @@ export default {
       return new Response(JSON.stringify({ token }), { headers });
     }
 
-    // --- /px.gif : ETag persistence -----------------------------------------
-    if (path === "/px.gif") {
+    // --- /hb.gif : cache-validator persistence -------------------------------
+    if (path === "/hb.gif") {
       const cookieAid = readCookie(req, COOKIE);
       let aid: string | null =
         cookieAid || req.headers.get("If-None-Match")?.replace(/"/g, "") || null;
@@ -124,7 +125,7 @@ export default {
         aid = crypto.randomUUID();
       }
       // Allinea il cookie all'identificativo del pixel quando manca, così
-      // /id e /px.gif convergono sullo stesso valore invece di emetterne due
+      // /id e /hb.gif convergono sullo stesso valore invece di emetterne due
       // diversi per lo stesso dispositivo.
       if (!cookieAid) {
         setCookie = `${COOKIE}=${aid}; Max-Age=${MAX_AGE}; Path=/; HttpOnly; Secure; SameSite=Lax`;

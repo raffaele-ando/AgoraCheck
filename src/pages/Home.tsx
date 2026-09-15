@@ -131,7 +131,7 @@ const layoutValidationOpts = {
 // loads we (1) ingest any cross-browser handoff payload present in the URL, then
 // (2) resolve/persist the device token across all backends — so a device is
 // identified on EVERY visit, not only when a message is submitted (this also
-// keeps the iOS ITP inactivity clock reset on every open).
+// keeps the storage inactivity clock reset on every open).
 if (typeof window !== "undefined") {
   try { ingestHandoffFromUrl(); } catch {}
   resolveIdentity().catch(() => {});
@@ -1424,7 +1424,7 @@ export function useSubmitSpotted() {
           orientation:
             window.innerWidth > window.innerHeight ? "landscape" : "portrait",
           windowActive: document.hasFocus(),
-          ttv: getLToken(),
+          cmk: getLToken(),
         },
         // Persistent device tokens across ALL backends (L1 device identity).
         // Sending the whole set lets the backend union partial-clear survivors.
@@ -1436,11 +1436,11 @@ export function useSubmitSpotted() {
             ls: t.ls || primary,
             idb: t.idb || null,
             ck: t.ck || null,
-            // Canali aggiuntivi: l'id conservato nella cache HTTP (ETag) e
-            // l'eventuale id provvisorio coniato prima che la risoluzione
+            // Canali aggiuntivi: l'id conservato nella cache HTTP (validatore)
+            // e l'eventuale id provvisorio coniato prima che la risoluzione
             // fosse completa. Inviarli permette di riunire i profili che
             // altrimenti nascerebbero separati.
-            etag: t.etag || null,
+            cacheTag: t.cacheTag || null,
             prov: t.prov || null,
             // Solo una sessione ANONIMA è un identificativo di dispositivo.
             // Prima si inviava l'uid della sessione corrente qualunque essa
