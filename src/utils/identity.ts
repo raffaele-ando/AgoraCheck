@@ -4,8 +4,8 @@
 // Design (see project notes):
 //  L1 DEVICE  = deterministic. A device == a set of co-observed persistent
 //               tokens (spread across several browser storage backends and
-//               an HTTP cache validator / anon uid). No fingerprint enters
-//               here.
+//               an HTTP cache validator / anon uid). No device signal
+//               guessing enters here.
 //  L2 PERSON  = probabilistic, handled server/dashboard side. Device class and
 //               OS are NEGATIVE constraints only, never positive links.
 //

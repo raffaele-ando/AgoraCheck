@@ -50,11 +50,11 @@ test("legacy fallback: stable hardware seed, no volatile signals", (t) => {
   // to the SAME id, because audio is no longer part of the seed.
   const s1 = {
     h: { uaDeviceModel: "iPhone14,5", physicalRes: "1170x2532", cores: "6" },
-    s: { audioFingerprint: "124.043", canvasFingerprint: "abc" },
+    s: { audioSample: "124.043", canvasSample: "abc" },
   };
   const s2 = {
     h: { uaDeviceModel: "iPhone14,5", physicalRes: "1170x2532", cores: "6" },
-    s: { audioFingerprint: "Unknown", canvasFingerprint: "abc" },
+    s: { audioSample: "Unknown", canvasSample: "abc" },
   };
   const id1 = computeDeviceProfileId(s1, deviceInfo);
   const id2 = computeDeviceProfileId(s2, deviceInfo);

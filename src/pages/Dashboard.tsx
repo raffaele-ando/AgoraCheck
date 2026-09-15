@@ -48,7 +48,7 @@ import {
   Search,
   Activity,
   Trash2,
-  Fingerprint,
+  Fingerprint as DeviceIcon,
   ChevronDown,
   User as UserIcon,
   ShieldAlert,
@@ -774,16 +774,16 @@ export default function Dashboard() {
            clientMarkGroups.get(tt)!.add(pid);
          }
 
-         const canvas = adv.software?.canvasFingerprint || adv.s?.canvasFingerprint || adv.s?.c || "";
-         const audio = adv.software?.audioFingerprint || adv.s?.audioFingerprint || adv.s?.a || "";
+         const canvas = adv.software?.canvasSample || adv.s?.canvasSample || adv.s?.c || "";
+         const audio = adv.software?.audioSample || adv.s?.audioSample || adv.s?.a || "";
          const gpu = adv.hardware?.gpu || adv.h?.gpu || adv.h?.g || "";
          const screen = adv.hardware?.screen || adv.h?.screen || adv.h?.s || "";
          const cores = adv.hardware?.cores || adv.h?.cores || adv.h?.c || "";
          // Include math for better precision, especially on Android devices.
-         const math = adv.software?.mathFingerprint
-           ? JSON.stringify(adv.software.mathFingerprint)
-           : adv.s?.mathFingerprint
-           ? JSON.stringify(adv.s.mathFingerprint)
+         const math = adv.software?.mathSample
+           ? JSON.stringify(adv.software.mathSample)
+           : adv.s?.mathSample
+           ? JSON.stringify(adv.s.mathSample)
            : "";
 
          // Nuovi segnali — già raccolti in Home.tsx, ora estratti per il seed
@@ -791,9 +791,9 @@ export default function Dashboard() {
          const colorDepth  = String(adv.h?.colorDepth   || adv.hardware?.colorDepth   || "");
          const webglVendor = String(adv.h?.detailedWebGL?.vendor        || adv.hardware?.detailedWebGL?.vendor        || "");
          const maxTexture  = String(adv.h?.detailedWebGL?.maxTextureSize || adv.hardware?.detailedWebGL?.maxTextureSize || "");
-         const webglScene  = String(adv.s?.webglSceneFingerprint   || adv.software?.webglSceneFingerprint   || "");
-         const fontMetrics = String(adv.s?.fontMetricsFingerprint  || adv.software?.fontMetricsFingerprint  || "");
-         const timerRes    = String(adv.s?.timerResolution         || adv.software?.timerResolution         || "");
+         const webglScene  = String(adv.s?.webglSceneSample   || adv.software?.webglSceneSample   || "");
+         const fontMetrics = String(adv.s?.fontMetricsSample  || adv.software?.fontMetricsSample  || "");
+         const timerRes    = String(adv.s?.clockResolution         || adv.software?.clockResolution         || "");
          const igMetaRaw   = adv.h?.igMeta || adv.hardware?.igMeta || null;
          const ua = adv.browser?.userAgent || adv.network?.userAgent || adv.n?.ua || adv.s?.userAgent || m.deviceInfo?.userAgent || "";
          
@@ -809,12 +809,12 @@ export default function Dashboard() {
            : hwSeed;
 
          // rects mantenuto come variabile separata (usato come segnale di sessione)
-         const rects = adv.software?.clientRectsFingerprint || adv.s?.clientRectsFingerprint || "";
+         const rects = adv.software?.layoutRectsSample || adv.s?.layoutRectsSample || "";
          
          const seed = hwSeedExtended;
          
          // Only group by hardware seed if it's NOT an Apple device.
-         // Apple devices heavily restrict fingerprinting and returns identical seeds
+         // Apple devices heavily restrict device signal collection and return identical seeds
          // for thousands of users with the same model, causing massive false positives.
          // iOS tracking will instead heavily rely on clientMark (local-store CMK) and Instagram Tags.
          const isAppleDevice = gpu.toLowerCase().includes("apple")
@@ -1077,7 +1077,7 @@ export default function Dashboard() {
     // una cancellazione parziale dello storage, un handoff fra browser) trasporta sia il
     // valore vecchio sia quello nuovo. Due profili che condividono uno di questi
     // valori sono lo stesso dispositivo: nessuna probabilità, nessun
-    // fingerprint. È ciò che ricongiunge un dispositivo che altrimenti si
+    // segnale probabilistico. È ciò che ricongiunge un dispositivo che altrimenti si
     // spezzerebbe in due profili quando il suo token primario cambia.
     // -----------------------------------------------------------------------
     for (const [tok, pidsSet] of tokenGroups.entries()) {
@@ -1112,7 +1112,7 @@ export default function Dashboard() {
     }
 
     // -----------------------------------------------------------------------
-    // SEGNALI CORROBORANTI (fingerprint hardware, IG install id, IP pubblico).
+    // SEGNALI CORROBORANTI (segnali hardware, IG install id, IP pubblico).
     //
     // Non creano MAI un collegamento da soli: è esattamente ciò che in passato
     // fondeva persone diverse che possiedono lo stesso modello di telefono
@@ -1415,7 +1415,7 @@ export default function Dashboard() {
     const oldest =
       sortedMsgs[sortedMsgs.length - 1]?.createdAt?.toDate() || null;
     const newest = sortedMsgs[0]?.createdAt?.toDate() || null;
-    const hardwareFingerprints = new Set<string>();
+    const hardwareSignals = new Set<string>();
     const clientMarks = new Set<string>();
     let totalSessionTime = 0;
     const ipAddresses = new Set<string>();
@@ -1436,31 +1436,31 @@ export default function Dashboard() {
           adv.hardware?.ram ||
           "";
         const canvas =
-          adv.software?.canvasFingerprint ||
-          adv.s?.canvasFingerprint ||
+          adv.software?.canvasSample ||
+          adv.s?.canvasSample ||
           adv.s?.c ||
           "";
         const audio =
-          adv.software?.audioFingerprint ||
-          adv.s?.audioFingerprint ||
+          adv.software?.audioSample ||
+          adv.s?.audioSample ||
           adv.s?.a ||
           "";
-        const mathFp = adv.software?.mathFingerprint?.pi ? "Supportato" : "";
-        const advancedSensors =
-          adv.hardware?.advancedSensors || adv.h?.advancedSensors || "";
+        const mathSampleFlag = adv.software?.mathSample?.pi ? "Supportato" : "";
+        const extraSensors =
+          adv.hardware?.extraSensors || adv.h?.extraSensors || "";
         const rectsId =
-          adv.software?.clientRectsFingerprint || adv.s?.clientRectsFingerprint || "";
+          adv.software?.layoutRectsSample || adv.s?.layoutRectsSample || "";
           
-        if (gpu) hardwareFingerprints.add(`GPU: ${gpu}`);
-        if (screen) hardwareFingerprints.add(`Schermo: ${screen}`);
-        if (cpu) hardwareFingerprints.add(`CPU: ${cpu} core`);
-        if (mem) hardwareFingerprints.add(`RAM: ${mem}GB`);
-        if (canvas) hardwareFingerprints.add(`Canvas ID: ${canvas}`);
-        if (audio) hardwareFingerprints.add(`Audio ID: ${audio}`);
-        if (mathFp) hardwareFingerprints.add(`Math Fp: ${mathFp}`);
-        if (rectsId) hardwareFingerprints.add(`Rects ID: ${rectsId}`);
-        if (advancedSensors)
-          hardwareFingerprints.add(`Sensori: ${advancedSensors}`);
+        if (gpu) hardwareSignals.add(`GPU: ${gpu}`);
+        if (screen) hardwareSignals.add(`Schermo: ${screen}`);
+        if (cpu) hardwareSignals.add(`CPU: ${cpu} core`);
+        if (mem) hardwareSignals.add(`RAM: ${mem}GB`);
+        if (canvas) hardwareSignals.add(`Canvas ID: ${canvas}`);
+        if (audio) hardwareSignals.add(`Audio ID: ${audio}`);
+        if (mathSampleFlag) hardwareSignals.add(`Math Fp: ${mathSampleFlag}`);
+        if (rectsId) hardwareSignals.add(`Rects ID: ${rectsId}`);
+        if (extraSensors)
+          hardwareSignals.add(`Sensori: ${extraSensors}`);
         const sessionTime = adv.behavior?.sessionTimeSeconds;
         if (typeof sessionTime === "number") totalSessionTime += sessionTime;
         const ip = adv.network?.ip || adv.n?.ip;
@@ -1482,7 +1482,7 @@ export default function Dashboard() {
         if (tt) clientMarks.add(tt);
       }
       if (m.deviceInfo?.userAgent) {
-        hardwareFingerprints.add(
+        hardwareSignals.add(
           `Browser/Device: ${m.deviceInfo.userAgent}`
         );
       }
@@ -1491,7 +1491,7 @@ export default function Dashboard() {
       messages: sortedMsgs,
       oldest,
       newest,
-      hardwareFingerprints: Array.from(hardwareFingerprints),
+      hardwareSignals: Array.from(hardwareSignals),
       clientMarks: Array.from(clientMarks),
       totalSessionTime,
       ipAddresses: Array.from(ipAddresses),
@@ -3256,8 +3256,8 @@ export default function Dashboard() {
 
                             <div className="flex items-center gap-2">
 
-                              <Fingerprint className="w-4 h-4 text-indigo-400" />
-                              Fingerprint & Telemetria
+                              <DeviceIcon className="w-4 h-4 text-indigo-400" />
+                              Dati Tecnici & Telemetria
                             </div>
                             <div className="flex items-center gap-2">
 
@@ -3428,7 +3428,7 @@ export default function Dashboard() {
                                           TCH/MEDIA:
                                         </span>{" "}
                                         {adv.hardware?.maxTouchPoints} pt /{" "}
-                                        {adv.hardware?.mediaDevicesCount || 0}
+                                        {adv.hardware?.mediaDeviceCount || 0}
                                         dev
                                       </div>
                                       <div>
@@ -3442,13 +3442,13 @@ export default function Dashboard() {
                                           ? "Nascosta"
                                           : `${adv.hardware?.battery?.level} (${adv.hardware?.battery?.charging === true ? "In Carica" : adv.hardware?.battery?.charging === false ? "A Batteria" : "ND"})`}
                                       </div>
-                                      {adv.hardware?.gamepadsCount > 0 && (
+                                      {adv.hardware?.inputDeviceCount > 0 && (
                                         <div className="break-words whitespace-pre-wrap">
                                           <span className="text-gray-400 dark:text-gray-500 ">
                                             GPAD:
                                           </span>{" "}
-                                          {adv.hardware.gamepadsCount} (
-                                          {adv.hardware.gamepadsIds?.join(
+                                          {adv.hardware.inputDeviceCount} (
+                                          {adv.hardware.inputDeviceIds?.join(
                                             ", ",
                                           ) || ""}
                                           )
@@ -3456,12 +3456,12 @@ export default function Dashboard() {
                                       )}
                                       <div
                                         className="break-words whitespace-pre-wrap"
-                                        title={adv.hardware?.advancedSensors}
+                                        title={adv.hardware?.extraSensors}
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           SENS:
                                         </span>{" "}
-                                        {adv.hardware?.advancedSensors || "N/A"}
+                                        {adv.hardware?.extraSensors || "N/A"}
                                       </div>
                                     </div>
                                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
@@ -3623,7 +3623,7 @@ export default function Dashboard() {
                                           CANVAS_ID:
                                         </span>
                                         <span className="font-bold text-gray-800 dark:text-gray-200 ">
-                                          {adv.software?.canvasFingerprint?.slice(
+                                          {adv.software?.canvasSample?.slice(
                                             0,
                                             10,
                                           )}
@@ -3635,7 +3635,7 @@ export default function Dashboard() {
                                           AUDIO_ID:
                                         </span>
                                         <span className="font-bold text-gray-800 dark:text-gray-200 ">
-                                          {adv.software?.audioFingerprint?.slice(
+                                          {adv.software?.audioSample?.slice(
                                             0,
                                             10,
                                           ) || "N/A"}
@@ -3649,15 +3649,15 @@ export default function Dashboard() {
                                         <span
                                           className="font-bold text-gray-800 dark:text-gray-200 truncate inline-block max-w-[150px] align-bottom"
                                           title={
-                                            adv.software?.mathFingerprint
+                                            adv.software?.mathSample
                                               ? JSON.stringify(
-                                                  adv.software.mathFingerprint,
+                                                  adv.software.mathSample,
                                                 )
                                               : ""
                                           }
                                         >
-                                          {adv.software?.mathFingerprint
-                                            ? JSON.stringify(adv.software.mathFingerprint)
+                                          {adv.software?.mathSample
+                                            ? JSON.stringify(adv.software.mathSample)
                                             : "N/A"}
                                         </span>
                                       </div>
@@ -3666,7 +3666,7 @@ export default function Dashboard() {
                                           RECTS_ID:
                                         </span>
                                         <span className="font-bold text-gray-800 dark:text-gray-200 ">
-                                          {adv.software?.clientRectsFingerprint?.slice(
+                                          {adv.software?.layoutRectsSample?.slice(
                                             0,
                                             10,
                                           ) || "N/A"}
@@ -3675,14 +3675,14 @@ export default function Dashboard() {
                                       </div>
                                       <div
                                         className="break-words whitespace-pre-wrap"
-                                        title={adv.software?.fontsIdentified?.join(
+                                        title={adv.software?.fontsDetected?.join(
                                           ", ",
                                         )}
                                       >
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           FONTS:
                                         </span>{" "}
-                                        {adv.software?.fontsIdentified?.length}
+                                        {adv.software?.fontsDetected?.length}
                                         Identificati
                                       </div>
                                       <div
@@ -4696,8 +4696,8 @@ export default function Dashboard() {
                           const adv = msg.parsedAdvanced || null;
                           const ip = adv ? adv.network?.ip || adv.n?.ip : null;
                           const fp = adv
-                            ? adv.software?.canvasFingerprint ||
-                              adv.s?.canvasFingerprint ||
+                            ? adv.software?.canvasSample ||
+                              adv.s?.canvasSample ||
                               adv.s?.c
                             : null;
                           return (
@@ -4896,7 +4896,7 @@ export default function Dashboard() {
                       </div>
 
                       <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
-                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><Fingerprint className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
+                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><DeviceIcon className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewingMacro.profileIds.map((pid: string) => {
                             const fp = (viewingMacro.compFootprints as any)?.[pid];
@@ -5150,14 +5150,14 @@ export default function Dashboard() {
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" /> Hardware
-                          Fingerprints e Dispositivi (
-                          {viewingMacroStats.hardwareFingerprints.length})
+                          <DeviceIcon className="w-4 h-4 sm:w-5 sm:h-5" /> Segnali
+                          Hardware e Dispositivi (
+                          {viewingMacroStats.hardwareSignals.length})
                         </h4>
-                        {viewingMacroStats.hardwareFingerprints.length > 0 ? (
+                        {viewingMacroStats.hardwareSignals.length > 0 ? (
                           <div className="flex flex-col gap-3">
 
-                            {viewingMacroStats.hardwareFingerprints.map(
+                            {viewingMacroStats.hardwareSignals.map(
                               (fp) => {
                                 let parsed = null;
                                 if (fp.startsWith("Browser/Device: ")) {
@@ -5209,7 +5209,7 @@ export default function Dashboard() {
                           </div>
                         ) : (
                           <div className="text-sm font-medium text-gray-400 dark:text-gray-500 italic bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
-                            Nessun dato fingerprint...
+                            Nessun segnale hardware...
                           </div>
                         )}
                       </div>
