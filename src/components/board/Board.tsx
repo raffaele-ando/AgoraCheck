@@ -6,7 +6,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { Squircle } from '../ui/Squircle';
 import { Portal } from '../ui/Portal';
 
-import { useSubmitSpotted } from '../../pages/Home';
+import { useSubmitMessage } from '../../pages/Home';
 import { useVisitAnalytics } from '../../hooks/useVisitAnalytics';
 import { loadWhatsappLinksFromDB, loadEventWidgetConfigFromDB, EventWidgetConfig, DEFAULT_EVENT_WIDGET_CONFIG } from '../../data/settings';
 
@@ -303,7 +303,7 @@ function TypewriterTextarea({ words, prefix = "", ...props }: React.TextareaHTML
  */
 export function Board() {
   const { handleFocus, handleBlur, markSubmitted } = useVisitAnalytics();
-  const { submit, isSubmitting, isSuccess, error, cooldown } = useSubmitSpotted();
+  const { submit, isSubmitting, isSuccess, error, cooldown } = useSubmitMessage();
   const navigate = useNavigate();
   
   const [mode, setMode] = useState<string>('spotted');
@@ -547,7 +547,7 @@ export function Board() {
     "In front of room 4.0.1", "In line for drinks", "On the stairs at the piazza"
   ];
 
-  const lookingForWordsSpotted = isIt ? [
+  const lookingForWordsDefault = isIt ? [
     "Il ragazzo in piedi con il maglione rosso con i capelli biondi e un tatuaggio sul braccio",
     "La ragazza con la borsa a tracolla"
   ] : [
@@ -911,7 +911,7 @@ export function Board() {
                    </Squircle>
                    <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden flex-1 focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🔍</div>
-                      <TypewriterTextarea words={lookingForWordsSpotted} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
+                      <TypewriterTextarea words={lookingForWordsDefault} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                 </div>
              )}

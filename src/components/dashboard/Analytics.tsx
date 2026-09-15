@@ -252,7 +252,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     const totalViews = messages.length;
     const uniqueDevices = Object.keys(profiles).length;
     const identifiedUsers = macroProfiles.length;
-    const spottedMessages = messages.filter((m) => (!m.type || m.type === "spotted") && (m.when || m.where)).length;
+    const postMessages = messages.filter((m) => (!m.type || m.type === "spotted") && (m.when || m.where)).length;
     const sondaggioMessages = messages.filter((m) => m.type === "sondaggio").length;
     const ricercaMessages = messages.filter((m) => m.type === "ricerca" || ((!m.type || m.type === "spotted") && !m.when && !m.where)).length;
     const safeVisits = Array.isArray(visits) ? visits : [];
@@ -336,7 +336,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
       totalViews,
       uniqueDevices,
       identifiedUsers,
-      spottedMessages,
+      postMessages,
       sondaggioMessages,
       ricercaMessages,
       totalVisits,
@@ -373,7 +373,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     },
     {
       label: "Spotted Effettuati",
-      value: stats.spottedMessages,
+      value: stats.postMessages,
       bg: "bg-emerald-50 dark:bg-emerald-900/40 ",
       text: "text-emerald-600",
       border: "group-hover:border-emerald-200",

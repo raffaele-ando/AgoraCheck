@@ -344,7 +344,7 @@ export default function Dashboard() {
     }
   }, [isDarkMode]);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [onlySpottedFilter, setOnlySpottedFilter] = useState(false);
+  const [onlyPostsFilter, setOnlyPostsFilter] = useState(false);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
   const [resolutionInput, setResolutionInput] = useState("");
   const [macroModalTab, setMacroModalTab] = useState<
@@ -1567,7 +1567,7 @@ export default function Dashboard() {
     // 3. MESSAGES
     //
     // La sottoscrizione dipende SOLO da quanti documenti servono. In passato
-    // dipendeva anche da viewFilter / onlySpottedFilter / selectedZoneFilter e
+    // dipendeva anche da viewFilter / onlyPostsFilter / selectedZoneFilter e
     // da currentPage: filtri applicati interamente lato client, che quindi non
     // cambiano la query. Ogni click su un filtro o su "pagina successiva"
     // distruggeva e ricreava l'onSnapshot, riscaricando e ri-parsificando
@@ -1682,7 +1682,7 @@ export default function Dashboard() {
     pageSize,
     activeTab,
     searchQuery,
-    onlySpottedFilter,
+    onlyPostsFilter,
     selectedZoneFilter,
   ]);
   /* Handle selected messages sync */ useEffect(() => {
@@ -1990,9 +1990,9 @@ export default function Dashboard() {
       if (!matchesArchive) return false;
 
       // 2. Only Spotted filter
-      if (onlySpottedFilter) {
-        const isSpotted = !m.type || m.type === "spotted";
-        if (!isSpotted) return false;
+      if (onlyPostsFilter) {
+        const isPostType = !m.type || m.type === "spotted";
+        if (!isPostType) return false;
       }
 
       // 3. Zone filter
@@ -2027,12 +2027,12 @@ export default function Dashboard() {
 
       return true;
     });
-  }, [messages, viewFilter, onlySpottedFilter, selectedZoneFilter, searchQuery]);
+  }, [messages, viewFilter, onlyPostsFilter, selectedZoneFilter, searchQuery]);
 
   const hasActiveFilters =
-    onlySpottedFilter || selectedZoneFilter !== "" || searchQuery.trim() !== "";
+    onlyPostsFilter || selectedZoneFilter !== "" || searchQuery.trim() !== "";
   const clearAllFilters = useCallback(() => {
-    setOnlySpottedFilter(false);
+    setOnlyPostsFilter(false);
     setSelectedZoneFilter("");
     setSearchQuery("");
     setCurrentPage(1);
@@ -2615,15 +2615,15 @@ export default function Dashboard() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={() => setOnlySpottedFilter((v) => !v)}
-                    aria-pressed={onlySpottedFilter}
+                    onClick={() => setOnlyPostsFilter((v) => !v)}
+                    aria-pressed={onlyPostsFilter}
                     className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border whitespace-nowrap ${
-                      onlySpottedFilter
+                      onlyPostsFilter
                         ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300"
                         : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${onlySpottedFilter ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${onlyPostsFilter ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`} />
                     Solo Spotted
                   </button>
 

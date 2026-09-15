@@ -987,7 +987,7 @@ const queryFontInventory = () => {
 };
 
 // --- HOOK FOR FIREBASE SUBMISSION ---
-export function useSubmitSpotted() {
+export function useSubmitMessage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
