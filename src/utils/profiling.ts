@@ -6,7 +6,7 @@ import { shortHash } from "./identity";
 // Priority:
 //   1. Persistent device token (cookie/localStorage/IndexedDB/server/anon uid).
 //      This is deterministic device identity — a device is its token. Same token
-//      => same profile, always. No fingerprint, no probability.
+//      => same profile, always. No device signal guessing, no probability.
 //   2. Fallback for LEGACY messages with no token: a STABLE hardware seed.
 //      Deliberately excludes volatile signals (canvas/audio/webgl/math/rects):
 //      inside a single browser engine those are identical per model (0 bits per
@@ -146,7 +146,7 @@ export const GEO_CONFLICT_WINDOW_MS = 60 * 60 * 1000;
  *    viene mai scambiato per una contraddizione.
  *
  * Resta un caso di falso blocco: una VPN che sposta il paese apparente. Per
- * questo il vincolo viene applicato solo alle prove DEBOLI (fingerprint
+ * questo il vincolo viene applicato solo alle prove DEBOLI (segnali
  * hardware, IP, install id), mai a quelle deterministiche come i token: al
  * massimo si perde un suggerimento, mai un collegamento certo.
  */

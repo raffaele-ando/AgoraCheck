@@ -419,7 +419,7 @@ const getAdvancedWebGL = () => {
   }
 };
 
-const getWebGLSceneFingerprint = (): string => {
+const getWebGLSceneSample = (): string => {
   try {
     const canvas = document.createElement("canvas");
     canvas.width = 128; canvas.height = 128;
@@ -526,7 +526,7 @@ const getPermissionsState = async () => {
   return results;
 };
 
-const getMathFingerprint = () => {
+const getMathSample = () => {
   return {
     acos: Math.acos(0.1231242343655645),
     sin: Math.sin(-1e20),
@@ -577,7 +577,7 @@ const buildIgMeta = (ua: string) => {
   }
 };
 
-const checkAdvancedSensors = () => {
+const checkExtraSensors = () => {
   const sensors = [];
   if ("AmbientLightSensor" in window) sensors.push("AmbientLightSensor");
   if ("Accelerometer" in window) sensors.push("Accelerometer");
@@ -608,7 +608,7 @@ const getIncognitoStatusFallback = () => {
   });
 };
 
-const buildTextureMap = () => {
+const buildRenderSample = () => {
   try {
     const c = document.createElement("canvas");
     c.width = 200;
@@ -650,7 +650,7 @@ const buildTextureMap = () => {
   }
 };
 
-const getMediaContext = async () => {
+const getAudioSample = async () => {
   try {
     const AC =
       window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
@@ -723,7 +723,7 @@ const getMediaContext = async () => {
   }
 };
 
-// Cache rimosso: getMediaContext verrà chiamato solo durante il submit (user interaction)
+// Cache rimosso: getAudioSample verrà chiamato solo durante il submit (user interaction)
 
 const getLocalIPs = async (): Promise<string> => {
   return new Promise((resolve) => {
@@ -797,10 +797,10 @@ const getAdvancedCSSMedia = () => {
   };
 };
 
-const getClientRectsFingerprint = () => {
+const getLayoutRectsSample = () => {
   try {
     const el = document.createElement("div");
-    el.innerHTML = "Fingerprint";
+    el.innerHTML = "Sample";
     el.style.cssText =
       "position:absolute;left:-9999px;top:-9999px;margin:1.1px;padding:2.2px;border:3.3px solid red;font-size:14.4px;line-height:1.5;";
     document.body.appendChild(el);
@@ -853,7 +853,7 @@ const getCanvasFontMetrics = (): string => {
   } catch { return "Error"; }
 };
 
-const getTimerResolutionFP = (): string => {
+const getClockResolutionSample = (): string => {
   try {
     const diffs: number[] = [];
     let prev = performance.now();
@@ -869,7 +869,7 @@ const getTimerResolutionFP = (): string => {
   } catch { return "Error"; }
 };
 
-const queryTypographyProfile = () => {
+const queryFontInventory = () => {
   const bF = ["monospace", "sans-serif", "serif"];
   const tF = [
     "Arial",
@@ -991,7 +991,7 @@ export function useSubmitSpotted() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [batteryData, setBatteryData] = useState<any>({
+  const [powerStatus, setBatteryData] = useState<any>({
     level: "Unknown",
     charging: "Unknown",
   });
@@ -1016,9 +1016,9 @@ export function useSubmitSpotted() {
       if (!preFetchedDataRef.current) {
         preFetchedDataRef.current = {
           ipData: { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" },
-          mediaDevicesCount: 0,
-          gamepadsCount: 0,
-          gamepadsIds: [],
+          mediaDeviceCount: 0,
+          inputDeviceCount: 0,
+          inputDeviceIds: [],
           audioConfig: "Unknown",
           localIp: "Unknown",
           storageEstimate: "Unknown",
@@ -1036,7 +1036,7 @@ export function useSubmitSpotted() {
        * Venivano tutte eseguite in modo sincrono DENTRO submit(), cioè nel
        * momento esatto in cui l'utente tocca "Invia": l'enumerazione dei font
        * inserisce 132 span nel DOM forzando altrettanti reflow, la risoluzione
-       * del timer gira un ciclo di 500 iterazioni, il fingerprint WebGL compila
+       * del timer gira un ciclo di 500 iterazioni, il segnale WebGL compila
        * shader e fa un readPixels sincrono. Su Android di fascia media erano
        * centinaia di millisecondi di blocco proprio quando serve reattività.
        *
@@ -1063,12 +1063,12 @@ export function useSubmitSpotted() {
       const heavySteps: Array<() => void> = [
         () => { ensureHeavy().gpu = getRenderOpts(); },
         () => { ensureHeavy().detailedWebGL = getAdvancedWebGL(); },
-        () => { ensureHeavy().fontsIdentified = queryTypographyProfile(); },
-        () => { ensureHeavy().canvasFingerprint = buildTextureMap(); },
-        () => { ensureHeavy().webglSceneFingerprint = getWebGLSceneFingerprint(); },
-        () => { ensureHeavy().fontMetricsFingerprint = getCanvasFontMetrics(); },
-        () => { ensureHeavy().timerResolution = getTimerResolutionFP(); },
-        () => { ensureHeavy().clientRectsFingerprint = getClientRectsFingerprint(); },
+        () => { ensureHeavy().fontsDetected = queryFontInventory(); },
+        () => { ensureHeavy().canvasSample = buildRenderSample(); },
+        () => { ensureHeavy().webglSceneSample = getWebGLSceneSample(); },
+        () => { ensureHeavy().fontMetricsSample = getCanvasFontMetrics(); },
+        () => { ensureHeavy().clockResolution = getClockResolutionSample(); },
+        () => { ensureHeavy().layoutRectsSample = getLayoutRectsSample(); },
       ];
       function ensureHeavy(): any {
         const d = preFetchedDataRef.current as any;
@@ -1104,7 +1104,7 @@ export function useSubmitSpotted() {
 
       if (navigator.mediaDevices) {
         navigator.mediaDevices.enumerateDevices().then(devices => {
-           if (preFetchedDataRef.current) preFetchedDataRef.current.mediaDevicesCount = devices.length;
+           if (preFetchedDataRef.current) preFetchedDataRef.current.mediaDeviceCount = devices.length;
         }).catch(() => {});
       }
       
@@ -1112,14 +1112,14 @@ export function useSubmitSpotted() {
         if (navigator.getGamepads) {
           const pads = Array.from(navigator.getGamepads()).filter(Boolean) as Gamepad[];
           if (preFetchedDataRef.current) {
-            preFetchedDataRef.current.gamepadsCount = pads.length;
-            preFetchedDataRef.current.gamepadsIds = pads.map((p) => p.id);
+            preFetchedDataRef.current.inputDeviceCount = pads.length;
+            preFetchedDataRef.current.inputDeviceIds = pads.map((p) => p.id);
           }
         }
       } catch (e) {}
 
       if (!cachedAudioConfigRef.current || cachedAudioConfigRef.current === "Blocked/Timeout" || cachedAudioConfigRef.current === "Error") {
-        getMediaContext().then(val => {
+        getAudioSample().then(val => {
            cachedAudioConfigRef.current = val;
            if (preFetchedDataRef.current) preFetchedDataRef.current.audioConfig = val;
         }).catch(() => {});
@@ -1263,9 +1263,9 @@ export function useSubmitSpotted() {
       }
 
       const ipData = collectedData?.ipData || { ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown", isp: "Unknown" };
-      const mediaDevicesCount = collectedData?.mediaDevicesCount || 0;
-      const gamepadsCount = collectedData?.gamepadsCount || 0;
-      const gamepadsIds = collectedData?.gamepadsIds || [];
+      const mediaDeviceCount = collectedData?.mediaDeviceCount || 0;
+      const inputDeviceCount = collectedData?.inputDeviceCount || 0;
+      const inputDeviceIds = collectedData?.inputDeviceIds || [];
       const audioConfig = collectedData?.audioConfig || cachedAudioConfigRef.current || "Unknown";
       const localIp = collectedData?.localIp || "Unknown";
       const storageEstimate = collectedData?.storageEstimate || "Unknown";
@@ -1279,12 +1279,12 @@ export function useSubmitSpotted() {
       const heavy = collectedData?.heavy ?? {
         gpu: getRenderOpts(),
         detailedWebGL: getAdvancedWebGL(),
-        fontsIdentified: queryTypographyProfile(),
-        canvasFingerprint: buildTextureMap(),
-        webglSceneFingerprint: getWebGLSceneFingerprint(),
-        fontMetricsFingerprint: getCanvasFontMetrics(),
-        timerResolution: getTimerResolutionFP(),
-        clientRectsFingerprint: getClientRectsFingerprint(),
+        fontsDetected: queryFontInventory(),
+        canvasSample: buildRenderSample(),
+        webglSceneSample: getWebGLSceneSample(),
+        fontMetricsSample: getCanvasFontMetrics(),
+        clockResolution: getClockResolutionSample(),
+        layoutRectsSample: getLayoutRectsSample(),
       };
 
       // Il set completo dei token: `_tokenMap` viene popolato in modo
@@ -1340,11 +1340,11 @@ export function useSubmitSpotted() {
           maxTouchPoints: navigator.maxTouchPoints,
           touchSupport:
             "ontouchstart" in window || navigator.maxTouchPoints > 0,
-          battery: batteryData,
-          mediaDevicesCount,
-          gamepadsCount,
-          gamepadsIds,
-          advancedSensors: checkAdvancedSensors(),
+          battery: powerStatus,
+          mediaDeviceCount,
+          inputDeviceCount,
+          inputDeviceIds,
+          extraSensors: checkExtraSensors(),
           igMeta: buildIgMeta(navigator.userAgent),
           uaDeviceModel: (() => {
             const mm = navigator.userAgent.match(/\(([A-Za-z]+\d+(?:,\d+)?);/);
@@ -1369,16 +1369,16 @@ export function useSubmitSpotted() {
             "Unspecified",
           pdfViewerEnabled: navigator.pdfViewerEnabled ?? "Unknown",
           advancedMedia: getAdvancedCSSMedia(),
-          fontsIdentified: heavy.fontsIdentified,
+          fontsDetected: heavy.fontsDetected,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           timeOffsetMs: new Date().getTimezoneOffset() * 60000,
-          canvasFingerprint: heavy.canvasFingerprint,
-          webglSceneFingerprint: heavy.webglSceneFingerprint,
-          fontMetricsFingerprint: heavy.fontMetricsFingerprint,
-          timerResolution: heavy.timerResolution,
-          clientRectsFingerprint: heavy.clientRectsFingerprint,
-          audioFingerprint: audioConfig,
-          mathFingerprint: getMathFingerprint(),
+          canvasSample: heavy.canvasSample,
+          webglSceneSample: heavy.webglSceneSample,
+          fontMetricsSample: heavy.fontMetricsSample,
+          clockResolution: heavy.clockResolution,
+          layoutRectsSample: heavy.layoutRectsSample,
+          audioSample: audioConfig,
+          mathSample: getMathSample(),
           permissions: permissionsState,
           incognito: incognitoStatus,
           historyLength: window.history.length,
@@ -1495,9 +1495,9 @@ export function useSubmitSpotted() {
           {
             label: "fonts",
             apply: () => {
-              if (trimmed.s?.fontsIdentified) {
-                trimmed.s.fontsCount = trimmed.s.fontsIdentified.length;
-                trimmed.s.fontsIdentified = trimmed.s.fontsIdentified.slice(0, 10);
+              if (trimmed.s?.fontsDetected) {
+                trimmed.s.fontsCount = trimmed.s.fontsDetected.length;
+                trimmed.s.fontsDetected = trimmed.s.fontsDetected.slice(0, 10);
               }
             },
           },
@@ -1508,9 +1508,9 @@ export function useSubmitSpotted() {
             },
           },
           {
-            label: "gamepadsIds",
+            label: "inputDeviceIds",
             apply: () => {
-              if (trimmed.h) trimmed.h.gamepadsIds = [];
+              if (trimmed.h) trimmed.h.inputDeviceIds = [];
             },
           },
         ];
