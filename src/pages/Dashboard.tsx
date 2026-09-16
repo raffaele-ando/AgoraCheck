@@ -1435,6 +1435,7 @@ export default function Dashboard() {
           adv.h?.memory ||
           adv.h?.m ||
           adv.hardware?.ram ||
+          adv.h?.ram ||
           "";
         const canvas =
           adv.software?.canvasSample ||
@@ -1462,7 +1463,8 @@ export default function Dashboard() {
         if (rectsId) hardwareSignals.add(`Rects ID: ${rectsId}`);
         if (extraSensors)
           hardwareSignals.add(`Sensori: ${extraSensors}`);
-        const sessionTime = adv.behavior?.sessionTimeSeconds;
+        const sessionTime =
+          adv.behavior?.sessionTimeSeconds ?? adv.b?.sessionTimeSeconds;
         if (typeof sessionTime === "number") totalSessionTime += sessionTime;
         const ip = adv.network?.ip || adv.n?.ip;
         if (ip) ipAddresses.add(ip);
