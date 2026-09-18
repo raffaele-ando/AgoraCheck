@@ -524,7 +524,7 @@ export default function StoryTemplateConfig() {
 
       {viewMode === "gallery" && (
         <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-           <h2 className="text-lg font-black mb-4 dark:text-white">Stato Template Salvati</h2>
+           <h2 className="text-lg font-black mb-4 dark:text-white">Sfondi caricati</h2>
            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
              {galleryData.map(item => (
                 <div key={`${item.target}-${item.mode}`} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-800/50 hover:border-indigo-300 hover:shadow-md transition-all">
@@ -635,7 +635,7 @@ export default function StoryTemplateConfig() {
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
                     <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                    <span className="text-sm font-medium">Nessun template caricato</span>
+                    <span className="text-sm font-medium">Nessuno sfondo caricato: le storie escono col fondo neutro</span>
                   </div>
                 )}
              </div>
@@ -648,9 +648,9 @@ export default function StoryTemplateConfig() {
             <div>
               <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Settings className="w-6 h-6 text-indigo-500" />
-                Impostazioni Template
+                Come vengono fatte le storie
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Sfondi per Target e Configurazioni per Modalità</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Uno sfondo per ogni zona, una disposizione dei testi per ogni tipo</p>
             </div>
             {savedStatus && (
               <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
@@ -664,28 +664,28 @@ export default function StoryTemplateConfig() {
             {/* Mode and Target Selectors */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 dark:text-gray-400">Modalità (Stile Testi)</label>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Che tipo di storia stai impostando</label>
                 <select
                   value={selectedMode}
                   onChange={(e) => setSelectedMode(e.target.value as any)}
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
                 >
                   <option value="spotted">Spotted</option>
-                  <option value="ricerca">Ricerca (Solo testo)</option>
+                  <option value="ricerca">Ricerca (solo testo)</option>
                   <option value="sondaggio">Sondaggio</option>
-                  <option value="risultati">Risultati Spotted</option>
-                  <option value="risultati_sondaggio">Risultati Sondaggio</option>
+                  <option value="risultati">Risultati spotted</option>
+                  <option value="risultati_sondaggio">Risultati sondaggio</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 dark:text-gray-400">Ateneo/Zona (Sfondo)</label>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Per quale zona (cambia solo lo sfondo)</label>
                 <select
                   value={selectedTarget}
                   onChange={(e) => setSelectedTarget(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
                 >
                   {targetOptions.map(opt => (
-                    <option key={opt} value={opt}>{opt === "DEFAULT" ? "Generico (Default)" : opt}</option>
+                    <option key={opt} value={opt}>{opt === "DEFAULT" ? "Tutte le zone senza sfondo proprio" : opt}</option>
                   ))}
                 </select>
               </div>
@@ -704,7 +704,7 @@ export default function StoryTemplateConfig() {
 
             {/* Background Template */}
             <div className="space-y-3">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+              <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" /> Sfondo ({selectedTarget} - {selectedMode})
               </label>
               
@@ -735,7 +735,7 @@ export default function StoryTemplateConfig() {
 
             {/* Box Selector */}
             <div className="space-y-4">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+              <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <Type className="w-4 h-4" /> Selezione Riquadro Testo
               </label>
 

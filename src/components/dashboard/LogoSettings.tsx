@@ -208,7 +208,7 @@ export function LogoSettings() {
       {/* Impostazioni scala loghi */}
       <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/30 rounded-xl space-y-4">
         <div className="flex items-center justify-between">
-            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Grandezze Loghi/Scritte (Bacheca)</h4>
+            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Quanto sono grandi sulla bacheca</h4>
             <div className="flex items-center gap-2">
               {scalesDirty && !savingScales && (
                 <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
@@ -239,7 +239,7 @@ export function LogoSettings() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Scritta Automatica Zona</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">La scritta con il nome della zona</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.zoneScale} onChange={(e) => {
                   const newScales = {...scales, zoneScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -248,7 +248,7 @@ export function LogoSettings() {
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Scritta/Logo Agorà (Sotto)</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Il marchio Agorà, sotto</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.agoraScale} onChange={(e) => {
                   const newScales = {...scales, agoraScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -257,7 +257,7 @@ export function LogoSettings() {
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Distanza Verticale</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Quanto spazio fra le due</label>
               <input type="range" min="-20" max="40" step="1" value={scales.spacing} onChange={(e) => {
                   const newScales = {...scales, spacing: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -266,7 +266,7 @@ export function LogoSettings() {
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{scales.spacing}px</div>
            </div>
            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Immagine Logo Personalizzato</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Se carichi un logo tuo, quanto e grande</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.customLogoScale} onChange={(e) => {
                   const newScales = {...scales, customLogoScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -280,7 +280,7 @@ export function LogoSettings() {
       {/* Upload nuovo logo */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
         <div className="flex-1">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1 dark:text-gray-400">Tipo Logo</label>
+          <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Cosa mostri in cima alla bacheca</label>
           <select
             value={selectedSlot}
             onChange={(e) => setSelectedSlot(e.target.value)}
