@@ -37,6 +37,22 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Logo } from "../components/ui/Logo";
 import {
+  IcArchivia,
+  IcCarosello,
+  IcCitta,
+  IcDove,
+  IcElimina,
+  IcIncerta,
+  IcInstagram,
+  IcProfilo,
+  IcQuando,
+  IcStoria,
+  IcTrovata,
+  IcZona,
+  IcAlias,
+  IcAltro,
+} from "../components/ui/AcIcons";
+import {
   LogOut,
   Monitor,
   Smartphone,
@@ -2962,144 +2978,100 @@ export default function DashboardNext() {
                       : "Non identificato";
                   })();
                   return (
-                    <div
+                    <article
                       key={msg.id}
-                      className={`w-full py-5 px-3 -mx-3 rounded-xl ${isSelected ? "bg-indigo-50 dark:bg-indigo-900/30" : "hover:bg-white dark:hover:bg-gray-800/60"} transition-colors relative group cursor-default`}
+                      className={`flex gap-2.5 sm:gap-3 py-5 px-3 -mx-3 rounded-xl transition-colors ${
+                        isSelected
+                          ? "bg-indigo-50 dark:bg-indigo-900/30"
+                          : "hover:bg-white dark:hover:bg-gray-800/60"
+                      } relative group`}
                       onClick={() =>
                         isSelectMode ? toggleSelection(msg.id) : undefined
                       }
                       style={{ cursor: isSelectMode ? "pointer" : "default" }}
                     >
-
-                      <div className="flex justify-between items-start mb-5">
-
-                        <div className="flex items-center gap-3">
-
-                          {isSelectMode && (
-                            <div
-                              className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-indigo-500 border-indigo-500 scale-110 shadow-md" : "border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 group-hover:border-indigo-400"}`}
-                            >
-
-                              {isSelected && (
-                                <div className="w-2 h-2 bg-white dark:bg-gray-800 rounded-full" />
-                              )}
-                            </div>
-                          )}
-                          {isSuperAdmin ? (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!isSelectMode) {
-                                    const target = macroProfiles.find((m) =>
-                                      m.profileIds.includes(profileId),
-                                    );
-                                    if (target) setViewingMacroId(target.id);
-                                    else setEditingProfileId(profileId);
-                                  }
-                                }}
-                                className={`flex items-center gap-2 text-left group/profile ${isSelectMode ? "pointer-events-none" : "cursor-pointer hover:opacity-80 transition-opacity"}`}
-                                title="Gestisci Profilo"
-                              >
-
-                                <div
-                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0 text-[11px]"
-                                  style={{ backgroundColor: profileColor }}
-                                  aria-hidden="true"
-                                >
-                                  {getProfileInitials(displayName) ?? (
-                                    <UserIcon className="w-4 h-4" />
-                                  )}
-                                </div>
-                                <div className="flex flex-col">
-
-                                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
-                                    {displayName}
-                                  </span>
-                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
-
-                                    <Clock className="w-3 h-3" />
-                                    {msg.createdAt
-                                      ? format(
-                                          msg.createdAt.toDate(),
-                                          "d MMM HH:mm",
-                                          { locale: it },
-                                        )
-                                      : "N/A"}
-                                  </span>
-                                </div>
-                              </button>
-                              {msg.profileGroupId && !isSelectMode && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUngroupDevice(msg.id);
-                                  }}
-                                  className="text-[10px] text-gray-400 dark:text-gray-500 hover:text-red-500 hover:underline mt-1 ml-1 self-start"
-                                >
-
-                                  (Rimuovi Gruppo)
-                                </button>
-                              )}
-                            </>
-                          ) : (
-                            <div className="flex items-center gap-2 text-left">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0 bg-gray-400">
-                                <UserIcon className="w-4 h-4" />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Non identificato</span>
-                                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1 mt-0.5">
-                                  <Clock className="w-3 h-3" />
-                                  {msg.createdAt
-                                    ? format(
-                                        msg.createdAt.toDate(),
-                                        "d MMM HH:mm",
-                                        { locale: it },
-                                      )
-                                    : "N/A"}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        {!isSelectMode && (
-                          <div className="flex items-center gap-1 shrink-0">
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleArchiveStatus(msg.id, !!msg.isArchived);
-                              }}
-                              className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${msg.isArchived ? "text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 " : "text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 "}`}
-                              title={
-                                msg.isArchived
-                                  ? "Sposta in Nuovi"
-                                  : "Segna come Letto/Archivia"
-                              }
-                            >
-
-                              {msg.isArchived ? (
-                                <ArchiveRestore className="w-4 h-4" />
-                              ) : (
-                                <Archive className="w-4 h-4" />
-                              )}
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMessage(msg.id);
-                              }}
-                              className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-full transition-colors"
-                              title="Elimina messaggio"
-                              aria-label="Elimina messaggio"
-                            >
-
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                      {/* Colonna di sinistra: scelta e stato di lettura.
+                          La casella compare al passaggio del mouse, cosi' non
+                          serve piu' entrare in "modalita' selezione" da un
+                          pulsante lontano dalla lista su cui agisce. */}
+                      <div className="shrink-0 w-4 sm:w-5 pt-1 flex flex-col items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelection(msg.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Seleziona il messaggio di ${displayName}`}
+                          className={`w-[15px] h-[15px] rounded accent-indigo-600 transition-opacity ${
+                            isSelected || isSelectMode
+                              ? "opacity-100"
+                              : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          }`}
+                        />
+                        {!msg.isArchived && (
+                          <span
+                            className="w-[6px] h-[6px] rounded-full bg-indigo-600"
+                            title="Non letto"
+                          />
                         )}
                       </div>
+
+                      {/* Il quadrato del profilo: quadrato e non cerchio,
+                          perche' il cerchio e' gia' la casella di scelta. */}
+                      {isSuperAdmin ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isSelectMode) return;
+                            const target = macroProfiles.find((m) =>
+                              m.profileIds.includes(profileId),
+                            );
+                            if (target) setViewingMacroId(target.id);
+                            else setEditingProfileId(profileId);
+                          }}
+                          title="Apri il profilo"
+                          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold hover:opacity-85 transition-opacity"
+                          style={{ backgroundColor: profileColor }}
+                        >
+                          {getProfileInitials(displayName) ?? (
+                            <IcProfilo className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      ) : (
+                        <div className="shrink-0 w-7 h-7 rounded-lg bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white">
+                          <IcProfilo className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <span
+                            className={`text-[13px] font-bold truncate ${
+                              displayName.startsWith("Non identificato")
+                                ? "text-gray-400 dark:text-gray-500"
+                                : "text-gray-900 dark:text-gray-100"
+                            }`}
+                          >
+                            {isSuperAdmin ? displayName : "Non identificato"}
+                          </span>
+                          {msg.profileGroupId && !isSelectMode && isSuperAdmin && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUngroupDevice(msg.id);
+                              }}
+                              className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 hover:text-red-600 hover:underline shrink-0"
+                            >
+                              gruppo manuale · rimuovi
+                            </button>
+                          )}
+                          <span className="ml-auto text-[11.5px] tabular-nums text-gray-400 dark:text-gray-500 shrink-0">
+                            {msg.createdAt
+                              ? format(msg.createdAt.toDate(), "d MMM HH:mm", {
+                                  locale: it,
+                                })
+                              : "—"}
+                          </span>
+                        </div>
                       {/* Core Content */}
                       <div className="mb-4">
                         {msg.type === "sondaggio" && (
@@ -3136,7 +3108,7 @@ export default function DashboardNext() {
                           <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                             {msg.city && (
                               <div className="flex items-center gap-1.5">
-                                <Globe className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" />
+                                <IcCitta className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                                 <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.city}</span>
                                 </div>
@@ -3144,7 +3116,7 @@ export default function DashboardNext() {
                             )}
                             {msg.area && (
                               <div className="flex items-center gap-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                <IcZona className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                                 <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.area}</span>
                                 </div>
@@ -3152,7 +3124,7 @@ export default function DashboardNext() {
                             )}
                             {msg.when && (
                               <div className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 shrink-0" />
+                                <IcQuando className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                                 <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.when}</span>
                                 </div>
@@ -3160,7 +3132,7 @@ export default function DashboardNext() {
                             )}
                             {msg.where && (
                               <div className="flex items-center gap-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                                <IcDove className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                                 <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.where}</span>
                                 </div>
@@ -3181,7 +3153,7 @@ export default function DashboardNext() {
                                 className={`flex items-center gap-2 text-purple-600 dark:text-purple-400 ${!msg.instagram ? "pr-16" : ""}`}
                               >
 
-                                <Instagram className="w-4 h-4 shrink-0" />
+                                <IcInstagram className="w-3.5 h-3.5 shrink-0" />
                                 <span className="sr-only">Instagram associati</span>
                                 {hasMultiple && (
                                   <span className="text-[9px] font-black bg-purple-200/80 dark:bg-purple-900/60 px-1.5 py-0.5 rounded text-purple-800 dark:text-purple-300 shadow-sm shrink-0">
@@ -3210,7 +3182,7 @@ export default function DashboardNext() {
                           msg.instagram ? (
                             <div className="flex flex-wrap items-center gap-2">
                               <div className={`flex items-center gap-2 text-purple-600 dark:text-purple-400`}>
-                                <Instagram className="w-4 h-4 shrink-0" />
+                                <IcInstagram className="w-3.5 h-3.5 shrink-0" />
                                 <span className="sr-only">Instagram utente</span>
                               </div>
                               <div className="flex flex-wrap gap-1.5">
@@ -3230,9 +3202,9 @@ export default function DashboardNext() {
                           profiles[profileId].possibleAliases!.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
 
-                              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 ">
+                              <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300 ">
 
-                                <ShieldAlert className="w-4 h-4 shrink-0" />
+                                <IcAlias className="w-3.5 h-3.5 shrink-0" />
                                 <span className="text-[11px] font-bold">
                                   Possibili alias ({profiles[profileId].possibleAliases!.length})
                                 </span>
@@ -3403,31 +3375,58 @@ export default function DashboardNext() {
                           )}
                         </div>
                       </div>
-                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExportingMessage(msg);
-                          }}
-                          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors flex items-center gap-1.5 group"
-                        >
-                           <ImageIcon className="w-3.5 h-3.5" /> Esporta storia
-                        </button>
-
-                        {isSuperAdmin && (
-                          <button 
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              const docRef = doc(db, "messages", msg.id);
-                              await updateDoc(docRef, {
-                                isValidatedForCarousel: !msg.isValidatedForCarousel
-                              });
-                            }}
-                            className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${msg.isValidatedForCarousel ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30" : "text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40"}`}
-                          >
-                            {msg.isValidatedForCarousel ? <Check className="w-3.5 h-3.5" /> : <LayoutTemplate className="w-3.5 h-3.5" />}
-                            {msg.isValidatedForCarousel ? "Nel carosello" : "Carosello"}
-                          </button>
+                      <div className="mt-3 flex lg:hidden items-center gap-1.5">
+                        {!isSelectMode && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleArchiveStatus(msg.id, !!msg.isArchived);
+                              }}
+                              className="flex-1 h-9 px-3 rounded-lg text-[12.5px] font-bold flex items-center justify-center gap-1.5 bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                            >
+                              <IcArchivia className="w-4 h-4" />
+                              {msg.isArchived ? "Ripristina" : "Archivia"}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExportingMessage(msg);
+                              }}
+                              aria-label="Esporta storia"
+                              className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300"
+                            >
+                              <IcStoria className="w-[17px] h-[17px]" />
+                            </button>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await updateDoc(doc(db, "messages", msg.id), {
+                                    isValidatedForCarousel: !msg.isValidatedForCarousel,
+                                  });
+                                }}
+                                aria-label="Carosello"
+                                className={`w-9 h-9 rounded-lg border flex items-center justify-center ${
+                                  msg.isValidatedForCarousel
+                                    ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-700 dark:text-emerald-300"
+                                    : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                                }`}
+                              >
+                                <IcCarosello className="w-[17px] h-[17px]" />
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMessage(msg.id);
+                              }}
+                              aria-label="Elimina messaggio"
+                              className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400"
+                            >
+                              <IcElimina className="w-[17px] h-[17px]" />
+                            </button>
+                          </>
                         )}
                       </div>
 
@@ -3919,7 +3918,77 @@ export default function DashboardNext() {
                         </div>
                       </details>
                       )}
-                    </div>
+                      </div>
+
+                      {/* I comandi stanno a destra della riga da lg in su, e
+                          scendono sotto il testo quando lo schermo si
+                          stringe: "Archivia" a tutta larghezza sotto il
+                          pollice. Archivia e' pieno perche' e' il gesto che
+                          ripeti di piu'; eliminare, che e' irreversibile,
+                          vive dentro il menu. */}
+                      {!isSelectMode && (
+                        <div className="hidden lg:flex shrink-0 items-start gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleArchiveStatus(msg.id, !!msg.isArchived);
+                            }}
+                            title={msg.isArchived ? "Rimetti fra i nuovi" : "Archivia"}
+                            className="h-8 px-2.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white transition-colors"
+                          >
+                            <IcArchivia className="w-4 h-4" />
+                            <span className="hidden xl:inline">
+                              {msg.isArchived ? "Ripristina" : "Archivia"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExportingMessage(msg);
+                            }}
+                            title="Esporta storia"
+                            aria-label="Esporta storia"
+                            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:border-gray-300 transition-colors"
+                          >
+                            <IcStoria className="w-4 h-4" />
+                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await updateDoc(doc(db, "messages", msg.id), {
+                                  isValidatedForCarousel: !msg.isValidatedForCarousel,
+                                });
+                              }}
+                              title={
+                                msg.isValidatedForCarousel
+                                  ? "Togli dal carosello"
+                                  : "Aggiungi al carosello"
+                              }
+                              aria-label="Carosello"
+                              className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors ${
+                                msg.isValidatedForCarousel
+                                  ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                                  : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300"
+                              }`}
+                            >
+                              <IcCarosello className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMessage(msg.id);
+                            }}
+                            title="Elimina messaggio"
+                            aria-label="Elimina messaggio"
+                            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-200 transition-colors"
+                          >
+                            <IcElimina className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </article>
                   );
                 })}
               </div>
