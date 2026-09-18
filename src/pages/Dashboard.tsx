@@ -179,7 +179,7 @@ function SkinSwitch({
   // cambiare niente, concludendo che fosse rotto.
   return (
     <div
-      className="fixed bottom-4 left-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/90 dark:bg-gray-700/95 backdrop-blur shadow-lg"
+      className="fixed bottom-4 right-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/70 hover:bg-gray-900/95 dark:bg-gray-700/80 dark:hover:bg-gray-700 backdrop-blur shadow-lg opacity-60 hover:opacity-100 transition-all"
       role="group"
       aria-label="Disegno della dashboard"
     >

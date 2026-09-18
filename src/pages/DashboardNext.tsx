@@ -2676,34 +2676,19 @@ export default function DashboardNext() {
 
               {/* Carousel Tools */}
               {isSuperAdmin && (
-                <div className="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-4 shadow-sm flex flex-col justify-between gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                       <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
-                         <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                       </div>
-                       <div className="flex flex-col">
-                         <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-none">Carosello IG</h3>
-                         <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold mt-1">
-                           Esporta ({carouselValidatedMessages.length}/20)
-                         </p>
-                       </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveTab("carousel")}
-                      className={`w-full px-3 py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm ${carouselValidatedMessages.length >= 20 ? "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 text-white" : "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white"}`}
-                    >
-                      {carouselValidatedMessages.length >= 20 ? (
-                        <>Esporta <Download className="w-3.5 h-3.5 shrink-0" /></>
-                      ) : (
-                        <>Apri Editor <Settings className="w-3.5 h-3.5 shrink-0" /></>
-                      )}
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={() => setActiveTab("carousel")}
+                  className="shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-indigo-300 transition-colors text-left"
+                >
+                  <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                    Carosello
+                  </span>
+                  <span className="text-sm font-bold tabular-nums text-indigo-600 dark:text-indigo-400">
+                    {carouselValidatedMessages.length}
+                    <span className="text-gray-400">/20</span>
+                  </span>
+                </button>
               )}
             </div>
 
@@ -3145,34 +3130,6 @@ export default function DashboardNext() {
                         )}
                       </div>
                       
-                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExportingMessage(msg);
-                          }}
-                          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors flex items-center gap-1.5 group"
-                        >
-                           <ImageIcon className="w-3.5 h-3.5" /> Esporta storia
-                        </button>
-
-                        {isSuperAdmin && (
-                          <button 
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              const docRef = doc(db, "messages", msg.id);
-                              await updateDoc(docRef, {
-                                isValidatedForCarousel: !msg.isValidatedForCarousel
-                              });
-                            }}
-                            className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${msg.isValidatedForCarousel ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30" : "text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40"}`}
-                          >
-                            {msg.isValidatedForCarousel ? <Check className="w-3.5 h-3.5" /> : <LayoutTemplate className="w-3.5 h-3.5" />}
-                            {msg.isValidatedForCarousel ? "Nel carosello" : "Carosello"}
-                          </button>
-                        )}
-                      </div>
-
                       <div className="space-y-2.5 mb-3">
 
                         {(msg.city || msg.area || msg.when || msg.where) && (
@@ -3180,8 +3137,7 @@ export default function DashboardNext() {
                             {msg.city && (
                               <div className="flex items-center gap-1.5">
                                 <Globe className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" />
-                                <div className="text-xs text-gray-700 dark:text-gray-300">
-                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Città</span>
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.city}</span>
                                 </div>
                               </div>
@@ -3189,8 +3145,7 @@ export default function DashboardNext() {
                             {msg.area && (
                               <div className="flex items-center gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                                <div className="text-xs text-gray-700 dark:text-gray-300">
-                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Zona</span>
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.area}</span>
                                 </div>
                               </div>
@@ -3198,8 +3153,7 @@ export default function DashboardNext() {
                             {msg.when && (
                               <div className="flex items-center gap-1.5">
                                 <Calendar className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 shrink-0" />
-                                <div className="text-xs text-gray-700 dark:text-gray-300">
-                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Quando</span>
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.when}</span>
                                 </div>
                               </div>
@@ -3207,8 +3161,7 @@ export default function DashboardNext() {
                             {msg.where && (
                               <div className="flex items-center gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
-                                <div className="text-xs text-gray-700 dark:text-gray-300">
-                                  <span className="opacity-60 mr-1 text-[10px] uppercase font-bold tracking-wider text-gray-500">Dove</span>
+                                <div className="text-xs text-gray-600 dark:text-gray-300">
                                   <span className="font-semibold">{msg.where}</span>
                                 </div>
                               </div>
@@ -3310,7 +3263,6 @@ export default function DashboardNext() {
                             <div
                               className={`flex items-center gap-2 ${(msg.city || msg.area) ? "text-indigo-600 dark:text-indigo-300" : "text-gray-500 dark:text-gray-400 "}`}
                             >
-                              <MapPin className="w-4 h-4 shrink-0" />
                               <span className="sr-only">Zona selezionata</span>
                             </div>
                             {!isSelectMode && editingMessageId !== `loc-${msg.id}` && (
@@ -3323,7 +3275,7 @@ export default function DashboardNext() {
                                 }}
                                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md text-gray-500 dark:text-gray-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 border border-dashed border-gray-300 dark:border-gray-600"
                               >
-                                {(msg.city || msg.area) ? "modifica" : "+ zona"}
+                                {(msg.city || msg.area) ? "Cambia zona" : "+ Aggiungi zona"}
                               </button>
                             )}
                           </div>
@@ -3371,14 +3323,7 @@ export default function DashboardNext() {
                                 </button>
                               </div>
                             </div>
-                          ) : (
-                            (msg.city || msg.area) && (
-                              <div className="font-semibold text-sm break-words flex flex-wrap gap-2 mt-2">
-                                {msg.city && <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-md text-xs">{msg.city}</span>}
-                                {msg.area && <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-xs">{msg.area}</span>}
-                              </div>
-                            )
-                          )}
+                          ) : null}
                         </div>
                         {/* Resolution Section */}
                         <div
@@ -3395,7 +3340,6 @@ export default function DashboardNext() {
                               className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600 dark:text-sky-300" : "text-gray-500 dark:text-gray-400 "}`}
                             >
 
-                              <CheckCircle2 className="w-4 h-4 shrink-0" />
                               <span className="sr-only">
                                 {msg.resolution ? "Risoluzione" : "Aggiungi risoluzione"}
                               </span>
@@ -3407,10 +3351,12 @@ export default function DashboardNext() {
                                   setEditingMessageId(msg.id);
                                   setResolutionInput(msg.resolution || "");
                                 }}
-                                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 ${msg.resolution ? "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 hover:bg-sky-200 shadow-sm" : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-300"}`}
+                                className={`text-[11px] font-semibold px-2 py-0.5 rounded-md transition-colors ${msg.resolution ? "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" : "text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 hover:text-emerald-700 hover:border-emerald-300"}`}
                               >
 
-                                {msg.resolution ? "Modifica" : "Inserisci"}
+                                {msg.resolution
+                                  ? `Risolto: ${msg.resolution.length > 34 ? msg.resolution.slice(0, 34) + "…" : msg.resolution}`
+                                  : "+ Com'è andata a finire"}
                               </button>
                             )}
                           </div>
@@ -3449,7 +3395,7 @@ export default function DashboardNext() {
                               </div>
                             </div>
                           ) : (
-                            msg.resolution && (
+                            false && (
                               <div className="font-semibold text-sm break-words whitespace-pre-wrap mt-2">
                                 {msg.resolution}
                               </div>
@@ -3457,11 +3403,39 @@ export default function DashboardNext() {
                           )}
                         </div>
                       </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExportingMessage(msg);
+                          }}
+                          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors flex items-center gap-1.5 group"
+                        >
+                           <ImageIcon className="w-3.5 h-3.5" /> Esporta storia
+                        </button>
+
+                        {isSuperAdmin && (
+                          <button 
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const docRef = doc(db, "messages", msg.id);
+                              await updateDoc(docRef, {
+                                isValidatedForCarousel: !msg.isValidatedForCarousel
+                              });
+                            }}
+                            className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${msg.isValidatedForCarousel ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30" : "text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40"}`}
+                          >
+                            {msg.isValidatedForCarousel ? <Check className="w-3.5 h-3.5" /> : <LayoutTemplate className="w-3.5 h-3.5" />}
+                            {msg.isValidatedForCarousel ? "Nel carosello" : "Carosello"}
+                          </button>
+                        )}
+                      </div>
+
                       {/* Telemetry Details */}
                       {isSuperAdmin && (
                         <details className="group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none">
 
-                          <summary className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                          <summary className="flex items-center justify-between text-[11.5px] font-semibold text-gray-400 dark:text-gray-500 outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
 
                             <div className="flex items-center gap-2">
 
