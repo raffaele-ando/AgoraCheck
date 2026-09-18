@@ -109,3 +109,45 @@ export const IcConfigurazione = (p: IconProps) => <Svg {...p}><path d="M4 7h10M1
 
 /** Altro — solo azioni rare */
 export const IcAltro = (p: IconProps) => <Svg {...p}><circle cx="5.5" cy="12" r="1.3" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" /><circle cx="18.5" cy="12" r="1.3" fill="currentColor" stroke="none" /></Svg>;
+
+/* --- Secondo gruppo: i segni che servivano fuori dalla lista messaggi.
+ * Prima li coprivano ancora icone lucide, con gli stessi doppioni di
+ * significato: lo scudo d'allarme faceva insieme "accesso negato" e
+ * "identita' incerta", il chip faceva insieme "dati tecnici" e "questo
+ * dispositivo". --- */
+
+/** Spunta: questa cosa e' scelta, o questa regola e' scattata. */
+export const IcSpunta = (p: IconProps) => <Svg {...p}><path d="M4.5 12.5l5 5 10-11" /></Svg>;
+
+/** Copia negli appunti */
+export const IcCopia = (p: IconProps) => <Svg {...p}><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M15 5.5a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2" /></Svg>;
+
+/** Scarica un file */
+export const IcScarica = (p: IconProps) => <Svg {...p}><path d="M12 3.5v12M7.5 11l4.5 4.5 4.5-4.5M4 20.5h16" /></Svg>;
+
+/** Un documento, un rapporto scritto */
+export const IcDocumento = (p: IconProps) => <Svg {...p}><path d="M14 3.5H7a1.5 1.5 0 00-1.5 1.5v14A1.5 1.5 0 007 20.5h10a1.5 1.5 0 001.5-1.5V8L14 3.5z" /><path d="M14 3.5V8h4.5M9 13h6M9 16.5h4" /></Svg>;
+
+/** Accesso negato: un guasto o un permesso mancante, non un'incertezza. */
+export const IcBloccato = (p: IconProps) => <Svg {...p}><rect x="5" y="10.5" width="14" height="9.5" rx="2" /><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3" /></Svg>;
+
+/** Attivita' nel tempo: quando questa persona si e' fatta viva. */
+export const IcAttivita = (p: IconProps) => <Svg {...p}><path d="M3 13h3.5l2.5-7 3.5 14 2.5-7H21" /></Svg>;
+
+/** Dati tecnici grezzi */
+export const IcTecnico = (p: IconProps) => <Svg {...p}><path d="M9 8.5L5.5 12 9 15.5M15 8.5l3.5 3.5-3.5 3.5M13.5 5.5l-3 13" /></Svg>;
+
+/** Chiudi questo pannello */
+export const IcChiudi = (p: IconProps) => <Svg {...p}><path d="M6 6l12 12M18 6L6 18" /></Svg>;
+
+/** Risoluzione dello schermo */
+export const IcSchermo = (p: IconProps) => <Svg {...p}><rect x="3" y="4.5" width="18" height="12" rx="1.5" /><path d="M9 20h6M12 16.5V20" /></Svg>;
+
+/** Apri o chiudi un pannello (ruota di 180 gradi da aperto) */
+export const IcApri = (p: IconProps) => <Svg {...p}><path d="M6 9.5l6 6 6-6" /></Svg>;
+
+/** Impronta: i dati con cui si riconosce un dispositivo */
+export const IcImpronta = (p: IconProps) => <Svg {...p}><path d="M12 4.5a7.5 7.5 0 00-7.5 7.5v2M12 4.5a7.5 7.5 0 017.5 7.5v3.5M8 12a4 4 0 018 0v5M12 12v7" /></Svg>;
+
+/** Porta altrove: un collegamento, un passaggio successivo */
+export const IcFreccia = (p: IconProps) => <Svg {...p}><path d="M5 12h13M12.5 6l6 6-6 6" /></Svg>;

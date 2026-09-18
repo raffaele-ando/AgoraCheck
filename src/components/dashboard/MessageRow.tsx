@@ -12,17 +12,6 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { LOCATIONS } from "../../data/locations";
 import {
-  Activity,
-  BarChart3,
-  ChevronDown,
-  Cpu,
-  Fingerprint as DeviceIcon,
-  Globe,
-  Monitor,
-  Search,
-  Smartphone,
-} from "lucide-react";
-import {
   IcAlias,
   IcArchivia,
   IcCarosello,
@@ -34,6 +23,13 @@ import {
   IcQuando,
   IcStoria,
   IcZona,
+  IcApri,
+  IcAttivita,
+  IcDispositivo,
+  IcImpronta,
+  IcRete,
+  IcSchermo,
+  IcTecnico,
 } from "../ui/AcIcons";
 
 export interface MessageRowProps {
@@ -512,12 +508,12 @@ export default function MessageRow(props: MessageRowProps) {
 
             <div className="flex items-center gap-2">
 
-              <DeviceIcon className="w-4 h-4 text-indigo-400" />
+              <IcImpronta className="w-4 h-4 text-indigo-400" />
               Dettagli tecnici
             </div>
             <div className="flex items-center gap-2">
 
-              <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
+              <IcApri className="w-4 h-4 group-open:rotate-180 transition-transform" />
             </div>
           </summary>
           <div className="pt-4 pb-1 space-y-4 opacity-0 group-open:opacity-100 transition-opacity duration-300">
@@ -536,7 +532,7 @@ export default function MessageRow(props: MessageRowProps) {
 
               <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
 
-                <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                <IcDispositivo className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
                 <div className="min-w-0">
 
                   <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
@@ -554,7 +550,7 @@ export default function MessageRow(props: MessageRowProps) {
               </div>
               <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
 
-                <Smartphone className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                <IcSchermo className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
                 <div className="min-w-0">
 
                   <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
@@ -569,7 +565,7 @@ export default function MessageRow(props: MessageRowProps) {
               </div>
               <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 col-span-2 sm:col-span-1">
 
-                <Globe className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                <IcRete className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
                 <div className="min-w-0">
 
                   <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
@@ -606,7 +602,7 @@ export default function MessageRow(props: MessageRowProps) {
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
                       <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                        <Globe className="w-3 h-3 text-blue-500" />
+                        <IcRete className="w-3 h-3 text-blue-500" />
                         Rete & Posizione
                       </strong>
                       <div>
@@ -655,7 +651,7 @@ export default function MessageRow(props: MessageRowProps) {
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
                       <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                        <Cpu className="w-3 h-3 text-purple-500" />
+                        <IcTecnico className="w-3 h-3 text-purple-500" />
                         Hardware
                       </strong>
                       <div
@@ -730,7 +726,7 @@ export default function MessageRow(props: MessageRowProps) {
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
                       <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                        <Activity className="w-3 h-3 text-orange-500" />
+                        <IcAttivita className="w-3 h-3 text-orange-500" />
                         Comportamento
                       </strong>
                       <div>
@@ -824,7 +820,7 @@ export default function MessageRow(props: MessageRowProps) {
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
 
                       <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                        <Monitor className="w-3 h-3 text-emerald-500" />
+                        <IcDispositivo className="w-3 h-3 text-emerald-500" />
                         Software / Hash
                       </strong>
                       <div className="break-words whitespace-pre-wrap">

@@ -42,64 +42,37 @@ import MessagesRail from "../components/dashboard/MessagesRail";
 import ConfirmDialog from "../components/dashboard/ConfirmDialog";
 import NextHeader from "../components/dashboard/NextHeader";
 import {
-  IcConfigurazione,
-  IcMessaggi,
-  IcStatistiche,
-} from "../components/ui/AcIcons";
-import SelectionBar from "../components/dashboard/SelectionBar";
-import {
+  IcAlias,
+  IcAltro,
   IcArchivia,
+  IcAttivita,
+  IcBloccato,
   IcCarosello,
+  IcCerca,
+  IcChiudi,
   IcCitta,
+  IcConfigurazione,
+  IcCopia,
+  IcDispositivo,
+  IcDocumento,
   IcDove,
   IcElimina,
   IcIncerta,
   IcInstagram,
+  IcMessaggi,
+  IcOra,
   IcProfilo,
   IcQuando,
+  IcRete,
+  IcScarica,
+  IcSpunta,
+  IcStatistiche,
   IcStoria,
+  IcTecnico,
   IcTrovata,
   IcZona,
-  IcAlias,
-  IcAltro,
 } from "../components/ui/AcIcons";
-import {
-  LogOut,
-  Monitor,
-  Smartphone,
-  Globe,
-  Clock,
-  Inbox,
-  MapPin,
-  Calendar,
-  Search,
-  Activity,
-  Trash2,
-  Fingerprint as DeviceIcon,
-  ChevronDown,
-  User as UserIcon,
-  ShieldAlert,
-  Cpu,
-  CheckCircle2,
-  Inbox as InboxIcon,
-  Archive,
-  ArchiveRestore,
-  Instagram,
-  X,
-  Layers,
-  Moon,
-  Sun,
-  Image as ImageIcon,
-  BarChart3,
-  MessageSquare,
-  LayoutTemplate,
-  Settings,
-  Sparkles,
-  Check,
-  Download,
-  FileText,
-  Copy,
-} from "lucide-react";
+import SelectionBar from "../components/dashboard/SelectionBar";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
@@ -2477,7 +2450,7 @@ export default function DashboardNext() {
                     fallita. */}
                 {snapshotsError ? (
                   <>
-                    <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <IcBloccato className="w-12 h-12 text-red-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                       Impossibile caricare i dati
                     </h3>
@@ -2493,7 +2466,7 @@ export default function DashboardNext() {
                   </>
                 ) : hasActiveFilters ? (
                   <>
-                    <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <IcCerca className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                       Nessun risultato per i filtri attivi
                     </h3>
@@ -2510,7 +2483,7 @@ export default function DashboardNext() {
                   </>
                 ) : (
                   <>
-                    <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <IcMessaggi className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
                       Nessun messaggio
                     </h3>
@@ -2625,7 +2598,7 @@ export default function DashboardNext() {
               <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
                 {snapshotsError ? (
                   <>
-                    <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <IcBloccato className="w-12 h-12 text-red-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                       Impossibile caricare i profili
                     </h3>
@@ -2641,7 +2614,7 @@ export default function DashboardNext() {
                   </>
                 ) : (
                   <>
-                    <UserIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <IcProfilo className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
                       Nessun profilo identificato
                     </h3>
@@ -2700,7 +2673,7 @@ export default function DashboardNext() {
                           >
 
                             {isProfileSelected && (
-                              <CheckCircle2 className="w-4 h-4" />
+                              <IcSpunta className="w-4 h-4" />
                             )}
                           </div>
                         </div>
@@ -2715,7 +2688,7 @@ export default function DashboardNext() {
                           aria-hidden="true"
                         >
                           {getProfileInitials(macro.name) ?? (
-                            <UserIcon className="w-5 h-5" />
+                            <IcProfilo className="w-5 h-5" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -2743,7 +2716,7 @@ export default function DashboardNext() {
                               className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide"
                               title="Identità dedotta da dati storici senza token: potrebbe raggruppare persone diverse con lo stesso modello di dispositivo."
                             >
-                              <ShieldAlert className="w-3 h-3" /> Identità incerta
+                              <IcIncerta className="w-3 h-3" /> Identità incerta
                             </div>
                           )}
                         </div>
@@ -2811,7 +2784,7 @@ export default function DashboardNext() {
                         <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
                           <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-1 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Ultima Attività
+                            <IcOra className="w-3 h-3" /> Ultima Attività
                           </div>
                           <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 ">
 
@@ -2828,7 +2801,7 @@ export default function DashboardNext() {
                         <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
                           <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-1 flex items-center gap-1">
-                            <Activity className="w-3 h-3" /> Tempo Speso
+                            <IcAttivita className="w-3 h-3" /> Tempo Speso
                           </div>
                           <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 ">
 
@@ -2842,7 +2815,7 @@ export default function DashboardNext() {
                         <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 col-span-2">
 
                           <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-1 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> Ultimo Indirizzo IP
+                            <IcZona className="w-3 h-3" /> Ultimo Indirizzo IP
                           </div>
                           <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 break-all font-mono">
 
@@ -2856,7 +2829,7 @@ export default function DashboardNext() {
                         <div>
 
                           <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <ShieldAlert className="w-3.5 h-3.5" /> Possibili Alias
+                            <IcIncerta className="w-3.5 h-3.5" /> Possibili Alias
                           </div>
                           <div className="flex flex-wrap gap-1.5">
 
@@ -2880,7 +2853,7 @@ export default function DashboardNext() {
                         <div>
 
                           <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Instagram className="w-3.5 h-3.5" /> Instagram
+                            <IcInstagram className="w-3.5 h-3.5" /> Instagram
                             Associati
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -3430,7 +3403,7 @@ export default function DashboardNext() {
                           >
 
                             {isSelected && (
-                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <IcSpunta className="w-3.5 h-3.5" />
                             )}
                           </div>
                           <div
@@ -3442,7 +3415,7 @@ export default function DashboardNext() {
                             }}
                           >
 
-                            <UserIcon className="w-5 h-5" />
+                            <IcProfilo className="w-5 h-5" />
                           </div>
                           <div className="min-w-0 flex-1">
 
@@ -3619,7 +3592,7 @@ export default function DashboardNext() {
                   }}
                 >
 
-                  <UserIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <IcProfilo className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
 
@@ -3644,7 +3617,7 @@ export default function DashboardNext() {
                 aria-label="Chiudi finestra"
               >
 
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <IcChiudi className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
             <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
@@ -3657,14 +3630,14 @@ export default function DashboardNext() {
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <Activity className="w-4 h-4 shrink-0" /> Timeline
+                  <IcAttivita className="w-4 h-4 shrink-0" /> Timeline
                 </button>
                 <button
                   onClick={() => setMacroModalTab("identita")}
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-blue-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <UserIcon className="w-4 h-4 shrink-0" /> Identità (
+                  <IcProfilo className="w-4 h-4 shrink-0" /> Identità (
                   {viewingMacro.profileIds.length})
                 </button>
                 <button
@@ -3672,14 +3645,14 @@ export default function DashboardNext() {
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <Cpu className="w-4 h-4 shrink-0" /> Info Tecniche
+                  <IcTecnico className="w-4 h-4 shrink-0" /> Info Tecniche
                 </button>
                 <button
                   onClick={() => setMacroModalTab("log")}
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "log" ? "bg-orange-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <FileText className="w-4 h-4 shrink-0" /> Log Raggruppamento
+                  <IcDocumento className="w-4 h-4 shrink-0" /> Log Raggruppamento
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
@@ -3691,7 +3664,7 @@ export default function DashboardNext() {
 
                       <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
-                        <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
+                        <IcAttivita className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
                         Timeline Accessi & Messaggi
                       </h4>
                       <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto uppercase tracking-wide">
@@ -3734,7 +3707,7 @@ export default function DashboardNext() {
 
                                   <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700 flex items-center gap-1">
 
-                                    <Clock className="w-3 h-3" />
+                                    <IcOra className="w-3 h-3" />
                                     {msg.createdAt
                                       ? format(
                                           msg.createdAt.toDate(),
@@ -3745,7 +3718,7 @@ export default function DashboardNext() {
                                   {parsedUA && (
                                     <>
                                       <div className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 border ${parsedUA.browser === 'Instagram In-App' ? 'text-pink-600 bg-pink-50 dark:bg-pink-900/40 border-pink-100 dark:border-pink-800' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/40 border-blue-100 dark:border-blue-800'}`}>
-                                        {parsedUA.browser === 'Instagram In-App' ? <Instagram className="w-3 h-3" /> : <Monitor className="w-3 h-3" />} {parsedUA.browser} {parsedUA.instagram?.version ? `v${parsedUA.instagram.version}` : ''}
+                                        {parsedUA.browser === 'Instagram In-App' ? <IcInstagram className="w-3 h-3" /> : <IcDispositivo className="w-3 h-3" />} {parsedUA.browser} {parsedUA.instagram?.version ? `v${parsedUA.instagram.version}` : ''}
                                       </div>
                                       <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
                                         OS: {parsedUA.os}
@@ -3763,7 +3736,7 @@ export default function DashboardNext() {
                                   {msg.deviceInfo?.location && (
                                     <div className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
 
-                                      <MapPin className="w-3 h-3" />
+                                      <IcZona className="w-3 h-3" />
                                       {msg.deviceInfo.location.city ||
                                         "Città ignota"}
                                       ,{" "}
@@ -3784,7 +3757,7 @@ export default function DashboardNext() {
 
                                         {msg.city && (
                                           <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
-                                            <Globe className="w-3 h-3 text-blue-500" />
+                                            <IcRete className="w-3 h-3 text-blue-500" />
                                             <span className="font-bold">
                                               Città:
                                             </span>
@@ -3793,7 +3766,7 @@ export default function DashboardNext() {
                                         )}
                                         {msg.area && (
                                           <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
-                                            <MapPin className="w-3 h-3 text-indigo-500" />
+                                            <IcZona className="w-3 h-3 text-indigo-500" />
                                             <span className="font-bold">
                                               Zona:
                                             </span>
@@ -3802,7 +3775,7 @@ export default function DashboardNext() {
                                         )}
                                         {msg.where && (
                                           <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
-                                            <MapPin className="w-3 h-3 text-emerald-500" />
+                                            <IcZona className="w-3 h-3 text-emerald-500" />
                                             <span className="font-bold">
                                               Dove:
                                             </span>
@@ -3811,7 +3784,7 @@ export default function DashboardNext() {
                                         )}
                                         {msg.when && (
                                           <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
-                                            <Calendar className="w-3 h-3 text-orange-500" />
+                                            <IcQuando className="w-3 h-3 text-orange-500" />
                                             <span className="font-bold">
                                               Quando:
                                             </span>
@@ -3823,7 +3796,7 @@ export default function DashboardNext() {
                                     {msg.resolution ? (
                                       <div className="text-[11px] text-sky-800 dark:text-sky-200 bg-sky-100 dark:bg-sky-900/60 px-3 py-2.5 rounded-lg border border-sky-200 dark:border-sky-800 mt-3 font-medium whitespace-pre-wrap flex items-start gap-2 shadow-inner">
 
-                                        <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                                        <IcSpunta className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
                                         <div>
 
                                           <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600">
@@ -3835,7 +3808,7 @@ export default function DashboardNext() {
                                     ) : msg.instagram ? (
                                       <div className="text-[11px] text-purple-800 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/40 px-3 py-2.5 rounded-lg border border-purple-200 dark:border-purple-800 mt-3 font-medium flex items-start gap-2 shadow-inner">
 
-                                        <Instagram className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
+                                        <IcInstagram className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
                                         <div>
 
                                           <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-purple-600 dark:text-purple-400">
@@ -3866,7 +3839,7 @@ export default function DashboardNext() {
                     <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
                         <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" /> Report di Analisi Gruppo
+                          <IcDocumento className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" /> Report di Analisi Gruppo
                         </h4>
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
                           Analisi sulle metriche hardware ed edges del grafo che ha determinato il raggruppamento di questi dispositivi come singola persona.
@@ -3877,20 +3850,20 @@ export default function DashboardNext() {
                           onClick={() => handleCopyMacroLog(viewingMacro)}
                           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-bold transition-all shadow-sm"
                         >
-                          <Copy className="w-4 h-4" /> Copia
+                          <IcCopia className="w-4 h-4" /> Copia
                         </button>
                         <button
                           onClick={() => handleDownloadMacroLog(viewingMacro)}
                           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white border border-transparent rounded-xl text-xs font-bold transition-all shadow-sm"
                         >
-                          <Download className="w-4 h-4" /> Scarica
+                          <IcScarica className="w-4 h-4" /> Scarica
                         </button>
                       </div>
                     </div>
 
                     <div className="space-y-6">
                       <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
-                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Regole di Match Attivate</h5>
+                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-emerald-600 flex items-center gap-2"><IcSpunta className="w-4 h-4"/> Regole di Match Attivate</h5>
                         {Object.entries(viewingMacro.linkReasons || {}).map(([edgeKey, reasons]) => {
                           const [pid1, pid2] = edgeKey.split("|");
                           const prof1 = profiles[pid1]?.name || pid1;
@@ -3912,7 +3885,7 @@ export default function DashboardNext() {
                       </div>
 
                       <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
-                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><DeviceIcon className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
+                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><IcDispositivo className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewingMacro.profileIds.map((pid: string) => {
                             const fp = (viewingMacro.compFootprints as any)?.[pid];
@@ -3980,7 +3953,7 @@ export default function DashboardNext() {
 
                       <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
-                        <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> Identità
+                        <IcProfilo className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> Identità
                         Separate
                       </h4>
                       <div className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
@@ -4014,7 +3987,7 @@ export default function DashboardNext() {
                                     }}
                                   >
 
-                                    <UserIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    <IcProfilo className="w-4 h-4 sm:w-5 sm:h-5" />
                                   </div>
                                   <div className="flex flex-col min-w-0">
 
@@ -4061,7 +4034,7 @@ export default function DashboardNext() {
                                           </div>
                                           <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 dark:text-gray-500 ">
 
-                                            <Clock className="w-3 h-3" />
+                                            <IcOra className="w-3 h-3" />
                                             {msg.createdAt
                                               ? format(
                                                   msg.createdAt.toDate(),
@@ -4076,7 +4049,7 @@ export default function DashboardNext() {
                                 ) : (
                                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 border-dashed flex flex-col items-center justify-center text-center">
 
-                                    <Activity className="w-6 h-6 text-gray-300 mb-2" />
+                                    <IcAttivita className="w-6 h-6 text-gray-300 mb-2" />
                                     <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                       Nessuno Spotted Inviato
                                     </span>
@@ -4112,7 +4085,7 @@ export default function DashboardNext() {
 
                       <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
-                        <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                        <IcTecnico className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                         Informazioni di Rete e Dispositivo
                       </h4>
                     </div>
@@ -4122,7 +4095,7 @@ export default function DashboardNext() {
 
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
 
-                          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 " />
+                          <IcOra className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 " />
                         </div>
                         <div>
 
@@ -4143,7 +4116,7 @@ export default function DashboardNext() {
 
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
 
-                          <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 " />
+                          <IcAttivita className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 " />
                         </div>
                         <div>
 
@@ -4166,7 +4139,7 @@ export default function DashboardNext() {
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
-                          <DeviceIcon className="w-4 h-4 sm:w-5 sm:h-5" /> Segnali
+                          <IcDispositivo className="w-4 h-4 sm:w-5 sm:h-5" /> Segnali
                           Hardware e Dispositivi (
                           {viewingMacroStats.hardwareSignals.length})
                         </h4>
@@ -4232,7 +4205,7 @@ export default function DashboardNext() {
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-orange-600 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Globe className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP (
+                          <IcRete className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP (
                           {viewingMacroStats.ipAddresses.length +
                             viewingMacroStats.netHints.length}
                           )
@@ -4284,7 +4257,7 @@ export default function DashboardNext() {
                       <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 flex items-center gap-2">
-                          <Cpu className="w-4 h-4 sm:w-5 sm:h-5" /> Configurazione Dispositivo
+                          <IcTecnico className="w-4 h-4 sm:w-5 sm:h-5" /> Configurazione Dispositivo
                         </h4>
                         <div className="flex flex-wrap gap-2.5">
 
@@ -4371,7 +4344,7 @@ export default function DashboardNext() {
               aria-label="Chiudi notifica"
               className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"
             >
-              <X className="w-4 h-4" />
+              <IcChiudi className="w-4 h-4" />
             </button>
           </motion.div>
         ))}

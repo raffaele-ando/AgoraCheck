@@ -26,20 +26,19 @@ import {
 } from "recharts";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import {
-  X,
-  Clock,
-  Monitor,
-  MapPin,
-  Instagram,
-  Cpu,
-  User as UserIcon,
-  ArrowRight,
-  ChevronRight,
-  Activity,
-  Globe,
-  Settings,
-  Smartphone,
-} from "lucide-react";
+  IcAttivita,
+  IcChiudi,
+  IcConfigurazione,
+  IcDispositivo,
+  IcFreccia,
+  IcInstagram,
+  IcOra,
+  IcProfilo,
+  IcRete,
+  IcSchermo,
+  IcTecnico,
+  IcZona,
+} from "../ui/AcIcons";
 interface AnalyticsProps {
   messages: any[];
   profiles: Record<string, any>;
@@ -518,7 +517,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0">
-              <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <IcConfigurazione className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Tracciamento Accessi</h3>
@@ -545,7 +544,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 flex items-center justify-center shrink-0">
-              <Settings className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <IcConfigurazione className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
               <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Modalità Admin (Il tuo dispositivo)</h3>
@@ -575,7 +574,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         <section className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0">
-              <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <IcAttivita className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Avvistamenti & Spotted</h2>
@@ -604,7 +603,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </div>
                 <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
                   <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
-                  <ArrowRight className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
+                  <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`}></div>
               </motion.div>
@@ -708,7 +707,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         <section className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 flex items-center justify-center shrink-0">
-              <UserIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <IcProfilo className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Dispositivi & Identità</h2>
@@ -737,7 +736,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </div>
                 <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
                   <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
-                  <ArrowRight className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
+                  <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`}></div>
               </motion.div>
@@ -749,7 +748,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         <section className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-2xl bg-pink-50 dark:bg-pink-900/40 border border-pink-100 dark:border-pink-800 flex items-center justify-center shrink-0">
-              <Globe className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+              <IcRete className="w-5 h-5 text-pink-600 dark:text-pink-400" />
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Visite & Form</h2>
@@ -778,7 +777,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </div>
                 <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
                   <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
-                  <ArrowRight className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
+                  <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl transition-transform duration-500 pointer-events-none`}></div>
               </motion.div>
@@ -868,7 +867,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                   className="w-10 h-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 rounded-full text-gray-500 dark:text-gray-400 transition-all active:scale-95 shrink-0 ml-4"
                 >
 
-                  <X className="w-5 h-5" />
+                  <IcChiudi className="w-5 h-5" />
                 </button>
               </div>
               {/* Content Body */}
@@ -928,20 +927,20 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
                                         {m.where && (
                                           <span className="flex items-center gap-1">
-                                            <MapPin className="w-3 h-3 text-gray-400 dark:text-gray-500 " />
+                                            <IcZona className="w-3 h-3 text-gray-400 dark:text-gray-500 " />
                                             {m.where}
                                           </span>
                                         )}
                                         {m.when && (
                                           <span className="flex items-center gap-1">
-                                            <Clock className="w-3 h-3 text-gray-400 dark:text-gray-500 " />
+                                            <IcOra className="w-3 h-3 text-gray-400 dark:text-gray-500 " />
                                             {m.when}
                                           </span>
                                         )}
                                       </div>
                                       {m.instagram && (
                                         <div className="text-xs text-pink-600 font-bold mt-2 pt-2 border-t border-gray-50 dark:border-gray-800 flex items-center gap-1.5">
-                                          <Instagram className="w-3 h-3" /> @
+                                          <IcInstagram className="w-3 h-3" /> @
                                           {m.instagram}
                                         </div>
                                       )}
@@ -959,7 +958,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                     {m.deviceInfo?.location && (
                                       <div className="text-[11px] bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 w-max font-bold">
 
-                                        <MapPin className="w-3.5 h-3.5" />
+                                        <IcZona className="w-3.5 h-3.5" />
                                         {m.deviceInfo.location.city},
                                         {m.deviceInfo.location.country}
                                       </div>
@@ -970,7 +969,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                       if (!ip) return null;
                                       return (
                                         <div className="text-[11px] font-mono bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-100 dark:border-orange-800 px-2.5 py-1.5 rounded-lg w-max font-bold flex items-center gap-1.5">
-                                          <Monitor className="w-3.5 h-3.5" />
+                                          <IcDispositivo className="w-3.5 h-3.5" />
                                           IP: {ip}
                                         </div>
                                       );
@@ -1008,7 +1007,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
                             <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
 
-                              <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 " />
+                              <IcOra className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 " />
                               {m.createdAt
                                 ? format(
                                     m.createdAt.toDate(),
@@ -1038,19 +1037,19 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
                                   {m.where && (
                                     <span className="flex items-center gap-1.5">
-                                      <MapPin className="w-3.5 h-3.5" />
+                                      <IcZona className="w-3.5 h-3.5" />
                                       {m.where}
                                     </span>
                                   )}
                                   {m.when && (
                                     <span className="flex items-center gap-1.5">
-                                      <Clock className="w-3.5 h-3.5" /> {m.when}
+                                      <IcOra className="w-3.5 h-3.5" /> {m.when}
                                     </span>
                                   )}
                                 </div>
                                 {m.instagram && (
                                   <div className="text-[11px] bg-pink-50 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 border border-pink-100 dark:border-pink-800 px-2.5 py-1.5 rounded-xl font-black mt-4 self-start flex items-center gap-1.5">
-                                    <Instagram className="w-3.5 h-3.5" /> @
+                                    <IcInstagram className="w-3.5 h-3.5" /> @
                                     {m.instagram}
                                   </div>
                                 )}
@@ -1071,7 +1070,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                               {m.deviceInfo?.location && (
                                 <div className="text-[10px] bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold">
 
-                                  <MapPin className="w-3 h-3" />
+                                  <IcZona className="w-3 h-3" />
                                   {m.deviceInfo.location.city},
                                   {m.deviceInfo.location.country}
                                 </div>
@@ -1082,7 +1081,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 if (!ip) return null;
                                 return (
                                   <div className="text-[10px] font-mono bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-100 dark:border-orange-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold">
-                                    <Monitor className="w-3 h-3" /> IP: {ip}
+                                    <IcDispositivo className="w-3 h-3" /> IP: {ip}
                                   </div>
                                 );
                               })()}
@@ -1143,7 +1142,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                         }}
                                       >
 
-                                        <UserIcon className="w-6 h-6" />
+                                        <IcProfilo className="w-6 h-6" />
                                       </div>
                                       <div>
 
@@ -1222,7 +1221,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 }}
                               >
 
-                                <UserIcon className="w-7 h-7" />
+                                <IcProfilo className="w-7 h-7" />
                               </div>
                               <div className="min-w-0 flex-1">
 
@@ -1361,7 +1360,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                             className="text-[11px] font-bold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5"
                                           >
 
-                                            <Monitor className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />
+                                            <IcDispositivo className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />
                                             {pid.substring(0, 12)}...
                                           </span>
                                         ))}
@@ -1375,7 +1374,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                               className="text-[11px] font-bold font-mono bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-2.5 py-1 sm:py-1.5 rounded-xl border border-orange-100 dark:border-orange-800 shadow-sm flex items-center gap-1.5"
                                             >
 
-                                              <Globe className="w-3.5 h-3.5 text-orange-500" />
+                                              <IcRete className="w-3.5 h-3.5 text-orange-500" />
                                               {ip}
                                             </span>
                                           ))}
@@ -1446,7 +1445,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-gray-700 ">
 
                               <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Cpu className="w-3.5 h-3.5" /> Dispositivi
+                                <IcTecnico className="w-3.5 h-3.5" /> Dispositivi
                                 Collegati
                               </span>
                               <div className="flex flex-wrap gap-2">
@@ -1465,7 +1464,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 <>
 
                                   <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5 mt-2">
-                                    <Globe className="w-3.5 h-3.5" /> IP
+                                    <IcRete className="w-3.5 h-3.5" /> IP
                                     Tracciati
                                   </span>
                                   <div className="flex flex-wrap gap-2">
@@ -1490,7 +1489,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                               </span>
                               <span className="text-xs font-black text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm px-3 py-1.5 rounded-xl flex items-center gap-1.5">
 
-                                <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />
+                                <IcOra className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 " />
                                 {mostRecentMsg?.createdAt
                                   ? format(
                                       mostRecentMsg.createdAt.toDate(),
@@ -1533,7 +1532,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                               <tr key={v.id} className="hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors">
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-gray-400" />
+                                    <IcOra className="w-4 h-4 text-gray-400" />
                                     <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
                                       {v.createdAt ? format(v.createdAt.toDate ? v.createdAt.toDate() : new Date(v.createdAt), "dd/MM/yyyy HH:mm") : "-"}
                                     </span>
@@ -1559,9 +1558,9 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 <td className="px-6 py-4">
                                   <div className="flex flex-col">
                                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100 space-x-1 flex items-center">
-                                      {v.platform === "iOS" && <Smartphone className="inline w-4 h-4 text-gray-400"/>}
-                                      {v.platform === "Android" && <Smartphone className="inline w-4 h-4 text-green-500"/>}
-                                      {(v.platform === "Mac OS" || v.platform === "Windows") && <Monitor className="inline w-4 h-4 text-blue-500"/>}
+                                      {v.platform === "iOS" && <IcSchermo className="inline w-4 h-4 text-gray-400"/>}
+                                      {v.platform === "Android" && <IcSchermo className="inline w-4 h-4 text-green-500"/>}
+                                      {(v.platform === "Mac OS" || v.platform === "Windows") && <IcDispositivo className="inline w-4 h-4 text-blue-500"/>}
                                       <span>{v.platform || "-"}</span>
                                     </span>
                                     <span className="text-xs text-gray-500 dark:text-gray-400">{v.browser || "-"}</span>
@@ -1578,7 +1577,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                         <div key={v.id} className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 shadow-sm gap-4">
                           <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
                             <span className="text-xs font-bold text-gray-500 flex items-center gap-2 dark:text-gray-400">
-                              <Clock className="w-4 h-4" />
+                              <IcOra className="w-4 h-4" />
                               {v.createdAt ? format(v.createdAt.toDate ? v.createdAt.toDate() : new Date(v.createdAt), "dd/MM/yyyy HH:mm") : "-"}
                             </span>
                             {v.hasSubmitted ? (
