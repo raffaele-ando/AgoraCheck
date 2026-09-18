@@ -3594,7 +3594,11 @@ export default function Dashboard() {
                                       <div
                                         className="break-words whitespace-pre-wrap"
                                         title={
-                                          adv.software?.performanceMemory
+                                          // Fuori da Chromium `performance.memory` non esiste e il
+                                          // client manda una stringa ("Non supportato"), non le tre
+                                          // misure: leggerne i campi dava "undefined / undefined".
+                                          adv.software?.performanceMemory &&
+                                          typeof adv.software.performanceMemory === "object"
                                             ? `L:${adv.software.performanceMemory.jsHeapSizeLimit} T:${adv.software.performanceMemory.totalJSHeapSize} U:${adv.software.performanceMemory.usedJSHeapSize}`
                                             : ""
                                         }
@@ -3602,9 +3606,10 @@ export default function Dashboard() {
                                         <span className="text-gray-400 dark:text-gray-500 ">
                                           MEM:
                                         </span>{" "}
-                                        {adv.software?.performanceMemory
+                                        {adv.software?.performanceMemory &&
+                                        typeof adv.software.performanceMemory === "object"
                                           ? `${adv.software.performanceMemory.usedJSHeapSize} / ${adv.software.performanceMemory.totalJSHeapSize}`
-                                          : "N/A"}
+                                          : adv.software?.performanceMemory || "N/A"}
                                       </div>
                                       <div
                                         className="break-words whitespace-pre-wrap"
