@@ -187,6 +187,7 @@ export default function CarouselTemplateConfig({
   variant = "classic"
 }: CarouselTemplateConfigProps) {
   const [carouselBgs, setCarouselBgs] = useState<(string | null)[]>(Array(20).fill(null));
+  const [mostraTutteLeCaselle, setMostraTutteLeCaselle] = useState(false);
   const [slideDimensions, setSlideDimensions] = useState<Record<number, { width: number, height: number }>>({});
   
   useEffect(() => {
@@ -794,7 +795,7 @@ export default function CarouselTemplateConfig({
               <div className="px-6 py-5 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MonitorSmartphone className="w-4 h-4 text-gray-400" />
-                  <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Layout Preview {selectedSlideIndex + 1}</span>
+                  <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400">Anteprima slide {selectedSlideIndex + 1}</span>
                 </div>
                 <AnimatePresence>
                   {savedStatus && (
@@ -906,7 +907,7 @@ export default function CarouselTemplateConfig({
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Asse X</label>
+                          <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Da sinistra</label>
                           <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400">{activeBox.left}%</span>
                         </div>
                         <input
@@ -919,7 +920,7 @@ export default function CarouselTemplateConfig({
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Asse Y</label>
+                          <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Dall'alto</label>
                           <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400">{activeBox.top}%</span>
                         </div>
                         <input
@@ -941,7 +942,7 @@ export default function CarouselTemplateConfig({
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                          <div className="flex items-center justify-between mb-2">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Larghezza</label>
+                          <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Larghezza</label>
                           <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400">{activeBox.width}%</span>
                         </div>
                         <input
@@ -954,7 +955,7 @@ export default function CarouselTemplateConfig({
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Altezza</label>
+                          <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Altezza</label>
                           <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400">{activeBox.height}%</span>
                         </div>
                         <input
@@ -973,7 +974,7 @@ export default function CarouselTemplateConfig({
                   {/* Typography & Color */}
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Dimensione Base Font (px)</label>
+                      <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-2">Grandezza del testo (px)</label>
                       <input
                         type="number"
                         min="16" max="250"
@@ -983,7 +984,7 @@ export default function CarouselTemplateConfig({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Colore Testo</label>
+                      <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-2">Colore del testo</label>
                       <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-1.5 pl-3">
                         <span className="text-xs font-mono font-bold text-gray-600 dark:text-gray-300 flex-1">{activeBox.color.toUpperCase()}</span>
                         <input
@@ -1000,7 +1001,7 @@ export default function CarouselTemplateConfig({
                   {/* Alignments (Buttons instead of selects for better UX) */}
                   <div className="grid grid-cols-2 gap-6">
                      <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Allineamento Testo</label>
+                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-2">Allineamento</label>
                         <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl">
                           <button 
                             onClick={() => {
@@ -1038,7 +1039,7 @@ export default function CarouselTemplateConfig({
                         </div>
                      </div>
                      <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Posizione Verticale</label>
+                        <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-2">In alto, al centro o in basso</label>
                         <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl">
                           <button 
                             onClick={() => handleConfigChange({ alignItems: "flex-start" })}
@@ -1077,7 +1078,7 @@ export default function CarouselTemplateConfig({
                 <LayoutTemplate className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                <span className="font-bold text-indigo-900 dark:text-indigo-200">Layout Carosello:</span> Carica fino a 20 sfondi numerati qui sotto. L'ordine degli sfondi corrisponderà all'ordine dei messaggi convalidati. Ogni testo verrà sovrapposto automaticamente.
+                <span className="font-bold text-indigo-900 dark:text-indigo-200">Come funziona:</span> Carica fino a 20 sfondi numerati qui sotto. L'ordine degli sfondi corrisponderà all'ordine dei messaggi convalidati. Ogni testo verrà sovrapposto automaticamente.
               </div>
             </div>
 
@@ -1085,16 +1086,34 @@ export default function CarouselTemplateConfig({
             <div className="bg-white dark:bg-[#09090b] border border-gray-200 dark:border-gray-800 rounded-[2.5rem] p-8 shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Galleria Sfondi</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Formato verticale (3:4) raccomandato.</p>
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Gli sfondi</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                    Uno per slide, in quest'ordine. Verticali (3:4).
+                  </p>
                 </div>
                 <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-bold text-gray-600 dark:text-gray-400">
-                  {carouselBgs.filter(Boolean).length}/20 Inseriti
+                  {carouselBgs.filter(Boolean).length} caricati su{" "}
+                  {Math.min(20, Math.max(1, localValidatedMessages.length))} che
+                  servono
                 </div>
               </div>
-              
+
+              {/* Si mostrano le caselle che servono davvero, non sempre venti.
+                  Con sei messaggi convalidati, quattordici riquadri "VUOTO"
+                  riempivano uno schermo intero per dire che non c'era niente
+                  da vedere — e facevano sembrare incompleto un lavoro finito. */}
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                {Array(20).fill(null).map((_, index) => {
+                {Array(
+                  mostraTutteLeCaselle
+                    ? 20
+                    : Math.min(
+                        20,
+                        Math.max(
+                          carouselBgs.filter(Boolean).length,
+                          Math.min(20, localValidatedMessages.length) || 1,
+                        ),
+                      ),
+                ).fill(null).map((_, index) => {
                   const image = carouselBgs[index];
                   const isSelected = selectedSlideIndex === index;
                   
@@ -1142,10 +1161,10 @@ export default function CarouselTemplateConfig({
 
                           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 py-3">
                             <ImageIcon className="w-8 h-8 opacity-20 mb-2" />
-                            <span className="text-[10px] font-black uppercase text-center tracking-widest text-gray-400">Vuoto</span>
+                            <span className="text-[11px] font-semibold text-center text-gray-400">Vuoto</span>
                           </div>
 
-                          <label className="relative z-20 bg-white dark:bg-gray-800 font-bold text-gray-900 dark:text-gray-200 border border-gray-200 dark:border-gray-700 text-[10px] uppercase tracking-widest text-center py-2 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
+                          <label className="relative z-20 bg-white dark:bg-gray-800 font-bold text-gray-900 dark:text-gray-200 border border-gray-200 dark:border-gray-700 text-[11px] text-center py-2 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
                             <span>Carica</span>
                             <input
                               type="file"
@@ -1160,6 +1179,16 @@ export default function CarouselTemplateConfig({
                   );
                 })}
               </div>
+              {!mostraTutteLeCaselle &&
+                localValidatedMessages.length < 20 &&
+                carouselBgs.filter(Boolean).length < 20 && (
+                  <button
+                    onClick={() => setMostraTutteLeCaselle(true)}
+                    className="mt-4 text-[13px] font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
+                  >
+                    Mostra tutte e venti le caselle
+                  </button>
+                )}
             </div>
 
             {/* MESSAGES LIST */}
@@ -1168,9 +1197,9 @@ export default function CarouselTemplateConfig({
                 <div>
                   <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
                     <MessageSquare className="w-6 h-6 text-gray-400" />
-                    Messaggi Assegnati
+                    Le slide, in ordine
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Ordinati per data di approvazione.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Escono cosi' nel post: la prima e' la copertina.</p>
                 </div>
               </div>
 
@@ -1221,7 +1250,7 @@ export default function CarouselTemplateConfig({
                               onClick={() => handleSetFirstSlide(msg.id)}
                               className="flex-1 sm:flex-none justify-center text-xs font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white px-4 py-2 rounded-xl transition-all shadow-sm"
                             >
-                              Imposta Cover
+                              Metti per prima
                             </button>
                           )}
 

@@ -270,7 +270,14 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
     const safeVisits = Array.isArray(visits) ? visits : [];
     const totalVisits = safeVisits.length;
     const submittedVisits = safeVisits.filter((v: any) => v.hasSubmitted).length;
-    const conversionRate = totalVisits > 0 ? ((submittedVisits / totalVisits) * 100).toFixed(1) : "0.0";
+    // Senza visite la conversione NON e' zero: e' indefinita. Mostrare
+    // "0.0%" quando il denominatore e' zero e' un numero inventato che
+    // sembra misurato — ed e' capitato davvero, con 0 visite e 6 messaggi
+    // ricevuti, cioe' una percentuale impossibile presentata come un fatto.
+    const conversionRate =
+      totalVisits > 0
+        ? ((submittedVisits / totalVisits) * 100).toFixed(1)
+        : null;
     
     // Visit field tracking
     let totalTimeWhen = 0, totalTimeWhere = 0, totalTimeLookingFor = 0;
@@ -370,7 +377,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
   const kpis = [
     {
-      label: "Totale Avvistamenti",
+      label: "Messaggi in tutto",
       value: stats.totalViews,
       bg: "bg-indigo-50 dark:bg-indigo-900/40 ",
       text: "text-indigo-600 dark:text-indigo-400 ",
@@ -378,52 +385,52 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         "group-hover:border-indigo-200 dark:group-hover:border-indigo-800 ",
       onClick: () =>
         setDetailView({
-          title: "Totale Avvistamenti",
+          title: "Messaggi in tutto",
           type: "messages",
           data: messages,
         }),
     },
     {
-      label: "Spotted Effettuati",
+      label: "Spotted",
       value: stats.postMessages,
       bg: "bg-emerald-50 dark:bg-emerald-900/40 ",
       text: "text-emerald-600",
       border: "group-hover:border-emerald-200",
       onClick: () =>
         setDetailView({
-          title: "Spotted Effettuati",
+          title: "Spotted",
           type: "messages",
           data: messages.filter((m) => (!m.type || m.type === "spotted") && (m.when || m.where)),
         }),
     },
     {
-      label: "Sondaggi Creati",
+      label: "Sondaggi",
       value: stats.sondaggioMessages,
       bg: "bg-fuchsia-50 dark:bg-fuchsia-900/40 ",
       text: "text-fuchsia-600",
       border: "group-hover:border-fuchsia-200",
       onClick: () =>
         setDetailView({
-          title: "Sondaggi Creati",
+          title: "Sondaggi",
           type: "messages",
           data: messages.filter((m) => m.type === "sondaggio"),
         }),
     },
     {
-      label: "Ricerche Create",
+      label: "Ricerche",
       value: stats.ricercaMessages,
       bg: "bg-blue-50 dark:bg-blue-900/40 ",
       text: "text-blue-600",
       border: "group-hover:border-blue-200",
       onClick: () =>
         setDetailView({
-          title: "Ricerche Create",
+          title: "Ricerche",
           type: "messages",
           data: messages.filter((m) => m.type === "ricerca" || ((!m.type || m.type === "spotted") && !m.when && !m.where)),
         }),
     },
     {
-      label: "Dispositivi Unici",
+      label: "Dispositivi diversi",
       value: stats.uniqueDevices,
       bg: "bg-orange-50 dark:bg-orange-900/40 ",
       text: "text-orange-600",
@@ -436,7 +443,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         }),
     },
     {
-      label: "Identità Unificate",
+      label: "Persone riconosciute",
       value: stats.identifiedUsers,
       bg: "bg-purple-50 dark:bg-purple-900/40 ",
       text: "text-purple-600",
@@ -449,27 +456,27 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         }),
     },
     {
-      label: "Totale Utenti (Entrati)",
+      label: "Visite",
       value: stats.totalVisits,
       bg: "bg-blue-50 dark:bg-blue-900/40 ",
       text: "text-blue-600 dark:text-blue-400 ",
       border: "group-hover:border-blue-200 dark:group-hover:border-blue-800 ",
       onClick: () =>
         setDetailView({
-          title: "Totale Utenti (Entrati)",
+          title: "Visite",
           type: "visits",
           data: Array.isArray(visits) ? visits : [],
         }),
     },
     {
-      label: "Conversione spotted",
-      value: `${stats.conversionRate}%`,
+      label: "Chi entra e scrive",
+      value: stats.conversionRate === null ? "—" : `${stats.conversionRate}%`,
       bg: "bg-pink-50 dark:bg-pink-900/40 ",
       text: "text-pink-600 dark:text-pink-400 ",
       border: "group-hover:border-pink-200 dark:group-hover:border-pink-800 ",
       onClick: () =>
         setDetailView({
-          title: "Conversione spotted",
+          title: "Chi entra e scrive",
           type: "visits",
           data: (Array.isArray(visits) ? visits : []).filter((v: any) => v.hasSubmitted),
         }),
@@ -491,10 +498,23 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
           <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
             Conversione: chi entra e scrive davvero
           </div>
-          <div className="text-5xl sm:text-6xl font-black tracking-tight text-gray-900 dark:text-gray-100 tabular-nums leading-none">
-            {stats.conversionRate}
-            <span className="text-3xl text-gray-400 dark:text-gray-500">%</span>
-          </div>
+          {stats.conversionRate === null ? (
+            <>
+              <div className="text-5xl sm:text-6xl font-black tracking-tight text-gray-400 dark:text-gray-500 leading-none">
+                —
+              </div>
+              <div className="mt-2 text-[12.5px] text-gray-500 dark:text-gray-400 max-w-xs">
+                Non si puo' calcolare: nessuna visita registrata. Se arrivano
+                messaggi ma non visite, il tracciamento e' spento o limitato a
+                Instagram.
+              </div>
+            </>
+          ) : (
+            <div className="text-5xl sm:text-6xl font-black tracking-tight text-gray-900 dark:text-gray-100 tabular-nums leading-none">
+              {stats.conversionRate}
+              <span className="text-3xl text-gray-400 dark:text-gray-500">%</span>
+            </div>
+          )}
         </div>
         <div className="flex items-end gap-6 pb-1">
           <div>
@@ -520,12 +540,18 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <IcConfigurazione className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Tracciamento Accessi</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Modalità per raccogliere analytics degli utenti.</p>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Da dove raccogli le visite</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Il browser dentro Instagram e' l'unico da cui arriva quasi tutto: allargare a tutti i browser aggiunge anche chi apre il link altrove.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Solo Instagram</span>
+            {/* Un'etichetta sola. Con due, una per lato, non si capisce
+                quale sia lo stato e quale la destinazione: l'interruttore
+                diceva "Solo Instagram [ ] Tutti i browser" e per leggerlo
+                bisognava indovinare da che parte fosse acceso. */}
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+              {trackAllBrowsers ? "Tutti i browser" : "Solo Instagram"}
+            </span>
             <button 
               type="button" 
               role="switch" 
@@ -537,7 +563,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <span className="sr-only">Raccogli da tutti i browser</span>
               <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${trackAllBrowsers ? 'translate-x-5' : 'translate-x-0'}`}></span>
             </button>
-            <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Tutti i browser</span>
+
           </div>
         </div>
 
@@ -547,12 +573,16 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <IcConfigurazione className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Modalità Admin (Il tuo dispositivo)</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Se attiva, il tuo dispositivo viene escluso dalle statistiche.</p>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Le tue visite</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Aprendo la bacheca per controllare falsi i tuoi stessi numeri: tenerle fuori e' quasi sempre la scelta giusta.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Traccia</span>
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+              {isAdminTrackingIgnored
+                ? "Il tuo dispositivo e' escluso"
+                : "Il tuo dispositivo viene contato"}
+            </span>
             <button 
               type="button" 
               role="switch" 
@@ -563,7 +593,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <span className="sr-only">Ignora Admin</span>
               <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${isAdminTrackingIgnored ? 'translate-x-5' : 'translate-x-0'}`}></span>
             </button>
-            <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Ignora Statistiche</span>
+
           </div>
         </div>
       </div>
@@ -577,14 +607,14 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <IcAttivita className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Avvistamenti & Spotted</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Statistiche relative ai messaggi ricevuti e traffico generato.</p>
-              <p className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1">Dati da {messages.length} log non ignorati</p>
+              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Messaggi ricevuti</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Quanti ne arrivano, di che tipo, e quanto traffico portano.</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">Contati {messages.length} messaggi (esclusi quelli messi da parte)</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {kpis.filter(k => ["Totale Avvistamenti", "Spotted Effettuati", "Sondaggi Creati", "Ricerche Create"].includes(k.label)).map((kpi, i) => (
+            {kpis.filter(k => ["Messaggi in tutto", "Spotted", "Sondaggi", "Ricerche"].includes(k.label)).map((kpi, i) => (
               <motion.div
                 key={kpi.label}
                 initial={{ opacity: 0, y: 20 }}
@@ -594,7 +624,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                  <div className={`text-[12px] font-semibold ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
                     {kpi.label}
                   </div>
                   <div className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
@@ -602,7 +632,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                   </div>
                 </div>
                 <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-400 dark:text-gray-500 ${kpi.text} transition-colors`}>
-                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Vedi dettagli</span>
+                  <span className="text-[12px] font-semibold">Vedi chi</span>
                   <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`}></div>
@@ -610,17 +640,17 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
             <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-3">
-                  Andamento Traffico
+                <h3 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-3">
+                  Visite e messaggi, giorno per giorno
                 </h3>
                 <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-xl">
-                  Ultimi 14 Giorni
+                  ultimi 14 giorni
                 </span>
               </div>
-              <div className="relative h-[250px] sm:h-[350px] w-full mt-auto">
+              <div className="relative h-[250px] sm:h-[320px] w-full">
                 {isReady && (
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -637,10 +667,10 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                         </defs>
                         <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={chartTheme.grid} />
                         <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.tick, fontWeight: 600 }} dy={15} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.tick, fontWeight: 600 }} dx={-10} />
+                        <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTheme.tick, fontWeight: 600 }} dx={-10} />
                         <RechartsTooltip contentStyle={chartTheme.tooltip} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
                         <Area type="monotone" dataKey="views" name="Accessi Totali" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-                        <Area type="monotone" dataKey="actions" name="Spotted Effettuati" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorActions)" />
+                        <Area type="monotone" dataKey="actions" name="Spotted" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorActions)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -650,8 +680,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
             <div className="flex flex-col gap-6 md:gap-8">
               <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
-                <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-2.5">
-                  Sistemi Operativi
+                <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-2.5">
+                  Da che telefono o computer
                 </h3>
                 <div className="h-[180px] sm:h-[200px] w-full relative z-10">
                   {isReady && (
@@ -678,8 +708,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               </div>
 
               <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-                <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
-                  Sorgente Accessi (Browser)
+                <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+                  Da quale applicazione aprono il link
                 </h3>
                 <div className="relative h-[200px] sm:h-[220px] w-full mt-2">
                   {isReady && (
@@ -710,9 +740,9 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <IcProfilo className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Dispositivi & Identità</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Analisi avanzata sulle identità univoche e i macro profili.</p>
-              <p className="text-[10px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest mt-1">Dati da {Object.keys(profiles).length} profili / {macroProfiles.length} identità (non n.)</p>
+              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Chi c'è dietro</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Quante persone diverse ci sono dietro i messaggi.</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">{Object.keys(profiles).length} dispositivi, riuniti in {macroProfiles.length} persone</p>
             </div>
           </div>
 
@@ -758,7 +788,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-            {kpis.filter(k => ["Totale Utenti (Entrati)", "Conversione spotted"].includes(k.label)).map((kpi, i) => (
+            {kpis.filter(k => ["Visite", "Chi entra e scrive"].includes(k.label)).map((kpi, i) => (
               <motion.div
                 key={kpi.label}
                 initial={{ opacity: 0, y: 20 }}
@@ -787,7 +817,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
             {/* Abandonment Rate UI */}
             <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-              <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+              <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
                 Abbandoni per Campo
               </h3>
               <div className="space-y-4">
@@ -812,7 +842,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
             {/* Time spent UI */}
             <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-              <h3 className="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+              <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
                 Tempo medio di compilazione
               </h3>
               <div className="space-y-4">
