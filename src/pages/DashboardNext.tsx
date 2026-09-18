@@ -85,7 +85,9 @@ import { lazy, Suspense } from "react";
  * parte, richiesto al primo utilizzo.
  */
 const Analytics = lazy(() =>
-  import("../components/dashboard/Analytics").then((m) => ({ default: m.Analytics })),
+  import("../components/dashboard/AnalyticsNext").then((m) => ({
+    default: m.AnalyticsNext,
+  })),
 );
 const StoryExportBeta = lazy(() => import("../components/dashboard/StoryExport"));
 const StoryTemplateConfig = lazy(() => import("../components/dashboard/StoryTemplateConfig"));
@@ -134,6 +136,14 @@ interface ProfileRecord {
   excludeFromAutoGrouping?: boolean;
   linkedToProfileId?: string;
   ignoredFromAnalytics?: boolean;
+  /**
+   * Suggerimenti di unione che l'operatore ha respinto.
+   *
+   * Contiene il primo identificativo del gruppo proposto. Senza questo, un
+   * "no" durava fino al ricalcolo successivo e la stessa proposta tornava
+   * su ogni volta.
+   */
+  dismissedMatches?: string[];
 }
 /**
  * Iniziali da mostrare dentro il cerchio colorato del profilo.
@@ -200,16 +210,30 @@ export default function DashboardNext() {
   // Sostituiscono gli alert(): non bloccano il thread, non sono tematizzabili
   // e soprattutto permettono di riportare l'esito reale delle operazioni di
   // massa (che possono riuscire solo in parte).
-  type Toast = { id: number; text: string; kind: "ok" | "error" | "info" };
+  type Toast = {
+    id: number;
+    text: string;
+    kind: "ok" | "error" | "info";
+    /**
+     * Come disfare cio' che la notifica annuncia.
+     *
+     * Archiviare e' reversibile, eppure era trattato come irreversibile:
+     * agire subito e poter tornare indietro costa un clic, chiedere il
+     * permesso ogni volta ne costa due e interrompe il lavoro. La finestra
+     * di conferma resta a cio' che distrugge davvero.
+     */
+    undo?: { label: string; run: () => void };
+  };
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastSeqRef = useRef(0);
   const notify = useCallback(
-    (text: string, kind: Toast["kind"] = "info") => {
+    (text: string, kind: Toast["kind"] = "info", undo?: Toast["undo"]) => {
       const id = ++toastSeqRef.current;
-      setToasts((prev) => [...prev.slice(-3), { id, text, kind }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, kind === "error" ? 7000 : 3500);
+      setToasts((prev) => [...prev.slice(-3), { id, text, kind, undo }]);
+      setTimeout(
+        () => setToasts((prev) => prev.filter((t) => t.id !== id)),
+        kind === "error" ? 7000 : undo ? 8000 : 3500,
+      );
     },
     [],
   );
@@ -347,6 +371,7 @@ export default function DashboardNext() {
   const [onlyPostsFilter, setOnlyPostsFilter] = useState(false);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
   const [resolutionInput, setResolutionInput] = useState("");
+  const [configMenuOpen, setConfigMenuOpen] = useState(false);
   const [macroModalTab, setMacroModalTab] = useState<
     "timeline" | "dettagli" | "identita" | "log"
   >("timeline");
@@ -561,6 +586,60 @@ export default function DashboardNext() {
       console.error("Errore nel toggle ignore analytics per macro", err);
     }
   };
+  /**
+   * Accetta un suggerimento in un colpo solo.
+   *
+   * Prima il sistema calcolava "87%, stesso dispositivo, stessa rete" e poi
+   * lasciava rifare l'unione a mano: aprire l'altro profilo, tornare
+   * indietro, aprire la fisarmonica, "Accorpa", ricercare il nome,
+   * selezionarlo, confermare. Otto passaggi, e la percentuale che ti aveva
+   * convinto non era piu' sotto gli occhi.
+   */
+  const handleAcceptSuggestion = async (
+    sourceMacroId: string,
+    targetMacroId: string,
+  ) => {
+      const source = macroProfiles.find((m) => m.id === sourceMacroId);
+      const target = macroProfiles.find((m) => m.id === targetMacroId);
+      if (!source || !target) return;
+      try {
+        const batch = writeBatch(db);
+        for (const pid of target.profileIds) {
+          batch.set(
+            doc(db, "profiles", pid),
+            { linkedToProfileId: source.profileIds[0], excludeFromAutoGrouping: false },
+            { merge: true },
+          );
+        }
+        await batch.commit();
+        notify(`«${target.name}» unito a «${source.name}»`, "ok");
+      } catch (e) {
+        console.error("Errore unione suggerita", e);
+        notify("Non sono riuscito a unire i due profili", "error");
+    }
+  };
+
+  /** «Non e' la stessa persona»: il suggerimento non torna piu'. */
+  const handleDismissSuggestion = async (
+    sourceMacroId: string,
+    dismissKey: string,
+    targetName: string,
+  ) => {
+      const source = macroProfiles.find((m) => m.id === sourceMacroId);
+      if (!source) return;
+      try {
+        await setDoc(
+          doc(db, "profiles", source.profileIds[0]),
+          { dismissedMatches: arrayUnion(dismissKey) },
+          { merge: true },
+        );
+        notify(`«${targetName}» non verrà più proposto`, "ok");
+      } catch (e) {
+        console.error("Errore rifiuto suggerimento", e);
+        notify("Non sono riuscito a salvare la scelta", "error");
+    }
+  };
+
   const confirmMergeMacro = async () => {
     if (!showMergeModal.sourceMacroId || mergeSelectedProfiles.length === 0)
       return;
@@ -1310,13 +1389,23 @@ export default function DashboardNext() {
         const compSuggestions =
           suggestionsByComp.get(compIdx) ??
           new Map<number, { confidence: number; reasons: string[] }>();
+        const dismissed = new Set<string>();
+        comp.forEach((p) => {
+          (profiles[p]?.dismissedMatches || []).forEach((d: string) =>
+            dismissed.add(d),
+          );
+        });
         const suggestions = Array.from(compSuggestions.entries())
           .map(([otherIdx, info]) => ({
             macroId: macroIdByIndex[otherIdx],
+            // Chiave stabile del suggerimento: il primo identificativo del
+            // gruppo proposto. L'id del macro-profilo cambia appena la sua
+            // composizione cambia, quindi non serve per ricordare un "no".
+            dismissKey: [...components[otherIdx]].sort()[0],
             confidence: info.confidence,
             reasons: info.reasons,
           }))
-          .filter((s) => !!s.macroId)
+          .filter((s) => !!s.macroId && !dismissed.has(s.dismissKey))
           .sort((a, b) => b.confidence - a.confidence);
 
         // Un macro-profilo è affidabile solo se OGNI profilo che lo compone
@@ -1342,7 +1431,11 @@ export default function DashboardNext() {
           isLegacyIdentity,
         };
       })
-      .sort((a, b) => b.msgCount - a.msgCount);
+      .sort(
+        (a, b) =>
+          (b.suggestions.length > 0 ? 1 : 0) - (a.suggestions.length > 0 ? 1 : 0) ||
+          b.msgCount - a.msgCount,
+      );
   }, [
     allProfileIds,
     profiles,
@@ -1859,6 +1952,21 @@ export default function DashboardNext() {
       await updateDoc(doc(db, "messages", messageId), {
         isArchived: !currentStatus,
       });
+      notify(
+        currentStatus ? "Rimesso fra i nuovi" : "Archiviato",
+        "ok",
+        {
+          label: "Annulla",
+          run: () => {
+            updateDoc(doc(db, "messages", messageId), {
+              isArchived: currentStatus,
+            }).catch((e) => {
+              console.error(e);
+              notify("Non sono riuscito ad annullare", "error");
+            });
+          },
+        },
+      );
     } catch (e) {
       console.error(e);
       notify("Errore durante l'operazione", "error");
@@ -1872,8 +1980,28 @@ export default function DashboardNext() {
       (id) => (b: ReturnType<typeof writeBatch>) =>
         b.update(doc(db, "messages", id), { isArchived: targetStatus }),
     );
+    const touched = [...selectedMessages];
     const res = await commitOperations(ops);
-    reportBulkOutcome(res, targetStatus ? "messaggi archiviati" : "messaggi ripristinati");
+    if (res.failed === 0 && res.done > 0) {
+      // Anche in blocco: si agisce e si puo' tornare indietro, invece di
+      // chiedere conferma prima per qualcosa che e' reversibile.
+      notify(
+        `${res.done} ${targetStatus ? "messaggi archiviati" : "messaggi ripristinati"}`,
+        "ok",
+        {
+          label: "Annulla",
+          run: () => {
+            commitOperations(
+              touched.map((id) => (b: ReturnType<typeof writeBatch>) =>
+                b.update(doc(db, "messages", id), { isArchived: !targetStatus }),
+              ),
+            ).catch(() => notify("Non sono riuscito ad annullare", "error"));
+          },
+        },
+      );
+    } else {
+      reportBulkOutcome(res, targetStatus ? "messaggi archiviati" : "messaggi ripristinati");
+    }
     setIsSelectMode(false);
     setSelectedMessages([]);
   };
@@ -2169,7 +2297,7 @@ export default function DashboardNext() {
 
   return (
     <div
-      className="min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 bg-gray-50 dark:bg-gray-900"
+      className="ac-next min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 bg-gray-50 dark:bg-gray-900"
     >
 
       <div className="max-w-7xl mx-auto">
@@ -2187,21 +2315,9 @@ export default function DashboardNext() {
                   <Link to="/" className="shrink-0 flex items-center">
                     <Logo className="h-7 w-[90px] sm:h-9 sm:w-[120px] hover:opacity-80 transition-all duration-300" />
                   </Link>
-                  <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 shrink-0 hidden md:block"></div>
-                  <h1 className="text-base sm:text-lg font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase hidden md:flex items-center shrink-0">
-                    Dashboard
-                  </h1>
+
                   {/* Contatore globale: veniva letto da Firestore a ogni
                       montaggio ma non era mostrato da nessuna parte. */}
-                  {totalGlobalMessages !== null && (
-                    <span
-                      className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700"
-                      title="Messaggi totali ricevuti dall'inizio"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      {totalGlobalMessages.toLocaleString("it-IT")} totali
-                    </span>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">
@@ -2233,9 +2349,7 @@ export default function DashboardNext() {
                     >
                       {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
-                    <div className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hidden lg:block overflow-hidden text-ellipsis max-w-[150px]">
-                      {auth.currentUser?.email}
-                    </div>
+
                     <button
                       onClick={handleLogout}
                       className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
@@ -2275,27 +2389,71 @@ export default function DashboardNext() {
                         <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         Analytics
                       </button>
-                      <button
-                        onClick={() => setActiveTab("story_template")}
-                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "story_template" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
-                      >
-                        <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Template
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("carousel")}
-                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "carousel" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
-                      >
-                        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Carosello IG
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("settings")}
-                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "settings" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
-                      >
-                        <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Impostazioni
-                      </button>
+                      <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
+                      <div className="relative">
+                        <button
+                          onClick={() => setConfigMenuOpen((v) => !v)}
+                          aria-expanded={configMenuOpen}
+                          aria-haspopup="menu"
+                          className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+                            activeTab === "story_template" ||
+                            activeTab === "carousel" ||
+                            activeTab === "settings"
+                              ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50"
+                          }`}
+                        >
+                          <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          Configurazione
+                          <span className="text-[9px] opacity-60">▾</span>
+                        </button>
+                        {configMenuOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-[70]"
+                              onClick={() => setConfigMenuOpen(false)}
+                              aria-hidden="true"
+                            />
+                            <div
+                              role="menu"
+                              className="absolute right-0 mt-1.5 w-56 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-1.5"
+                            >
+                              {(
+                                [
+                                  ["story_template", "Template storia", LayoutTemplate],
+                                  ["carousel", "Carosello Instagram", Sparkles],
+                                  ["settings", "Impostazioni", Settings],
+                                ] as const
+                              ).map(([tab, label, Icon]) => (
+                                <button
+                                  key={tab}
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setActiveTab(tab);
+                                    setConfigMenuOpen(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold flex items-center gap-2.5 transition-colors ${
+                                    activeTab === tab
+                                      ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                  }`}
+                                >
+                                  <Icon className="w-4 h-4 shrink-0 opacity-70" />
+                                  {label}
+                                </button>
+                              ))}
+                              <div className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 px-3 py-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+                                {auth.currentUser?.email}
+                                {totalGlobalMessages !== null && (
+                                  <div className="mt-0.5 tabular-nums">
+                                    {totalGlobalMessages.toLocaleString("it-IT")} messaggi in totale
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -2675,6 +2833,26 @@ export default function DashboardNext() {
               </div>
             )}
 
+            {snapshotsError && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/25 border border-red-200 dark:border-red-800 flex items-start gap-3">
+                <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-red-800 dark:text-red-200">
+                    Connessione interrotta
+                  </div>
+                  <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                    Stai vedendo gli ultimi dati ricevuti. Le modifiche che fai
+                    adesso potrebbero non essere salvate.
+                  </p>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="shrink-0 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold"
+                >
+                  Riprova
+                </button>
+              </div>
+            )}
             {historyTruncated && (
               <div className="mb-6 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs font-medium">
                 Sono caricati i {messages.length} messaggi più recenti: i
@@ -3907,40 +4085,56 @@ export default function DashboardNext() {
                           install id) che NON uniscono da soli, proposti
                           all'operatore invece di essere applicati in silenzio. */}
                       {macro.suggestions.length > 0 && (
-                        <div className="mb-4 p-3 rounded-2xl bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 mb-2 flex items-center gap-1.5">
-                            <Layers className="w-3.5 h-3.5" />
-                            Possibili corrispondenze ({macro.suggestions.length})
-                          </div>
-                          <div className="space-y-1.5">
-                            {macro.suggestions.slice(0, 3).map((sug) => {
-                              const other = macroProfiles.find((x) => x.id === sug.macroId);
-                              if (!other) return null;
-                              return (
-                                <button
-                                  key={sug.macroId}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setViewingMacroId(sug.macroId);
-                                  }}
-                                  className="w-full text-left px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-sky-100 dark:border-sky-900 hover:border-sky-300 transition-colors"
+                        <div
+                          className="mb-4 space-y-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {macro.suggestions.slice(0, 3).map((sug) => {
+                            const other = macroProfiles.find((x) => x.id === sug.macroId);
+                            if (!other) return null;
+                            return (
+                              <div
+                                key={sug.macroId}
+                                className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800"
+                              >
+                                <div className="text-[12.5px] text-gray-800 dark:text-gray-200 leading-snug">
+                                  Potrebbe essere la stessa persona di{" "}
+                                  <strong className="font-bold">{other.name}</strong>
+                                  <span className="ml-1.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-900 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.5 rounded-md align-middle">
+                                    {Math.round(sug.confidence * 100)}%
+                                  </span>
+                                </div>
+                                <div
+                                  className="text-[11.5px] text-gray-500 dark:text-gray-400 mt-0.5"
                                   title={sug.reasons.join(" · ")}
                                 >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
-                                      {other.name}
-                                    </span>
-                                    <span className="text-[10px] font-black text-sky-600 dark:text-sky-400 shrink-0">
-                                      {Math.round(sug.confidence * 100)}%
-                                    </span>
-                                  </div>
-                                  <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                                    {sug.reasons[0]}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
+                                  {sug.reasons.slice(0, 2).join(" · ")}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                                  <button
+                                    onClick={() => handleAcceptSuggestion(macro.id, sug.macroId)}
+                                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-bold transition-colors"
+                                  >
+                                    Unisci
+                                  </button>
+                                  <button
+                                    onClick={() => setViewingMacroId(sug.macroId)}
+                                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-[12px] font-semibold text-gray-700 dark:text-gray-300 hover:border-gray-300"
+                                  >
+                                    Confronta
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDismissSuggestion(macro.id, sug.dismissKey, other.name)
+                                    }
+                                    className="px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800"
+                                  >
+                                    Non è lei
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -4618,12 +4812,13 @@ export default function DashboardNext() {
         </div>
       )}
       {viewingMacroId && viewingMacro && viewingMacroStats && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[1000]">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex justify-end z-[1000]">
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl w-full max-w-4xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden"
+            initial={{ x: 32, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.18 }}
+            className="bg-white dark:bg-gray-800 w-full max-w-3xl h-full shadow-2xl relative flex flex-col overflow-hidden border-l border-gray-200 dark:border-gray-700"
           >
 
             <div className="p-4 sm:p-5 md:px-6 md:py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
@@ -5375,6 +5570,17 @@ export default function DashboardNext() {
             }`}
           >
             <span className="flex-1 break-words">{t.text}</span>
+            {t.undo && (
+              <button
+                onClick={() => {
+                  t.undo!.run();
+                  dismissToast(t.id);
+                }}
+                className="shrink-0 px-2.5 py-1 -my-0.5 rounded-lg bg-white/20 hover:bg-white/30 text-[12px] font-bold transition-colors"
+              >
+                {t.undo.label}
+              </button>
+            )}
             <button
               onClick={() => dismissToast(t.id)}
               aria-label="Chiudi notifica"

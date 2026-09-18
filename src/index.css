@@ -289,3 +289,19 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .ac-skeleton { animation: none; }
 }
+
+/*
+  Il contorno di fuoco da tastiera, nel disegno nuovo della dashboard.
+
+  Un contorno ESTERNO e non un cambio di fondo: cosi' resta visibile anche
+  sopra una riga gia' selezionata, che il fondo ce l'ha gia'. Solo
+  :focus-visible, quindi non compare al clic del mouse.
+*/
+.ac-next :focus-visible {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.dark .ac-next :focus-visible {
+  outline-color: #8e86f0;
+}
