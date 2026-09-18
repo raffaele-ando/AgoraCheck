@@ -173,11 +173,18 @@ const CarouselAutoScalingText = ({
 interface CarouselTemplateConfigProps {
   validatedMessages: any[];
   onUnvalidateMessage: (msgId: string) => Promise<void>;
+  /**
+   * "next" compatta l'intestazione: nel disegno nuovo il primo schermo deve
+   * dire quante slide ci sono e cosa manca, non presentare lo strumento a
+   * chi lo apre ogni settimana. "classic" lascia tutto com'era.
+   */
+  variant?: "classic" | "next";
 }
 
 export default function CarouselTemplateConfig({ 
   validatedMessages = [], 
-  onUnvalidateMessage = async () => {} 
+  onUnvalidateMessage = async () => {},
+  variant = "classic"
 }: CarouselTemplateConfigProps) {
   const [carouselBgs, setCarouselBgs] = useState<(string | null)[]>(Array(20).fill(null));
   const [slideDimensions, setSlideDimensions] = useState<Record<number, { width: number, height: number }>>({});
@@ -645,7 +652,60 @@ export default function CarouselTemplateConfig({
         </div>
       )}
 
-      {/* HERO HEADER */}
+      {/* Intestazione compatta del disegno nuovo: quante slide, cosa manca,
+          e i due comandi. Al posto di un riquadro da 260 pixel che spiegava
+          lo strumento a chi lo apre ogni settimana. */}
+      {variant === "next" && (
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100">
+              Carosello
+            </h1>
+            <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-300">
+              <span className="font-semibold tabular-nums">
+                {localValidatedMessages.length}
+              </span>{" "}
+              {localValidatedMessages.length === 1 ? "slide" : "slide"} pronte
+              {targetZone ? ` per ${targetZone}` : " su tutte le zone"}
+              {localValidatedMessages.length > 20 && (
+                <span className="text-amber-700 dark:text-amber-400">
+                  {" "}
+                  · {localValidatedMessages.length - 20} restano fuori: il post
+                  ne porta 20
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={targetZone}
+              onChange={(e) => setTargetZone(e.target.value)}
+              className="h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] font-semibold text-gray-900 dark:text-gray-100 outline-none focus:border-indigo-600"
+            >
+              <option value="">Tutte le zone</option>
+              {Object.entries(LOCATIONS)
+                .flatMap(([city, areas]) => [city, ...areas.filter((a) => a !== city)])
+                .map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+            </select>
+            <button
+              onClick={handleBatchExport}
+              disabled={localValidatedMessages.length === 0}
+              className="h-10 px-4 bg-indigo-700 hover:bg-indigo-800 text-white disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-[13px] rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {localValidatedMessages.length > 20
+                ? `Esporta le prime 20`
+                : `Esporta ${localValidatedMessages.length}`}
+            </button>
+          </div>
+        </div>
+      )}
+      {variant === "classic" && (
+        <>
       <div className="relative overflow-hidden bg-white dark:bg-[#09090b] border border-gray-200 dark:border-gray-800 rounded-[2rem] p-8 sm:p-10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-8 mb-8 group">
         <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
@@ -684,8 +744,17 @@ export default function CarouselTemplateConfig({
         <div className="relative z-10 flex flex-col items-center sm:items-end gap-4 shrink-0">
           <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-3xl flex items-center justify-between gap-6 shadow-sm min-w-[240px]">
             <div>
-              <div className="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-0.5">Post Pronti per zona</div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">Max. 20 post</div>
+              <div className="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-0.5">Slide pronte per questa zona</div>
+              {localValidatedMessages.length > 20 ? (
+                <div className="text-sm font-bold text-amber-700 dark:text-amber-400">
+                  {localValidatedMessages.length - 20} oltre il limite di 20:
+                  escono le prime in ordine di data, le altre restano fuori
+                </div>
+              ) : (
+                <div className="text-sm font-bold text-gray-900 dark:text-white">
+                  Ne entrano al massimo 20
+                </div>
+              )}
             </div>
             <div className="w-14 h-14 bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center justify-center font-black text-2xl text-indigo-600 dark:text-indigo-400 shadow-sm">
               {localValidatedMessages.length}
@@ -698,15 +767,21 @@ export default function CarouselTemplateConfig({
             className="w-full px-8 py-4 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed font-black rounded-3xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3 text-sm uppercase tracking-wider"
           >
             <Download className="w-5 h-5" />
-            <span>Esporta Tutto ({Math.min(20, localValidatedMessages.length)})</span>
+            <span>
+              {localValidatedMessages.length > 20
+                ? `Esporta le prime 20 di ${localValidatedMessages.length}`
+                : `Esporta ${localValidatedMessages.length} ${localValidatedMessages.length === 1 ? "slide" : "slide"}`}
+            </span>
           </button>
         </div>
       </div>
+        </>
+      )}
 
       {isLoading ? (
         <div className="py-32 flex flex-col items-center justify-center text-gray-400">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-500 shrink-0 mb-4" />
-          <span className="text-sm font-semibold tracking-wide uppercase">Inizializzazione Workspace...</span>
+          <span className="text-sm font-semibold tracking-wide uppercase">Sto preparando le slide...</span>
         </div>
       ) : (
         <div className="flex flex-col xl:flex-row items-start gap-8">

@@ -2467,6 +2467,7 @@ export default function DashboardNext() {
         {activeTab === "carousel" && (
           <Suspense fallback={<TabLoading />}>
             <CarouselTemplateConfig
+              variant="next"
               validatedMessages={carouselValidatedMessages}
               onUnvalidateMessage={async (msgId) => {
                 const docRef = doc(db, "messages", msgId);
