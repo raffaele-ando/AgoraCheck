@@ -183,6 +183,44 @@ export const hasGeographicConflict = (
  * used to read a `color` field that no profile document has ever carried, so
  * every avatar there rendered the same grey.
  */
+/**
+ * Gli otto colori usati per gli avatar dei profili.
+ *
+ * `computeProfileColor` qui sopra costruisce invece un colore dai 24 bit
+ * grezzi dell'hash: senza controllo su luminosità o saturazione, e sul
+ * fondo ci vanno le iniziali in BIANCO. Su dieci identificativi reali,
+ * quattro risultavano sotto 4,5:1 di contrasto — «profile_marco_b» esce
+ * #B4EB17 (verde lime) e si legge 1,42:1, cioè non si legge.
+ *
+ * Questi otto sono scelti invece che generati. L'ordine non è estetico: è
+ * ciò che tiene distinguibili due colori vicini, ed è stato verificato con
+ * il validatore (banda di luminosità, saturazione minima, separazione per
+ * daltonismo, contrasto sul fondo) in tema chiaro e scuro. Il contrasto
+ * peggiore con le iniziali bianche è 5,44:1.
+ */
+export const PROFILE_COLOR_SLOTS = [
+  "#B4471A", // arancio bruciato
+  "#047857", // verde acqua
+  "#4A3AA7", // violetto
+  "#166534", // verde bosco
+  "#B33270", // magenta
+  "#8A6100", // ocra
+  "#1C5CAB", // blu
+  "#B42318", // rosso mattone
+] as const;
+
+/**
+ * Lo stesso profilo riceve sempre lo stesso colore, come prima: cambia solo
+ * che l'hash sceglie una posizione fra otto invece di generare una tinta.
+ */
+export const computeProfileSlotColor = (profileId: string): string => {
+  let hash = 0;
+  for (let i = 0; i < profileId.length; i++) {
+    hash = profileId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return PROFILE_COLOR_SLOTS[Math.abs(hash) % PROFILE_COLOR_SLOTS.length];
+};
+
 export const computeProfileColor = (profileId: string): string => {
   let hash = 0;
   for (let i = 0; i < profileId.length; i++) {
