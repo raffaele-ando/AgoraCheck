@@ -65,3 +65,5 @@ Le due pagine sono caricate separatamente: si scarica solo quella che guardi.
 `DashboardClassic.tsx` è autosufficiente. Per abbandonare il disegno nuovo
 basta cambiare `DEFAULT_SKIN` in `src/pages/Dashboard.tsx`, oppure eliminare
 `DashboardNext.tsx` e far puntare il selettore solo al precedente.
+
+<!-- rilascio: verifica pipeline 2026-09-18T20:59:39Z -->
