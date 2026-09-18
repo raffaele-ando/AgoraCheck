@@ -200,16 +200,41 @@ export function migrateProfile(data) {
 const BATCH_SIZE = 400; // il limite di Firestore è 500 scritture per batch
 const PAGE_SIZE = 500;
 
+/**
+ * Il progetto non ha un database `(default)`: ne usa uno con id proprio. Lo si
+ * legge dalla stessa configurazione da cui lo prende il sito, così la
+ * migrazione non può finire per sbaglio su un altro database.
+ */
+async function resolveDatabaseId() {
+  const fromArg = process.argv.find((a) => a.startsWith("--database="));
+  if (fromArg) return fromArg.slice("--database=".length);
+  if (process.env.FIRESTORE_DATABASE_ID) return process.env.FIRESTORE_DATABASE_ID;
+
+  const { readFileSync } = await import("node:fs");
+  const config = readFileSync(new URL("../src/firebase.ts", import.meta.url), "utf8");
+  const match = config.match(/databaseId:\s*"([^"]+)"/);
+  if (!match) {
+    throw new Error(
+      "databaseId non trovato in src/firebase.ts: passalo con --database=<id>",
+    );
+  }
+  return match[1];
+}
+
 async function run() {
   const apply = process.argv.includes("--apply");
-  const { default: admin } = await import("firebase-admin");
+  // Import modulari: in ESM `firebase-admin` non espone più l'oggetto unico
+  // con `credential`/`firestore()` sotto il default export.
+  const { initializeApp, applicationDefault } = await import("firebase-admin/app");
+  const { getFirestore, FieldValue } = await import("firebase-admin/firestore");
 
-  admin.initializeApp({ credential: admin.credential.applicationDefault() });
-  const db = admin.firestore();
-  const { FieldValue } = admin.firestore;
+  const databaseId = await resolveDatabaseId();
+  initializeApp({ credential: applicationDefault() });
+  const db = getFirestore(databaseId);
 
   const label = apply ? "SCRITTURA" : "ANTEPRIMA (nessuna scrittura)";
-  console.log(`\n=== Migrazione nomi campi — ${label} ===\n`);
+  console.log(`\n=== Migrazione nomi campi — ${label} ===`);
+  console.log(`Database: ${databaseId}\n`);
 
   const stats = {};
   const record = (col, key) => {
