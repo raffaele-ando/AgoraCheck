@@ -31,5 +31,13 @@ export const formatArea = (area: string, city: string) => {
   if (area === "CATTOLICA") return "Cattolica";
   if (area === "HUNIMED") return "Hunimed";
   if (area === "UNISR") return "UniSR";
-  return area;
+  // Tutto il resto arriva dal database in maiuscolo, perche' la bacheca
+  // salva city/area con toUpperCase(). Mostrarlo com'e' vuol dire scrivere
+  // "CITTA' STUDI" e "LAMBRATE" dentro righe di testo normale: il maiuscolo
+  // integrale si legge piu' lentamente e grida senza motivo.
+  return area
+    .toLocaleLowerCase("it-IT")
+    .split(" ")
+    .map((w) => (w ? w.charAt(0).toLocaleUpperCase("it-IT") + w.slice(1) : w))
+    .join(" ");
 };

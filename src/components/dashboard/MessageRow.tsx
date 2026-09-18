@@ -31,6 +31,7 @@ import {
   IcSchermo,
   IcTecnico,
 } from "../ui/AcIcons";
+import { formatArea, formatCity } from "../../data/locations";
 
 export interface MessageRowProps {
   msg: any;
@@ -237,7 +238,7 @@ export default function MessageRow(props: MessageRowProps) {
               <div className="flex items-center gap-1.5">
                 <IcCitta className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
-                  <span>{msg.city}</span>
+                  <span>{formatCity(msg.city)}</span>
                 </div>
               </div>
             )}
@@ -245,7 +246,7 @@ export default function MessageRow(props: MessageRowProps) {
               <div className="flex items-center gap-1.5">
                 <IcZona className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
-                  <span>{msg.area}</span>
+                  <span>{formatArea(msg.area, msg.city || "")}</span>
                 </div>
               </div>
             )}

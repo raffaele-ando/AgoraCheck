@@ -1085,7 +1085,7 @@ export default function DashboardNext() {
       if (!prev || confidence > prev.conf) {
         sigs.set(reasonKey, {
           conf: confidence,
-          label: label + " (conf:" + Math.round(confidence * 100) + "%)",
+          label,
           linking: opts.linking,
         });
       }
@@ -2478,7 +2478,11 @@ export default function DashboardNext() {
         )}
         <div className={activeTab === "messages" ? "block" : "hidden"}>
           <>
-            <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
+            {/* Su schermo largo la scheda attiva in cima dice gia' dove sei,
+                a quaranta pixel da qui: il titolo ripeteva la stessa parola.
+                Su telefono la navigazione sta in fondo, piccola, quindi il
+                titolo serve. */}
+            <h1 className="md:hidden text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Messaggi
             </h1>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_248px] 2xl:grid-cols-[minmax(0,1fr)_300px] gap-x-10 xl:gap-x-14 items-start">
@@ -2744,6 +2748,13 @@ export default function DashboardNext() {
               </div>
             ) : (
               <>
+              {/* La schermata non aveva un titolo: si apriva direttamente su
+                  "Da verificare", cioe' su un sottotitolo. Su telefono, dove
+                  la navigazione sta in fondo, non c'era nulla che dicesse in
+                  che sezione ci si trova. */}
+              <h1 className="md:hidden text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
+                Profili
+              </h1>
               {macroProfiles.some((m) => m.suggestions.length > 0) && (
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-gray-600 dark:text-gray-300">
@@ -2820,10 +2831,11 @@ export default function DashboardNext() {
                           </h3>
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
 
-                            {macro.msgCount}{" "}
-                            {macro.msgCount === 1
-                              ? "Spotted Creato"
-                              : "Spotted Creati"}
+                            {macro.msgCount === 0
+                              ? "nessun messaggio"
+                              : macro.msgCount === 1
+                                ? "1 messaggio"
+                                : `${macro.msgCount} messaggi`}
                           </div>
                           {/* Un profilo ricostruito da un seed hardware (dati
                               storici, prima dei token) può aggregare persone
@@ -2897,57 +2909,66 @@ export default function DashboardNext() {
                         </div>
                       )}
 
-                      <div className="grid grid-cols-2 gap-2 mb-4">
+                      {/* I fatti tecnici in una riga, e solo quelli che
+                          esistono davvero.
 
-                        <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
-
-                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-1 flex items-center gap-1">
-                            <IcOra className="w-3 h-3" /> Ultima Attività
+                          Prima erano tre riquadri grandi in griglia — ultima
+                          attivita', tempo speso, ultimo indirizzo IP — che
+                          occupavano meta' scheda e che, per la maggior parte
+                          dei profili, contenevano "N/A", "N/A" e
+                          "Sconosciuto": tre cornici per dire tre volte che non
+                          si sa. Ed erano anche il motivo per cui le schede
+                          avevano altezze diversissime e la griglia restava
+                          piena di buchi. */}
+                      {(() => {
+                        const fatti: string[] = [];
+                        if (macro.mostRecentMsg?.createdAt)
+                          fatti.push(
+                            "ultima volta " +
+                              format(
+                                macro.mostRecentMsg.createdAt.toDate(),
+                                "d MMM HH:mm",
+                                { locale: it },
+                              ),
+                          );
+                        if (macro.totalTime > 0)
+                          fatti.push(
+                            macro.totalTime > 60
+                              ? `${Math.floor(macro.totalTime / 60)}m ${macro.totalTime % 60}s sul sito`
+                              : `${macro.totalTime}s sul sito`,
+                          );
+                        if (macro.lastIp && macro.lastIp !== "Sconosciuto")
+                          fatti.push(macro.lastIp);
+                        if (fatti.length === 0)
+                          return (
+                            <div className="mb-4 text-[12.5px] text-gray-400 dark:text-gray-500">
+                              Nessun dato tecnico su questo profilo
+                            </div>
+                          );
+                        return (
+                          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-gray-500 dark:text-gray-400">
+                            {fatti.map((f, i) => (
+                              <span key={i} className="flex items-center gap-1.5">
+                                {i > 0 && (
+                                  <span className="text-gray-300 dark:text-gray-600">·</span>
+                                )}
+                                <span className={i === 2 ? "font-mono" : ""}>{f}</span>
+                              </span>
+                            ))}
                           </div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 ">
-
-                            {macro.mostRecentMsg &&
-                            macro.mostRecentMsg.createdAt
-                              ? format(
-                                  macro.mostRecentMsg.createdAt.toDate(),
-                                  "d MMM HH:mm",
-                                  { locale: it },
-                                )
-                              : "N/A"}
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
-
-                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-1 flex items-center gap-1">
-                            <IcAttivita className="w-3 h-3" /> Tempo Speso
-                          </div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 ">
-
-                            {macro.totalTime > 0
-                              ? macro.totalTime > 60
-                                ? `${Math.floor(macro.totalTime / 60)}m ${macro.totalTime % 60}s`
-                                : `${macro.totalTime}s`
-                              : "N/A"}
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 col-span-2">
-
-                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-1 flex items-center gap-1">
-                            <IcZona className="w-3 h-3" /> Ultimo Indirizzo IP
-                          </div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 break-all font-mono">
-
-                            {macro.lastIp}
-                          </div>
-                        </div>
-                      </div>
+                        );
+                      })()}
                       <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex-1 flex flex-col justify-between">
 
-                        {/* Possible aliases */}
-                        <div>
+                        {/* I possibili alias: la sezione compare solo se ce
+                            n'e' almeno uno. Prima c'era sempre, con scritto
+                            "Nessuno" in corsivo: un'intestazione, uno spazio e
+                            una riga per dire che non c'e' niente da vedere,
+                            su ogni scheda. */}
+                        <div className={macro.possibleAliases.length > 0 ? "" : "hidden"}>
 
-                          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <IcIncerta className="w-3.5 h-3.5" /> Possibili Alias
+                          <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                            <IcIncerta className="w-3.5 h-3.5" /> Possibili alias
                           </div>
                           <div className="flex flex-wrap gap-1.5">
 
@@ -2970,7 +2991,7 @@ export default function DashboardNext() {
                         {/* Instagrams */}
                         <div>
 
-                          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
                             <IcInstagram className="w-3.5 h-3.5" /> Instagram
                             Associati
                           </div>
@@ -3000,10 +3021,10 @@ export default function DashboardNext() {
 
                           <details className="group">
 
-                            <summary className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <summary className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex flex-wrap items-center justify-between gap-y-2 p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
 
                               <span>
-                                Profili Dispositivo/Manuali (
+                                Dispositivi collegati (
                                 {macro.profileIds.length})
                               </span>
                               <div className="flex items-center gap-2">
@@ -3014,10 +3035,10 @@ export default function DashboardNext() {
                                     e.stopPropagation();
                                     handleToggleMacroIgnoreAnalytics(macro.id);
                                   }}
-                                  className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-orange-600 text-white" : "bg-orange-50 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"} hover:opacity-80 text-[10px] flex items-center gap-1 px-2 py-1 rounded-md transition-colors`}
+                                  className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-orange-600 text-white" : "bg-orange-50 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"} hover:opacity-80 text-[11px] whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-md transition-colors`}
                                   title="Escludi o Includi questo intero mega-profilo dalle statistiche"
                                 >
-                                  {macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "Ignorato (Stats)" : "Ignora (Stats)"}
+                                  {macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "Escluso dalle statistiche" : "Escludi dalle statistiche"}
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -3028,9 +3049,9 @@ export default function DashboardNext() {
                                       sourceMacroId: macro.id,
                                     });
                                   }}
-                                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-[10px] flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-md"
+                                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 text-[11px] whitespace-nowrap flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-md"
                                 >
-                                  Accorpa
+                                  Unisci ad altri
                                 </button>
                                 <svg
                                   className="w-4 h-4 text-gray-400 dark:text-gray-500 group-open:rotate-180 transition-transform"
@@ -3115,7 +3136,7 @@ export default function DashboardNext() {
                                             className={`${profiles[pid]?.ignoredFromAnalytics ? "bg-orange-600 text-white" : "bg-orange-50 dark:bg-orange-900/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-600 dark:text-orange-400"} font-bold px-2 py-1 rounded text-[10px] transition-colors`}
                                             title="Escludi o Includi questo profilo dalle statistiche"
                                           >
-                                            {profiles[pid]?.ignoredFromAnalytics ? "Ignorato (Stats)" : "Ignora (Stats)"}
+                                            {profiles[pid]?.ignoredFromAnalytics ? "Escluso dalle statistiche" : "Escludi dalle statistiche"}
                                           </button>
                                           {macro.profileIds.length > 1 ? (
                                           <button
@@ -3207,12 +3228,13 @@ export default function DashboardNext() {
             )}
           </div>
 
-        {/* Global Pagination */}
+        {/* La paginazione compare SOLO se c'e' davvero piu' di una pagina.
+            Prima occupava 100 pixel al centro dello schermo anche con
+            "Pagina 1 di 1", cioe' tre comandi spenti che dicevano solo che
+            non c'era niente da sfogliare. */}
         {!loading &&
           (activeTab === "messages" || activeTab === "profiles") &&
-          (activeTab === "messages"
-            ? filteredMessages.length > 0
-            : macroProfiles.length > 0) && (
+          (activeTab === "messages" ? totalPagesMsg : totalPagesProf) > 1 && (
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 py-8">
 
               <button
