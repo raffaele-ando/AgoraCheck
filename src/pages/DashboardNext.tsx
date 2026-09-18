@@ -39,6 +39,7 @@ import { Logo } from "../components/ui/Logo";
 import MessageRow from "../components/dashboard/MessageRow";
 import MessagesToolbar from "../components/dashboard/MessagesToolbar";
 import MessagesRail from "../components/dashboard/MessagesRail";
+import ConfirmDialog from "../components/dashboard/ConfirmDialog";
 import NextHeader from "../components/dashboard/NextHeader";
 import {
   IcConfigurazione,
@@ -396,6 +397,20 @@ export default function DashboardNext() {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [onlyPostsFilter, setOnlyPostsFilter] = useState(false);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
+
+  // Un solo elenco dei filtri attivi: lo legge la colonna laterale e lo
+  // ripete la conferma di eliminazione, perche' "Tutti (86)" agisce sui
+  // messaggi FILTRATI e chi conferma deve sapere su quali.
+  const filtriAttivi = useMemo(
+    () =>
+      [
+        selectedZoneFilter ? `Zona: ${selectedZoneFilter}` : null,
+        onlyPostsFilter ? "Solo spotted" : null,
+        searchQuery ? `Ricerca: «${searchQuery}»` : null,
+        viewFilter === "archived" ? "Archiviati" : null,
+      ].filter(Boolean) as string[],
+    [selectedZoneFilter, onlyPostsFilter, searchQuery, viewFilter],
+  );
   const [resolutionInput, setResolutionInput] = useState("");
   const [configMenuOpen, setConfigMenuOpen] = useState(false);
   const [macroModalTab, setMacroModalTab] = useState<
@@ -2581,12 +2596,7 @@ export default function DashboardNext() {
               unreadCount={unreadCount}
               carouselCount={carouselValidatedMessages.length}
               onOpenCarousel={() => setActiveTab("carousel")}
-              activeFilters={[
-                selectedZoneFilter ? `Zona: ${selectedZoneFilter}` : null,
-                onlyPostsFilter ? "Solo spotted" : null,
-                searchQuery ? `Ricerca: «${searchQuery}»` : null,
-                viewFilter === "archived" ? "Archiviati" : null,
-              ].filter(Boolean) as string[]}
+              activeFilters={filtriAttivi}
               onClearFilters={clearAllFilters}
               resultCount={filteredMessages.length}
               totalLoaded={messages.length}
@@ -3211,113 +3221,137 @@ export default function DashboardNext() {
           }
         />
       )}
-      {confirmModalState.isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999]">
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative text-center"
-          >
-
-            <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-              Conferma Operazione
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
-
-              {confirmModalState.type === "delete"
-                ? "Sei sicuro di voler eliminare questo messaggio? L'azione è irreversibile."
-                : confirmModalState.type === "delete-bulk"
-                  ? `Sei sicuro di voler eliminare i ${selectedMessages.length} messaggi selezionati? L'azione è irreversibile.`
-                  : confirmModalState.type === "delete-profile-bulk"
-                    ? `Sei sicuro di voler eliminare i ${selectedProfiles.length} profili selezionati? L'azione è irreversibile e disconnetterà i messaggi collegati.`
-                    : "Vuoi rimuovere questo messaggio dal suo gruppo manuale? Verrà nuovamente tracciato separatamente."}
-            </p>
-            <div className="flex gap-3">
-
-              <button
-                onClick={() =>
-                  setConfirmModalState({
-                    isOpen: false,
-                    messageId: null,
-                    type: null,
-                  })
+      {confirmModalState.isOpen &&
+        (() => {
+          const chiudi = () =>
+            setConfirmModalState({
+              isOpen: false,
+              messageId: null,
+              type: null,
+            });
+          const testoDi = (id: string) =>
+            messages.find((m) => m.id === id)?.lookingFor || "(senza testo)";
+          if (confirmModalState.type === "delete") {
+            return (
+              <ConfirmDialog
+                kind="distruttivo"
+                title="Eliminare questo messaggio?"
+                consequence="Sparisce dalla dashboard e dalla bacheca pubblica. Non si recupera."
+                note="Se ti serve solo toglierlo di mezzo, Archivia lo mette da parte senza cancellarlo."
+                preview={[testoDi(confirmModalState.messageId)]}
+                confirmLabel="Elimina il messaggio"
+                onConfirm={confirmAction}
+                onCancel={chiudi}
+              />
+            );
+          }
+          if (confirmModalState.type === "delete-bulk") {
+            const n = selectedMessages.length;
+            return (
+              <ConfirmDialog
+                kind="distruttivo"
+                title={`Eliminare ${n} ${n === 1 ? "messaggio" : "messaggi"}?`}
+                consequence="Spariscono dalla dashboard e dalla bacheca pubblica. Non si recuperano."
+                note={
+                  filtriAttivi.length > 0
+                    ? `Sono i ${n} che hai selezionato mentre era attivo il filtro: ${filtriAttivi.join(" · ")}.`
+                    : "Se volevi solo toglierli di mezzo, Archivia li mette da parte senza cancellarli."
                 }
-                className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors"
-              >
-
-                Annulla
-              </button>
-              <button
-                onClick={confirmAction}
-                className={`flex-1 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors text-white shadow-lg ${confirmModalState.type === "delete" || confirmModalState.type === "delete-bulk" || confirmModalState.type === "delete-profile-bulk" ? "bg-red-600 hover:bg-red-500 shadow-red-500/30" : "bg-orange-500 hover:bg-orange-400 shadow-orange-500/30"}`}
-              >
-
-                Conferma
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+                preview={selectedMessages.map(testoDi)}
+                confirmLabel={`Elimina ${n} ${n === 1 ? "messaggio" : "messaggi"}`}
+                onConfirm={confirmAction}
+                onCancel={chiudi}
+              />
+            );
+          }
+          if (confirmModalState.type === "delete-profile-bulk") {
+            const n = selectedProfiles.length;
+            return (
+              <ConfirmDialog
+                kind="distruttivo"
+                title={`Eliminare ${n} ${n === 1 ? "profilo" : "profili"}?`}
+                consequence="I messaggi collegati non vengono cancellati, ma perdono l'attribuzione: tornano a comparire come Non identificato."
+                note="L'unione fra dispositivi va rifatta a mano."
+                preview={selectedProfiles.map(
+                  (id) =>
+                    macroProfiles.find((m) => m.id === id)?.name || "Senza nome",
+                )}
+                confirmLabel={`Elimina ${n} ${n === 1 ? "profilo" : "profili"}`}
+                onConfirm={confirmAction}
+                onCancel={chiudi}
+              />
+            );
+          }
+          return (
+            <ConfirmDialog
+              kind="attenzione"
+              title="Togliere il messaggio dal gruppo?"
+              consequence="Torna a essere tracciato per conto suo. Il gruppo resta in piedi per gli altri messaggi."
+              note="Si puo' rifare: e' un'operazione reversibile."
+              confirmLabel="Togli dal gruppo"
+              onConfirm={confirmAction}
+              onCancel={chiudi}
+            />
+          );
+        })()}
       {showGroupPrompt && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999]">
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative"
-          >
-
-            <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-              Salva Gruppo
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
-              Inserisci un identificativo per questo gruppo (lascia vuoto per
-              casuale):
-            </p>
+        <ConfirmDialog
+          kind="neutro"
+          title={`Attribuire ${selectedMessages.length} ${selectedMessages.length === 1 ? "messaggio" : "messaggi"} alla stessa persona?`}
+          consequence="Da qui in poi compaiono sotto un profilo solo, anche se arrivano da dispositivi diversi. Serve quando la stessa persona scrive dal telefono e dal portatile."
+          note="Reversibile: da ogni messaggio si puo' togliere il gruppo."
+          preview={selectedMessages.map(
+            (id) =>
+              messages.find((m) => m.id === id)?.lookingFor || "(senza testo)",
+          )}
+          confirmLabel="Unisci nel profilo"
+          onConfirm={confirmGroupDevices}
+          onCancel={() => setShowGroupPrompt(false)}
+        >
+          <label className="block">
+            <span className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+              Nome del profilo
+            </span>
             <input
               autoFocus
               type="text"
               value={groupNameInput}
               onChange={(e) => setGroupNameInput(e.target.value)}
-              placeholder="Es. SconosciutaTreno"
-              className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-200 dark:border-gray-600 outline-none p-3 rounded-xl focus:border-indigo-500 transition-colors font-bold text-gray-900 dark:text-gray-100 mb-6"
+              placeholder="Es. Sconosciuta del treno"
+              className="w-full h-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 outline-none px-3 rounded-lg focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
             />
-            <div className="flex gap-3">
-
-              <button
-                onClick={() => setShowGroupPrompt(false)}
-                className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors"
-              >
-
-                Annulla
-              </button>
-              <button
-                onClick={confirmGroupDevices}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30"
-              >
-
-                Conferma
-              </button>
-            </div>
-          </motion.div>
-        </div>
+            <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+              Se lo lasci vuoto ne viene generato uno automatico, del tipo
+              MANUAL-4F7B2C: funziona, ma poi non lo riconosci nell'elenco.
+            </span>
+          </label>
+        </ConfirmDialog>
       )}
-      {showMergeModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999]">
+      {showMergeModal.isOpen &&
+        (() => {
+          const nomeProfiloDestinazione =
+            macroProfiles.find((m) => m.id === showMergeModal.sourceMacroId)
+              ?.name || "questo profilo";
+          return (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[2px] flex items-center justify-center p-4 z-[999]">
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative max-h-[80vh] flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.12 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-xl border border-gray-200 dark:border-gray-700 relative max-h-[80vh] flex flex-col"
           >
 
-            <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-              Accorpa Profili
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium">
-              Seleziona i profili che vuoi accorpare (questo diventerà il gruppo
-              principale):
+            <h2 className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50">
+              Unire altri profili in «{nomeProfiloDestinazione}»?
+            </h2>
+            <p className="text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300 mt-2 mb-4">
+              I profili che scegli qui sotto <strong>spariscono</strong> e i
+              loro messaggi passano a «{nomeProfiloDestinazione}», che resta il
+              profilo buono. Va nella direzione opposta a quello che ti aspetti
+              se pensi di stare scegliendo il vincitore.
             </p>
             <div className="mb-4">
 
@@ -3444,7 +3478,7 @@ export default function DashboardNext() {
                   setMergeSearchQuery("");
                   setMergeSelectedProfiles([]);
                 }}
-                className="px-6 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors"
+                className="px-5 h-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold text-[13px] rounded-lg transition-colors"
               >
 
                 Annulla
@@ -3452,62 +3486,80 @@ export default function DashboardNext() {
               <button
                 onClick={confirmMergeMacro}
                 disabled={mergeSelectedProfiles.length === 0}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-sm py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 disabled:opacity-50"
+                className="flex-1 h-10 bg-indigo-700 hover:bg-indigo-800 text-white font-semibold text-[13px] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
 
-                Conferma ({mergeSelectedProfiles.length})
+                {mergeSelectedProfiles.length === 0
+                  ? "Scegli almeno un profilo"
+                  : `Unisci ${mergeSelectedProfiles.length} ${mergeSelectedProfiles.length === 1 ? "profilo" : "profili"} in «${nomeProfiloDestinazione}»`}
               </button>
             </div>
           </motion.div>
         </div>
-      )}
+          );
+        })()}
       {editingProfileId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[1100]">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4 z-[1100]">
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative"
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.12 }}
+            className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-xl border border-gray-200 dark:border-gray-700 relative"
           >
 
-            <h3 className="text-xl font-bold mb-1">
-              Gestione Profilo Singolo
-            </h3>
-            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 mb-6 bg-gray-100 dark:bg-gray-700 p-2 rounded inline-block">
-              {editingProfileId}
-            </div>
+            <h2 className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50">
+              Chi e' questa persona?
+            </h2>
+            <p className="mt-2 mb-5 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300">
+              Quello che scrivi qui sostituisce il codice del dispositivo in
+              ogni messaggio che gli appartiene: e' l'unico modo per
+              riconoscerlo a colpo d'occhio nella lista.
+            </p>
             <div className="space-y-4">
 
               <div>
 
-                <label className="block text-sm font-semibold mb-1">
-                  Nome Identificativo
+                <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                  Come lo chiami
                 </label>
                 <input
                   type="text"
                   value={profileNameInput}
                   onChange={(e) => setProfileNameInput(e.target.value)}
+                  autoFocus
                   placeholder="Es. Il ragazzo coi capelli ricci"
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
+                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
                 />
+                <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                  Codice del dispositivo, se ti serve per una segnalazione:{" "}
+                  <span className="font-mono">{editingProfileId}</span>
+                </span>
               </div>
               <div>
 
-                <label className="block text-sm font-semibold mb-1">
-                  Possibili Alias (Separati da virgola)
+                <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                  Altri nomi con cui si e' firmato
                 </label>
                 <input
                   type="text"
                   value={profilePossibleAliasesInput}
                   onChange={(e) => setProfilePossibleAliasesInput(e.target.value)}
                   placeholder="Es. Mario Rossi, Luigi Bianchi"
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
+                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
                 />
+                <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                  Separati da virgola. Compaiono nella riga come «possibili
+                  alias», col punto esclamativo: servono a ricordarti che non
+                  sono confermati.
+                </span>
               </div>
               <div>
 
-                <label className="block text-sm font-semibold mb-1">
-                  Tag Instagram Custom (Separati da virgola)
+                <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                  Instagram aggiunti a mano
                 </label>
                 <input
                   type="text"
@@ -3516,24 +3568,28 @@ export default function DashboardNext() {
                     setProfileCustomInstagramsInput(e.target.value)
                   }
                   placeholder="Es. mario.rossi, luigi99"
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-gray-100"
+                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
                 />
+                <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                  Separati da virgola, senza @. Si affiancano a quelli che la
+                  persona ha scritto da se'.
+                </span>
               </div>
               <div className="pt-4 flex gap-3 flex-col-reverse sm:flex-row">
 
                 <button
                   onClick={() => setEditingProfileId(null)}
-                  className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 h-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-semibold text-[13px] rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
 
                   Annulla
                 </button>
                 <button
                   onClick={saveProfile}
-                  className="flex-1 px-4 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors"
+                  className="flex-1 h-10 bg-indigo-700 text-white font-semibold text-[13px] rounded-lg hover:bg-indigo-800 transition-colors"
                 >
 
-                  Salva Profilo
+                  Salva il nome
                 </button>
               </div>
             </div>
@@ -3567,11 +3623,11 @@ export default function DashboardNext() {
                 </div>
                 <div>
 
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
 
                     {viewingMacro.name}
                   </h2>
-                  <div className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5 sm:mt-1">
+                  <div className="text-[12.5px] sm:text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
 
                     {viewingMacro.profileIds.length}{" "}
                     {viewingMacro.profileIds.length === 1
@@ -3633,7 +3689,7 @@ export default function DashboardNext() {
 
                     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
 
-                      <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
                         Timeline Accessi & Messaggi
@@ -3809,7 +3865,7 @@ export default function DashboardNext() {
                   <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
-                        <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" /> Report di Analisi Gruppo
                         </h4>
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -3922,7 +3978,7 @@ export default function DashboardNext() {
 
                     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
 
-                      <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> Identità
                         Separate
@@ -4054,7 +4110,7 @@ export default function DashboardNext() {
 
                     <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
 
-                      <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                         Informazioni di Rete e Dispositivo
