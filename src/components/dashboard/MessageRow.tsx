@@ -35,6 +35,8 @@ import {
 export interface MessageRowProps {
   msg: any;
   isSelected: boolean;
+  /** La riga che ha il fuoco da tastiera: J e K la spostano. */
+  isFocused?: boolean;
   isSelectMode: boolean;
   isSuperAdmin: boolean;
   displayName: string;
@@ -70,6 +72,7 @@ export default function MessageRow(props: MessageRowProps) {
   const {
     msg,
     isSelected,
+  isFocused = false,
     isSelectMode,
     isSuperAdmin,
     displayName,
@@ -104,10 +107,15 @@ export default function MessageRow(props: MessageRowProps) {
   return (
     <article
       key={msg.id}
+      id={`ac-msg-${msg.id}`}
       className={`flex gap-2.5 sm:gap-3 py-5 px-3 -mx-3 transition-colors ${
         isSelected
           ? "bg-indigo-50 dark:bg-indigo-900/30"
           : "hover:bg-white dark:hover:bg-gray-800/60"
+      } ${
+        isFocused
+          ? "ring-2 ring-indigo-600 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-900 rounded-lg"
+          : ""
       } relative group`}
       onClick={() =>
         isSelectMode ? toggleSelection(msg.id) : undefined

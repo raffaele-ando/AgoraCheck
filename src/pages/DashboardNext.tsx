@@ -370,6 +370,7 @@ export default function DashboardNext() {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [onlyPostsFilter, setOnlyPostsFilter] = useState(false);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
+  const [focusedMessageId, setFocusedMessageId] = useState<string | null>(null);
 
   // Un solo elenco dei filtri attivi: lo legge la colonna laterale e lo
   // ripete la conferma di eliminazione, perche' "Tutti (86)" agisce sui
@@ -2309,6 +2310,121 @@ export default function DashboardNext() {
     isProfileSelectMode,
   ]);
 
+  /**
+   * Le scorciatoie della lista. Smaltire la coda del mattino vuol dire
+   * ripetere leggi-decidi-archivia qualche decina di volte: farlo col mouse
+   * costa un viaggio fino al pulsante per ogni messaggio.
+   *
+   * J e K spostano il fuoco, E archivia, C mette nel carosello, S seleziona,
+   * Invio apre i dettagli tecnici. Il tasto non fa niente mentre si scrive in
+   * un campo o mentre una finestra e' aperta: la scorciatoia non deve
+   * rubare le lettere a chi sta digitando.
+   */
+  useEffect(() => {
+    if (activeTab !== "messages") return;
+    const modaleAperta =
+      confirmModalState.isOpen ||
+      showGroupPrompt ||
+      showMergeModal.isOpen ||
+      !!editingProfileId ||
+      !!viewingMacroId ||
+      !!exportingMessage ||
+      !!editingMessageId;
+    if (modaleAperta) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const bersaglio = e.target as HTMLElement | null;
+      if (
+        bersaglio &&
+        (bersaglio.tagName === "INPUT" ||
+          bersaglio.tagName === "TEXTAREA" ||
+          bersaglio.tagName === "SELECT" ||
+          bersaglio.isContentEditable)
+      )
+        return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const lista = paginatedMessages;
+      if (lista.length === 0) return;
+      const indice = lista.findIndex((m) => m.id === focusedMessageId);
+      const corrente = indice >= 0 ? lista[indice] : null;
+
+      const vaiA = (nuovoIndice: number) => {
+        const msg = lista[Math.max(0, Math.min(lista.length - 1, nuovoIndice))];
+        if (!msg) return;
+        setFocusedMessageId(msg.id);
+        document
+          .getElementById(`ac-msg-${msg.id}`)
+          ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      };
+
+      switch (e.key) {
+        case "j":
+        case "J":
+        case "ArrowDown":
+          e.preventDefault();
+          vaiA(indice < 0 ? 0 : indice + 1);
+          return;
+        case "k":
+        case "K":
+        case "ArrowUp":
+          e.preventDefault();
+          vaiA(indice < 0 ? 0 : indice - 1);
+          return;
+        case "e":
+        case "E":
+          if (!corrente) return;
+          e.preventDefault();
+          // Il fuoco scende prima di archiviare: la riga sparisce dalla lista
+          // e senza questo il fuoco resterebbe su un messaggio che non c'e'.
+          vaiA(indice + 1);
+          toggleArchiveStatus(corrente.id, !!corrente.isArchived);
+          return;
+        case "c":
+        case "C":
+          if (!corrente) return;
+          e.preventDefault();
+          updateDoc(doc(db, "messages", corrente.id), {
+            isValidatedForCarousel: !corrente.isValidatedForCarousel,
+          });
+          return;
+        case "s":
+        case "S":
+          if (!corrente) return;
+          e.preventDefault();
+          if (!isSelectMode) setIsSelectMode(true);
+          toggleSelection(corrente.id);
+          return;
+        case "Enter":
+          if (!corrente) return;
+          e.preventDefault();
+          {
+            const dettagli = document.getElementById(
+              `ac-msg-${corrente.id}`,
+            )?.querySelector("details");
+            if (dettagli) (dettagli as HTMLDetailsElement).open = !(dettagli as HTMLDetailsElement).open;
+          }
+          return;
+        default:
+          return;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    activeTab,
+    paginatedMessages,
+    focusedMessageId,
+    isSelectMode,
+    confirmModalState.isOpen,
+    showGroupPrompt,
+    showMergeModal.isOpen,
+    editingProfileId,
+    viewingMacroId,
+    exportingMessage,
+    editingMessageId,
+  ]);
+
   return (
     <div
       className="ac-next min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 bg-gray-50 dark:bg-gray-900"
@@ -2525,6 +2641,7 @@ export default function DashboardNext() {
                       key={msg.id}
                       msg={msg}
                       isSelected={isSelected}
+                      isFocused={focusedMessageId === msg.id}
                       isSelectMode={isSelectMode}
                       isSuperAdmin={isSuperAdmin}
                       displayName={displayName}

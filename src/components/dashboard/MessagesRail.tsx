@@ -125,14 +125,30 @@ export default function MessagesRail({
         <div className="text-[11px] font-black uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500 mb-2">
           Da tastiera
         </div>
-        <div className="text-[12px] text-gray-500 dark:text-gray-400 space-y-1">
-          <div>
-            <kbd className="font-mono text-[11px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5">
-              Esc
-            </kbd>{" "}
-            chiude e annulla la selezione
-          </div>
-        </div>
+        <dl className="text-[12px] text-gray-500 dark:text-gray-400 space-y-1.5">
+          {[
+            ["J K", "scorri i messaggi"],
+            ["E", "archivia"],
+            ["C", "metti nel carosello"],
+            ["S", "seleziona"],
+            ["Invio", "apri i dettagli tecnici"],
+            ["Esc", "chiude e annulla la selezione"],
+          ].map(([tasto, cosa]) => (
+            <div key={tasto} className="flex items-baseline gap-2">
+              <dt className="shrink-0">
+                {tasto.split(" ").map((t) => (
+                  <kbd
+                    key={t}
+                    className="font-mono text-[11px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 mr-1"
+                  >
+                    {t}
+                  </kbd>
+                ))}
+              </dt>
+              <dd className="min-w-0">{cosa}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </aside>
   );
