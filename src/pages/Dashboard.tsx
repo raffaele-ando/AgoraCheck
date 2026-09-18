@@ -172,25 +172,17 @@ function SkinSwitch({
   skin: DashboardSkin;
   onChoose: (next: DashboardSkin) => void;
 }) {
-  const [open, setOpen] = useState(false);
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-[100] flex items-center gap-2 pl-2.5 pr-3 py-2 rounded-full bg-gray-900/90 dark:bg-gray-700/95 text-white text-[11px] font-bold uppercase tracking-wide backdrop-blur shadow-lg hover:bg-gray-900 transition-colors"
-        title="Cambia disegno della dashboard"
-      >
-        <span className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-[10px]">
-          {skin === "classic" ? "1" : "2"}
-        </span>
-        {skin === "classic" ? "Disegno precedente" : "Disegno nuovo"}
-      </button>
-    );
-  }
-
+  // Mostra sempre tutte e due le voci con quella attiva evidenziata.
+  // Prima era una targhetta sola col nome del disegno in corso: si legge
+  // come un pulsante che APPLICA quel disegno, non come l'indicazione di
+  // dove sei — e chi era gia' sul nuovo cliccava "nuovo" senza veder
+  // cambiare niente, concludendo che fosse rotto.
   return (
-    <div className="fixed bottom-4 left-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/90 dark:bg-gray-700/95 backdrop-blur shadow-lg">
+    <div
+      className="fixed bottom-4 left-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/90 dark:bg-gray-700/95 backdrop-blur shadow-lg"
+      role="group"
+      aria-label="Disegno della dashboard"
+    >
       {(
         [
           ["classic", "Precedente"],
@@ -199,24 +191,22 @@ function SkinSwitch({
       ).map(([value, label]) => (
         <button
           key={value}
-          onClick={() => (value === skin ? setOpen(false) : onChoose(value))}
+          onClick={() => value !== skin && onChoose(value)}
           aria-pressed={value === skin}
+          title={
+            value === skin
+              ? `Stai guardando il disegno: ${label.toLowerCase()}`
+              : `Passa al disegno ${label.toLowerCase()}`
+          }
           className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide transition-colors ${
             value === skin
-              ? "bg-white text-gray-900"
-              : "text-white/70 hover:text-white hover:bg-white/10"
+              ? "bg-white text-gray-900 cursor-default"
+              : "text-white/60 hover:text-white hover:bg-white/10"
           }`}
         >
           {label}
         </button>
       ))}
-      <button
-        onClick={() => setOpen(false)}
-        className="w-6 h-6 rounded-full text-white/50 hover:text-white text-[13px] leading-none"
-        aria-label="Chiudi"
-      >
-        &times;
-      </button>
     </div>
   );
 }
