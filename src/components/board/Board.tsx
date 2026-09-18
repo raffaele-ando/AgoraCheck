@@ -98,17 +98,41 @@ function warmOrbite() {
  * digita, o quando la scheda è in secondo piano, non ha alcun senso continuare
  * a riscrivere un suggerimento che nessuno sta leggendo.
  */
+/**
+ * Chi ha chiesto al sistema di ridurre le animazioni non deve vedere un
+ * suggerimento che si riscrive da solo mentre sta decidendo cosa scrivere.
+ * In quel caso il campo mostra la prima frase, ferma.
+ */
+function useAnimazioniRidotte() {
+  const [ridotte, setRidotte] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setRidotte(mq.matches);
+    const onChange = () => setRidotte(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return ridotte;
+}
+
 function useTypewriter(
   words: string[],
   { paused = false, speed = 60, waitTime = 2000 } = {},
 ) {
   const [text, setText] = useState("");
+  const animazioniRidotte = useAnimazioniRidotte();
 
   // Confronto per contenuto: l'array arriva nuovo a ogni render, quindi
   // usarlo direttamente come dipendenza rifarebbe partire tutto ogni volta.
   const wordsJson = JSON.stringify(words);
 
   useEffect(() => {
+    if (animazioniRidotte) {
+      const list = JSON.parse(wordsJson) as string[];
+      setText(list[0] ?? "");
+      return;
+    }
     if (paused) return;
     const list = JSON.parse(wordsJson) as string[];
     if (!list.length) return;
@@ -148,7 +172,7 @@ function useTypewriter(
       alive = false;
       clearTimeout(timer);
     };
-  }, [wordsJson, paused, speed, waitTime]);
+  }, [wordsJson, paused, speed, waitTime, animazioniRidotte]);
 
   return text;
 }
@@ -903,15 +927,15 @@ export function Board() {
                 <div key="spotted" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
                       <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📍</div>
-                      <TypewriterTextarea words={whereWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={where} onChange={(e) => setWhere(e.target.value)} onFocus={() => handleInputFocus("where")} onBlur={() => handleInputBlur("where")} />
+                      <TypewriterTextarea aria-label={isIt ? "Dove l'hai vista o visto" : "Where you saw them"} words={whereWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={where} onChange={(e) => setWhere(e.target.value)} onFocus={() => handleInputFocus("where")} onBlur={() => handleInputBlur("where")} />
                    </Squircle>
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
                       <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🗓️</div>
-                      <TypewriterTextarea words={whenWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={when} onChange={(e) => setWhen(e.target.value)} onFocus={() => handleInputFocus("when")} onBlur={() => handleInputBlur("when")}/>
+                      <TypewriterTextarea aria-label={isIt ? "Quando" : "When"} words={whenWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={when} onChange={(e) => setWhen(e.target.value)} onFocus={() => handleInputFocus("when")} onBlur={() => handleInputBlur("when")}/>
                    </Squircle>
                    <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden flex-1 focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🔍</div>
-                      <TypewriterTextarea words={lookingForWordsDefault} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
+                      <TypewriterTextarea aria-label={isIt ? "Chi stai cercando" : "Who you are looking for"} words={lookingForWordsDefault} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                 </div>
              )}
@@ -958,7 +982,8 @@ export function Board() {
                    */}
                    <Squircle cornerRadius={24} className="ag-poll-q ag-edge bg-[var(--ag-inset)] flex overflow-hidden flex-1 min-h-[2.75rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>📊</div>
-                      <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
+                      <textarea className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pr-4 pb-2 h-full" aria-label={isIt ? "La tua domanda" : "Your question"}
+                        placeholder={isIt ? "Fai una domanda alla community... *" : "Ask a question to the community... *"} required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                    {/*
                      Le quattro risposte hanno altezza fissa e NON si
@@ -1007,6 +1032,7 @@ export function Board() {
                          </div>
                          <input 
                            className="bg-transparent h-full w-full outline-none text-[14px] font-medium placeholder:text-[var(--ag-muted)] placeholder:font-normal px-3" 
+                           aria-label={isIt ? `Risposta ${i + 1}` : `Answer ${i + 1}`}
                            placeholder={i < 2 ? "Risposta obbligatoria *" : "Risposta opzionale"} value={opt.value} onChange={(e) => { const newOpts = [...options]; newOpts[i] = {...newOpts[i], value: e.target.value}; setOptions(newOpts); }}
                            onFocus={() => handleInputFocus(`option_${opt.id}`)} onBlur={() => handleInputBlur(`option_${opt.id}`)}
                          />
@@ -1032,6 +1058,7 @@ export function Board() {
                  <span className={`text-[15px] font-bold transition-all duration-300 shrink-0 ${instagram ? 'text-[#DC5F00]' : 'text-[var(--ag-muted)] group-focus-within/ig:text-[var(--ag-accent)]/60'}`}>@</span>
                  <input 
                    className="bg-transparent flex-1 h-full pl-0.5 pr-2 text-[14px] font-bold outline-none placeholder:text-[var(--ag-muted)] placeholder:font-normal min-w-0 text-[var(--ag-text)] selection:bg-[#DC5F00]/20" 
+                   aria-label={isIt ? "Il tuo nome utente Instagram" : "Your Instagram username"}
                    placeholder={isIt ? "Il tuo username IG" : "Your IG username"}
                    value={instagram} 
                    onChange={e => handleIgChange(e.target.value)} 

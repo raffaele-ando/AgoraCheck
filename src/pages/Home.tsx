@@ -1239,16 +1239,30 @@ export function useSubmitMessage() {
     type?: "spotted" | "sondaggio";
     pollOptions?: string[];
   }) => {
+    // L'errore dice QUALE campo manca e non sparisce da solo.
+    //
+    // Diceva "Devi compilare il campo obbligatorio": nel modulo spotted i
+    // campi sono tre e l'obbligatorio e' uno, ma non era detto quale. E dopo
+    // tre secondi il messaggio se ne andava: su un telefono compare sopra il
+    // modulo, mentre chi scrive sta guardando il pulsante in fondo, quindi
+    // poteva finire il suo tempo senza essere mai stato letto. Ora resta
+    // finche' l'invio non riesce (piu' sotto c'e' setError("")).
     if (!data.lookingFor.trim()) {
-      setError("Devi compilare il campo obbligatorio.");
-      setTimeout(() => setError(""), 3000);
+      setError(
+        data.type === "sondaggio"
+          ? "Manca la domanda: scrivi cosa vuoi chiedere."
+          : "Manca la cosa principale: scrivi chi stai cercando.",
+      );
       return false;
     }
     if (data.type === "sondaggio") {
       const opts = (data.pollOptions || []).filter(o => o.trim());
       if (opts.length < 2) {
-        setError("Devi inserire almeno 2 opzioni per il sondaggio.");
-        setTimeout(() => setError(""), 3000);
+        setError(
+          opts.length === 0
+            ? "Un sondaggio ha bisogno di almeno due risposte fra cui scegliere."
+            : "Ne manca ancora una: servono almeno due risposte.",
+        );
         return false;
       }
     }
