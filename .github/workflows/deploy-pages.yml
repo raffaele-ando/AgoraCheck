@@ -44,7 +44,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Build (dominio proprio: agora.theproject.world)
+      - name: "Build (dominio proprio: agora.theproject.world)"
         # Niente VITE_BASE: il default in vite.config.ts è '/', giusto per un
         # sito che vive alla radice di un dominio — non più sotto
         # github.io/AgoraCheck/. Il file public/CNAME (copiato tale e quale in
