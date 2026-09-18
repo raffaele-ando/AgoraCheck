@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import MessageRow from "../src/components/dashboard/MessageRow";
 import MessagesToolbar from "../src/components/dashboard/MessagesToolbar";
+import NextHeader from "../src/components/dashboard/NextHeader";
+import SelectionBar from "../src/components/dashboard/SelectionBar";
 
 const ts = (d: Date) => ({ toDate: () => d, toMillis: () => d.getTime() });
 const nulla = () => {};
@@ -19,6 +21,12 @@ const messaggi = [
 
 const pagina = renderToStaticMarkup(
   <div className="ac-next">
+    <NextHeader
+      activeTab="messages" onTab={nulla} unreadCount={12} isSuperAdmin
+      email="raffaele@polinetwork.org" totalMessages={4128}
+      isDarkMode={false} onToggleTheme={nulla} onLogout={nulla}
+    />
+    <h1 className="text-[26px] font-black tracking-tight mb-5">Messaggi</h1>
     <MessagesToolbar
       viewFilter="new" onViewFilter={nulla} unreadCount={12}
       searchQuery="" onSearch={nulla}
@@ -58,5 +66,5 @@ const css = readdirSync("dist/assets").find((f) => f.endsWith(".css"))!;
 writeFileSync("/tmp/pagina-vera.html", `<!doctype html><html lang="it"><head><meta charset="utf-8">
 <link rel="stylesheet" href="file://${process.cwd()}/dist/assets/${css}">
 <style>body{margin:0;background:#f9fafb}</style></head>
-<body><div class="p-8 max-w-7xl mx-auto"><h1 class="text-2xl font-black tracking-tight mb-5">Messaggi</h1>${pagina}</div></body></html>`);
+<body><div class="p-4 md:p-8 max-w-7xl mx-auto">${pagina}</div></body></html>`);
 console.log("scritto /tmp/pagina-vera.html");

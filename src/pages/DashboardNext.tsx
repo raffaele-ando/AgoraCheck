@@ -38,6 +38,13 @@ import { it } from "date-fns/locale";
 import { Logo } from "../components/ui/Logo";
 import MessageRow from "../components/dashboard/MessageRow";
 import MessagesToolbar from "../components/dashboard/MessagesToolbar";
+import NextHeader from "../components/dashboard/NextHeader";
+import {
+  IcConfigurazione,
+  IcMessaggi,
+  IcStatistiche,
+} from "../components/ui/AcIcons";
+import SelectionBar from "../components/dashboard/SelectionBar";
 import {
   IcArchivia,
   IcCarosello,
@@ -2320,340 +2327,18 @@ export default function DashboardNext() {
 
       <div className="max-w-7xl mx-auto">
 
-        <header
-          className={`sticky top-2 sm:top-4 z-40 mb-4 sm:mb-6 p-3 sm:p-4 rounded-3xl border shadow-sm transition-all duration-500 ${isAnySelectMode ? "bg-indigo-600 dark:bg-indigo-900 backdrop-blur-xl border-indigo-500 dark:border-indigo-800 shadow-indigo-500/20 dark:shadow-indigo-900/40 text-white shadow-lg scale-[1.01]" : "bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-700 shadow-sm"}`}
-        >
-
-          {/* NOT SELECT MODE */}
-          {!isAnySelectMode && (
-            <div className="flex flex-col gap-3 sm:gap-4 w-full">
-              {/* Top Row: Logo & Actions */}
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <Link to="/" className="shrink-0 flex items-center">
-                    <Logo className="h-7 w-[90px] sm:h-9 sm:w-[120px] hover:opacity-80 transition-all duration-300" />
-                  </Link>
-
-                  {/* Contatore globale: veniva letto da Firestore a ogni
-                      montaggio ma non era mostrato da nessuna parte. */}
-                </div>
-
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {(activeTab === "messages" || activeTab === "profiles") && (
-                    <button
-                      onClick={() => {
-                        if (activeTab === "messages") {
-                          setIsSelectMode(true);
-                          setSelectedMessages([]);
-                        } else {
-                          setIsProfileSelectMode(true);
-                          setSelectedProfiles([]);
-                        }
-                      }}
-                      className="flex items-center justify-center gap-1.5 px-2.5 py-2 sm:px-4 sm:py-2 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-xl hover:shadow-md hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all active:scale-95 shrink-0"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                      <span className="hidden sm:inline-block whitespace-nowrap">
-                        Selezione
-                      </span>
-                    </button>
-                  )}
-                  <div className="flex items-center gap-1 sm:gap-2 border-l border-gray-300 dark:border-gray-600 pl-1.5 sm:pl-2">
-                    <button
-                      onClick={() => setIsDarkMode(!isDarkMode)}
-                      className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 rounded-xl transition-all"
-                      title="Cambia tema"
-                      aria-label="Cambia tema chiaro/scuro"
-                    >
-                      {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
-                    </button>
-
-                    <button
-                      onClick={handleLogout}
-                      className="p-2 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
-                      title="Disconnetti"
-                      aria-label="Disconnetti"
-                    >
-                      <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Row: Navigation Tabs */}
-              <div className="w-full overflow-x-auto hide-scrollbar -mx-1 px-1">
-                <div className="flex items-center justify-start sm:justify-center gap-1.5 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl border border-gray-200/50 dark:border-gray-700 min-w-max md:min-w-0">
-                  <button
-                    onClick={() => setActiveTab("messages")}
-                    className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "messages" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    Messaggi
-                  </button>
-                  {isSuperAdmin && (
-                    <>
-                      <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
-                      <button
-                        onClick={() => setActiveTab("profiles")}
-                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "profiles" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
-                      >
-                        <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Profili
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("analytics")}
-                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${ activeTab === "analytics" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50" }`}
-                      >
-                        <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Analytics
-                      </button>
-                      <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
-                      <div className="relative">
-                        <button
-                          onClick={() => setConfigMenuOpen((v) => !v)}
-                          aria-expanded={configMenuOpen}
-                          aria-haspopup="menu"
-                          className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
-                            activeTab === "story_template" ||
-                            activeTab === "carousel" ||
-                            activeTab === "settings"
-                              ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50"
-                          }`}
-                        >
-                          <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          Configurazione
-                          <span className="text-[9px] opacity-60">▾</span>
-                        </button>
-                        {configMenuOpen && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-[70]"
-                              onClick={() => setConfigMenuOpen(false)}
-                              aria-hidden="true"
-                            />
-                            <div
-                              role="menu"
-                              className="absolute right-0 mt-1.5 w-56 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-1.5"
-                            >
-                              {(
-                                [
-                                  ["story_template", "Template storia", LayoutTemplate],
-                                  ["carousel", "Carosello Instagram", Sparkles],
-                                  ["settings", "Impostazioni", Settings],
-                                ] as const
-                              ).map(([tab, label, Icon]) => (
-                                <button
-                                  key={tab}
-                                  role="menuitem"
-                                  onClick={() => {
-                                    setActiveTab(tab);
-                                    setConfigMenuOpen(false);
-                                  }}
-                                  className={`w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold flex items-center gap-2.5 transition-colors ${
-                                    activeTab === tab
-                                      ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
-                                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                  }`}
-                                >
-                                  <Icon className="w-4 h-4 shrink-0 opacity-70" />
-                                  {label}
-                                </button>
-                              ))}
-                              <div className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 px-3 py-1.5 text-[11px] text-gray-400 dark:text-gray-500">
-                                {auth.currentUser?.email}
-                                {totalGlobalMessages !== null && (
-                                  <div className="mt-0.5 tabular-nums">
-                                    {totalGlobalMessages.toLocaleString("it-IT")} messaggi in totale
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          {/* SELECT MODE */}
-          {isAnySelectMode && (
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
-
-              {/* Top Row on mobile, Left side on Desktop */}
-              <div className="flex items-center justify-between w-full md:w-auto">
-
-                <div className="flex items-center gap-3">
-
-                  <button
-                    onClick={() => {
-                      if (activeTab === "messages") {
-                        setIsSelectMode(false);
-                        setSelectedMessages([]);
-                      } else {
-                        setIsProfileSelectMode(false);
-                        setSelectedProfiles([]);
-                      }
-                    }}
-                    className="p-2 sm:p-2 bg-white/10 hover:bg-red-500/80 rounded-full text-white transition-colors flex items-center justify-center shrink-0 border border-white/10 dark:bg-gray-900"
-                    title="Annulla selezione"
-                    aria-label="Annulla selezione"
-                  >
-
-                    <X className="w-5 h-5 sm:w-4 sm:h-4 text-white" />
-                  </button>
-                  <span className="text-sm font-black text-white bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 dark:bg-gray-900">
-
-                    {activeTab === "messages"
-                      ? selectedMessages.length
-                      : selectedProfiles.length}
-                    <span className="opacity-80 font-semibold hidden sm:inline-block ml-2">
-                      selezionati
-                    </span>
-                  </span>
-                </div>
-                {/* Tutti / Nessuno on Mobile Top Right */}
-                <div className="flex md:hidden items-center gap-1 bg-white/10 rounded-xl p-1 border border-white/10 shadow-inner dark:bg-gray-900">
-
-                  <button
-                    onClick={selectCurrentPage}
-                    className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
-                  >
-
-                    Pagina
-                  </button>
-                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
-                  <button
-                    onClick={selectAllFiltered}
-                    className="px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
-                    title={`Seleziona tutti i ${selectableTotal} elementi che corrispondono ai filtri`}
-                  >
-                    Tutti ({selectableTotal})
-                  </button>
-                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
-                  <button
-                    onClick={clearSelection}
-                    className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
-                  >
-
-                    Nessuno
-                  </button>
-                </div>
-              </div>
-              {/* Bottom Row on mobile, Right side on Desktop */}
-              <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto">
-
-                {/* Tutti / Nessuno on Desktop */}
-                <div className="hidden md:flex items-center gap-1 bg-white/10 rounded-xl p-1 border border-white/10 shadow-inner mr-2 dark:bg-gray-900">
-
-                  <button
-                    onClick={selectCurrentPage}
-                    className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
-                  >
-
-                    Pagina
-                  </button>
-                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
-                  <button
-                    onClick={selectAllFiltered}
-                    className="px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
-                    title={`Seleziona tutti i ${selectableTotal} elementi che corrispondono ai filtri`}
-                  >
-                    Tutti ({selectableTotal})
-                  </button>
-                  <div className="w-px h-4 bg-white/20 mx-0.5 dark:bg-gray-900"></div>
-                  <button
-                    onClick={clearSelection}
-                    className="px-3 py-1.5 text-xs font-bold uppercase hover:bg-white/20 text-white rounded-lg transition-all active:scale-95 dark:bg-gray-900"
-                  >
-
-                    Nessuno
-                  </button>
-                </div>
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between w-full md:w-auto gap-2">
-
-                  {activeTab === "messages" && (
-                    <button
-                      onClick={handleGroupDevices}
-                      disabled={selectedMessages.length === 0}
-                      className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-indigo-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-indigo-400/50"
-                    >
-
-                      <Layers className="w-4 h-4 shrink-0" />
-                      <span className="inline-block sm:hidden xl:inline-block">
-                        Gruppo
-                      </span>
-                      <span className="hidden sm:inline-block xl:hidden">
-                        Raggruppa
-                      </span>
-                    </button>
-                  )}
-                  {activeTab === "profiles" ? (
-                    <button
-                      onClick={() =>
-                        setConfirmModalState({
-                          isOpen: true,
-                          messageId: null,
-                          type: "delete-profile-bulk",
-                        })
-                      }
-                      disabled={selectedProfiles.length === 0}
-                      className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-red-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-red-400 focus:ring-4 focus:ring-red-500/20 transition-all disabled:opacity-50 shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-red-400/50"
-                      title="Elimina Selezionati"
-                    >
-
-                      <Trash2 className="w-4 h-4 shrink-0" />
-                      <span className="inline-block">Elimina</span>
-                    </button>
-                  ) : (
-                    <>
-
-                      <button
-                        onClick={handleBulkArchive}
-                        disabled={selectedMessages.length === 0}
-                        className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-slate-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-slate-500 focus:ring-4 focus:ring-slate-500/20 transition-all disabled:opacity-50 shadow-lg shadow-slate-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-slate-500/50"
-                        title={
-                          viewFilter === "new"
-                            ? "Archivia Selezionati"
-                            : "Sposta in Nuovi"
-                        }
-                      >
-
-                        {viewFilter === "new" ? (
-                          <Archive className="w-4 h-4 shrink-0" />
-                        ) : (
-                          <ArchiveRestore className="w-4 h-4 shrink-0" />
-                        )}
-                        <span className="inline-block">
-                          {viewFilter === "new" ? "Archivia" : "Ripristina"}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() =>
-                          setConfirmModalState({
-                            isOpen: true,
-                            messageId: null,
-                            type: "delete-bulk",
-                          })
-                        }
-                        disabled={selectedMessages.length === 0}
-                        className="flex-1 md:flex-none px-2 py-2.5 sm:px-4 sm:py-2 bg-red-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide rounded-xl hover:bg-red-400 focus:ring-4 focus:ring-red-500/20 transition-all disabled:opacity-50 shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-1.5 border border-red-400/50"
-                        title="Elimina Selezionati"
-                      >
-
-                        <Trash2 className="w-4 h-4 shrink-0" />
-                        <span className="inline-block">Elimina</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </header>
+        <NextHeader
+          activeTab={activeTab}
+          onTab={setActiveTab}
+          unreadCount={unreadCount}
+          isSuperAdmin={isSuperAdmin}
+          email={auth.currentUser?.email}
+          totalMessages={totalGlobalMessages}
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          onLogout={handleLogout}
+          logo={<Logo className="h-6 w-[80px]" />}
+        />
         {activeTab === "analytics" && (
           <Suspense fallback={<TabLoading />}>
             <Analytics
@@ -2932,6 +2617,20 @@ export default function DashboardNext() {
                 )}
               </div>
             ) : (
+              <>
+              {macroProfiles.some((m) => m.suggestions.length > 0) && (
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-gray-600 dark:text-gray-300">
+                    Da verificare
+                  </h2>
+                  <span className="tabular-nums text-[11px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-md">
+                    {macroProfiles.filter((m) => m.suggestions.length > 0).length}
+                  </span>
+                  <span className="text-[12.5px] text-gray-400 dark:text-gray-500">
+                    il sistema propone un'unione: decidi tu
+                  </span>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max items-start">
 
                 {paginatedProfiles.map((macro) => {
@@ -3378,6 +3077,7 @@ export default function DashboardNext() {
                   );
                 })}
               </div>
+              </>
             )}
           </div>
         {/* Global Pagination */}
@@ -3416,6 +3116,75 @@ export default function DashboardNext() {
             </div>
           )}
       </div>
+      {!isAnySelectMode && isSuperAdmin && (
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 flex bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+          {(
+            [
+              ["messages", "Messaggi", IcMessaggi],
+              ["profiles", "Profili", IcProfilo],
+              ["analytics", "Statistiche", IcStatistiche],
+              ["settings", "Config.", IcConfigurazione],
+            ] as const
+          ).map(([tab, label, Icon]) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              aria-current={activeTab === tab ? "page" : undefined}
+              className={`flex-1 py-2 flex flex-col items-center gap-1 ${
+                activeTab === tab
+                  ? "text-gray-900 dark:text-gray-100"
+                  : "text-gray-400 dark:text-gray-500"
+              }`}
+            >
+              <Icon className="w-[19px] h-[19px]" />
+              <span
+                className={`text-[10.5px] ${activeTab === tab ? "font-bold" : "font-semibold"}`}
+              >
+                {label}
+              </span>
+            </button>
+          ))}
+        </nav>
+      )}
+      {/* spazio per non far coprire l'ultimo messaggio dalla barra */}
+      <div className="md:hidden h-16" />
+      {isAnySelectMode && (
+        <SelectionBar
+          count={
+            activeTab === "messages" ? selectedMessages.length : selectedProfiles.length
+          }
+          totalFiltered={selectableTotal}
+          filterSummary={
+            [
+              selectedZoneFilter ? `zona ${selectedZoneFilter}` : null,
+              onlyPostsFilter ? "solo spotted" : null,
+              searchQuery ? `«${searchQuery}»` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || null
+          }
+          isArchivedView={viewFilter === "archived"}
+          onSelectPage={selectCurrentPage}
+          onSelectAll={selectAllFiltered}
+          onClear={clearSelection}
+          onCancel={() => {
+            setIsSelectMode(false);
+            setIsProfileSelectMode(false);
+            setSelectedMessages([]);
+            setSelectedProfiles([]);
+          }}
+          onArchive={handleBulkArchive}
+          onGroup={activeTab === "messages" ? handleGroupDevices : undefined}
+          onDelete={() =>
+            setConfirmModalState({
+              isOpen: true,
+              messageId: null,
+              type:
+                activeTab === "messages" ? "delete-bulk" : "delete-profile-bulk",
+            })
+          }
+        />
+      )}
       {confirmModalState.isOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999]">
 

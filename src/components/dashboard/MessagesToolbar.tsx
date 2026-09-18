@@ -149,7 +149,7 @@ export default function MessagesToolbar({
           value={pageSize}
           onChange={(e) => onPageSize(Number(e.target.value))}
           aria-label="Quanti messaggi per pagina"
-          className="px-2 py-[7px] rounded-lg text-[12.5px] font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 outline-none"
+          className="hidden sm:block px-2 py-[7px] rounded-lg text-[12.5px] font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 outline-none"
         >
           {[20, 50, 100, 200].map((n) => (
             <option key={n} value={n}>
@@ -165,7 +165,7 @@ export default function MessagesToolbar({
 
       {/* Riga di riepilogo: i numeri su cui si agisce, al posto delle due
           schede grandi che li contenevano prima. */}
-      <div className="flex items-center gap-5 sm:gap-7 py-3 overflow-x-auto">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7 py-3">
         <div className="shrink-0 flex items-baseline gap-1.5">
           <span className="text-[19px] font-black tabular-nums text-gray-900 dark:text-gray-100">
             {unreadCount}
