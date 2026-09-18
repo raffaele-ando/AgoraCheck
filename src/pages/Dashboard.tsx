@@ -25,12 +25,21 @@ const DEFAULT_SKIN: DashboardSkin = "next";
 const isSkin = (value: unknown): value is DashboardSkin =>
   value === "classic" || value === "next";
 
+/** Accetta i modi ragionevoli di scrivere la stessa cosa, non solo i due esatti. */
+const parseSkin = (raw: string | null): DashboardSkin | null => {
+  if (!raw) return null;
+  const v = raw.trim().toLowerCase();
+  if (["classic", "classico", "precedente", "vecchio", "old", "1"].includes(v)) return "classic";
+  if (["next", "nuovo", "new", "2"].includes(v)) return "next";
+  return null;
+};
+
 /** L'indirizzo vince sempre sulla preferenza salvata, ed è anche ciò che la aggiorna. */
 export const readSkin = (): DashboardSkin => {
   if (typeof window === "undefined") return DEFAULT_SKIN;
 
-  const fromUrl = new URLSearchParams(window.location.search).get("ui");
-  if (isSkin(fromUrl)) {
+  const fromUrl = parseSkin(new URLSearchParams(window.location.search).get("ui"));
+  if (fromUrl) {
     // Il ricordo è un di più: se il browser lo nega (navigazione privata,
     // dati del sito bloccati) la scelta scritta nell'indirizzo vale
     // comunque. Con il try attorno a tutto, un setItem che falliva
@@ -169,17 +178,19 @@ function SkinSwitch({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-[60] w-9 h-9 rounded-full bg-gray-900/85 dark:bg-gray-700/90 text-white text-[11px] font-bold backdrop-blur shadow-lg hover:bg-gray-900 transition-colors"
+        className="fixed bottom-4 left-4 z-[100] flex items-center gap-2 pl-2.5 pr-3 py-2 rounded-full bg-gray-900/90 dark:bg-gray-700/95 text-white text-[11px] font-bold uppercase tracking-wide backdrop-blur shadow-lg hover:bg-gray-900 transition-colors"
         title="Cambia disegno della dashboard"
-        aria-label="Cambia disegno della dashboard"
       >
-        {skin === "classic" ? "1" : "2"}
+        <span className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-[10px]">
+          {skin === "classic" ? "1" : "2"}
+        </span>
+        {skin === "classic" ? "Disegno precedente" : "Disegno nuovo"}
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-[60] flex items-center gap-1 p-1 rounded-full bg-gray-900/90 dark:bg-gray-700/95 backdrop-blur shadow-lg">
+    <div className="fixed bottom-4 left-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/90 dark:bg-gray-700/95 backdrop-blur shadow-lg">
       {(
         [
           ["classic", "Precedente"],

@@ -60,3 +60,25 @@ test("se il browser nega la memoria, la pagina si apre lo stesso", async () => {
   const readSkin = await load(win);
   assert.strictEqual(readSkin(), "classic");
 });
+
+test("i modi ragionevoli di scrivere la scelta valgono tutti", async () => {
+  for (const [scritto, atteso] of [
+    ["classico", "classic"],
+    ["CLASSIC", "classic"],
+    [" precedente ", "classic"],
+    ["1", "classic"],
+    ["nuovo", "next"],
+    ["2", "next"],
+  ] as [string, string][]) {
+    const readSkin = await load(makeWindow(`?ui=${encodeURIComponent(scritto)}`));
+    assert.strictEqual(readSkin(), atteso, `?ui=${scritto}`);
+  }
+});
+
+test("un refuso non azzera la scelta gia' fatta", async () => {
+  // «?ui=classicnext» nasce da un copia-incolla andato storto: prima
+  // ricadeva in silenzio sul predefinito, facendo sembrare rotto
+  // l'interruttore proprio a chi lo stava usando.
+  const readSkin = await load(makeWindow("?ui=classicnext", "classic"));
+  assert.strictEqual(readSkin(), "classic");
+});
