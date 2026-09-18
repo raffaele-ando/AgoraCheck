@@ -11,7 +11,8 @@
  * file suo perche' cosi' la si puo' renderizzare e fotografare insieme
  * alle righe, senza Firebase e senza login.
  */
-import { IcAltro, IcCarosello, IcCerca, IcFiltro, IcSelezione } from "../ui/AcIcons";
+import { useState } from "react";
+import { IcCarosello, IcCerca, IcFiltro, IcSelezione } from "../ui/AcIcons";
 
 export interface MessagesToolbarProps {
   viewFilter: "new" | "archived";
@@ -34,6 +35,7 @@ export interface MessagesToolbarProps {
   carouselCount: number;
   onOpenCarousel: () => void;
   linkWidget: React.ReactNode;
+  carouselMax?: number;
 }
 
 export default function MessagesToolbar({
@@ -57,7 +59,10 @@ export default function MessagesToolbar({
   carouselCount,
   onOpenCarousel,
   linkWidget,
+  carouselMax = 20,
 }: MessagesToolbarProps) {
+  const [linkAperto, setLinkAperto] = useState(false);
+  const oltreIlLimite = carouselCount > carouselMax;
   const segmento = (valore: "new" | "archived", testo: string, badge?: number) => (
     <button
       onClick={() => onViewFilter(valore)}
@@ -177,21 +182,46 @@ export default function MessagesToolbar({
           <button
             onClick={onOpenCarousel}
             className="shrink-0 flex items-center gap-2 group"
-            title="Apri l'editor del carosello"
+            title={
+              oltreIlLimite
+                ? `Hai ${carouselCount} messaggi validati ma il post ne porta ${carouselMax}: apri l'editor per scegliere quali`
+                : "Apri l'editor del carosello"
+            }
           >
-            <IcCarosello className="w-4 h-4 text-gray-400" />
-            <span className="text-[13px] font-bold tabular-nums text-gray-800 dark:text-gray-200">
-              {carouselCount}
-              <span className="text-gray-400">/20</span>
+            <IcCarosello
+              className={`w-4 h-4 ${oltreIlLimite ? "text-amber-600 dark:text-amber-400" : "text-gray-400"}`}
+            />
+            <span
+              className={`text-[13px] font-bold tabular-nums ${
+                oltreIlLimite
+                  ? "text-amber-700 dark:text-amber-300"
+                  : "text-gray-800 dark:text-gray-200"
+              }`}
+            >
+              {Math.min(carouselCount, carouselMax)}
+              <span className="text-gray-400">/{carouselMax}</span>
             </span>
             <span className="text-[12.5px] text-gray-500 dark:text-gray-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
               carosello
             </span>
+            {oltreIlLimite && (
+              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md">
+                +{carouselCount - carouselMax} da scegliere
+              </span>
+            )}
           </button>
         )}
 
-        <div className="shrink-0">{linkWidget}</div>
+        <button
+          onClick={() => setLinkAperto((v) => !v)}
+          aria-expanded={linkAperto}
+          className="shrink-0 text-[12.5px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline"
+        >
+          Link in bio {linkAperto ? "▴" : "▾"}
+        </button>
       </div>
+
+      {linkAperto && <div className="pb-4">{linkWidget}</div>}
     </div>
   );
 }

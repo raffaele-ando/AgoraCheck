@@ -2370,8 +2370,11 @@ export default function DashboardNext() {
             />
           </Suspense>
         )}
-        <div className={activeTab === "messages" ? "block" : "hidden"}>
+        <div className={activeTab === "messages" ? "block max-w-4xl" : "hidden"}>
           <>
+            <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
+              Messaggi
+            </h1>
             <MessagesToolbar
               viewFilter={viewFilter}
               onViewFilter={(v) => {
@@ -2500,7 +2503,7 @@ export default function DashboardNext() {
                 )}
               </div>
             ) : (
-              <div className="max-w-3xl divide-y divide-gray-200 dark:divide-gray-700 border-t border-gray-200 dark:border-gray-700">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700 border-t border-gray-200 dark:border-gray-700">
 
                 {paginatedMessages.map((msg) => {
                   const profileId = getDeviceProfile(msg);

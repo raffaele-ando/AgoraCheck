@@ -108,7 +108,7 @@ export default function MessageRow(props: MessageRowProps) {
   return (
     <article
       key={msg.id}
-      className={`flex gap-2.5 sm:gap-3 py-5 px-3 -mx-3 rounded-xl transition-colors ${
+      className={`flex gap-2.5 sm:gap-3 py-5 px-3 -mx-3 transition-colors ${
         isSelected
           ? "bg-indigo-50 dark:bg-indigo-900/30"
           : "hover:bg-white dark:hover:bg-gray-800/60"
@@ -237,7 +237,7 @@ export default function MessageRow(props: MessageRowProps) {
                 </div>
               </div>
             )}
-            {msg.area && (
+            {msg.area && msg.area !== msg.city && (
               <div className="flex items-center gap-1.5">
                 <IcZona className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
@@ -517,13 +517,20 @@ export default function MessageRow(props: MessageRowProps) {
             </div>
             <div className="flex items-center gap-2">
 
-              <span className="text-gray-300 font-mono lowercase">
-                id: {msg.id.slice(0, 8)}
-              </span>
               <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
             </div>
           </summary>
           <div className="pt-4 pb-1 space-y-4 opacity-0 group-open:opacity-100 transition-opacity duration-300">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard?.writeText(msg.id);
+              }}
+              className="text-[11px] font-mono text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              title="Copia l'identificativo del messaggio"
+            >
+              id: {msg.id}
+            </button>
 
             <div className="grid grid-cols-2 gap-3">
 
