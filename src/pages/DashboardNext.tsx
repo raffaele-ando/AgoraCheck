@@ -194,6 +194,103 @@ function TabLoading() {
   );
 }
 
+/**
+ * Cosa si vede quando i dati non arrivano.
+ *
+ * Diceva "Controlla la connessione e ricarica la pagina" e basta: una
+ * diagnosi che poteva essere sbagliata (il computer puo' essere benissimo
+ * collegato) e un'istruzione da eseguire a mano, senza un pulsante.
+ *
+ * Ora distingue i tre casi che capitano davvero e in ognuno dice cosa fare,
+ * con il comando li' accanto.
+ */
+function BloccoInCaricamento({ errore }: { errore: string | null }) {
+  const [offline, setOffline] = useState(
+    typeof navigator !== "undefined" && navigator.onLine === false,
+  );
+  useEffect(() => {
+    const su = () => setOffline(false);
+    const giu = () => setOffline(true);
+    window.addEventListener("online", su);
+    window.addEventListener("offline", giu);
+    return () => {
+      window.removeEventListener("online", su);
+      window.removeEventListener("offline", giu);
+    };
+  }, []);
+
+  return (
+    <div className="mx-auto mt-4 max-w-md rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-center">
+      {errore ? (
+        <>
+          <p className="text-[14px] font-semibold text-red-700 dark:text-red-400">
+            Il database ha rifiutato la richiesta
+          </p>
+          <p className="mt-1.5 text-[13px] text-gray-600 dark:text-gray-300">
+            Non e' un problema di rete: la risposta e' arrivata, ed e' un
+            errore. Di solito vuol dire che l'accesso e' scaduto.
+          </p>
+          <p className="mt-2 font-mono text-[11.5px] text-gray-500 dark:text-gray-400 break-words">
+            {errore}
+          </p>
+        </>
+      ) : offline ? (
+        <>
+          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+            Questo computer risulta scollegato
+          </p>
+          <p className="mt-1.5 text-[13px] text-gray-600 dark:text-gray-300">
+            La dashboard riparte da sola appena torna la rete: non serve
+            ricaricare.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+            I dati non stanno arrivando
+          </p>
+          <p className="mt-1.5 text-[13px] text-gray-600 dark:text-gray-300">
+            La rete c'e' e l'accesso e' valido, ma il database non risponde.
+            Capita quando la copia locale dei dati si incastra, o quando un
+            blocco-pubblicita' ferma le richieste verso Google.
+          </p>
+        </>
+      )}
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <button
+          onClick={() => window.location.reload()}
+          className="h-9 px-4 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white text-[13px] font-semibold transition-colors"
+        >
+          Ricarica
+        </button>
+        {!offline && (
+          <button
+            onClick={async () => {
+              // Svuota la copia locale: e' il rimedio quando la cache si
+              // incastra, e prima si poteva fare solo dagli strumenti per
+              // sviluppatori del browser.
+              try {
+                const dbs = await (indexedDB as any).databases?.();
+                await Promise.all(
+                  (dbs || [])
+                    .filter((d: any) => String(d.name || "").includes("firestore"))
+                    .map((d: any) => indexedDB.deleteDatabase(d.name)),
+                );
+              } catch {
+                /* se il browser non lo permette si ricarica e basta */
+              }
+              window.location.reload();
+            }}
+            className="h-9 px-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-[13px] font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            Svuota la copia locale e ricarica
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardNext() {
   // Il flag IGNORE_ANALYTICS ha un'unica fonte di verità nella scheda
   // Analytics, che lo mostra e lo modifica. Qui esisteva una seconda copia in
@@ -2527,40 +2624,41 @@ export default function DashboardNext() {
             )}
             {loading || !profilesLoaded ? (
               <div className="flex flex-col gap-4">
-                {/* Scheletro con la forma delle schede vere: quando i dati
-                    arrivano non si sposta nulla. La rotella non riservava
-                    spazio, quindi la pagina saltava al primo caricamento.
+                {/* Lo scheletro ha la forma di cio' che arriva: righe.
+                    Era rimasto una griglia di sei SCHEDE su tre colonne, la
+                    forma del disegno precedente — quindi annunciava una cosa
+                    e ne consegnava un'altra, e al primo caricamento la pagina
+                    saltava esattamente come prima che lo scheletro ci fosse.
                     L'animazione si ferma da sola con prefers-reduced-motion
                     (regola in index.css sulla classe .ac-skeleton). */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start" aria-hidden="true">
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-600">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="ac-skeleton w-8 h-8 rounded-full" />
-                        <div className="flex-1">
-                          <div className="ac-skeleton h-3 w-28 rounded mb-2" />
-                          <div className="ac-skeleton h-2.5 w-20 rounded" />
+                <div aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="flex gap-3 py-5 px-3 -mx-3 border-b border-gray-100 dark:border-gray-800"
+                    >
+                      <div className="ac-skeleton w-9 h-9 rounded-lg shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="ac-skeleton h-3 w-32 rounded mb-3" />
+                        <div className="ac-skeleton h-4 rounded mb-2" />
+                        <div className="ac-skeleton h-4 rounded mb-3 w-[70%]" />
+                        <div className="flex gap-2">
+                          <div className="ac-skeleton h-5 w-20 rounded-md" />
+                          <div className="ac-skeleton h-5 w-24 rounded-md" />
+                          <div className="ac-skeleton h-5 w-16 rounded-md" />
                         </div>
                       </div>
-                      <div className="ac-skeleton h-4 rounded mb-2" />
-                      <div className="ac-skeleton h-4 rounded mb-2 w-[85%]" />
-                      <div className="ac-skeleton h-4 rounded mb-5 w-[60%]" />
-                      <div className="flex gap-2">
-                        <div className="ac-skeleton h-9 w-32 rounded-xl" />
-                        <div className="ac-skeleton h-9 w-36 rounded-xl" />
+                      <div className="hidden lg:flex gap-1 shrink-0">
+                        <div className="ac-skeleton h-8 w-24 rounded-lg" />
+                        <div className="ac-skeleton h-8 w-8 rounded-lg" />
+                        <div className="ac-skeleton h-8 w-8 rounded-lg" />
                       </div>
                     </div>
                   ))}
                 </div>
                 <span className="sr-only" role="status">Caricamento dei messaggi in corso</span>
                 {(isStuckLoading || snapshotsError) && (
-                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2 dark:text-gray-400">
-                    {snapshotsError ? (
-                      <span className="text-red-500">Errore di connessione a Firebase: {snapshotsError}</span>
-                    ) : (
-                      "Il caricamento dei dati sta impiegando piu del previsto. Controlla la connessione e ricarica la pagina."
-                    )}
-                  </div>
+                  <BloccoInCaricamento errore={snapshotsError} />
                 )}
               </div>
             ) : filteredMessages.length === 0 ? (
@@ -2707,13 +2805,7 @@ export default function DashboardNext() {
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
                 {(isStuckLoading || snapshotsError) && (
-                  <div className="text-center text-sm text-gray-500 px-4 max-w-sm mt-2 dark:text-gray-400">
-                    {snapshotsError ? (
-                      <span className="text-red-500">Errore di connessione: {snapshotsError}</span>
-                    ) : (
-                      "Il caricamento dei dati sta impiegando piu del previsto. Controlla la connessione e ricarica la pagina."
-                    )}
-                  </div>
+                  <BloccoInCaricamento errore={snapshotsError} />
                 )}
               </div>
             ) : macroProfiles.length === 0 ? (

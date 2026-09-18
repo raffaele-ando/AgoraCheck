@@ -38,6 +38,10 @@ export const where = () => ({});
 export const limit = () => ({});
 export const startAfter = () => ({});
 export const onSnapshot = (rif: any, cb: any) => {
+  // ?bloccato finge un database che non risponde mai: serve a fotografare
+  // cosa vede l'operatore quando i dati non arrivano.
+  if (typeof location !== "undefined" && location.search.includes("bloccato"))
+    return () => {};
   const nome = rif?.__nome ?? "";
   setTimeout(() => cb(querySnap(perCollezione(nome))), 0);
   return () => {};
