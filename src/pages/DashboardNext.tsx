@@ -37,6 +37,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Logo } from "../components/ui/Logo";
 import MessageRow from "../components/dashboard/MessageRow";
+import MessagesToolbar from "../components/dashboard/MessagesToolbar";
 import {
   IcArchivia,
   IcCarosello,
@@ -2686,175 +2687,37 @@ export default function DashboardNext() {
         )}
         <div className={activeTab === "messages" ? "block" : "hidden"}>
           <>
-            {/* Global Tools Section */}
-            <div className="flex flex-col md:flex-row items-stretch gap-4 mb-6">
-              {/* Link Widget */}
-              <LinkWidgetCard latestMessage={messages.find(m => !m.isArchived)} />
+            <MessagesToolbar
+              viewFilter={viewFilter}
+              onViewFilter={(v) => {
+                setViewFilter(v);
+                setSelectedMessages([]);
+              }}
+              unreadCount={unreadCount}
+              searchQuery={searchQuery}
+              onSearch={setSearchQuery}
+              onlyPostsFilter={onlyPostsFilter}
+              onOnlyPosts={() => setOnlyPostsFilter((v) => !v)}
+              zoneOptions={zoneOptions}
+              selectedZoneFilter={selectedZoneFilter}
+              onZone={setSelectedZoneFilter}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={clearAllFilters}
+              resultCount={filteredMessages.length}
+              pageSize={pageSize}
+              onPageSize={setPageSize}
+              onStartSelect={() => {
+                setIsSelectMode(true);
+                setSelectedMessages([]);
+              }}
+              isSuperAdmin={isSuperAdmin}
+              carouselCount={carouselValidatedMessages.length}
+              onOpenCarousel={() => setActiveTab("carousel")}
+              linkWidget={
+                <LinkWidgetCard latestMessage={messages.find((m) => !m.isArchived)} />
+              }
+            />
 
-              {/* Carousel Tools */}
-              {isSuperAdmin && (
-                <button
-                  onClick={() => setActiveTab("carousel")}
-                  className="shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-indigo-300 transition-colors text-left"
-                >
-                  <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                    Carosello
-                  </span>
-                  <span className="text-sm font-bold tabular-nums text-indigo-600 dark:text-indigo-400">
-                    {carouselValidatedMessages.length}
-                    <span className="text-gray-400">/20</span>
-                  </span>
-                </button>
-              )}
-            </div>
-
-            {/* List Filters */}
-            {/* La barra dei filtri resta visibile anche in modalità
-                selezione. Prima era dentro {!isSelectMode && (...)}: entrando
-                in selezione spariva, ma "Tutti (86)" continua ad agire sui
-                messaggi FILTRATI — e a valle c'è l'eliminazione, che è
-                irreversibile. Vedere quale filtro è attivo è parte della
-                difesa. */}
-            {(
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div className="flex bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
-                  <button
-                    onClick={() => {
-                      setViewFilter("new");
-                      setSelectedMessages([]);
-                    }}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "new" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-                  >
-                    <InboxIcon className="w-4 h-4" /> Spotted Nuovi
-                    {unreadCount > 0 && (
-                      <span className="ml-1 min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black leading-none flex items-center justify-center">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewFilter("archived");
-                      setSelectedMessages([]);
-                    }}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${viewFilter === "archived" ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-                  >
-                    <Archive className="w-4 h-4" /> Letti / Archiviati
-                  </button>
-                </div>
-                
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Mostra / Pagina
-                  </span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="bg-gray-100 dark:bg-gray-800 border-none text-xs text-gray-600 dark:text-gray-300 font-bold rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
-                  >
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={200}>200</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Barra filtri della LISTA.
-                Prima "Solo Spotted" e il filtro zona vivevano dentro la scheda
-                "Carosello IG", visibile solo al super admin: gli altri
-                amministratori non potevano filtrare affatto, e concettualmente
-                non sono strumenti del carosello ma della lista. */}
-            {/* La barra dei filtri resta visibile anche in modalità
-                selezione. Prima era dentro {!isSelectMode && (...)}: entrando
-                in selezione spariva, ma "Tutti (86)" continua ad agire sui
-                messaggi FILTRATI — e a valle c'è l'eliminazione, che è
-                irreversibile. Vedere quale filtro è attivo è parte della
-                difesa. */}
-            {(
-
-              <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-6">
-                <div className="relative flex-1 min-w-0">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cerca nel testo, @instagram, risoluzione, zona…"
-                    aria-label="Cerca fra i messaggi"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => setOnlyPostsFilter((v) => !v)}
-                    aria-pressed={onlyPostsFilter}
-                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border whitespace-nowrap ${
-                      onlyPostsFilter
-                        ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300"
-                        : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${onlyPostsFilter ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`} />
-                    Solo Spotted
-                  </button>
-
-                  <select
-                    value={selectedZoneFilter}
-                    onChange={(e) => setSelectedZoneFilter(e.target.value)}
-                    aria-label="Filtra per zona"
-                    className={`text-xs font-bold rounded-xl px-3 py-2.5 border transition-all outline-none ${
-                      selectedZoneFilter !== ""
-                        ? "border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30"
-                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800"
-                    }`}
-                  >
-                    <option value="">Tutte le zone</option>
-                    {zoneOptions.map((zone) => (
-                      <option key={zone} value={zone}>{zone}</option>
-                    ))}
-                  </select>
-
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearAllFilters}
-                      className="px-3 py-2.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
-                    >
-                      <X className="w-3.5 h-3.5" /> Rimuovi filtri
-                    </button>
-                  )}
-
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap px-1">
-                    {filteredMessages.length} risultati
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {snapshotsError && (
-              <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/25 border border-red-200 dark:border-red-800 flex items-start gap-3">
-                <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-red-800 dark:text-red-200">
-                    Connessione interrotta
-                  </div>
-                  <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
-                    Stai vedendo gli ultimi dati ricevuti. Le modifiche che fai
-                    adesso potrebbero non essere salvate.
-                  </p>
-                </div>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold"
-                >
-                  Riprova
-                </button>
-              </div>
-            )}
             {historyTruncated && (
               <div className="mb-6 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs font-medium">
                 Sono caricati i {messages.length} messaggi più recenti: i
