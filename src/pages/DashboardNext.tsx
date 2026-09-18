@@ -38,6 +38,7 @@ import { it } from "date-fns/locale";
 import { Logo } from "../components/ui/Logo";
 import MessageRow from "../components/dashboard/MessageRow";
 import MessagesToolbar from "../components/dashboard/MessagesToolbar";
+import MessagesRail from "../components/dashboard/MessagesRail";
 import NextHeader from "../components/dashboard/NextHeader";
 import {
   IcConfigurazione,
@@ -2325,7 +2326,7 @@ export default function DashboardNext() {
       className="ac-next min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 bg-gray-50 dark:bg-gray-900"
     >
 
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full max-w-[1600px] mx-auto">
 
         <NextHeader
           activeTab={activeTab}
@@ -2370,11 +2371,13 @@ export default function DashboardNext() {
             />
           </Suspense>
         )}
-        <div className={activeTab === "messages" ? "block max-w-4xl" : "hidden"}>
+        <div className={activeTab === "messages" ? "block" : "hidden"}>
           <>
             <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Messaggi
             </h1>
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_248px] 2xl:grid-cols-[minmax(0,1fr)_300px] gap-x-10 xl:gap-x-14 items-start">
+            <div className="min-w-0">
             <MessagesToolbar
               viewFilter={viewFilter}
               onViewFilter={(v) => {
@@ -2572,9 +2575,28 @@ export default function DashboardNext() {
                 })}
               </div>
             )}
+            </div>
+
+            <MessagesRail
+              unreadCount={unreadCount}
+              carouselCount={carouselValidatedMessages.length}
+              onOpenCarousel={() => setActiveTab("carousel")}
+              activeFilters={[
+                selectedZoneFilter ? `Zona: ${selectedZoneFilter}` : null,
+                onlyPostsFilter ? "Solo spotted" : null,
+                searchQuery ? `Ricerca: «${searchQuery}»` : null,
+                viewFilter === "archived" ? "Archiviati" : null,
+              ].filter(Boolean) as string[]}
+              onClearFilters={clearAllFilters}
+              resultCount={filteredMessages.length}
+              totalLoaded={messages.length}
+            >
+              <LinkWidgetCard latestMessage={messages.find((m) => !m.isArchived)} />
+            </MessagesRail>
+            </div>
           </>
         </div>
-        <div className={`flex flex-col gap-6 w-full max-w-7xl mx-auto ${activeTab === "profiles" ? "flex" : "hidden"}`}>
+        <div className={`flex flex-col gap-6 w-full max-w-[1600px] mx-auto ${activeTab === "profiles" ? "flex" : "hidden"}`}>
 
             {loading || !profilesLoaded ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -3083,6 +3105,7 @@ export default function DashboardNext() {
               </>
             )}
           </div>
+
         {/* Global Pagination */}
         {!loading &&
           (activeTab === "messages" || activeTab === "profiles") &&

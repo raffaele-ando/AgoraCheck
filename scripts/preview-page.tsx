@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import MessageRow from "../src/components/dashboard/MessageRow";
 import MessagesToolbar from "../src/components/dashboard/MessagesToolbar";
+import MessagesRail from "../src/components/dashboard/MessagesRail";
 import NextHeader from "../src/components/dashboard/NextHeader";
 import SelectionBar from "../src/components/dashboard/SelectionBar";
 
@@ -26,8 +27,9 @@ const pagina = renderToStaticMarkup(
       email="raffaele@polinetwork.org" totalMessages={4128}
       isDarkMode={false} onToggleTheme={nulla} onLogout={nulla}
     />
-    <div className="max-w-4xl">
     <h1 className="text-[26px] font-black tracking-tight mb-4">Messaggi</h1>
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_248px] 2xl:grid-cols-[minmax(0,1fr)_300px] gap-x-10 xl:gap-x-14 items-start">
+    <div className="min-w-0">
     <MessagesToolbar
       viewFilter="new" onViewFilter={nulla} unreadCount={12}
       searchQuery="" onSearch={nulla}
@@ -61,6 +63,14 @@ const pagina = renderToStaticMarkup(
       ))}
     </div>
     </div>
+    <MessagesRail
+      unreadCount={12} carouselCount={35} onOpenCarousel={nulla}
+      activeFilters={["Zona: Città Studi"]} onClearFilters={nulla}
+      resultCount={86} totalLoaded={120}
+    >
+      <button className="text-[12.5px] font-semibold text-indigo-700">Copia link in bio →</button>
+    </MessagesRail>
+    </div>
   </div>,
 );
 
@@ -68,5 +78,5 @@ const css = readdirSync("dist/assets").find((f) => f.endsWith(".css"))!;
 writeFileSync("/tmp/pagina-vera.html", `<!doctype html><html lang="it"><head><meta charset="utf-8">
 <link rel="stylesheet" href="file://${process.cwd()}/dist/assets/${css}">
 <style>body{margin:0;background:#f9fafb}</style></head>
-<body><div class="p-4 md:p-8 max-w-7xl mx-auto">${pagina}</div></body></html>`);
+<body><div class="p-4 md:p-8 w-full max-w-[1600px] mx-auto">${pagina}</div></body></html>`);
 console.log("scritto /tmp/pagina-vera.html");

@@ -459,7 +459,7 @@ export default function MessageRow(props: MessageRowProps) {
                 e.stopPropagation();
                 toggleArchiveStatus(msg.id, !!msg.isArchived);
               }}
-              className="flex-1 h-9 px-3 rounded-lg text-[12.5px] font-bold flex items-center justify-center gap-1.5 bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+              className="flex-1 sm:flex-none sm:min-w-[180px] h-9 px-3 rounded-lg text-[12.5px] font-bold flex items-center justify-center gap-1.5 bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
             >
               <IcArchivia className="w-4 h-4" />
               {msg.isArchived ? "Ripristina" : "Archivia"}
@@ -1018,7 +1018,7 @@ export default function MessageRow(props: MessageRowProps) {
             className="h-8 px-2.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white transition-colors"
           >
             <IcArchivia className="w-4 h-4" />
-            <span className="hidden xl:inline">
+            <span className="hidden lg:inline">
               {msg.isArchived ? "Ripristina" : "Archivia"}
             </span>
           </button>

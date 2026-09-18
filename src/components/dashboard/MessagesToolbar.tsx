@@ -170,7 +170,7 @@ export default function MessagesToolbar({
 
       {/* Riga di riepilogo: i numeri su cui si agisce, al posto delle due
           schede grandi che li contenevano prima. */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7 py-3">
+      <div className="lg:hidden flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7 py-3">
         <div className="shrink-0 flex items-baseline gap-1.5">
           <span className="text-[19px] font-black tabular-nums text-gray-900 dark:text-gray-100">
             {unreadCount}
@@ -221,7 +221,7 @@ export default function MessagesToolbar({
         </button>
       </div>
 
-      {linkAperto && <div className="pb-4">{linkWidget}</div>}
+      {linkAperto && <div className="lg:hidden pb-4">{linkWidget}</div>}
     </div>
   );
 }
