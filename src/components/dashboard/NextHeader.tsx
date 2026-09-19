@@ -162,6 +162,20 @@ export default function NextHeader({
                         {label}
                       </button>
                     ))}
+                    {/* Lo Studio e' una pagina a se', non una scheda della
+                        dashboard: quindi un collegamento e non un bottone,
+                        cosi' si apre anche in una scheda nuova col tasto
+                        centrale. Sta in fondo, staccato: e' un posto dove si
+                        va a lavorare, non un'impostazione da cambiare. */}
+                    <a
+                      role="menuitem"
+                      // Non "/studio": il sito puo' essere servito da una
+                      // sottocartella, e li' un percorso assoluto uscirebbe fuori.
+                      href={`${import.meta.env.BASE_URL}studio`}
+                      className="w-full block text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-2 pt-2"
+                    >
+                      Studio — post e storie
+                    </a>
                   </div>
                 </>
               )}
