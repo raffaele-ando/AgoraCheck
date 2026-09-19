@@ -2540,6 +2540,32 @@ export default function DashboardNext() {
           onToggleTheme={() => setIsDarkMode(!isDarkMode)}
           onLogout={handleLogout}
           logo={<Logo className="h-6 w-[80px]" />}
+          stato={
+            activeTab === "messages" ? (
+              <>
+                <span className="tabular-nums font-semibold text-gray-900 dark:text-gray-100">
+                  {unreadCount}
+                </span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  da leggere
+                </span>
+                {filtriAttivi.length > 0 && (
+                  <>
+                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span className="truncate text-gray-500 dark:text-gray-400">
+                      {filtriAttivi.join(" · ")}
+                    </span>
+                    <button
+                      onClick={clearAllFilters}
+                      className="shrink-0 font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
+                    >
+                      togli
+                    </button>
+                  </>
+                )}
+              </>
+            ) : null
+          }
         />
         {activeTab === "analytics" && (
           <Suspense fallback={<TabLoading />}>

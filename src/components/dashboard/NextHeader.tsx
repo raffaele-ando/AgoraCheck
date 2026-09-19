@@ -31,6 +31,8 @@ export interface NextHeaderProps {
   onTab: (t: NextTab) => void;
   unreadCount: number;
   isSuperAdmin: boolean;
+  /** Cosa stai guardando adesso: va nel vuoto al centro della barra. */
+  stato?: React.ReactNode;
   email?: string | null;
   totalMessages: number | null;
   isDarkMode: boolean;
@@ -56,6 +58,7 @@ export default function NextHeader({
   onTab,
   unreadCount,
   isSuperAdmin,
+  stato,
   email,
   totalMessages,
   isDarkMode,
@@ -106,6 +109,18 @@ export default function NextHeader({
             ),
           )}
         </nav>
+
+        {/* Il centro dell'intestazione: misurato, erano 739 pixel vuoti su
+            1440, cioe' meta' della barra — la fascia piu' vista della
+            pagina, in alto, sempre a schermo, e non portava niente. Ci va
+            cio' che si guarda in continuazione mentre si smaltisce: quanti
+            ne restano e con che filtro. Prima stavano in fondo alla colonna
+            di destra, dove l'occhio non passa. */}
+        {stato && (
+          <div className="hidden lg:flex items-center gap-2 mx-6 min-w-0 text-[12.5px]">
+            {stato}
+          </div>
+        )}
 
         <div className="ml-auto flex items-center gap-1.5">
           {isSuperAdmin && (

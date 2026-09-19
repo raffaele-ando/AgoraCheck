@@ -105,6 +105,23 @@ export default function MessageRow(props: MessageRowProps) {
     getProfileInitials,
   } = props;
 
+  /*
+   * La riga e' CHIUSA finche' non la si guarda.
+   *
+   * Misurata sulla dashboard vera, una riga era alta in media 238 pixel
+   * (da 174 a 367): su uno schermo da 1080 ne entravano quattro, e una coda
+   * di 86 messaggi voleva ventuno schermate. Ma per decidere se un messaggio
+   * va archiviato bastano il nome, il testo e la data: zona, alias,
+   * risoluzione e dettagli tecnici servono solo su quello che stai
+   * guardando davvero.
+   *
+   * Quindi il resto compare sulla riga sotto il puntatore, su quella che ha
+   * il fuoco da tastiera (J/K) e su quelle scelte. Nient'altro: niente stato
+   * in React, niente ridisegni, solo group-hover.
+   */
+  const aperta = isFocused || isSelected || isSelectMode;
+  const soloDaAperta = aperta ? "" : "hidden group-hover:block";
+
   return (
     <article
       key={msg.id}
@@ -140,16 +157,20 @@ export default function MessageRow(props: MessageRowProps) {
               : "opacity-0 group-hover:opacity-100 focus:opacity-100"
           }`}
         />
-        {!msg.isArchived && (
-          <span
-            className="w-[6px] h-[6px] rounded-full bg-indigo-600"
-            title="Non letto"
-          />
-        )}
       </div>
 
       {/* Il quadrato del profilo: quadrato e non cerchio,
           perche' il cerchio e' gia' la casella di scelta. */}
+      {/* Il quadrato del profilo porta addosso il pallino del non letto:
+          prima aveva una colonna tutta sua, larga venti pixel piu' il
+          distanziamento, per un cerchietto da sei. */}
+      <div className="relative shrink-0">
+      {!msg.isArchived && (
+        <span
+          className="absolute -top-0.5 -right-0.5 z-10 w-[7px] h-[7px] rounded-full bg-indigo-600 ring-2 ring-gray-50 dark:ring-gray-900"
+          title="Non letto"
+        />
+      )}
       {isSuperAdmin ? (
         <button
           onClick={(e) => {
@@ -174,8 +195,14 @@ export default function MessageRow(props: MessageRowProps) {
           <IcProfilo className="w-3.5 h-3.5" />
         </div>
       )}
+      </div>
 
-      <div className="min-w-0 flex-1">
+      {/* La colonna del contenuto si ferma a 74 caratteri. Prima era
+          flex-1 e basta: si stirava fino al bordo (891px), il testo andava
+          a capo a un centinaio di caratteri — oltre il limite di
+          leggibilita' — e fra l'ultima pastiglia e i comandi restava una
+          fascia morta di circa 257 pixel su OGNI riga. */}
+      <div className="min-w-0 flex-1 max-w-[74ch]">
         <div className="flex items-baseline gap-2 mb-1">
           <span
             className={`text-[13px] font-bold truncate ${
@@ -213,13 +240,17 @@ export default function MessageRow(props: MessageRowProps) {
           </span>
         </div>
       {/* Core Content */}
-      <div className="mb-4">
-        <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words text-base sm:text-[17px] leading-relaxed max-w-[62ch]">
+      <div className={aperta ? "mb-4" : "mb-0 group-hover:mb-4"}>
+        <p
+          className={`text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words text-[15.5px] sm:text-base leading-relaxed max-w-[62ch] ${
+            aperta ? "" : "line-clamp-2 group-hover:line-clamp-none"
+          }`}
+        >
 
           {msg.lookingFor}
         </p>
         {msg.type === "sondaggio" && msg.pollOptions && msg.pollOptions.length > 0 && (
-          <div className="mt-4 space-y-2">
+          <div className={`mt-4 space-y-2 ${soloDaAperta}`}>
              {msg.pollOptions.map((opt: string, i: number) => (
                <div key={i} className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 rounded-xl border border-gray-200 dark:border-gray-700 text-sm md:text-base text-gray-700 dark:text-gray-200 flex items-center gap-3 shadow-sm">
                   <div className="w-6 h-6 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/60 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center font-bold text-xs shrink-0">{i + 1}</div>
@@ -230,7 +261,7 @@ export default function MessageRow(props: MessageRowProps) {
         )}
       </div>
       
-      <div className="space-y-1.5 mb-2">
+      <div className={`space-y-1.5 mb-2 ${soloDaAperta}`}>
 
         {(msg.city || msg.area || msg.when || msg.where) && (
           <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -511,7 +542,7 @@ export default function MessageRow(props: MessageRowProps) {
         </div>
       {/* Telemetry Details */}
       {isSuperAdmin && (
-        <details className="group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none">
+        <details className={`group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none ${soloDaAperta}`}>
 
           <summary className="flex items-center justify-between text-[11.5px] font-semibold text-gray-400 dark:text-gray-500 outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
 
@@ -1012,6 +1043,12 @@ export default function MessageRow(props: MessageRowProps) {
           pollice. Archivia e' pieno perche' e' il gesto che
           ripeti di piu'; eliminare, che e' irreversibile,
           vive dentro il menu. */}
+      {/* Un comando sempre, gli altri sulla riga che stai guardando.
+          Cinque righe per quattro comandi facevano venti bersagli
+          persistenti sullo stesso schermo, tutti dello stesso peso — e fra
+          questi Elimina, che e' irreversibile, era un'icona grigia uguale
+          alle altre due. Ora Elimina e' staccato da un divisore e compare
+          solo a riga aperta. */}
       {!isSelectMode && (
         <div className="hidden lg:flex shrink-0 items-start gap-1">
           <button
@@ -1034,7 +1071,9 @@ export default function MessageRow(props: MessageRowProps) {
             }}
             title="Esporta storia"
             aria-label="Esporta storia"
-            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:border-gray-300 transition-colors"
+            className={`w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:border-gray-300 transition-colors ${
+              aperta ? "" : "hidden group-hover:flex"
+            }`}
           >
             <IcStoria className="w-4 h-4" />
           </button>
@@ -1050,7 +1089,9 @@ export default function MessageRow(props: MessageRowProps) {
                   : "Aggiungi al carosello"
               }
               aria-label="Carosello"
-              className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors ${
+              className={`w-8 h-8 rounded-lg border items-center justify-center transition-colors ${
+                aperta ? "flex" : "hidden group-hover:flex"
+              } ${
                 msg.isValidatedForCarousel
                   ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
                   : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300"
@@ -1059,6 +1100,12 @@ export default function MessageRow(props: MessageRowProps) {
               <IcCarosello className="w-4 h-4" />
             </button>
           )}
+          <span
+            aria-hidden="true"
+            className={`w-px h-8 bg-gray-200 dark:bg-gray-700 mx-1 ${
+              aperta ? "block" : "hidden group-hover:block"
+            }`}
+          />
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -1066,9 +1113,12 @@ export default function MessageRow(props: MessageRowProps) {
             }}
             title="Elimina messaggio"
             aria-label="Elimina messaggio"
-            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-200 transition-colors"
+            className={`h-8 px-2.5 rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-800 items-center gap-1.5 text-[12px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors ${
+              aperta ? "flex" : "hidden group-hover:flex"
+            }`}
           >
             <IcElimina className="w-4 h-4" />
+            Elimina
           </button>
         </div>
       )}

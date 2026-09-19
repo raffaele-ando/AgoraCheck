@@ -83,48 +83,42 @@ export default function MessagesRail({
         </button>
       </div>
 
-      {children && (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">{children}</div>
-      )}
-
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <div className="text-[11px] font-black uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500 mb-2">
-          Stai guardando
-        </div>
-        {activeFilters.length > 0 ? (
-          <>
-            <ul className="space-y-1 mb-2">
-              {activeFilters.map((f) => (
-                <li
-                  key={f}
-                  className="text-[12.5px] text-gray-700 dark:text-gray-300 flex items-start gap-1.5"
-                >
-                  <IcFiltro className="w-3 h-3 mt-1 shrink-0 text-gray-400" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <div className="text-[12px] text-gray-500 dark:text-gray-400 tabular-nums mb-2">
-              {resultCount} di {totalLoaded} caricati
-            </div>
-            <button
-              onClick={onClearFilters}
-              className="text-[12.5px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline"
-            >
-              Rimuovi i filtri
-            </button>
-          </>
-        ) : (
-          <div className="text-[12.5px] text-gray-500 dark:text-gray-400 tabular-nums">
-            Tutti i {resultCount} messaggi, nessun filtro
+      {/* "Stai guardando" resta solo se c'e' davvero un filtro: l'intestazione
+          dice gia' quanti ne restano, e "nessun filtro" non e' una notizia. */}
+      {activeFilters.length > 0 && (
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2">
+            Filtri attivi
           </div>
-        )}
-      </div>
-
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <div className="text-[11px] font-black uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500 mb-2">
-          Da tastiera
+          <ul className="space-y-1 mb-2">
+            {activeFilters.map((f) => (
+              <li
+                key={f}
+                className="text-[12.5px] text-gray-700 dark:text-gray-300 flex items-start gap-1.5"
+              >
+                <IcFiltro className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" />
+                <span className="min-w-0 break-words">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="text-[12.5px] text-gray-500 dark:text-gray-400 tabular-nums mb-2">
+            {resultCount} di {totalLoaded} caricati
+          </div>
+          <button
+            onClick={onClearFilters}
+            className="text-[12.5px] font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
+          >
+            Rimuovi i filtri
+          </button>
         </div>
+      )}
+      <details className="border-t border-gray-200 dark:border-gray-700 pt-4 group">
+        <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between mb-2">
+          Da tastiera
+          <span className="text-gray-400 group-open:rotate-180 transition-transform">
+            ⌄
+          </span>
+        </summary>
         <dl className="text-[12px] text-gray-500 dark:text-gray-400 space-y-1.5">
           {[
             ["J K", "scorri i messaggi"],
@@ -149,7 +143,18 @@ export default function MessagesRail({
             </div>
           ))}
         </dl>
-      </div>
+      </details>
+      {children && (
+        <details className="border-t border-gray-200 dark:border-gray-700 pt-4 group">
+          <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between">
+            Il link da mettere in bio
+            <span className="text-gray-400 group-open:rotate-180 transition-transform">
+              ⌄
+            </span>
+          </summary>
+          <div className="mt-3">{children}</div>
+        </details>
+      )}
     </aside>
   );
 }
