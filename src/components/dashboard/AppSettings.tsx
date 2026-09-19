@@ -4,7 +4,7 @@ import { db } from "../../firebase";
 import { readDocDataSafe } from "../../utils/firestoreRead";
 import { Save, Link as LinkIcon, Users, Trash2, Plus, ShieldAlert, MessageCircle } from "lucide-react";
 import { LogoSettings } from "./LogoSettings";
-import { LOCATIONS } from "../../data/locations";
+import { LOCATIONS, formatArea } from "../../data/locations";
 import {
   LinkWidgetConfig,
   DEFAULT_LINK_CONFIG,
@@ -113,7 +113,7 @@ function WhatsappSettings() {
         <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
         <button
           onClick={handleSave}
-          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20" }`}
+          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
         >
           <Save className="w-4 h-4" />
           {isSaved ? "Salvato" : "Salva i gruppi"}
@@ -147,8 +147,8 @@ function WhatsappSettings() {
           const val = links[loc] || "";
           return (
             <div key={loc} className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 w-32 shrink-0">
-                {loc}
+              <span className="text-[12.5px] font-medium text-gray-600 dark:text-gray-300 w-36 shrink-0">
+                {loc === "default" ? "Tutte le altre" : formatArea(loc, "")}
               </span>
               <input
                 type="text"
@@ -262,7 +262,7 @@ function EventWidgetSettings() {
         <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
         <button
           onClick={handleSave}
-          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-[#DC5F00] hover:bg-[#c95300] text-white shadow-md shadow-[#DC5F00]/20" }`}
+          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
         >
           <Save className="w-4 h-4" />
           {isSaved ? "Salvato" : "Salva gli eventi"}
@@ -334,7 +334,7 @@ function EventWidgetSettings() {
         ))}
         
         <button onClick={handleAddEvent} className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-[#DC5F00]/50 hover:text-[#DC5F00] transition-all flex items-center justify-center gap-2">
-          <Plus className="w-5 h-5" /> Aggiungi Evento
+          <Plus className="w-5 h-5" /> Aggiungi un evento
         </button>
       </div>
     </div>
@@ -449,8 +449,15 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
     }
   };
 
+  /*
+   * Misurato: il contenuto stava in una colonna larga 768 pixel al centro di
+   * 1440, con 336 pixel vuoti PER PARTE — il 47% della larghezza buttato — e
+   * la pagina era alta 2598 pixel, cioe' due schermate e mezza di
+   * scorrimento per riquadri che non hanno niente a che vedere l'uno con
+   * l'altro. Sono blocchi indipendenti: vanno affiancati.
+   */
   return (
-    <div className="w-full max-w-3xl mx-auto py-8 text-left">
+    <div className="w-full max-w-[1200px] mx-auto py-8 text-left">
       <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100">
         Configurazione
       </h1>
@@ -460,7 +467,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
         pulsante e' acceso, quella modifica non e' ancora sul sito.
       </p>
       
-      <div className="grid gap-6">
+      <div className="columns-1 lg:columns-2 gap-6 [&>*]:mb-6 [&>*]:break-inside-avoid">
         {/* Link config */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h3 className="text-lg font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
@@ -496,7 +503,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
               <DirtyBadge isDirty={isLinkDirty} isSaved={isSaved} />
               <button
                 onClick={handleSaveLink}
-                className={`flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20" }`}
+                className={`flex items-center justify-center flex-1 gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
               >
                 <Save className="w-4 h-4" />
                 {isSaved ? "Salvato" : "Salva la scritta"}
@@ -546,9 +553,9 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
               />
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-500/20 text-white text-sm font-bold rounded-xl transition-all w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-700 hover:bg-indigo-800 shadow-md shadow-orange-500/20 text-white text-sm font-bold rounded-xl transition-all w-full sm:w-auto"
               >
-                <Plus className="w-4 h-4" /> Aggiungi Admin
+                <Plus className="w-4 h-4" /> Dai accesso
               </button>
             </form>
 

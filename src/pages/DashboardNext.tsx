@@ -2886,7 +2886,15 @@ export default function DashboardNext() {
                   </span>
                 </div>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max items-start">
+              {/* Colonne invece di griglia.
+                  Le schede profilo hanno altezze molto diverse — chi ha due
+                  suggerimenti e' alto il doppio di chi non ne ha — e in una
+                  griglia a righe ogni riga si allinea alla piu' alta: sotto
+                  le schede corte restava un buco alto centinaia di pixel.
+                  Con le colonne ognuna scorre per conto suo e il buco non
+                  esiste. L'ordine resta leggibile perche' non c'e' un ordine
+                  di priorita' fra i profili: si guardano tutti. */}
+              <div className="columns-1 md:columns-2 lg:columns-3 gap-6 [&>*]:mb-6 [&>*]:break-inside-avoid">
 
                 {paginatedProfiles.map((macro) => {
                   const profileColor = getProfileColor(macro.profileIds[0]);
@@ -2961,7 +2969,7 @@ export default function DashboardNext() {
                               detto, non presentato come identità certa. */}
                           {macro.isLegacyIdentity && (
                             <div
-                              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide"
+                              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[11px] font-semibold"
                               title="Identità dedotta da dati storici senza token: potrebbe raggruppare persone diverse con lo stesso modello di dispositivo."
                             >
                               <IcIncerta className="w-3 h-3" /> Identità incerta

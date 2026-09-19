@@ -532,73 +532,6 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         </div>
       </div>
 
-      {/* Settings Panel */}
-      <div className="flex flex-col gap-4">
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0">
-              <IcConfigurazione className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Da dove raccogli le visite</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Il browser dentro Instagram e' l'unico da cui arriva quasi tutto: allargare a tutti i browser aggiunge anche chi apre il link altrove.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Un'etichetta sola. Con due, una per lato, non si capisce
-                quale sia lo stato e quale la destinazione: l'interruttore
-                diceva "Solo Instagram [ ] Tutti i browser" e per leggerlo
-                bisognava indovinare da che parte fosse acceso. */}
-            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
-              {trackAllBrowsers ? "Tutti i browser" : "Solo Instagram"}
-            </span>
-            <button 
-              type="button" 
-              role="switch" 
-              aria-checked={trackAllBrowsers}
-              disabled={loadingSettings}
-              onClick={toggleTrackAllBrowsers}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${trackAllBrowsers ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'}`}
-            >
-              <span className="sr-only">Raccogli da tutti i browser</span>
-              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${trackAllBrowsers ? 'translate-x-5' : 'translate-x-0'}`}></span>
-            </button>
-
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 flex items-center justify-center shrink-0">
-              <IcConfigurazione className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Le tue visite</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Aprendo la bacheca per controllare falsi i tuoi stessi numeri: tenerle fuori e' quasi sempre la scelta giusta.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
-              {isAdminTrackingIgnored
-                ? "Il tuo dispositivo e' escluso"
-                : "Il tuo dispositivo viene contato"}
-            </span>
-            <button 
-              type="button" 
-              role="switch" 
-              aria-checked={isAdminTrackingIgnored}
-              onClick={toggleAdminTracking}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 ${isAdminTrackingIgnored ? 'bg-orange-600' : 'bg-gray-200 dark:bg-gray-700'}`}
-            >
-              <span className="sr-only">Ignora Admin</span>
-              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${isAdminTrackingIgnored ? 'translate-x-5' : 'translate-x-0'}`}></span>
-            </button>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Sections */}
       <div className="space-y-12">
         {/* SECTION 1: SPOTTED & MESSAGES */}
         <section className="space-y-6">
@@ -640,8 +573,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
+            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-3">
                   Visite e messaggi, giorno per giorno
@@ -650,7 +583,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                   ultimi 14 giorni
                 </span>
               </div>
-              <div className="relative h-[250px] sm:h-[320px] w-full">
+              <div className="relative h-[200px] sm:h-[240px] w-full">
                 {isReady && (
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -679,11 +612,11 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             </div>
 
             <div className="flex flex-col gap-6 md:gap-8">
-              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
                 <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-2.5">
                   Da che telefono o computer
                 </h3>
-                <div className="h-[180px] sm:h-[200px] w-full relative z-10">
+                <div className="h-[160px] sm:h-[180px] w-full relative z-10">
                   {isReady && (
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
                       <ResponsiveContainer width="100%" height="100%">
@@ -707,7 +640,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
                 <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
                   Da quale applicazione aprono il link
                 </h3>
@@ -781,9 +714,9 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               <IcRete className="w-5 h-5 text-pink-600 dark:text-pink-400" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Visite & Form</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Comportamento degli utenti durante la compilazione del form.</p>
-              <p className="text-[10px] font-bold text-pink-500 dark:text-pink-400 uppercase tracking-widest mt-1">Dati da {Array.isArray(visits) ? visits.length : 0} sessioni / accessi completi monitorati.</p>
+              <h2 className="text-lg font-black text-gray-800 dark:text-gray-200">Chi apre e chi scrive</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Quanti arrivano sulla bacheca e quanti arrivano in fondo al modulo.</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">Su {Array.isArray(visits) ? visits.length : 0} visite registrate</p>
             </div>
           </div>
 
@@ -816,7 +749,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
             {/* Abandonment Rate UI */}
-            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
               <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
                 Abbandoni per Campo
               </h3>
@@ -841,7 +774,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             </div>
 
             {/* Time spent UI */}
-            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
               <h3 className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
                 Tempo medio di compilazione
               </h3>
@@ -1654,6 +1587,81 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
       </AnimatePresence>,
       document.body
     )}
+      {/* Questi due interruttori non sono statistiche: sono configurazione.
+          Stavano al secondo e terzo posto della pagina, SOPRA i numeri,
+          cioe' nel punto piu' visto, per due comandi che si toccano una
+          volta l'anno. Ora stanno in fondo, dopo i dati. */}
+      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+        <h2 className="text-[15px] font-semibold text-gray-800 dark:text-gray-200 mb-4">
+          Come vengono contate
+        </h2>
+      <div className="flex flex-col gap-4">
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0">
+              <IcConfigurazione className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Da dove raccogli le visite</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Il browser dentro Instagram e' l'unico da cui arriva quasi tutto: allargare a tutti i browser aggiunge anche chi apre il link altrove.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Un'etichetta sola. Con due, una per lato, non si capisce
+                quale sia lo stato e quale la destinazione: l'interruttore
+                diceva "Solo Instagram [ ] Tutti i browser" e per leggerlo
+                bisognava indovinare da che parte fosse acceso. */}
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+              {trackAllBrowsers ? "Tutti i browser" : "Solo Instagram"}
+            </span>
+            <button 
+              type="button" 
+              role="switch" 
+              aria-checked={trackAllBrowsers}
+              disabled={loadingSettings}
+              onClick={toggleTrackAllBrowsers}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${trackAllBrowsers ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+            >
+              <span className="sr-only">Raccogli da tutti i browser</span>
+              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${trackAllBrowsers ? 'translate-x-5' : 'translate-x-0'}`}></span>
+            </button>
+
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 flex items-center justify-center shrink-0">
+              <IcConfigurazione className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-200">Le tue visite</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Aprendo la bacheca per controllare falsi i tuoi stessi numeri: tenerle fuori e' quasi sempre la scelta giusta.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+              {isAdminTrackingIgnored
+                ? "Il tuo dispositivo e' escluso"
+                : "Il tuo dispositivo viene contato"}
+            </span>
+            <button 
+              type="button" 
+              role="switch" 
+              aria-checked={isAdminTrackingIgnored}
+              onClick={toggleAdminTracking}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 ${isAdminTrackingIgnored ? 'bg-orange-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+            >
+              <span className="sr-only">Ignora Admin</span>
+              <span aria-hidden="true" className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white dark:bg-gray-900 shadow ring-0 transition duration-200 ease-in-out ${isAdminTrackingIgnored ? 'translate-x-5' : 'translate-x-0'}`}></span>
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Analytics Sections */}
+      </div>
     </div>
   );
 };

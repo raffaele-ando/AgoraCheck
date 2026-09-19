@@ -182,14 +182,14 @@ export function LogoSettings() {
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <ImageIcon className="w-5 h-5 text-indigo-500" />
-          Gestione Loghi
+          Il marchio in cima alla bacheca
         </h3>
         <button onClick={loadLogos} className="p-2 text-gray-400 hover:text-indigo-500 transition-colors" title="Aggiorna">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
       <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed dark:text-gray-400">
-        Seleziona quale logo o icona vuoi caricare. Le modifiche verranno applicate automaticamente su tutta la piattaforma (es. aggiornamento favicon).
+        Quello che gli studenti vedono in cima alla bacheca, e l’icona del sito. Si applica ovunque appena salvi.
       </p>
 
       {statusMsg && (
@@ -206,7 +206,7 @@ export function LogoSettings() {
       )}
 
       {/* Impostazioni scala loghi */}
-      <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/30 rounded-xl space-y-4">
+      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl space-y-4">
         <div className="flex items-center justify-between">
             <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Quanto sono grandi sulla bacheca</h4>
             <div className="flex items-center gap-2">
@@ -216,8 +216,8 @@ export function LogoSettings() {
                   Non salvate
                 </span>
               )}
-              <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-xs font-bold rounded-lg transition-colors">
-                 {savingScales ? "Salvataggio..." : "Salva Grandezze"}
+              <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-60 text-white text-xs font-bold rounded-lg transition-colors">
+                 {savingScales ? "Salvataggio..." : "Salva le grandezze"}
               </button>
             </div>
         </div>
@@ -244,7 +244,7 @@ export function LogoSettings() {
                   const newScales = {...scales, zoneScale: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
-              }} className="w-full accent-orange-500" />
+              }} className="w-full accent-indigo-600" />
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
            </div>
            <div>
@@ -253,7 +253,7 @@ export function LogoSettings() {
                   const newScales = {...scales, agoraScale: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
-              }} className="w-full accent-orange-500" />
+              }} className="w-full accent-indigo-600" />
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
            </div>
            <div>
@@ -262,7 +262,7 @@ export function LogoSettings() {
                   const newScales = {...scales, spacing: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
-              }} className="w-full accent-orange-500" />
+              }} className="w-full accent-indigo-600" />
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{scales.spacing}px</div>
            </div>
            <div>
@@ -271,7 +271,7 @@ export function LogoSettings() {
                   const newScales = {...scales, customLogoScale: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
-              }} className="w-full accent-orange-500" />
+              }} className="w-full accent-indigo-600" />
               <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.customLogoScale * 100)}%</div>
            </div>
         </div>
