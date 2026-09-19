@@ -14,9 +14,9 @@ import { useRef } from "react";
 import type { Campo, Valori } from "./tipi";
 import { IcCarica, IcChiudi } from "../components/ui/AcIcons";
 
-const ETICHETTA = "block text-[12px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5";
+const ETICHETTA = "block text-[12px] font-bold text-gray-700 dark:text-gray-300 mb-1.5";
 const CASELLA =
-  "w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-[13px] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700/40 text-[13px] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors";
 
 function CampoImmagine({
   campo,
@@ -41,7 +41,7 @@ function CampoImmagine({
       <span className={ETICHETTA}>{campo.nome}</span>
       {valore ? (
         <div className="relative">
-          <img src={valore} alt="" className="w-full h-28 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+          <img src={valore} alt="" className="w-full h-28 object-cover rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900" />
           <button
             type="button"
             onClick={() => onCambia("")}
@@ -63,7 +63,7 @@ function CampoImmagine({
           className="w-full h-28 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center gap-1.5 text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
         >
           <IcCarica className="w-5 h-5" />
-          <span className="text-[12px] font-semibold">Scegli un file o trascinalo qui</span>
+          <span className="text-[12px] font-bold">Scegli un file o trascinalo qui</span>
         </button>
       )}
       <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => leggi(e.target.files?.[0])} />
@@ -154,7 +154,7 @@ export function CampoSingolo({
     case "interruttore":
       return (
         <label className="flex items-center justify-between gap-3 py-1 cursor-pointer">
-          <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">{campo.nome}</span>
+          <span className="text-[13px] font-bold text-gray-700 dark:text-gray-300">{campo.nome}</span>
           <input
             type="checkbox"
             checked={Boolean(v)}
@@ -198,9 +198,9 @@ export default function Maschera({
 
   return (
     <div className="space-y-6">
-      {gruppi.map((g) => (
-        <div key={g.nome}>
-          <h3 className="text-[11px] font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase mb-3">{g.nome}</h3>
+      {gruppi.map((g, i) => (
+        <div key={g.nome} className={i > 0 ? "pt-6 border-t border-gray-100 dark:border-gray-700" : undefined}>
+          <h3 className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-3">{g.nome}</h3>
           <div className="space-y-4">
             {g.campi.map((c) => (
               <CampoSingolo key={c.id} campo={c} valori={valori} onCambia={onCambia} />

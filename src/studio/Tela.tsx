@@ -201,6 +201,7 @@ export default function Tela({ modello, valori, variante, larghezza, mostraRiqua
   return (
     <div
       ref={tela}
+      data-tela=""
       style={{
         position: "relative",
         width: `${larghezza}px`,
