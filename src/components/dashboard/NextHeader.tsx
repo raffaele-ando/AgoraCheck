@@ -24,7 +24,8 @@ export type NextTab =
   | "analytics"
   | "story_template"
   | "carousel"
-  | "settings";
+  | "settings"
+  | "studio";
 
 export interface NextHeaderProps {
   activeTab: NextTab;
@@ -47,10 +48,11 @@ const SEZIONI = [
   { tab: "analytics" as const, label: "Statistiche", Icon: IcStatistiche },
 ];
 
-const CONFIG = [
-  { tab: "story_template" as const, label: "Template storia" },
-  { tab: "carousel" as const, label: "Carosello Instagram" },
-  { tab: "settings" as const, label: "Impostazioni" },
+export const SCHEDE_CONFIG: { tab: NextTab; label: string }[] = [
+  { tab: "story_template", label: "Template storia" },
+  { tab: "carousel", label: "Carosello Instagram" },
+  { tab: "settings", label: "Impostazioni" },
+  { tab: "studio", label: "Studio — post e storie" },
 ];
 
 export default function NextHeader({
@@ -68,7 +70,10 @@ export default function NextHeader({
 }: NextHeaderProps) {
   const [menu, setMenu] = useState<null | "config" | "account">(null);
   const inConfig =
-    activeTab === "story_template" || activeTab === "carousel" || activeTab === "settings";
+    activeTab === "story_template" ||
+    activeTab === "carousel" ||
+    activeTab === "settings" ||
+    activeTab === "studio";
 
   return (
     <header className="sticky top-0 z-40 -mx-4 md:-mx-8 px-4 md:px-8 mb-6 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-700">
@@ -145,7 +150,7 @@ export default function NextHeader({
                     role="menu"
                     className="absolute right-0 mt-2 w-56 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-2"
                   >
-                    {CONFIG.map(({ tab, label }) => (
+                    {SCHEDE_CONFIG.map(({ tab, label }) => (
                       <button
                         key={tab}
                         role="menuitem"
@@ -162,20 +167,6 @@ export default function NextHeader({
                         {label}
                       </button>
                     ))}
-                    {/* Lo Studio e' una pagina a se', non una scheda della
-                        dashboard: quindi un collegamento e non un bottone,
-                        cosi' si apre anche in una scheda nuova col tasto
-                        centrale. Sta in fondo, staccato: e' un posto dove si
-                        va a lavorare, non un'impostazione da cambiare. */}
-                    <a
-                      role="menuitem"
-                      // Non "/studio": il sito puo' essere servito da una
-                      // sottocartella, e li' un percorso assoluto uscirebbe fuori.
-                      href={`${import.meta.env.BASE_URL}studio`}
-                      className="w-full block text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 mt-2 pt-2"
-                    >
-                      Studio — post e storie
-                    </a>
                   </div>
                 </>
               )}

@@ -1,6 +1,12 @@
 /*
  * Lo Studio: si scrive a sinistra, si guarda a destra, si scarica.
  *
+ * E' una scheda della dashboard come le altre, non una pagina a se':
+ * l'intestazione, il fondo e i margini li mette il guscio che la
+ * contiene, e qui dentro c'e' solo il contenuto. Averla fuori voleva
+ * dire tenere in piedi una seconda intestazione che doveva restare
+ * uguale alla prima a mano.
+ *
  * Tre regole che vengono da quello che non funzionava nei pannelli
  * esistenti:
  *
@@ -22,12 +28,12 @@
  * sue regole in mezzo a otto che ne seguivano un'altra.
  */
 import { useMemo, useRef, useState } from "react";
-import Tela from "../studio/Tela";
-import Maschera from "../studio/Maschera";
-import { MODELLI } from "../studio/modelli";
-import { FORMATI, type Modello, type Valori } from "../studio/tipi";
-import { catturaSicura, nomeFile, scarica } from "../studio/esporta";
-import { IcAggiungi, IcAttesa, IcElimina, IcScarica, IcSelezione } from "../components/ui/AcIcons";
+import Tela from "../../studio/Tela";
+import Maschera from "../../studio/Maschera";
+import { MODELLI } from "../../studio/modelli";
+import { FORMATI, type Modello, type Valori } from "../../studio/tipi";
+import { catturaSicura, nomeFile, scarica } from "../../studio/esporta";
+import { IcAggiungi, IcAttesa, IcElimina, IcScarica, IcSelezione } from "../ui/AcIcons";
 
 /* I mattoni del sistema, scritti una volta sola invece che a ogni riga. */
 const SCHEDA =
@@ -45,7 +51,7 @@ function valoriIniziali(m: Modello): Valori {
   return v;
 }
 
-export default function Studio() {
+export default function StudioPanel() {
   const [modello, setModello] = useState<Modello>(MODELLI[0]);
   const [variante, setVariante] = useState<string>(MODELLI[0].varianti?.[0]?.id ?? "");
   const [schede, setSchede] = useState<Valori[]>([valoriIniziali(MODELLI[0])]);
@@ -105,33 +111,20 @@ export default function Studio() {
   const largaAnteprima = useMemo(() => (fmt.altezza / fmt.larghezza > 1.5 ? 260 : 330), [fmt]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="w-full max-w-[1200px] mx-auto py-8 text-left">
       {/* L'intestazione e' quella della dashboard: stessa altezza, stesso
           fondo velato, stesso bordo. Cambiando pagina non deve sembrare
           di aver cambiato programma. */}
-      <header className="sticky top-0 z-40 px-4 md:px-8 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-700">
-        <div className="h-[54px] flex items-center gap-3 sm:gap-6">
-          <a
-            href={`${import.meta.env.BASE_URL}dashboard`}
-            className="shrink-0 font-bold tracking-[0.18em] text-[13px] text-gray-900 dark:text-gray-100"
-          >
-            AGORÀ
-          </a>
-          {/* Solo un separatore fra il marchio e il nome della pagina: e'
-              decorazione, quindi e' fuori dalla lettura a voce. Il grigio
-              che avevo usato dava 2.30 di contrasto, sotto la soglia. */}
-          <span aria-hidden className="text-[13px] font-semibold text-gray-600 dark:text-gray-400">/</span>
-          <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">Studio</span>
 
-          <div className="ml-auto flex items-center gap-2">
-            {/* Sul telefono sparisce: mandava l'intestazione a capo, e il
-                marchio a sinistra porta gia' alla dashboard. */}
-            <a
-              href={`${import.meta.env.BASE_URL}dashboard`}
-              className="hidden sm:block px-3 py-2 text-[13px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-            >
-              Torna alla dashboard
-            </a>
+      <div>
+        {/* Titolo di pagina come in Carosello e in Impostazioni: 26 nero,
+            una riga sotto che dice cosa fa senza ripetere il titolo. */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100">Studio</h1>
+            <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-300">{modello.descrizione}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             {modello.multiplo && schede.length > 1 && (
               <button onClick={() => esporta(true)} disabled={!!lavoro} className={BOTTONE_VUOTO}>
                 Scarica tutte ({schede.length})
@@ -142,15 +135,6 @@ export default function Studio() {
               {lavoro || "Scarica"}
             </button>
           </div>
-        </div>
-      </header>
-
-      <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-8">
-        {/* Titolo di pagina come in Carosello e in Impostazioni: 26 nero,
-            una riga sotto che dice cosa fa senza ripetere il titolo. */}
-        <div className="mb-6">
-          <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100">Studio</h1>
-          <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-300">{modello.descrizione}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-6 items-start">
@@ -245,7 +229,7 @@ export default function Studio() {
             </div>
           </div>
 
-          <div className="lg:sticky lg:top-[86px] justify-self-center lg:justify-self-start">
+          <div className="lg:sticky lg:top-[78px] justify-self-center lg:justify-self-start">
             <div className={`${SCHEDA} p-4`}>
               <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} mostraRiquadri={riquadri} />
               <div className="mt-3 flex items-center justify-between gap-4 text-[11px]">

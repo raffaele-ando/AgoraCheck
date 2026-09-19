@@ -40,7 +40,7 @@ import MessageRow from "../components/dashboard/MessageRow";
 import MessagesToolbar from "../components/dashboard/MessagesToolbar";
 import MessagesRail from "../components/dashboard/MessagesRail";
 import ConfirmDialog from "../components/dashboard/ConfirmDialog";
-import NextHeader from "../components/dashboard/NextHeader";
+import NextHeader, { SCHEDE_CONFIG, type NextTab } from "../components/dashboard/NextHeader";
 import {
   IcAlias,
   IcAltro,
@@ -94,6 +94,9 @@ const StoryExportBeta = lazy(() => import("../components/dashboard/StoryExport")
 const StoryTemplateConfig = lazy(() => import("../components/dashboard/StoryTemplateConfig"));
 const CarouselTemplateConfig = lazy(() => import("../components/dashboard/CarouselTemplateConfig"));
 const AppSettings = lazy(() => import("../components/dashboard/AppSettings"));
+// Lo Studio porta con se' la libreria di cattura: sta in un blocco suo,
+// cosi' chi non lo apre non la scarica.
+const StudioPanel = lazy(() => import("../components/dashboard/StudioPanel"));
 // Le utilità di configurazione restano statiche: sono poche righe e servono
 // subito, senza trascinare l'interfaccia delle impostazioni.
 import { loadLinkConfigFromDB, LinkWidgetConfig, DEFAULT_LINK_CONFIG } from "../data/settings";
@@ -440,9 +443,29 @@ export default function DashboardNext() {
   const [profileCustomInstagramsInput, setProfileCustomInstagramsInput] =
     useState("");
   const [viewFilter, setViewFilter] = useState<"new" | "archived">("new");
-  const [activeTab, setActiveTab] = useState<
-    "messages" | "profiles" | "analytics" | "story_template" | "settings" | "carousel"
-  >("messages");
+  // Il tipo e' quello esportato dall'intestazione, non una copia scritta a
+  // mano: la copia era gia' rimasta indietro di una scheda, e il compilatore
+  // se n'e' accorto solo perche' ne ho aggiunta un'altra.
+  const [activeTab, setActiveTab] = useState<NextTab>("messages");
+  /*
+   * Lo Studio, una volta aperto, non si smonta piu'.
+   *
+   * La lista dei messaggi sta gia' nascosta invece che smontata, per non
+   * perdere il punto in cui si era. Nello Studio la posta e' piu' alta:
+   * smontarlo butta via il post che stai scrivendo, e basta una passata
+   * ai Messaggi per controllare una cosa. Resta pero' differito finche'
+   * non lo si apre la prima volta, cosi' chi non lo usa non ne scarica
+   * il codice ne' tiene in memoria le tele da 1080.
+   */
+  const [studioAperto, setStudioAperto] = useState(false);
+  const inConfigurazione =
+    activeTab === "story_template" ||
+    activeTab === "carousel" ||
+    activeTab === "settings" ||
+    activeTab === "studio";
+  useEffect(() => {
+    if (activeTab === "studio") setStudioAperto(true);
+  }, [activeTab]);
   const pageSize = pageSizeByTab[activeTab] ?? 20;
   const setPageSize = useCallback(
     (size: number) => {
@@ -2582,6 +2605,40 @@ export default function DashboardNext() {
           <Suspense fallback={<TabLoading />}>
             <StoryTemplateConfig />
           </Suspense>
+        )}
+        {/*
+          Su telefono la barra in fondo ha un solo tasto per tutta la
+          configurazione, e porta dritto alle Impostazioni: Template
+          storia e Carosello non si raggiungevano affatto: un buco che
+          c'era gia' prima dello Studio, e che con una scheda in piu'
+          diventava insostenibile. Qui sopra i pannelli di
+          configurazione compare una riga per passare dall'uno all'altro.
+          Su schermo largo non serve: c'e' il menu nell'intestazione.
+        */}
+        {inConfigurazione && (
+          <nav className="md:hidden -mx-4 px-4 mb-6 flex gap-2 overflow-x-auto pb-2">
+            {SCHEDE_CONFIG.map(({ tab, label }) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                aria-current={activeTab === tab ? "page" : undefined}
+                className={`shrink-0 px-3 py-2 rounded-lg text-[13px] font-bold border transition-colors ${
+                  activeTab === tab
+                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                    : "border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        )}
+        {studioAperto && (
+          <div className={activeTab === "studio" ? "block" : "hidden"}>
+            <Suspense fallback={<TabLoading />}>
+              <StudioPanel />
+            </Suspense>
+          </div>
         )}
         {activeTab === "settings" && (
           <Suspense fallback={<TabLoading />}>
