@@ -87,7 +87,7 @@ function InstagramBlocker() {
           </>
         ) : (
           <>
-            For the full experience, open Agorà in your phone's browser.
+            For the full experience, open Agorà in your phonés browser.
             <br />
             <br />
             Tap the three dots in the top right <b>(⋮)</b> and select{" "}

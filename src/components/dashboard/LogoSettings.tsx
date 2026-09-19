@@ -16,7 +16,7 @@ import { uploadMedia } from "../../utils/media";
 const getBaseLogos = () => {
   const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
   return [
-    { id: "default", label: "Logo Principale (Piattaforma Base)" },
+    { id: "default", label: "Il marchio Agorà" },
     { id: "favicon", label: "Favicon (Icona scheda browser)" },
     { id: "brandmark_agora", label: "Brandmark Agorà (Quadrato)" },
     ...locations.filter(l => l !== "default").map(l => ({ id: `logo_${l}`, label: `Logo ${l}` }))
@@ -178,9 +178,9 @@ export function LogoSettings() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+        <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <ImageIcon className="w-5 h-5 text-indigo-500" />
           Il marchio in cima alla bacheca
         </h3>
@@ -188,16 +188,16 @@ export function LogoSettings() {
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
-      <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed dark:text-gray-400">
+      <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
         Quello che gli studenti vedono in cima alla bacheca, e l’icona del sito. Si applica ovunque appena salvi.
       </p>
 
       {statusMsg && (
         <div
           role="status"
-          className={`mb-4 p-3 rounded-lg border text-xs font-bold ${
+          className={`mb-4 p-3 rounded-lg border text-[12px] font-semibold ${
             statusMsg.kind === "ok"
-              ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300"
+              ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
               : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
           }`}
         >
@@ -208,15 +208,15 @@ export function LogoSettings() {
       {/* Impostazioni scala loghi */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl space-y-4">
         <div className="flex items-center justify-between">
-            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Quanto sono grandi sulla bacheca</h4>
+            <h4 className="font-bold text-[13px] text-gray-800 dark:text-gray-200">Quanto sono grandi sulla bacheca</h4>
             <div className="flex items-center gap-2">
               {scalesDirty && !savingScales && (
-                <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
+                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   Non salvate
                 </span>
               )}
-              <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-60 text-white text-xs font-bold rounded-lg transition-colors">
+              <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-60 text-white text-[12px] font-semibold rounded-lg transition-colors">
                  {savingScales ? "Salvataggio..." : "Salva le grandezze"}
               </button>
             </div>
@@ -233,46 +233,46 @@ export function LogoSettings() {
              backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px"
            }}
         >
-           <div className="absolute top-2 left-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-white/80 dark:bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm">Anteprima</div>
+           <div className="absolute top-2 left-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wider bg-white/80 dark:bg-black/50 px-2 py-1 rounded backdrop-blur-sm">Anteprima</div>
            <Logo forceTextFallback={true} fallbackText="ANTEPRIMA" className="w-56 h-20 drop-shadow-sm" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">La scritta con il nome della zona</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">La scritta con il nome della zona</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.zoneScale} onChange={(e) => {
                   const newScales = {...scales, zoneScale: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
               }} className="w-full accent-indigo-600" />
-              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
+              <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Il marchio Agorà, sotto</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Il marchio Agorà, sotto</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.agoraScale} onChange={(e) => {
                   const newScales = {...scales, agoraScale: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
               }} className="w-full accent-indigo-600" />
-              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
+              <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Quanto spazio fra le due</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Quanto spazio fra le due</label>
               <input type="range" min="-20" max="40" step="1" value={scales.spacing} onChange={(e) => {
                   const newScales = {...scales, spacing: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
               }} className="w-full accent-indigo-600" />
-              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{scales.spacing}px</div>
+              <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{scales.spacing}px</div>
            </div>
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Se carichi un logo tuo, quanto e grande</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Se carichi un logo tuo, quanto e grande</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.customLogoScale} onChange={(e) => {
                   const newScales = {...scales, customLogoScale: parseFloat(e.target.value)};
                   setScales(newScales);
                   updateLogoScalesCache(newScales);
               }} className="w-full accent-indigo-600" />
-              <div className="text-[10px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.customLogoScale * 100)}%</div>
+              <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.customLogoScale * 100)}%</div>
            </div>
         </div>
       </div>
@@ -280,11 +280,11 @@ export function LogoSettings() {
       {/* Upload nuovo logo */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
         <div className="flex-1">
-          <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Cosa mostri in cima alla bacheca</label>
+          <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Cosa mostri in cima alla bacheca</label>
           <select
             value={selectedSlot}
             onChange={(e) => setSelectedSlot(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold focus:outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] font-bold focus:outline-none focus:border-indigo-500 transition-colors text-gray-900 dark:text-white"
           >
             {predefinedLogos.map((opt) => (
               <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -292,9 +292,9 @@ export function LogoSettings() {
           </select>
         </div>
         <div className="sm:w-auto self-end w-full">
-           <label className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 ${saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white shadow-md shadow-indigo-600/20 text-sm font-bold rounded-lg transition-all cursor-pointer`}>
+           <label className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 ${saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white shadow-md shadow-indigo-600/20 text-[13px] font-bold rounded-lg transition-all cursor-pointer`}>
               <Upload className="w-4 h-4" />
-              {saving ? "Caricamento..." : "Carica Logo"}
+              {saving ? "Caricamento..." : "Carica un'immagine"}
               <input type="file" accept="image/png, image/jpeg, image/svg+xml, image/webp" className="hidden" onChange={handleUpload} disabled={saving || !selectedSlot} />
            </label>
         </div>
@@ -302,11 +302,11 @@ export function LogoSettings() {
 
       {/* Lista loghi */}
       {loading ? (
-        <div className="text-sm font-medium text-gray-400 dark:text-gray-500 italic py-4 text-center">
+        <div className="text-[13px] font-medium text-gray-400 dark:text-gray-500 italic py-4 text-center">
           Caricamento loghi...
         </div>
       ) : logos.length === 0 ? (
-        <div className="text-sm font-medium text-gray-400 dark:text-gray-500 italic py-4 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+        <div className="text-[13px] font-medium text-gray-400 dark:text-gray-500 italic py-4 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
           Nessun logo caricato. Aggiungine uno usando il modulo qui sopra.
         </div>
       ) : (
@@ -325,10 +325,10 @@ export function LogoSettings() {
                 <img src={logo.dataUrl} alt={logo.name} className="max-w-full max-h-full object-contain drop-shadow-sm" />
               </div>
               <div className="p-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate pr-2" title={logo.name}>{logo.name}</span>
+                <span className="text-[12px] font-semibold text-gray-700 dark:text-gray-300 truncate pr-2" title={logo.name}>{logo.name}</span>
                 <button
                   onClick={() => handleDelete(logo.id)}
-                  className={`transition-colors p-1 text-xs font-bold flex items-center gap-1 shrink-0 ${
+                  className={`transition-colors p-1 text-[12px] font-semibold flex items-center gap-1 shrink-0 ${
                     pendingDelete === logo.id
                       ? "text-red-600"
                       : "text-gray-400 hover:text-red-500"

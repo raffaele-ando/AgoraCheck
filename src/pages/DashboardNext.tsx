@@ -3834,7 +3834,7 @@ export default function DashboardNext() {
                 />
                 <span className="block mt-2 text-[12px] text-gray-600 dark:text-gray-400">
                   Separati da virgola, senza @. Si affiancano a quelli che la
-                  persona ha scritto da se'.
+                  persona ha scritto da sé.
                 </span>
               </div>
               <div className="pt-4 flex gap-3 flex-col-reverse sm:flex-row">

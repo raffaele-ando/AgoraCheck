@@ -73,15 +73,15 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
   const generatedLink = currentUrl.toString();
 
   return (
-    <div className="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between gap-4">
+    <div className="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between gap-4">
       <div className="flex items-start justify-between mb-2">
       <div className="flex items-center gap-3">
          <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
            <Link className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
          </div>
          <div className="flex flex-col">
-           <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Il link da mettere in bio</h3>
-           <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+           <h3 className="text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight">Il link da mettere in bio</h3>
+           <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
              già compilato per la zona scelta
            </p>
          </div>
@@ -92,7 +92,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
            <select 
               value={selectedMode} 
               onChange={e => setSelectedMode(e.target.value)}
-              className="px-2 py-1.5 text-[11px] sm:text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg outline-none flex-1 sm:flex-none text-gray-700 dark:text-gray-300 min-w-0 flex-1 transition-colors"
+              className="px-2 py-2 text-[11px] sm:text-[12px] font-semibold bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg outline-none flex-1 sm:flex-none text-gray-700 dark:text-gray-300 min-w-0 flex-1 transition-colors"
            >
              <option value="spotted">Spotted</option>
              <option value="sondaggio">Sondaggio</option>
@@ -107,7 +107,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
                    setSelectedArea(LOCATIONS[newCity][0]);
                 }
               }}
-              className="px-2 py-1.5 text-[11px] sm:text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg outline-none flex-1 sm:flex-none text-gray-700 dark:text-gray-300 min-w-0 flex-1 transition-colors"
+              className="px-2 py-2 text-[11px] sm:text-[12px] font-semibold bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg outline-none flex-1 sm:flex-none text-gray-700 dark:text-gray-300 min-w-0 flex-1 transition-colors"
            >
              {CITIES.map(c => <option key={c} value={c}>{formatCity(c)}</option>)}
            </select>
@@ -115,7 +115,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
            <select 
               value={selectedArea} 
               onChange={e => setSelectedArea(e.target.value)}
-              className="px-2 py-1.5 text-[11px] sm:text-xs font-semibold bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg outline-none flex-1 sm:flex-none text-gray-700 dark:text-gray-300 min-w-0 flex-1 transition-colors"
+              className="px-2 py-2 text-[11px] sm:text-[12px] font-semibold bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg outline-none flex-1 sm:flex-none text-gray-700 dark:text-gray-300 min-w-0 flex-1 transition-colors"
            >
              {(LOCATIONS[selectedCity] || []).map(a => <option key={a} value={a}>{formatArea(a, selectedCity)}</option>)}
            </select>
@@ -128,7 +128,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
         <div className="flex flex-wrap items-center gap-2">
             <button
                 onClick={() => copyToClipboard(generatedLink, 'url')}
-                className={`flex items-center justify-center gap-2 px-3 py-2 min-w-0 flex-1 rounded-xl transition-all text-xs font-bold border ${copiedUrl ? "bg-green-500 border-green-500 text-white" : "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 border-transparent text-white"}`}
+                className={`flex items-center justify-center gap-2 px-3 py-2 min-w-0 flex-1 rounded-xl transition-all text-[12px] font-semibold border ${copiedUrl ? "bg-emerald-500 border-emerald-500 text-white" : "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 border-transparent text-white"}`}
                 title={generatedLink}
             >
                 <span className="truncate min-w-0">{generatedLink}</span>
@@ -137,7 +137,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
             
             <button
               onClick={() => copyToClipboard(config.tagline, 'label')}
-              className={`flex items-center justify-center gap-2 px-3 py-2 min-w-0 flex-1 rounded-xl transition-all text-xs font-bold border ${copiedLabel ? "bg-green-500 border-green-500 text-white" : "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"}`}
+              className={`flex items-center justify-center gap-2 px-3 py-2 min-w-0 flex-1 rounded-xl transition-all text-[12px] font-semibold border ${copiedLabel ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"}`}
               title="Copia Sticker Label"
             >
               <span className="truncate min-w-0">"{config.tagline || 'Label'}"</span>

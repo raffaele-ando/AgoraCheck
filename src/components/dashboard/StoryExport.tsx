@@ -148,10 +148,10 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 shrink-0">
-          <h2 className="text-lg font-black text-gray-900 dark:text-white">
+          <h2 className="text-[19px] font-bold text-gray-900 dark:text-white">
             Esporta come immagine
           </h2>
           <button
@@ -172,7 +172,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                 <select 
                   value={selectedMode} 
                   onChange={e => setSelectedMode(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-sm font-bold text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-[13px] font-bold text-gray-900 dark:text-white"
                 >
                   <option value="spotted">Spotted</option>
                   <option value="ricerca">Ricerca</option>
@@ -200,23 +200,23 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
               
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Chi cerchi" : selectedMode === "ricerca" ? "La domanda" : selectedMode === "risultati" ? "Il messaggio" : "La domanda"}</label>
+                  <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Chi cerchi" : selectedMode === "ricerca" ? "La domanda" : selectedMode === "risultati" ? "Il messaggio" : "La domanda"}</label>
                   <textarea 
                     value={chiText} 
                     onChange={e => setChiText(e.target.value)} 
                     rows={2}
-                    className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm resize-none text-gray-900 dark:text-white"
+                    className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-[13px] resize-none text-gray-900 dark:text-white"
                   />
                 </div>
                 {selectedMode !== "ricerca" && (
                   <>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
-                      <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Quando" : selectedMode === "risultati" ? "Esito (Trovato/a)" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 1" : "Opzione 1"}</label>
+                      <input type="text" value={quandoText} onChange={e => setQuandoText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-[13px] text-gray-900 dark:text-white"/>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
-                      <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Dove" : selectedMode === "risultati" ? "Extra / Dettagli" : selectedMode === "risultati_sondaggio" ? "Esito Opzione 2" : "Opzione 2"}</label>
+                      <input type="text" value={doveText} onChange={e => setDoveText(e.target.value)} className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-[13px] text-gray-900 dark:text-white"/>
                     </div>
                   </>
                 )}
@@ -225,12 +225,12 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
               {(selectedMode === "sondaggio" || selectedMode === "risultati_sondaggio") && (
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "risultati_sondaggio" ? "Esito Opz 3" : "Opzione 3"}</label>
-                    <input type="text" value={box4Text} onChange={e => setBox4Text(e.target.value)} placeholder="Opz 3..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
+                    <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "risultati_sondaggio" ? "Esito Opz 3" : "Opzione 3"}</label>
+                    <input type="text" value={box4Text} onChange={e => setBox4Text(e.target.value)} placeholder="Opz 3..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-[13px] text-gray-900 dark:text-white"/>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "risultati_sondaggio" ? "Esito Opz 4" : "Opzione 4"}</label>
-                    <input type="text" value={box5Text} onChange={e => setBox5Text(e.target.value)} placeholder="Opz 4..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white"/>
+                    <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "risultati_sondaggio" ? "Esito Opz 4" : "Opzione 4"}</label>
+                    <input type="text" value={box5Text} onChange={e => setBox5Text(e.target.value)} placeholder="Opz 4..." className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-[13px] text-gray-900 dark:text-white"/>
                   </div>
                 </div>
               )}
@@ -293,7 +293,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="w-full py-3.5 bg-indigo-700 hover:bg-indigo-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 bg-indigo-700 hover:bg-indigo-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isExporting ? (
               <>Esportazione in corso... <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>

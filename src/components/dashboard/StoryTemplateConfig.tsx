@@ -510,31 +510,31 @@ export default function StoryTemplateConfig() {
       <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
         <button
           onClick={() => setViewMode("editor")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${viewMode === "editor" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+          className={`px-4 py-2 text-[13px] font-bold rounded-lg transition-colors ${viewMode === "editor" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
           Come sono fatte
         </button>
         <button
           onClick={() => setViewMode("gallery")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${viewMode === "gallery" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+          className={`px-4 py-2 text-[13px] font-bold rounded-lg transition-colors ${viewMode === "gallery" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
           Cosa hai caricato
         </button>
       </div>
 
       {viewMode === "gallery" && (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-           <h2 className="text-lg font-black mb-4 dark:text-white">Sfondi caricati</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+           <h2 className="text-[19px] font-bold mb-4 dark:text-white">Sfondi caricati</h2>
            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
              {galleryData.map(item => (
                 <div key={`${item.target}-${item.mode}`} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-800/50 hover:border-indigo-300 hover:shadow-md transition-all">
                    <div className="p-2 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
                      <div className="flex-1 truncate">
-                       <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest truncate dark:text-gray-400">{item.target}</div>
-                       <div className="text-[11px] sm:text-sm font-black capitalize truncate">{item.mode}</div>
+                       <div className="text-[11px] sm:text-[12px] font-semibold text-gray-500 uppercase tracking-widest truncate dark:text-gray-400">{item.target}</div>
+                       <div className="text-[11px] sm:text-[13px] font-semibold capitalize truncate">{item.mode}</div>
                      </div>
                      {item.hasImage ? (
-                       <CheckCircle2 className="w-4 h-4 text-green-500 ml-1 shrink-0" />
+                       <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-1 shrink-0" />
                      ) : (
                        <div className="w-4 h-4 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 ml-1 shrink-0" />
                      )}
@@ -568,7 +568,7 @@ export default function StoryTemplateConfig() {
                       ) : (
                          <div className="flex flex-col items-center justify-center h-full text-gray-400 aspect-[9/16] w-full border border-dashed border-gray-300 dark:border-gray-700 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                            <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
-                           <span className="text-[10px] font-bold text-center">Aggiungi</span>
+                           <span className="text-[11px] font-semibold text-center">Aggiungi</span>
                          </div>
                       )}
                    </div>
@@ -582,7 +582,7 @@ export default function StoryTemplateConfig() {
         <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row"
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row"
       >
         {/* Left Side: Preview */}
         {/* L'anteprima e' un telefono alto 560 pixel e largo 315: teneva
@@ -640,7 +640,7 @@ export default function StoryTemplateConfig() {
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
                     <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                    <span className="text-[12.5px] font-medium px-4 text-center leading-snug">Nessuno sfondo: le storie escono col fondo neutro</span>
+                    <span className="text-[12px] font-medium px-4 text-center leading-snug">Nessuno sfondo: le storie escono col fondo neutro</span>
                   </div>
                 )}
              </div>
@@ -651,14 +651,14 @@ export default function StoryTemplateConfig() {
         <div className="flex-1 flex flex-col max-h-full">
           <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900">
             <div>
-              <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-[19px] font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Settings className="w-6 h-6 text-indigo-500" />
                 Come vengono fatte le storie
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Uno sfondo per ogni zona, una disposizione dei testi per ogni tipo</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">Uno sfondo per ogni zona, una disposizione dei testi per ogni tipo</p>
             </div>
             {savedStatus && (
-              <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
+              <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
                 <CheckCircle2 className="w-4 h-4" /> Salvato 
               </span>
             )}
@@ -669,11 +669,11 @@ export default function StoryTemplateConfig() {
             {/* Mode and Target Selectors */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Che tipo di storia stai impostando</label>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Che tipo di storia stai impostando</label>
                 <select
                   value={selectedMode}
                   onChange={(e) => setSelectedMode(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] font-bold text-gray-800 dark:text-gray-200"
                 >
                   <option value="spotted">Spotted</option>
                   <option value="ricerca">Ricerca (solo testo)</option>
@@ -683,11 +683,11 @@ export default function StoryTemplateConfig() {
                 </select>
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-gray-600 mb-1.5 dark:text-gray-300">Per quale zona (cambia solo lo sfondo)</label>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Per quale zona (cambia solo lo sfondo)</label>
                 <select
                   value={selectedTarget}
                   onChange={(e) => setSelectedTarget(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] font-bold text-gray-800 dark:text-gray-200"
                 >
                   {targetOptions.map(opt => (
                     <option key={opt} value={opt}>{opt === "DEFAULT" ? "Tutte le zone senza sfondo proprio" : opt}</option>
@@ -697,7 +697,7 @@ export default function StoryTemplateConfig() {
             </div>
 
             <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-[11px] leading-relaxed">
-              <span className="font-black shrink-0">!</span>
+              <span className="font-bold shrink-0">!</span>
               <span>
                 Lo <b>sfondo</b> è specifico per la zona selezionata, ma la{" "}
                 <b>posizione dei testi è condivisa da tutte le zone</b> con la
@@ -749,7 +749,7 @@ export default function StoryTemplateConfig() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 min-w-[80px] text-xs sm:text-sm font-bold capitalize py-2 px-2 sm:px-3 rounded-lg transition-colors whitespace-nowrap ${ activeTab === tab ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' }`}
+                    className={`flex-1 min-w-[80px] text-[12px] sm:text-[13px] font-semibold capitalize py-2 px-2 sm:px-3 rounded-lg transition-colors whitespace-nowrap ${ activeTab === tab ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' }`}
                   >
                     {getLabelForModeAndTab(tab)}
                   </button>
@@ -757,9 +757,9 @@ export default function StoryTemplateConfig() {
               </div>
 
               {/* Box Settings */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl space-y-4 border border-gray-100 dark:border-gray-700/50">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-4 border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200 capitalize">Riquadro «{getLabelForModeAndTab(activeTab)}»</span>
+                  <span className="text-[13px] font-bold text-gray-800 dark:text-gray-200 capitalize">Riquadro «{getLabelForModeAndTab(activeTab)}»</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input 
                       type="checkbox"
@@ -767,14 +767,14 @@ export default function StoryTemplateConfig() {
                       onChange={(e) => handleConfigChange({ enabled: e.target.checked })}
                       className="rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     />
-                    <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Attivo</span>
+                    <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400">Attivo</span>
                   </label>
                 </div>
 
                 <div className={`space-y-4 transition-opacity ${activeBox.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Distanza dal bordo di sopra</label>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Distanza dal bordo di sopra</label>
                       <input
                         type="range"
                         min="0" max="100"
@@ -782,10 +782,10 @@ export default function StoryTemplateConfig() {
                         onChange={(e) => handleConfigChange({ top: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
-                      <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.top}%</div>
+                      <div className="text-right text-[12px] text-gray-400 font-mono mt-1">{activeBox.top}%</div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Distanza dal bordo sinistro</label>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Distanza dal bordo sinistro</label>
                       <input
                         type="range"
                         min="0" max="100"
@@ -793,10 +793,10 @@ export default function StoryTemplateConfig() {
                         onChange={(e) => handleConfigChange({ left: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
-                      <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.left}%</div>
+                      <div className="text-right text-[12px] text-gray-400 font-mono mt-1">{activeBox.left}%</div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e largo</label>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e largo</label>
                       <input
                         type="range"
                         min="10" max="100"
@@ -804,10 +804,10 @@ export default function StoryTemplateConfig() {
                         onChange={(e) => handleConfigChange({ width: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
-                      <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.width}%</div>
+                      <div className="text-right text-[12px] text-gray-400 font-mono mt-1">{activeBox.width}%</div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e alto</label>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e alto</label>
                       <input
                         type="range"
                         min="5" max="100"
@@ -815,23 +815,23 @@ export default function StoryTemplateConfig() {
                         onChange={(e) => handleConfigChange({ height: Number(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
-                      <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.height}%</div>
+                      <div className="text-right text-[12px] text-gray-400 font-mono mt-1">{activeBox.height}%</div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e grande il testo (px)</label>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e grande il testo (px)</label>
                       <input
                         type="number"
                         min="16" max="250"
                         value={activeBox.fontSize}
                         onChange={(e) => handleConfigChange({ fontSize: Number(e.target.value) })}
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Di che colore</label>
+                      <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Di che colore</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
@@ -843,13 +843,13 @@ export default function StoryTemplateConfig() {
                           type="text" 
                           value={activeBox.color.toUpperCase()}
                           onChange={(e) => handleConfigChange({ color: e.target.value })}
-                          className="flex-1 w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono text-gray-900 dark:text-white"
+                          className="flex-1 w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] font-mono text-gray-900 dark:text-white"
                         />
                       </div>
                     </div>
                     <div className="col-span-2 grid grid-cols-2 gap-4 mt-2">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Il testo si allinea a</label>
+                        <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Il testo si allinea a</label>
                         <select
                           value={activeBox.textAlign || "left"}
                           onChange={(e) => {
@@ -864,7 +864,7 @@ export default function StoryTemplateConfig() {
                                     : "flex-start",
                             });
                           }}
-                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] text-gray-900 dark:text-white"
                         >
                           <option value="left">Sinistra</option>
                           <option value="center">Centro</option>
@@ -872,11 +872,11 @@ export default function StoryTemplateConfig() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Dentro il riquadro sta</label>
+                        <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">Dentro il riquadro sta</label>
                         <select
                           value={activeBox.alignItems || "flex-start"}
                           onChange={(e) => handleConfigChange({ alignItems: e.target.value as BoxConfig["alignItems"] })}
-                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[13px] text-gray-900 dark:text-white"
                         >
                           <option value="flex-start">In Alto</option>
                           <option value="center">Al Centro</option>
@@ -889,8 +889,8 @@ export default function StoryTemplateConfig() {
               </div>
             </div>
             
-            <p className="text-xs text-gray-500 mt-4 text-center dark:text-gray-400">
-              Si salva da se': quello che imposti qui vale per tutte le storie che esporti.
+            <p className="text-[12px] text-gray-500 mt-4 text-center dark:text-gray-400">
+              Si salva da sé: quello che imposti qui vale per tutte le storie che esporti.
             </p>
           </div>
         </div>
