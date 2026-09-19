@@ -178,6 +178,18 @@ export interface ElementoForma extends BaseElemento {
   raggio?: number;
   opacita?: number;
   /**
+   * Il bordo, in percentuale della larghezza del formato.
+   *
+   * Nei post dei risultati il riquadro dell'esito NON e' pieno: e' crema
+   * come il foglio, con un filo arancione intorno. E' un secondo tipo di
+   * contenitore, e vuol dire un'altra cosa — «questo e' l'esito», non
+   * «questo e' il contenuto». Senza il bordo i due tipi si confondono.
+   */
+  bordo?: number;
+  coloreBordo?: string;
+  /** Il filo e' tratteggiato: nei risultati lo e'. */
+  tratteggiato?: boolean;
+  /**
    * Sfuma da `colore` a questo, in gradi. Serve alle bande scure sotto le
    * fotografie, dove un colore pieno taglia e una sfumatura no.
    */

@@ -169,6 +169,10 @@ function Forma({ el, valori, larghezza }: { el: ElementoForma; valori: Valori; l
         ...posizione(el),
         background: el.sfumaA ? `linear-gradient(${el.angolo ?? 180}deg, ${colore}, ${el.sfumaA})` : colore,
         borderRadius: el.forma === "ellisse" ? "50%" : el.raggio ? `${(el.raggio / 100) * larghezza}px` : undefined,
+        border: el.bordo
+          ? `${(el.bordo / 100) * larghezza}px ${el.tratteggiato ? "dashed" : "solid"} ${el.coloreBordo ?? colore}`
+          : undefined,
+        boxSizing: "border-box",
         opacity: opacita(el, valori, el.opacita),
       }}
     />

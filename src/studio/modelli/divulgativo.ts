@@ -1,84 +1,134 @@
 /*
- * Post divulgativo, 1080x1350.
+ * Divulgativo — il post che spiega qualcosa.
  *
- * Il caso che i pannelli esistenti non sanno fare: una fotografia
- * caricata da chi pubblica, con il testo sopra. La banda sfumata sotto al
- * titolo non e' decorazione — senza, un titolo chiaro su una fotografia
- * chiara diventa illeggibile, e il testo non e' controllabile perche'
- * l'immagine cambia a ogni post.
+ * E' l'unico modello che non nasce da un tuo file: nei ventitre fogli non
+ * c'e'. Ma non e' inventato — e' costruito sulle regole ricavate dagli
+ * altri, che stanno scritte in SISTEMA.md. Dove ho dovuto scegliere, la
+ * scelta e' scritta qui sotto con la sua ragione, cosi' si puo'
+ * contestare una cosa alla volta.
+ *
+ * 1. LA TESTATA E' «ATENEO AGORÀ», NON «ATENEO SPOTTED».
+ *    E' la distinzione che regge la pagina: «Spotted» vuol dire «questo
+ *    l'ha mandato qualcuno», il marchio vuol dire «questo lo diciamo
+ *    noi». Un post divulgativo con la testata Spotted sembra un
+ *    messaggio di uno studente. E' anche a questo che servono i fogli da
+ *    3000x3750 che mi hai mandato: sono quella seconda testata.
+ *
+ * 2. LA FOTOGRAFIA STA NEL RIQUADRO, NON SOTTO IL TESTO.
+ *    Nella mia prima versione era a tutto schermo con le scritte sopra e
+ *    una banda sfumata per renderle leggibili. Non e' il tuo sistema: da
+ *    te il contenuto sta SEMPRE dentro un riquadro beige, nella colonna
+ *    di destra, con la sua icona a sinistra. Una fotografia e' contenuto
+ *    come il resto. E ha il vantaggio di non dipendere da com'e' la foto:
+ *    il testo non ci finisce mai sopra, quindi non serve scurirla.
+ *
+ * 3. IL TITOLO E IL TESTO STANNO IN RIQUADRI A TUTTA LARGHEZZA.
+ *    Nei tuoi file esistono gia' due tipi di riquadro: quello da 67.1%
+ *    che lascia la colonna delle icone, e quello da 80% che parte da 10 e
+ *    la occupa — e' quello dell'invito «Hai visto qualcuno?». Il secondo
+ *    si usa quando non c'e' un'icona da mettere, ed e' il caso qui: il
+ *    genere del post lo dice gia' l'etichetta in alto, e ripetere la
+ *    lente accanto al titolo la userebbe due volte per due cose diverse.
+ *    Un'icona, un significato.
+ *
+ * 4. L'OCCHIELLO E' UN'ETICHETTA DI SEZIONE.
+ *    Come «RISULTATI»: colonna di sinistra, Archivo Black maiuscolo
+ *    arancione, con la sua icona. Non un titoletto sopra al contenuto.
+ *
+ * 5. IL FORMATO PREDEFINITO E' IL POST VERTICALE 1080x1350.
+ *    Il divulgativo resta nel profilo, non sparisce in ventiquattro ore,
+ *    quindi il posto giusto e' il feed.
  */
 import type { Modello } from "../tipi";
-import { ARANCIO, CARATTERE_ATENEO, CARATTERE_TESTO, CREMA, INCHIOSTRO, SPAZIATURA_ATENEO } from "../marchio";
+import {
+  CARATTERE_TESTO, CORPO_MINORE, CORPO_TESTO, CREMA, INCHIOSTRO,
+  PIENO_LARGHEZZA, PIENO_X, RIQUADRO, campoAteneo, etichetta, firma, testataAgora,
+} from "../marchio";
 
 export const divulgativo: Modello = {
   id: "divulgativo",
   nome: "Divulgativo — post",
-  descrizione: "Una fotografia, un titolo, un occhiello e la fonte.",
+  descrizione: "Il post che spiega qualcosa: un'immagine, un titolo, il testo e la fonte.",
   formato: "ritratto",
-  fondo: INCHIOSTRO,
+  fondo: CREMA,
 
   campi: [
-    { id: "foto", nome: "Fotografia", tipo: "immagine", gruppo: "Immagine" },
-    { id: "scurisci", nome: "Scurisci la foto", tipo: "numero", predefinito: 35, min: 0, max: 80, passo: 5, gruppo: "Immagine" },
-    { id: "occhiello", nome: "Occhiello", tipo: "testo", predefinito: "LO SAPEVI?", gruppo: "Testo" },
-    { id: "titolo", nome: "Titolo", tipo: "paragrafo", esempio: "Il Politecnico ha una biblioteca aperta fino alle 23", gruppo: "Testo" },
-    { id: "sottotitolo", nome: "Sottotitolo", tipo: "paragrafo", esempio: "Una riga di contesto, se serve", gruppo: "Testo" },
-    { id: "fonte", nome: "Fonte", tipo: "testo", esempio: "polimi.it", gruppo: "Coda" },
-    { id: "firma", nome: "Firma", tipo: "testo", predefinito: "@agora.polimi", gruppo: "Coda" },
+    campoAteneo,
+    {
+      id: "occhiello", nome: "Occhiello", tipo: "testo",
+      predefinito: "LO SAPEVI?", gruppo: "Il post",
+    },
+    { id: "titolo", nome: "Titolo", tipo: "paragrafo", esempio: "La biblioteca del Leonardo resta aperta fino alle 23", gruppo: "Il post" },
+    { id: "testo", nome: "Il testo", tipo: "paragrafo", esempio: "Dal lunedì al venerdì, anche in sessione.", gruppo: "Il post" },
+    { id: "foto", nome: "Immagine (facoltativa)", tipo: "immagine", gruppo: "Il post" },
+    { id: "fonte", nome: "Fonte (facoltativa)", tipo: "testo", esempio: "polimi.it", gruppo: "Coda" },
   ],
 
   elementi: [
-    { id: "foto", tipo: "immagine", campo: "foto", riquadro: { x: 0, y: 0, larghezza: 100, altezza: 100 }, riempimento: "cover" },
-    // Il velo: scurisce la fotografia quanto serve a quello scatto. Quanto
-    // non lo decide il modello — dipende da com'e' la foto — quindi e' un
-    // campo, non un numero scritto qui.
-    { id: "velo", tipo: "forma", riquadro: { x: 0, y: 0, larghezza: 100, altezza: 100 }, colore: "#0d0c0b", campoOpacita: "scurisci" },
-    // La banda: trasparente in alto, piena in basso, cosi' la fotografia
-    // si vede e il testo resta leggibile qualunque foto sia.
+    ...testataAgora(1.9),
+
+    /* L'occhiello come etichetta di sezione: colonna di sinistra, come
+       «RISULTATI». Non un titoletto sopra al contenuto. */
+    ...etichetta("occhiello-et", 15.5, "lente", { campo: "occhiello" }),
+
+    /* La fotografia, a tutta larghezza come i riquadri che la seguono.
+       Sparisce se non la carichi, e quello che viene dopo NON si sposta:
+       un post senza immagine ha semplicemente piu' aria in alto, invece
+       di avere tutto il resto in un posto diverso. */
     {
-      id: "banda", tipo: "forma",
-      riquadro: { x: 0, y: 38, larghezza: 100, altezza: 62 },
-      colore: "rgba(28,27,26,0)", sfumaA: "rgba(28,27,26,0.94)", angolo: 180,
+      id: "foto", tipo: "immagine", campo: "foto",
+      riquadro: { x: PIENO_X, y: 26.5, larghezza: PIENO_LARGHEZZA, altezza: 22 },
+      riempimento: "cover", raggio: 2.7, seCampo: "foto",
     },
-    { id: "bollo", tipo: "forma", riquadro: { x: 8, y: 60, larghezza: 13, altezza: 0.45 }, colore: ARANCIO },
+
+    /* Il titolo: riquadro pieno a tutta larghezza. */
     {
-      id: "occhiello", tipo: "testo", campo: "occhiello",
-      riquadro: { x: 8, y: 64, larghezza: 84, altezza: 3.4 },
-      corpo: 2.13, peso: 800, colore: ARANCIO, maiuscolo: true, spaziatura: SPAZIATURA_ATENEO, famiglia: CARATTERE_ATENEO, adatta: false,
+      id: "riq-titolo", tipo: "forma",
+      riquadro: { x: PIENO_X, y: 52.94, larghezza: PIENO_LARGHEZZA, altezza: 13 },
+      colore: RIQUADRO, raggio: 2.7,
     },
     {
       id: "titolo", tipo: "testo", campo: "titolo",
-      riquadro: { x: 8, y: 69, larghezza: 84, altezza: 15 },
-      corpo: 6.75, peso: 700, colore: CREMA, interlinea: 1.08, famiglia: CARATTERE_ATENEO,
+      riquadro: { x: PIENO_X + 3, y: 55.4, larghezza: PIENO_LARGHEZZA - 6, altezza: 8.2 },
+      corpo: CORPO_TESTO, peso: 700, colore: INCHIOSTRO,
+      famiglia: CARATTERE_TESTO, interlinea: 1.25, verticale: "center",
+    },
+
+    /* Il testo, uno spazio di sistema piu' sotto. */
+    {
+      id: "riq-testo", tipo: "forma",
+      riquadro: { x: PIENO_X, y: 70.38, larghezza: PIENO_LARGHEZZA, altezza: 13 },
+      colore: RIQUADRO, raggio: 2.7, seCampo: "testo",
     },
     {
-      id: "sottotitolo", tipo: "testo", campo: "sottotitolo",
-      riquadro: { x: 8, y: 85, larghezza: 84, altezza: 6 },
-      corpo: 2.63, peso: 700, colore: "#cfc9c0", interlinea: 1.3, famiglia: CARATTERE_TESTO, seCampo: "sottotitolo",
+      id: "testo", tipo: "testo", campo: "testo",
+      riquadro: { x: PIENO_X + 3, y: 72.5, larghezza: PIENO_LARGHEZZA - 6, altezza: 8.8 },
+      corpo: CORPO_MINORE, peso: 700, colore: INCHIOSTRO,
+      famiglia: CARATTERE_TESTO, interlinea: 1.4, verticale: "center", seCampo: "testo",
     },
+
+    /* La fonte: piccola, allineata al bordo dei riquadri. */
     {
       id: "fonte", tipo: "testo", campo: "fonte",
-      riquadro: { x: 8, y: 93.5, larghezza: 50, altezza: 3.5 },
-      corpo: 1.75, peso: 500, colore: "#9b968e", seCampo: "fonte", adatta: false,
+      riquadro: { x: PIENO_X, y: 85.4, larghezza: PIENO_LARGHEZZA, altezza: 3.5 },
+      corpo: CORPO_MINORE * 0.78, peso: 700, colore: "#6b6660",
+      famiglia: CARATTERE_TESTO, adatta: false, seCampo: "fonte",
     },
-    {
-      id: "firma", tipo: "testo", campo: "firma",
-      riquadro: { x: 58, y: 93.5, larghezza: 34, altezza: 3.5 },
-      corpo: 1.75, peso: 700, colore: "#9b968e", allineamento: "right", adatta: false,
-    },
+
+    ...firma(),
   ],
 
   varianti: [
-    { id: "scuro", nome: "Su scuro" },
+    { id: "crema", nome: "Crema" },
     {
-      id: "chiaro", nome: "Su chiaro",
+      id: "inchiostro", nome: "Inchiostro", fondo: "#1c1b1a",
       ritocchi: {
-        velo: { colore: "#f3ece0" },
-        banda: { colore: "rgba(243,236,224,0)", sfumaA: "rgba(243,236,224,0.96)" },
-        titolo: { colore: "#1c1b1a" },
-        sottotitolo: { colore: "#4a463f" },
-        fonte: { colore: "#6b7280" },
-        firma: { colore: "#6b7280" },
+        ateneo: { colore: CREMA },
+        titolo: { colore: CREMA },
+        testo: { colore: CREMA },
+        fonte: { colore: "#9b968e" },
+        "riq-titolo": { colore: "#2b2927" },
+        "riq-testo": { colore: "#2b2927" },
       },
     },
   ],

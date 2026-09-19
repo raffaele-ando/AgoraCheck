@@ -1,18 +1,28 @@
 /*
  * «RISULTATI» — la storia che racconta com'e' finita.
  *
- * E' il seguito di uno spotted: si sono trovati, oppure no. Nei tuoi file
- * ne esistono due versioni, con uno e con due riquadri tratteggiati: qui
- * e' un modello solo, e il secondo riquadro compare quando lo riempi.
- * Erano due file per una differenza che e' un campo vuoto.
+ * Rifatta misurando la pagina 6 del tuo file, dopo che la prima versione
+ * l'avevo disegnata a occhio. Tre cose che avevo sbagliato:
+ *
+ * 1. QUANDO e DOVE stanno AFFIANCATI, non impilati. A meta' larghezza la
+ *    colonna delle icone sparisce e il segno passa sopra al riquadro.
+ * 2. Il riquadro dell'esito non e' pieno: e' crema col filo arancione. E'
+ *    un secondo tipo di contenitore, e dice «com'e' finita» invece di
+ *    «questo e' il contenuto».
+ * 3. Dietro all'esito c'e' il suo numero, grande e chiaro.
+ *
+ * Il secondo esito compare solo se lo scrivi: nei tuoi file sono due
+ * documenti diversi per una differenza che e' un campo vuoto.
  */
 import type { Modello } from "../tipi";
-import { ARANCIO, CARATTERE_TESTO, CREMA, INCHIOSTRO, RIQUADRO, campoAteneo, firma, riga, testata } from "../marchio";
+import {
+  CORPO_TESTO, CREMA, arcoSopra, campoAteneo, esito, etichetta, firma, mezzeRighe, riga, testata,
+} from "../marchio";
 
 export const risultati: Modello = {
   id: "risultati",
   nome: "Risultati",
-  descrizione: "Com'e' finita: uno o due esiti, il secondo compare se lo scrivi.",
+  descrizione: "Com'è finita: uno o due esiti, il secondo compare se lo scrivi.",
   formato: "storia",
   fondo: CREMA,
 
@@ -26,31 +36,31 @@ export const risultati: Modello = {
   ],
 
   elementi: [
+    arcoSopra,
     ...testata({ ateneo: 5.17, spotted: 9.53 }),
-    ...riga(1, 17.0, 9.0, "calendario", "quando", 4.32),
-    ...riga(2, 29.0, 9.0, "puntina", "dove", 4.32),
-    ...riga(3, 41.0, 16.0, "lente", "messaggio", 4.32),
+    ...mezzeRighe(19.29, { icona: "calendario", campo: "quando" }, { icona: "puntina", campo: "dove" }, CORPO_TESTO),
+    ...riga(1, 34.66, 12.77, "lente", "messaggio", CORPO_TESTO),
+    ...etichetta("risultati-et", 52.55, "bersaglio", { fisso: "Risultati" }),
+    ...esito(1, 57.45, "esito1", CORPO_TESTO),
+    ...esito(2, 75.34, "esito2", CORPO_TESTO),
+    // In questa pagina il marchio non c'e': solo i tre pallini, e a
+    // destra invece che a sinistra. E' cosi' nel tuo file — l'ho tenuto
+    // com'e' invece di uniformarlo, e l'incoerenza sta scritta in
+    // SISTEMA.md perche' e' una cosa da decidere, non da nascondere.
+    ...firma({ marchio: false, pallini: "destra" }),
+  ],
 
-    { id: "bersaglio", tipo: "immagine", fonte: "/studio/bersaglio.png", riquadro: { x: 8.0, y: 60.6, larghezza: 6.5, altezza: 3.7 }, riempimento: "contain" },
+  varianti: [
+    { id: "crema", nome: "Crema" },
     {
-      id: "titolo", tipo: "testo", fisso: "RISULTATI",
-      riquadro: { x: 16.0, y: 61.4, larghezza: 40, altezza: 3.2 },
-      corpo: 3.38, peso: 700, colore: ARANCIO, famiglia: CARATTERE_TESTO,
-      maiuscolo: true, spaziatura: 0.06, adatta: false,
+      id: "inchiostro", nome: "Inchiostro", fondo: "#1c1b1a",
+      ritocchi: {
+        ateneo: { colore: CREMA }, quando: { colore: CREMA }, dove: { colore: CREMA },
+        messaggio: { colore: CREMA }, esito1: { colore: CREMA }, esito2: { colore: CREMA },
+        mez1: { colore: "#2b2927" }, mez2: { colore: "#2b2927" }, riq1: { colore: "#2b2927" },
+        "esito1-riq": { colore: "#1c1b1a" }, "esito2-riq": { colore: "#1c1b1a" },
+        "esito1-num": { colore: "#332f2c" }, "esito2-num": { colore: "#332f2c" },
+      },
     },
-    { id: "cor1", tipo: "forma", riquadro: { x: 16.0, y: 66.0, larghezza: 74, altezza: 9.5 }, colore: RIQUADRO, raggio: 2.0 },
-    {
-      id: "esito1", tipo: "testo", campo: "esito1",
-      riquadro: { x: 19.0, y: 68.0, larghezza: 68, altezza: 5.5 },
-      corpo: 3.91, peso: 700, colore: INCHIOSTRO, famiglia: CARATTERE_TESTO, verticale: "center",
-    },
-    { id: "cor2", tipo: "forma", riquadro: { x: 16.0, y: 77.0, larghezza: 74, altezza: 9.5 }, colore: RIQUADRO, raggio: 2.0, seCampo: "esito2" },
-    {
-      id: "esito2", tipo: "testo", campo: "esito2",
-      riquadro: { x: 19.0, y: 79.0, larghezza: 68, altezza: 5.5 },
-      corpo: 3.91, peso: 700, colore: INCHIOSTRO, famiglia: CARATTERE_TESTO, verticale: "center",
-      seCampo: "esito2",
-    },
-    ...firma(),
   ],
 };

@@ -20,6 +20,13 @@
  * testata per un ateneo nuovo non richiede piu' un file nuovo.
  */
 @font-face {
+  font-family: "Archivo Black";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("/studio/ArchivoBlack-400.ttf") format("truetype");
+}
+@font-face {
   font-family: "Abril Fatface";
   font-weight: 400;
   font-style: normal;
