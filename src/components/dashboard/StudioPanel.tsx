@@ -28,6 +28,7 @@
  * sue regole in mezzo a otto che ne seguivano un'altra.
  */
 import { useMemo, useRef, useState } from "react";
+import "../../studio/caratteri.css";
 import Tela from "../../studio/Tela";
 import Maschera from "../../studio/Maschera";
 import { MODELLI } from "../../studio/modelli";

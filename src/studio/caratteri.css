@@ -1,0 +1,47 @@
+/*
+ * I caratteri dello Studio, ospitati qui e non presi da Google.
+ *
+ * Due ragioni, e nessuna delle due e' l'ideologia. La prima: il file da
+ * esportare viene catturato da `html-to-image`, che disegna solo cio' che
+ * il browser ha gia' in memoria — un carattere ancora in viaggio verso
+ * Google esce dalla cattura come ripiego di sistema, e il post e' da
+ * rifare. La seconda: la bacheca pubblica non deve pagare una richiesta a
+ * un terzo per dei caratteri che servono solo qui dentro.
+ *
+ * Sono i due caratteri veri dei post, letti dal PDF: i nomi delle
+ * universita' sono League Spartan Bold, i testi Open Sans Bold e Bold
+ * Italic. Entrambi con licenza libera (SIL OFL), quindi si possono
+ * ospitare.
+ *
+ * Manca «Spotted»: nell'originale e' CAGenerated, un carattere di Canva
+ * che non si puo' ridistribuire. Quella parola non cambia mai, quindi
+ * sta come disegno — `spotted.png`, staccata dal suo fondo.
+ */
+@font-face {
+  font-family: "League Spartan";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block; /* mai il ripiego: meglio attendere che sbagliare il file */
+  src: url("/studio/LeagueSpartan-700.ttf") format("truetype");
+}
+@font-face {
+  font-family: "League Spartan";
+  font-weight: 800;
+  font-style: normal;
+  font-display: block;
+  src: url("/studio/LeagueSpartan-800.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("/studio/OpenSans-700.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-weight: 700;
+  font-style: italic;
+  font-display: block;
+  src: url("/studio/OpenSans-700italic.ttf") format("truetype");
+}

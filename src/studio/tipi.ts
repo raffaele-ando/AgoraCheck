@@ -132,6 +132,7 @@ export interface ElementoImmagine extends BaseElemento {
   fonte?: string;
   /** `cover` riempie e ritaglia, `contain` entra tutta. */
   riempimento?: "cover" | "contain";
+  /** Vedi `ElementoForma.raggio`. */
   raggio?: number;
   opacita?: number;
 }
@@ -141,6 +142,17 @@ export interface ElementoForma extends BaseElemento {
   forma?: "rettangolo" | "ellisse";
   colore: string;
   campoColore?: string;
+  /**
+   * L'arrotondamento degli angoli, in percentuale della LARGHEZZA DEL
+   * FORMATO.
+   *
+   * Non dell'elemento: in CSS un raggio in percentuale si misura sui lati
+   * dell'elemento stesso, quindi su un riquadro basso e largo lo stesso
+   * numero dava un'ellisse, e su due riquadri di altezza diversa dava due
+   * arrotondamenti diversi. Nei post originali i riquadri hanno tutti lo
+   * stesso raggio e altezze diverse: con la regola vecchia non si poteva
+   * scrivere.
+   */
   raggio?: number;
   opacita?: number;
   /**
@@ -151,7 +163,38 @@ export interface ElementoForma extends BaseElemento {
   angolo?: number;
 }
 
-export type Elemento = ElementoTesto | ElementoImmagine | ElementoForma;
+/**
+ * Una fila di forme uguali: la barra dei pallini in cima alle schede.
+ *
+ * Nei file originali quella barra sono venti rettangoli disegnati a mano
+ * uno per uno, e cambiare "a che punto sei" vuol dire rifare la barra.
+ * Qui e' un elemento solo: quanti ce ne sono, quanti sono accesi, e come
+ * cambiano i due stati.
+ */
+export interface ElementoSerie extends BaseElemento {
+  tipo: "serie";
+  /** Quanti segni in tutto. */
+  quanti: number;
+  /** Un campo `numero`: quanti dei primi sono nello stato "acceso". */
+  campoAccesi?: string;
+  accesi?: number;
+  /**
+   * Dove comincia il primo segno e ogni quanto si ripete, in percentuale
+   * della LARGHEZZA DEL FORMATO — come tutto il resto del modello.
+   *
+   * Prima erano percentuali del riquadro della serie, e bastava spostare
+   * il riquadro perche' i segni cambiassero dimensione: un numero preso
+   * dal file originale non ci finiva dentro senza essere ricalcolato. Il
+   * riquadro adesso serve solo a dire a che altezza sta la barra.
+   */
+  inizio: number;
+  passo: number;
+  /** Il segno acceso e quello spento: stessa larghezza, altezza diversa. */
+  acceso: { larghezza: number; altezza: number; colore: string; raggio?: number };
+  spento: { larghezza: number; altezza: number; colore: string; raggio?: number };
+}
+
+export type Elemento = ElementoTesto | ElementoImmagine | ElementoForma | ElementoSerie;
 
 /**
  * Un ritocco di variante.
@@ -161,7 +204,10 @@ export type Elemento = ElementoTesto | ElementoImmagine | ElementoForma;
  * e toglierli di mezzo evita anche che l'unione dei tre tipi si annulli.
  */
 export type Ritocco = Partial<
-  Omit<ElementoTesto, "tipo" | "id"> & Omit<ElementoImmagine, "tipo" | "id"> & Omit<ElementoForma, "tipo" | "id">
+  Omit<ElementoTesto, "tipo" | "id"> &
+    Omit<ElementoImmagine, "tipo" | "id"> &
+    Omit<ElementoForma, "tipo" | "id"> &
+    Omit<ElementoSerie, "tipo" | "id">
 >;
 
 /* --- Il modello --- */

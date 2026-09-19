@@ -12,7 +12,7 @@
  * file da 1080 sono la stessa immagine a due ingrandimenti diversi.
  */
 import { useLayoutEffect, useRef, useState } from "react";
-import type { Elemento, ElementoForma, ElementoImmagine, ElementoTesto, Modello, Valori } from "./tipi";
+import type { Elemento, ElementoForma, ElementoImmagine, ElementoSerie, ElementoTesto, Modello, Valori } from "./tipi";
 import { FORMATI } from "./tipi";
 
 /**
@@ -145,11 +145,11 @@ function Testo({ el, valori, larghezza, altezza }: { el: ElementoTesto; valori: 
   );
 }
 
-function Immagine({ el, valori }: { el: ElementoImmagine; valori: Valori }) {
+function Immagine({ el, valori, larghezza }: { el: ElementoImmagine; valori: Valori; larghezza: number }) {
   const src = el.fonte ?? valore(valori, el.campo);
   if (!src) return null;
   return (
-    <div style={{ ...posizione(el), overflow: "hidden", borderRadius: el.raggio ? `${el.raggio}%` : undefined, opacity: opacita(el, valori, el.opacita) }}>
+    <div style={{ ...posizione(el), overflow: "hidden", borderRadius: el.raggio ? `${(el.raggio / 100) * larghezza}px` : undefined, opacity: opacita(el, valori, el.opacita) }}>
       <img
         src={src}
         alt=""
@@ -160,17 +160,52 @@ function Immagine({ el, valori }: { el: ElementoImmagine; valori: Valori }) {
   );
 }
 
-function Forma({ el, valori }: { el: ElementoForma; valori: Valori }) {
+function Forma({ el, valori, larghezza }: { el: ElementoForma; valori: Valori; larghezza: number }) {
   const colore = el.campoColore ? valore(valori, el.campoColore) || el.colore : el.colore;
   return (
     <div
       style={{
         ...posizione(el),
         background: el.sfumaA ? `linear-gradient(${el.angolo ?? 180}deg, ${colore}, ${el.sfumaA})` : colore,
-        borderRadius: el.forma === "ellisse" ? "50%" : el.raggio ? `${el.raggio}%` : undefined,
+        borderRadius: el.forma === "ellisse" ? "50%" : el.raggio ? `${(el.raggio / 100) * larghezza}px` : undefined,
         opacity: opacita(el, valori, el.opacita),
       }}
     />
+  );
+}
+
+/**
+ * La barra dei pallini. I segni si allineano sul CENTRO del riquadro, non
+ * sul bordo alto: acceso e spento hanno altezze diverse, e allineandoli
+ * in alto la barra sembrerebbe scendere man mano che si avanza.
+ */
+function Serie({ el, valori }: { el: ElementoSerie; valori: Valori }) {
+  const accesi = el.campoAccesi !== undefined
+    ? Number(valori[el.campoAccesi] ?? el.accesi ?? 0)
+    : (el.accesi ?? 0);
+  const segni = [];
+  for (let i = 0; i < el.quanti; i++) {
+    const s = i < accesi ? el.acceso : el.spento;
+    segni.push(
+      <div
+        key={i}
+        style={{
+          position: "absolute",
+          left: `${el.inizio + i * el.passo}%`,
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: `${s.larghezza}%`,
+          height: `${s.altezza}%`,
+          background: s.colore,
+          borderRadius: s.raggio === undefined ? "999px" : `${s.raggio}%`,
+        }}
+      />,
+    );
+  }
+  // Il riquadro della serie e' sempre largo quanto il formato: cosi' le
+  // percentuali dei segni sono le stesse del resto del modello.
+  return (
+    <div style={{ ...posizione(el), left: 0, width: "100%" }}>{segni}</div>
   );
 }
 
@@ -220,9 +255,11 @@ export default function Tela({ modello, valori, variante, larghezza, mostraRiqua
           el.tipo === "testo" ? (
             <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
           ) : el.tipo === "immagine" ? (
-            <Immagine key={el.id} el={el} valori={valori} />
+            <Immagine key={el.id} el={el} valori={valori} larghezza={larghezza} />
+          ) : el.tipo === "serie" ? (
+            <Serie key={el.id} el={el} valori={valori} />
           ) : (
-            <Forma key={el.id} el={el} valori={valori} />
+            <Forma key={el.id} el={el} valori={valori} larghezza={larghezza} />
           );
         return bordo ? [disegno, bordo] : disegno;
       })}

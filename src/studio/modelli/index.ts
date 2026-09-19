@@ -11,11 +11,12 @@
  * e piu' schede in fila.
  */
 import type { Modello } from "../tipi";
+import { spottedScheda } from "./spotted-scheda";
 import { spottedStoria } from "./spotted-storia";
 import { divulgativo } from "./divulgativo";
 import { carosello } from "./carosello";
 
-export const MODELLI: Modello[] = [spottedStoria, divulgativo, carosello];
+export const MODELLI: Modello[] = [spottedScheda, spottedStoria, divulgativo, carosello];
 
 export function modelloPerId(id: string): Modello | undefined {
   return MODELLI.find((m) => m.id === id);
