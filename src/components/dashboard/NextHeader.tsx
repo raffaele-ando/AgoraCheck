@@ -75,7 +75,7 @@ export default function NextHeader({
       <div className="h-[54px] flex items-center gap-3 sm:gap-5">
         <div className="shrink-0">
           {logo ?? (
-            <span className="font-black tracking-[0.18em] text-[13px]">AGORÀ</span>
+            <span className="font-bold tracking-[0.18em] text-[13px]">AGORÀ</span>
           )}
         </div>
 
@@ -89,14 +89,14 @@ export default function NextHeader({
                 className={`px-2.5 py-1.5 text-[13px] font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
                   activeTab === tab
                     ? "bg-gray-200/70 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{label}</span>
                 {tab === "messages" && unreadCount > 0 && (
                   <span
-                    className={`tabular-nums text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
+                    className={`tabular-nums text-[11px] font-semibold px-1.5 py-0.5 rounded-lg ${
                       activeTab === tab
                         ? "bg-indigo-600 text-white"
                         : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
@@ -117,7 +117,7 @@ export default function NextHeader({
             ne restano e con che filtro. Prima stavano in fondo alla colonna
             di destra, dove l'occhio non passa. */}
         {stato && (
-          <div className="hidden lg:flex items-center gap-2 mx-6 min-w-0 text-[12.5px]">
+          <div className="hidden lg:flex items-center gap-2 mx-6 min-w-0 text-[12px]">
             {stato}
           </div>
         )}
@@ -132,7 +132,7 @@ export default function NextHeader({
                 className={`px-2.5 py-1.5 text-[13px] font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
                   inConfig
                     ? "bg-gray-200/70 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 }`}
               >
                 <IcConfigurazione className="w-4 h-4" />
@@ -174,7 +174,7 @@ export default function NextHeader({
               aria-expanded={menu === "account"}
               aria-haspopup="menu"
               aria-label="Il tuo account"
-              className="w-7 h-7 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[10px] font-bold flex items-center justify-center"
+              className="w-7 h-7 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] font-semibold flex items-center justify-center"
             >
               {(email || "?").slice(0, 2).toUpperCase()}
             </button>
@@ -186,11 +186,11 @@ export default function NextHeader({
                   className="absolute right-0 mt-1.5 w-64 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-1.5"
                 >
                   <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-1.5">
-                    <div className="text-[12px] text-gray-500 dark:text-gray-400 truncate">
+                    <div className="text-[12px] text-gray-600 dark:text-gray-400 truncate">
                       {email}
                     </div>
                     {isSuperAdmin && (
-                      <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-1.5 py-0.5 rounded">
+           <span className="mt-1 inline-block text-[11px] font-semibold tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-1.5 py-0.5 rounded">
                         Super admin
                       </span>
                     )}
@@ -201,7 +201,7 @@ export default function NextHeader({
                     </span>
                     <button
                       onClick={onToggleTheme}
-                      className="ml-auto px-2.5 py-1 rounded-md text-[12px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                      className="ml-auto px-2.5 py-1 rounded-lg text-[12px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
                     >
                       {isDarkMode ? "Scuro" : "Chiaro"}
                     </button>
@@ -213,7 +213,7 @@ export default function NextHeader({
                     Vai alla bacheca pubblica
                   </a>
                   {totalMessages !== null && (
-                    <div className="px-3 py-1.5 text-[11.5px] tabular-nums text-gray-400 dark:text-gray-500">
+                    <div className="px-3 py-1.5 text-[12px] tabular-nums text-gray-600 dark:text-gray-400">
                       {totalMessages.toLocaleString("it-IT")} messaggi in totale
                     </div>
                   )}

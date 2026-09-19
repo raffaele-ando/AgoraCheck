@@ -48,7 +48,7 @@ export default function MessagesRail({
         <div className="text-[44px] font-black leading-none tabular-nums text-gray-900 dark:text-gray-100">
           {unreadCount}
         </div>
-        <div className="text-[12.5px] font-semibold text-gray-500 dark:text-gray-400 mt-1">
+        <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mt-1">
           {unreadCount === 1 ? "messaggio da leggere" : "messaggi da leggere"}
         </div>
       </div>
@@ -56,17 +56,17 @@ export default function MessagesRail({
       <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
         <button onClick={onOpenCarousel} className="w-full text-left group">
           <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+            <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
               <IcCarosello className="w-3.5 h-3.5" />
               Carosello
             </span>
             <span
-              className={`text-[12px] font-bold tabular-nums ${
+              className={`text-[12px] font-semibold tabular-nums ${
                 oltre ? "text-amber-700 dark:text-amber-300" : "text-gray-800 dark:text-gray-200"
               }`}
             >
               {Math.min(carouselCount, carouselMax)}
-              <span className="text-gray-400">/{carouselMax}</span>
+              <span className="text-gray-600">/{carouselMax}</span>
             </span>
           </div>
           <div className="h-[5px] rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -76,7 +76,7 @@ export default function MessagesRail({
             />
           </div>
           {oltre && (
-            <div className="mt-2 text-[11.5px] text-amber-700 dark:text-amber-300">
+            <div className="mt-2 text-[12px] text-amber-700 dark:text-amber-300">
               {carouselCount - carouselMax} in più del limite: scegli quali pubblicare
             </div>
           )}
@@ -87,39 +87,39 @@ export default function MessagesRail({
           dice gia' quanti ne restano, e "nessun filtro" non e' una notizia. */}
       {activeFilters.length > 0 && (
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2">
+          <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mb-2">
             Filtri attivi
           </div>
           <ul className="space-y-1 mb-2">
             {activeFilters.map((f) => (
               <li
                 key={f}
-                className="text-[12.5px] text-gray-700 dark:text-gray-300 flex items-start gap-1.5"
+                className="text-[12px] text-gray-700 dark:text-gray-300 flex items-start gap-1.5"
               >
-                <IcFiltro className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" />
+                <IcFiltro className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-600" />
                 <span className="min-w-0 break-words">{f}</span>
               </li>
             ))}
           </ul>
-          <div className="text-[12.5px] text-gray-500 dark:text-gray-400 tabular-nums mb-2">
+          <div className="text-[12px] text-gray-600 dark:text-gray-400 tabular-nums mb-2">
             {resultCount} di {totalLoaded} caricati
           </div>
           <button
             onClick={onClearFilters}
-            className="text-[12.5px] font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
+            className="text-[12px] font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
           >
             Rimuovi i filtri
           </button>
         </div>
       )}
       <details className="border-t border-gray-200 dark:border-gray-700 pt-4 group">
-        <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between mb-2">
+        <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between mb-2">
           Da tastiera
-          <span className="text-gray-400 group-open:rotate-180 transition-transform">
+          <span className="text-gray-600 group-open:rotate-180 transition-transform">
             ⌄
           </span>
         </summary>
-        <dl className="text-[12px] text-gray-500 dark:text-gray-400 space-y-1.5">
+        <dl className="text-[12px] text-gray-600 dark:text-gray-400 space-y-1.5">
           {[
             ["J K", "scorri i messaggi"],
             ["E", "archivia"],
@@ -146,9 +146,9 @@ export default function MessagesRail({
       </details>
       {children && (
         <details className="border-t border-gray-200 dark:border-gray-700 pt-4 group">
-          <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between">
+          <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between">
             Il link da mettere in bio
-            <span className="text-gray-400 group-open:rotate-180 transition-transform">
+            <span className="text-gray-600 group-open:rotate-180 transition-transform">
               ⌄
             </span>
           </summary>

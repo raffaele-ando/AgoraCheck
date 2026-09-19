@@ -107,7 +107,7 @@ export default function ConfirmDialog({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.12 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
       >
         <div className="p-5 sm:p-6">
           <h2
@@ -116,17 +116,17 @@ export default function ConfirmDialog({
           >
             {title}
           </h2>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300">
+          <p className="mt-2 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300">
             {consequence}
           </p>
           {note && (
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 text-[12px] leading-relaxed text-gray-600 dark:text-gray-400">
               {note}
             </p>
           )}
 
           {preview && preview.length > 0 && (
-            <ul className="mt-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700 text-[12.5px]">
+            <ul className="mt-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700 text-[12px]">
               {preview.slice(0, MAX_PREVIEW).map((riga, i) => (
                 <li
                   key={i}
@@ -137,7 +137,7 @@ export default function ConfirmDialog({
                 </li>
               ))}
               {restanti > 0 && (
-                <li className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                <li className="px-3 py-2 text-gray-600 dark:text-gray-400">
                   e altri {restanti}
                 </li>
               )}

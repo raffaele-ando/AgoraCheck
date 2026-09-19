@@ -38,14 +38,14 @@ export default function SelectionBar({
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.18)]">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center gap-3 flex-wrap">
-        <span className="text-[15px] font-black tabular-nums text-gray-900 dark:text-gray-100">
+        <span className="text-[15px] font-bold tabular-nums text-gray-900 dark:text-gray-100">
           {count}
         </span>
         <span className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">
           selezionati
         </span>
 
-        <span className="text-[12.5px] text-gray-400 dark:text-gray-500 border-l border-gray-200 dark:border-gray-600 pl-3">
+        <span className="text-[12px] text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-600 pl-3">
           di {totalFiltered} filtrati
           {filterSummary ? (
             <>
@@ -57,16 +57,16 @@ export default function SelectionBar({
           ) : null}
         </span>
 
-        <button onClick={onSelectPage} className="text-[12.5px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline">
+        <button onClick={onSelectPage} className="text-[12px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline">
           Pagina
         </button>
-        <button onClick={onSelectAll} className="text-[12.5px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline">
+        <button onClick={onSelectAll} className="text-[12px] font-semibold text-indigo-700 dark:text-indigo-400 hover:underline">
           Tutti e {totalFiltered}
         </button>
-        <button onClick={onClear} className="text-[12.5px] font-semibold text-gray-500 dark:text-gray-400 hover:underline">
+        <button onClick={onClear} className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:underline">
           Nessuno
         </button>
-        <button onClick={onCancel} className="text-[12.5px] font-semibold text-gray-500 dark:text-gray-400 hover:underline">
+        <button onClick={onCancel} className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:underline">
           Annulla
         </button>
 

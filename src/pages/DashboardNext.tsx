@@ -224,20 +224,20 @@ function BloccoInCaricamento({ errore }: { errore: string | null }) {
     <div className="mx-auto mt-4 max-w-md rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-center">
       {errore ? (
         <>
-          <p className="text-[14px] font-semibold text-red-700 dark:text-red-400">
+          <p className="text-[13px] font-semibold text-red-700 dark:text-red-400">
             Il database ha rifiutato la richiesta
           </p>
           <p className="mt-1.5 text-[13px] text-gray-600 dark:text-gray-300">
             Non e' un problema di rete: la risposta e' arrivata, ed e' un
             errore. Di solito vuol dire che l'accesso e' scaduto.
           </p>
-          <p className="mt-2 font-mono text-[11.5px] text-gray-500 dark:text-gray-400 break-words">
+          <p className="mt-2 font-mono text-[12px] text-gray-600 dark:text-gray-400 break-words">
             {errore}
           </p>
         </>
       ) : offline ? (
         <>
-          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
             Questo computer risulta scollegato
           </p>
           <p className="mt-1.5 text-[13px] text-gray-600 dark:text-gray-300">
@@ -247,7 +247,7 @@ function BloccoInCaricamento({ errore }: { errore: string | null }) {
         </>
       ) : (
         <>
-          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
             I dati non stanno arrivando
           </p>
           <p className="mt-1.5 text-[13px] text-gray-600 dark:text-gray-300">
@@ -2525,7 +2525,7 @@ export default function DashboardNext() {
 
   return (
     <div
-      className="ac-next min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-500 bg-gray-50 dark:bg-gray-900"
+      className="ac-next min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-150 bg-gray-50 dark:bg-gray-900"
     >
 
       <div className="w-full max-w-[1600px] mx-auto">
@@ -2547,13 +2547,13 @@ export default function DashboardNext() {
                 <span className="tabular-nums font-semibold text-gray-900 dark:text-gray-100">
                   {unreadCount}
                 </span>
-                <span className="text-gray-500 dark:text-gray-400">
+                <span className="text-gray-600 dark:text-gray-400">
                   da leggere
                 </span>
                 {filtriAttivi.length > 0 && (
                   <>
-                    <span className="text-gray-300 dark:text-gray-600">·</span>
-                    <span className="truncate text-gray-500 dark:text-gray-400">
+                    <span className="text-gray-300 dark:text-gray-400">·</span>
+                    <span className="truncate text-gray-600 dark:text-gray-400">
                       {filtriAttivi.join(" · ")}
                     </span>
                     <button
@@ -2643,7 +2643,7 @@ export default function DashboardNext() {
             />
 
             {historyTruncated && (
-              <div className="mb-6 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs font-medium">
+              <div className="mb-6 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-[12px] font-medium">
                 Sono caricati i {messages.length} messaggi più recenti: i
                 conteggi e la ricerca riguardano solo questi. Restringi il
                 periodo o usa i filtri per analizzare lo storico più vecchio.
@@ -2670,9 +2670,9 @@ export default function DashboardNext() {
                         <div className="ac-skeleton h-4 rounded mb-2" />
                         <div className="ac-skeleton h-4 rounded mb-3 w-[70%]" />
                         <div className="flex gap-2">
-                          <div className="ac-skeleton h-5 w-20 rounded-md" />
-                          <div className="ac-skeleton h-5 w-24 rounded-md" />
-                          <div className="ac-skeleton h-5 w-16 rounded-md" />
+                          <div className="ac-skeleton h-5 w-20 rounded-lg" />
+                          <div className="ac-skeleton h-5 w-24 rounded-lg" />
+                          <div className="ac-skeleton h-5 w-16 rounded-lg" />
                         </div>
                       </div>
                       <div className="hidden lg:flex gap-1 shrink-0">
@@ -2689,7 +2689,7 @@ export default function DashboardNext() {
                 )}
               </div>
             ) : filteredMessages.length === 0 ? (
-              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
+              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
                 {/* L'errore veniva mostrato SOLO nel ramo di caricamento: con
                     loading già a false e lista vuota l'operatore leggeva
                     "Nessun messaggio" mentre in realtà la connessione era
@@ -2697,15 +2697,15 @@ export default function DashboardNext() {
                 {snapshotsError ? (
                   <>
                     <IcBloccato className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100">
                       Impossibile caricare i dati
                     </h3>
-                    <p className="text-red-500 text-sm max-w-md mx-auto mt-2 px-4">
+                    <p className="text-red-500 text-[13px] max-w-md mx-auto mt-2 px-4">
                       {snapshotsError}
                     </p>
                     <button
                       onClick={() => window.location.reload()}
-                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold"
+                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold"
                     >
                       Ricarica
                     </button>
@@ -2713,16 +2713,16 @@ export default function DashboardNext() {
                 ) : hasActiveFilters ? (
                   <>
                     <IcCerca className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100">
                       Nessun risultato per i filtri attivi
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">
                       Ci sono {messages.length} messaggi caricati, ma nessuno
                       corrisponde alla ricerca.
                     </p>
                     <button
                       onClick={clearAllFilters}
-                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold"
+                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold"
                     >
                       Rimuovi i filtri
                     </button>
@@ -2730,10 +2730,10 @@ export default function DashboardNext() {
                 ) : (
                   <>
                     <IcMessaggi className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
+                    <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100 ">
                       Nessun messaggio
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 ">
+                    <p className="text-gray-600 dark:text-gray-400 ">
                       I messaggi in questa sezione appariranno qui.
                     </p>
                   </>
@@ -2836,19 +2836,19 @@ export default function DashboardNext() {
                 )}
               </div>
             ) : macroProfiles.length === 0 ? (
-              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
+              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
                 {snapshotsError ? (
                   <>
                     <IcBloccato className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100">
                       Impossibile caricare i profili
                     </h3>
-                    <p className="text-red-500 text-sm max-w-md mx-auto mt-2 px-4">
+                    <p className="text-red-500 text-[13px] max-w-md mx-auto mt-2 px-4">
                       {snapshotsError}
                     </p>
                     <button
                       onClick={() => window.location.reload()}
-                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold"
+                      className="mt-5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold"
                     >
                       Ricarica
                     </button>
@@ -2856,10 +2856,10 @@ export default function DashboardNext() {
                 ) : (
                   <>
                     <IcProfilo className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 ">
+                    <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100 ">
                       Nessun profilo identificato
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 ">
+                    <p className="text-gray-600 dark:text-gray-400 ">
                       I profili analizzati dal tracker appariranno qui.
                     </p>
                   </>
@@ -2876,13 +2876,13 @@ export default function DashboardNext() {
               </h1>
               {macroProfiles.some((m) => m.suggestions.length > 0) && (
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-gray-600 dark:text-gray-300">
+         <h2 className="text-[12px] font-semibold tracking-[0.12em] text-gray-600 dark:text-gray-300">
                     Da verificare
                   </h2>
-                  <span className="tabular-nums text-[11px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-md">
+                  <span className="tabular-nums text-[11px] font-semibold bg-indigo-600 text-white px-1.5 py-0.5 rounded-lg">
                     {macroProfiles.filter((m) => m.suggestions.length > 0).length}
                   </span>
-                  <span className="text-[12.5px] text-gray-400 dark:text-gray-500">
+                  <span className="text-[12px] text-gray-600 dark:text-gray-400">
                     il sistema propone un'unione: decidi tu
                   </span>
                 </div>
@@ -2903,7 +2903,7 @@ export default function DashboardNext() {
                   return (
                     <div
                       key={macro.id}
-                      className={`bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col group transition-colors duration-300 ${isProfileSelected ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20" : isProfileSelectMode ? "border-gray-200 dark:border-gray-600 hover:border-indigo-400 cursor-pointer" : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md"}`}
+                      className={`bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border shadow-sm relative overflow-hidden flex flex-col group transition-colors duration-150 ${isProfileSelected ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20" : isProfileSelectMode ? "border-gray-200 dark:border-gray-600 hover:border-indigo-400 cursor-pointer" : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md"}`}
                       onClick={() => {
                         if (isProfileSelectMode) {
                           setSelectedProfiles((prev) =>
@@ -2921,7 +2921,7 @@ export default function DashboardNext() {
                       {/* Selection Mode Checkbox Overlay */}
                       {isProfileSelectMode && (
                         <div
-                          className={`absolute top-3 left-3 z-30 transition-all duration-300 ${isProfileSelected ? "scale-100 opacity-100" : "scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-50"}`}
+                          className={`absolute top-3 left-3 z-30 transition-all duration-150 ${isProfileSelected ? "scale-100 opacity-100" : "scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-50"}`}
                         >
 
                           <div
@@ -2935,11 +2935,11 @@ export default function DashboardNext() {
                         </div>
                       )}
                       <div
-                        className={`flex items-center gap-3 mb-4 pr-16 relative z-20 transition-transform duration-300 ${isProfileSelectMode ? "translate-x-8" : "translate-x-0"}`}
+                        className={`flex items-center gap-3 mb-4 pr-16 relative z-20 transition-transform duration-150 ${isProfileSelectMode ? "translate-x-8" : "translate-x-0"}`}
                       >
 
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-sm"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-[13px]"
                           style={{ backgroundColor: profileColor }}
                           aria-hidden="true"
                         >
@@ -2950,13 +2950,13 @@ export default function DashboardNext() {
                         <div className="min-w-0 flex-1">
 
                           <h3
-                            className="font-bold text-gray-900 dark:text-gray-100 text-lg sm:text-xl break-words whitespace-pre-wrap relative z-20"
+                            className="font-bold text-gray-900 dark:text-gray-100 text-[19px] sm:text-[19px] break-words whitespace-pre-wrap relative z-20"
                             title={macro.name}
                           >
 
                             {macro.name}
                           </h3>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                          <div className="text-[12px] text-gray-600 dark:text-gray-400 font-medium mt-0.5">
 
                             {macro.msgCount === 0
                               ? "nessun messaggio"
@@ -2970,7 +2970,7 @@ export default function DashboardNext() {
                               detto, non presentato come identità certa. */}
                           {macro.isLegacyIdentity && (
                             <div
-                              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[11px] font-semibold"
+                              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[11px] font-semibold"
                               title="Identità dedotta da dati storici senza token: potrebbe raggruppare persone diverse con lo stesso modello di dispositivo."
                             >
                               <IcIncerta className="w-3 h-3" /> Identità incerta
@@ -2995,15 +2995,15 @@ export default function DashboardNext() {
                                 key={sug.macroId}
                                 className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800"
                               >
-                                <div className="text-[12.5px] text-gray-800 dark:text-gray-200 leading-snug">
+                                <div className="text-[12px] text-gray-800 dark:text-gray-200 leading-snug">
                                   Potrebbe essere la stessa persona di{" "}
                                   <strong className="font-bold">{other.name}</strong>
-                                  <span className="ml-1.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-900 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.5 rounded-md align-middle">
+                                  <span className="ml-1.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-900 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.5 rounded-lg align-middle">
                                     {Math.round(sug.confidence * 100)}%
                                   </span>
                                 </div>
                                 <div
-                                  className="text-[11.5px] text-gray-500 dark:text-gray-400 mt-0.5"
+                                  className="text-[12px] text-gray-600 dark:text-gray-400 mt-0.5"
                                   title={sug.reasons.join(" · ")}
                                 >
                                   {sug.reasons.slice(0, 2).join(" · ")}
@@ -3011,7 +3011,7 @@ export default function DashboardNext() {
                                 <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
                                   <button
                                     onClick={() => handleAcceptSuggestion(macro.id, sug.macroId)}
-                                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-bold transition-colors"
+                                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-semibold transition-colors"
                                   >
                                     Unisci
                                   </button>
@@ -3025,7 +3025,7 @@ export default function DashboardNext() {
                                     onClick={() =>
                                       handleDismissSuggestion(macro.id, sug.dismissKey, other.name)
                                     }
-                                    className="px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800"
+                                    className="px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800"
                                   >
                                     Non è lei
                                   </button>
@@ -3068,16 +3068,16 @@ export default function DashboardNext() {
                           fatti.push(macro.lastIp);
                         if (fatti.length === 0)
                           return (
-                            <div className="mb-4 text-[12.5px] text-gray-400 dark:text-gray-500">
+                            <div className="mb-4 text-[12px] text-gray-600 dark:text-gray-400">
                               Nessun dato tecnico su questo profilo
                             </div>
                           );
                         return (
-                          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-gray-500 dark:text-gray-400">
+                          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-gray-600 dark:text-gray-400">
                             {fatti.map((f, i) => (
                               <span key={i} className="flex items-center gap-1.5">
                                 {i > 0 && (
-                                  <span className="text-gray-300 dark:text-gray-600">·</span>
+                                  <span className="text-gray-300 dark:text-gray-400">·</span>
                                 )}
                                 <span className={i === 2 ? "font-mono" : ""}>{f}</span>
                               </span>
@@ -3094,7 +3094,7 @@ export default function DashboardNext() {
                             su ogni scheda. */}
                         <div className={macro.possibleAliases.length > 0 ? "" : "hidden"}>
 
-                          <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                          <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1.5">
                             <IcIncerta className="w-3.5 h-3.5" /> Possibili alias
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -3103,13 +3103,13 @@ export default function DashboardNext() {
                               macro.possibleAliases.map((s) => (
                                 <span
                                   key={s}
-                                  className="px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-md text-[10px] font-semibold"
+                                  className="px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-[11px] font-semibold"
                                 >
                                   {s}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                              <span className="text-[11px] text-gray-600 dark:text-gray-400 italic">
                                 Nessuno
                               </span>
                             )}
@@ -3118,7 +3118,7 @@ export default function DashboardNext() {
                         {/* Instagrams */}
                         <div>
 
-                          <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                          <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1.5">
                             <IcInstagram className="w-3.5 h-3.5" /> Instagram
                             associati
                           </div>
@@ -3128,13 +3128,13 @@ export default function DashboardNext() {
                               macro.instagrams.map((i) => (
                                 <span
                                   key={i}
-                                  className="px-2 py-0.5 bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-100 dark:border-purple-800 rounded-md text-[10px] font-semibold"
+                                  className="px-2 py-0.5 bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-100 dark:border-purple-800 rounded-lg text-[11px] font-semibold"
                                 >
                                   @{i}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                              <span className="text-[11px] text-gray-600 dark:text-gray-400 italic">
                                 Nessuno
                               </span>
                             )}
@@ -3142,13 +3142,13 @@ export default function DashboardNext() {
                         </div>
                         {/* Sotto-profili se ci sono, + pulsanti scollega (collapsible for mobile) */}
                         <div
-                          className="mt-2 text-sm"
+                          className="mt-2 text-[13px]"
                           onClick={(e) => e.stopPropagation()}
                         >
 
                           <details className="group">
 
-                            <summary className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex flex-wrap items-center justify-between gap-y-2 p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <summary className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex flex-wrap items-center justify-between gap-y-2 p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
 
                               <span>
                                 Dispositivi collegati (
@@ -3162,7 +3162,7 @@ export default function DashboardNext() {
                                     e.stopPropagation();
                                     handleToggleMacroIgnoreAnalytics(macro.id);
                                   }}
-                                  className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-orange-600 text-white" : "bg-orange-50 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"} hover:opacity-80 text-[11px] whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-md transition-colors`}
+                                  className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"} hover:opacity-80 text-[11px] whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-lg transition-colors`}
                                   title="Escludi o Includi questo intero mega-profilo dalle statistiche"
                                 >
                                   {macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "Escluso dalle statistiche" : "Escludi dalle statistiche"}
@@ -3176,12 +3176,12 @@ export default function DashboardNext() {
                                       sourceMacroId: macro.id,
                                     });
                                   }}
-                                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 text-[11px] whitespace-nowrap flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-md"
+                                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 text-[11px] whitespace-nowrap flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-lg"
                                 >
                                   Unisci ad altri
                                 </button>
                                 <svg
-                                  className="w-4 h-4 text-gray-400 dark:text-gray-500 group-open:rotate-180 transition-transform"
+                                  className="w-4 h-4 text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -3218,7 +3218,7 @@ export default function DashboardNext() {
                                       <div className="break-words whitespace-pre-wrap flex-1 flex flex-col min-w-0 flex-row items-center gap-2">
 
                                         <svg
-                                          className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 group-open/sub:rotate-90 transition-transform shrink-0"
+                                          className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-open/sub:rotate-90 transition-transform shrink-0"
                                           fill="none"
                                           viewBox="0 0 24 24"
                                           stroke="currentColor"
@@ -3232,11 +3232,11 @@ export default function DashboardNext() {
                                         </svg>
                                         <div className="flex flex-col min-w-0">
 
-                                          <span className="font-semibold text-gray-800 dark:text-gray-200 text-xs break-words whitespace-pre-wrap">
+                                          <span className="font-semibold text-gray-800 dark:text-gray-200 text-[12px] break-words whitespace-pre-wrap">
                                             {profiles[pid]?.name ||
                                               "Profilo senza nome"}
                                           </span>
-                                          <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500 break-words whitespace-pre-wrap">
+                                          <span className="text-[11px] font-mono text-gray-600 dark:text-gray-400 break-words whitespace-pre-wrap">
                                             {pid.slice(0, 12)}...
                                           </span>
                                         </div>
@@ -3249,7 +3249,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               setEditingProfileId(pid);
                                             }}
-                                            className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 font-bold px-2 py-1 rounded text-[10px] transition-colors"
+                                            className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 font-semibold px-2 py-1 rounded text-[11px] transition-colors"
                                             title="Modifica Identità Dati..."
                                           >
                                             Modifica
@@ -3260,7 +3260,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               handleToggleIgnoreAnalytics(pid, profiles[pid]?.ignoredFromAnalytics);
                                             }}
-                                            className={`${profiles[pid]?.ignoredFromAnalytics ? "bg-orange-600 text-white" : "bg-orange-50 dark:bg-orange-900/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-600 dark:text-orange-400"} font-bold px-2 py-1 rounded text-[10px] transition-colors`}
+                                            className={`${profiles[pid]?.ignoredFromAnalytics ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-600 dark:text-amber-400"} font-semibold px-2 py-1 rounded text-[11px] transition-colors`}
                                             title="Escludi o Includi questo profilo dalle statistiche"
                                           >
                                             {profiles[pid]?.ignoredFromAnalytics ? "Escluso dalle statistiche" : "Escludi dalle statistiche"}
@@ -3272,7 +3272,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               handleScollega(pid);
                                             }}
-                                            className="bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 font-bold px-2 py-1 rounded text-[10px] transition-colors"
+                                            className="bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 font-semibold px-2 py-1 rounded text-[11px] transition-colors"
                                             title="Scollega da questo mega-profilo"
                                           >
                                             Scollega
@@ -3286,7 +3286,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               handleRiabilitaAutoGroup(pid);
                                             }}
-                                            className="bg-green-50 dark:bg-green-900/40 hover:bg-green-100 dark:hover:bg-green-900/60 text-green-600 dark:text-green-400 font-bold px-2 py-1 rounded text-[10px] transition-colors"
+                                            className="bg-emerald-50 dark:bg-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-1 rounded text-[11px] transition-colors"
                                             title="Riabilita Auto-Join"
                                           >
                                             Reset Join
@@ -3302,13 +3302,13 @@ export default function DashboardNext() {
                                           profileMsgs.map((msg) => (
                                             <div
                                               key={msg.id}
-                                              className="w-[14rem] sm:w-[16rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md p-2.5 shadow-sm shrink-0 snap-start flex flex-col justify-between"
+                                              className="w-[14rem] sm:w-[16rem] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2.5 shadow-sm shrink-0 snap-start flex flex-col justify-between"
                                             >
 
                                               <div className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 mb-2 break-words">
                                                 "{msg.lookingFor}"
                                               </div>
-                                              <div className="text-[9px] text-gray-500 dark:text-gray-400 space-y-0.5">
+                                              <div className="text-[11px] text-gray-600 dark:text-gray-400 space-y-0.5">
 
                                                 {msg.when && (
                                                   <div>
@@ -3334,7 +3334,7 @@ export default function DashboardNext() {
                                             </div>
                                           ))
                                         ) : (
-                                          <div className="text-[10px] text-gray-400 dark:text-gray-500 italic py-2">
+                                          <div className="text-[11px] text-gray-600 dark:text-gray-400 italic py-2">
                                             Nessuno spotted attivo.
                                           </div>
                                         )}
@@ -3367,12 +3367,12 @@ export default function DashboardNext() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-xs sm:text-sm ${currentPage === 1 ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 " : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 "} border border-gray-200 dark:border-gray-600 font-semibold rounded-xl shadow-sm transition-all text-center`}
+                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-[12px] sm:text-[13px] ${currentPage === 1 ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 " : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 "} border border-gray-200 dark:border-gray-600 font-semibold rounded-xl shadow-sm transition-all text-center`}
               >
 
                 Pagina Precedente
               </button>
-              <span className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 order-first sm:order-none">
+              <span className="text-[12px] sm:text-[13px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 order-first sm:order-none">
 
                 Pagina {currentPage} di{" "}
                 {activeTab === "messages" ? totalPagesMsg : totalPagesProf}
@@ -3384,7 +3384,7 @@ export default function DashboardNext() {
                     ? currentPage >= totalPagesMsg
                     : currentPage >= totalPagesProf
                 }
-                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-xs sm:text-sm ${(activeTab === "messages" ? currentPage >= totalPagesMsg : currentPage >= totalPagesProf) ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 " : "bg-indigo-600 hover:bg-indigo-700 text-white"} border border-transparent font-semibold rounded-xl shadow-sm transition-all text-center`}
+                className={`px-4 py-2 sm:px-4 sm:py-2 w-full sm:w-auto text-[12px] sm:text-[13px] ${(activeTab === "messages" ? currentPage >= totalPagesMsg : currentPage >= totalPagesProf) ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 " : "bg-indigo-600 hover:bg-indigo-700 text-white"} border border-transparent font-semibold rounded-xl shadow-sm transition-all text-center`}
               >
 
                 Prossima Pagina
@@ -3409,12 +3409,12 @@ export default function DashboardNext() {
               className={`flex-1 py-2 flex flex-col items-center gap-1 ${
                 activeTab === tab
                   ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-400 dark:text-gray-500"
+                  : "text-gray-600 dark:text-gray-400"
               }`}
             >
               <Icon className="w-[19px] h-[19px]" />
               <span
-                className={`text-[10.5px] ${activeTab === tab ? "font-bold" : "font-semibold"}`}
+                className={`text-[11px] ${activeTab === tab ? "font-semibold" : "font-semibold"}`}
               >
                 {label}
               </span>
@@ -3558,9 +3558,9 @@ export default function DashboardNext() {
               value={groupNameInput}
               onChange={(e) => setGroupNameInput(e.target.value)}
               placeholder="Es. Sconosciuta del treno"
-              className="w-full h-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 outline-none px-3 rounded-lg focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
+              className="w-full h-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 outline-none px-3 rounded-lg focus:border-indigo-600 transition-colors text-[13px] text-gray-900 dark:text-gray-100"
             />
-            <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+            <span className="block mt-1.5 text-[12px] text-gray-600 dark:text-gray-400">
               Se lo lasci vuoto ne viene generato uno automatico, del tipo
               MANUAL-4F7B2C: funziona, ma poi non lo riconosci nell'elenco.
             </span>
@@ -3581,13 +3581,13 @@ export default function DashboardNext() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.12 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-xl border border-gray-200 dark:border-gray-700 relative max-h-[80vh] flex flex-col"
+            className="bg-white dark:bg-gray-900 rounded-xl p-5 sm:p-6 max-w-lg w-full shadow-xl border border-gray-200 dark:border-gray-700 relative max-h-[80vh] flex flex-col"
           >
 
             <h2 className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50">
               Unire altri profili in «{nomeProfiloDestinazione}»?
             </h2>
-            <p className="text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300 mt-2 mb-4">
+            <p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300 mt-2 mb-4">
               I profili che scegli qui sotto <strong>spariscono</strong> e i
               loro messaggi passano a «{nomeProfiloDestinazione}», che resta il
               profilo buono. Va nella direzione opposta a quello che ti aspetti
@@ -3618,7 +3618,7 @@ export default function DashboardNext() {
                   });
                 if (filtered.length === 0) {
                   return (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 font-medium">
+                    <div className="text-center py-8 text-gray-600 dark:text-gray-400 font-medium">
                       Nessun profilo trovato.
                     </div>
                   );
@@ -3635,14 +3635,14 @@ export default function DashboardNext() {
                         onClick={() =>
                           setMergeSelectedProfiles(filtered.map((x) => x.id))
                         }
-                        className="text-[10px] font-bold uppercase hover:bg-gray-200 dark:hover:bg-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-all"
+            className="text-[11px] font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-all"
                       >
 
                         Seleziona Tutti
                       </button>
                       <button
                         onClick={() => setMergeSelectedProfiles([])}
-                        className="text-[10px] font-bold uppercase hover:bg-gray-200 dark:hover:bg-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-all"
+            className="text-[11px] font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-all"
                       >
 
                         Deseleziona
@@ -3662,7 +3662,7 @@ export default function DashboardNext() {
                                 : [...prev, macro.id],
                             );
                           }}
-                          className={`w-full text-left p-4 rounded-2xl transition-all group flex items-center gap-3 shadow-sm border ${isSelected ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-500 ring-2 ring-indigo-500/20" : "bg-gray-50 dark:bg-gray-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 border-gray-200 dark:border-gray-600 hover:border-indigo-200 dark:hover:border-indigo-800 "}`}
+                          className={`w-full text-left p-4 rounded-xl transition-all group flex items-center gap-3 shadow-sm border ${isSelected ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-500 ring-2 ring-indigo-500/20" : "bg-gray-50 dark:bg-gray-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 border-gray-200 dark:border-gray-600 hover:border-indigo-200 dark:hover:border-indigo-800 "}`}
                         >
 
                           <div
@@ -3689,7 +3689,7 @@ export default function DashboardNext() {
                             <h4 className="font-bold text-gray-900 dark:text-gray-100 break-words whitespace-pre-wrap">
                               {macro.name}
                             </h4>
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400 break-words whitespace-pre-wrap font-semibold uppercase tracking-wider mt-0.5">
+              <div className="text-[11px] text-gray-600 dark:text-gray-400 break-words whitespace-pre-wrap font-semibold tracking-wider mt-0.5">
 
                               {macro.profileIds.length} dispositivi
                               <span className="mx-1 opacity-50">•</span>
@@ -3700,7 +3700,7 @@ export default function DashboardNext() {
                       );
                     })}
                     {hasMore && (
-                      <div className="text-center py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-2 border-t py-4">
+           <div className="text-center py-3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 tracking-widest mt-2 border-t py-4">
 
                         + {filtered.length - maxResults} altri profili... usa la
                         ricerca
@@ -3747,13 +3747,13 @@ export default function DashboardNext() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.12 }}
-            className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-xl border border-gray-200 dark:border-gray-700 relative"
+            className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl p-5 sm:p-6 max-w-lg w-full shadow-xl border border-gray-200 dark:border-gray-700 relative"
           >
 
             <h2 className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50">
               Chi e' questa persona?
             </h2>
-            <p className="mt-2 mb-5 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300">
+            <p className="mt-2 mb-5 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300">
               Quello che scrivi qui sostituisce il codice del dispositivo in
               ogni messaggio che gli appartiene: e' l'unico modo per
               riconoscerlo a colpo d'occhio nella lista.
@@ -3771,9 +3771,9 @@ export default function DashboardNext() {
                   onChange={(e) => setProfileNameInput(e.target.value)}
                   autoFocus
                   placeholder="Es. Il ragazzo coi capelli ricci"
-                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
+                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13px] text-gray-900 dark:text-gray-100"
                 />
-                <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                <span className="block mt-1.5 text-[12px] text-gray-600 dark:text-gray-400">
                   Codice del dispositivo, se ti serve per una segnalazione:{" "}
                   <span className="font-mono">{editingProfileId}</span>
                 </span>
@@ -3788,9 +3788,9 @@ export default function DashboardNext() {
                   value={profilePossibleAliasesInput}
                   onChange={(e) => setProfilePossibleAliasesInput(e.target.value)}
                   placeholder="Es. Mario Rossi, Luigi Bianchi"
-                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
+                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13px] text-gray-900 dark:text-gray-100"
                 />
-                <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                <span className="block mt-1.5 text-[12px] text-gray-600 dark:text-gray-400">
                   Separati da virgola. Compaiono nella riga come «possibili
                   alias», col punto esclamativo: servono a ricordarti che non
                   sono confermati.
@@ -3808,9 +3808,9 @@ export default function DashboardNext() {
                     setProfileCustomInstagramsInput(e.target.value)
                   }
                   placeholder="Es. mario.rossi, luigi99"
-                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13.5px] text-gray-900 dark:text-gray-100"
+                  className="w-full h-10 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-indigo-600 transition-colors text-[13px] text-gray-900 dark:text-gray-100"
                 />
-                <span className="block mt-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                <span className="block mt-1.5 text-[12px] text-gray-600 dark:text-gray-400">
                   Separati da virgola, senza @. Si affiancano a quelli che la
                   persona ha scritto da se'.
                 </span>
@@ -3851,7 +3851,7 @@ export default function DashboardNext() {
               <div className="flex items-center gap-3 sm:gap-4">
 
                 <div
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-base sm:text-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-inner font-bold text-[15px] sm:text-[19px]"
                   style={{
                     backgroundColor: getProfileColor(
                       viewingMacro.profileIds[0],
@@ -3863,11 +3863,11 @@ export default function DashboardNext() {
                 </div>
                 <div>
 
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+                  <h2 className="text-[19px] sm:text-[26px] font-bold tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
 
                     {viewingMacro.name}
                   </h2>
-                  <div className="text-[12.5px] sm:text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+                  <div className="text-[12px] sm:text-[13px] font-medium text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1">
 
                     {viewingMacro.profileIds.length}{" "}
                     {viewingMacro.profileIds.length === 1
@@ -3882,7 +3882,7 @@ export default function DashboardNext() {
               </div>
               <button
                 onClick={() => setViewingMacroId(null)}
-                className="p-2 sm:p-3 bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/60 text-gray-500 dark:text-gray-400 hover:text-red-500 rounded-xl transition-colors"
+                className="p-2 sm:p-3 bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/60 text-gray-600 dark:text-gray-400 hover:text-red-500 rounded-xl transition-colors"
                 title="Chiudi"
                 aria-label="Chiudi finestra"
               >
@@ -3897,14 +3897,14 @@ export default function DashboardNext() {
 
                 <button
                   onClick={() => setMacroModalTab("timeline")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcAttivita className="w-4 h-4 shrink-0" /> Cosa ha fatto
                 </button>
                 <button
                   onClick={() => setMacroModalTab("identita")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-blue-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcProfilo className="w-4 h-4 shrink-0" /> Identità (
@@ -3912,14 +3912,14 @@ export default function DashboardNext() {
                 </button>
                 <button
                   onClick={() => setMacroModalTab("dettagli")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcTecnico className="w-4 h-4 shrink-0" /> Dati tecnici
                 </button>
                 <button
                   onClick={() => setMacroModalTab("log")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "log" ? "bg-orange-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "log" ? "bg-amber-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcDocumento className="w-4 h-4 shrink-0" /> Perche' sono uniti
@@ -3928,16 +3928,16 @@ export default function DashboardNext() {
               <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
 
                 {macroModalTab === "timeline" && (
-                  <div className="max-w-3xl mx-auto flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="max-w-3xl mx-auto flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-150">
 
                     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
 
-                      <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <IcAttivita className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
                         Visite e messaggi, dal piu' recente
                       </h4>
-                      <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto uppercase tracking-wide">
+           <div className="text-[11px] sm:text-[12px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto tracking-wide">
 
                         {viewingMacroStats.messages.length} Eventi
                       </div>
@@ -3945,7 +3945,7 @@ export default function DashboardNext() {
                     <div className="space-y-4">
 
                       {viewingMacroStats.messages.length === 0 ? (
-                        <div className="text-center py-10 font-medium text-gray-400 dark:text-gray-500 ">
+                        <div className="text-center py-10 font-medium text-gray-600 dark:text-gray-400 ">
                           Nessun evento registrato
                         </div>
                       ) : (
@@ -3971,11 +3971,11 @@ export default function DashboardNext() {
                               <div
                                 className={`absolute left-[7px] sm:left-[5px] top-[14px] w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white shadow-sm ${hasMessage ? "bg-indigo-500" : "bg-slate-400"}`}
                               ></div>
-                              <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
+                              <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl sm:rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
 
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
 
-                                  <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700 flex items-center gap-1">
+                 <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 tracking-wider bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-700 flex items-center gap-1">
 
                                     <IcOra className="w-3 h-3" />
                                     {msg.createdAt
@@ -3987,24 +3987,24 @@ export default function DashboardNext() {
                                   </div>
                                   {parsedUA && (
                                     <>
-                                      <div className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 border ${parsedUA.browser === 'Instagram In-App' ? 'text-pink-600 bg-pink-50 dark:bg-pink-900/40 border-pink-100 dark:border-pink-800' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/40 border-blue-100 dark:border-blue-800'}`}>
+                                      <div className={`text-[11px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 border ${parsedUA.browser === 'Instagram In-App' ? 'text-pink-600 bg-pink-50 dark:bg-pink-900/40 border-pink-100 dark:border-pink-800' : 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 border-indigo-100 dark:border-indigo-800'}`}>
                                         {parsedUA.browser === 'Instagram In-App' ? <IcInstagram className="w-3 h-3" /> : <IcDispositivo className="w-3 h-3" />} {parsedUA.browser} {parsedUA.instagram?.version ? `v${parsedUA.instagram.version}` : ''}
                                       </div>
-                                      <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
+                                      <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">
                                         {parsedUA.os}
                                       </div>
-                                      <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
+                                      <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">
                                         {parsedUA.device}
                                       </div>
                                       {parsedUA.instagram?.build && (
-                                        <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700">
+                                        <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-700">
                                           Build: {parsedUA.instagram.build}
                                         </div>
                                       )}
                                     </>
                                   )}
                                   {msg.deviceInfo?.location && (
-                                    <div className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-md flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
+                                    <div className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-lg flex items-center gap-1 border border-emerald-100 dark:border-emerald-800 ">
 
                                       <IcZona className="w-3 h-3" />
                                       {msg.deviceInfo.location.city ||
@@ -4018,16 +4018,16 @@ export default function DashboardNext() {
                                 {hasMessage ? (
                                   <div className="bg-indigo-50 dark:bg-indigo-900/40 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-indigo-100 dark:border-indigo-800 ">
 
-                                    <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 border-l-2 border-indigo-400 pl-2 sm:pl-3 break-words leading-relaxed mb-2 sm:mb-3">
+                                    <div className="text-[12px] sm:text-[13px] font-medium text-gray-900 dark:text-gray-100 border-l-2 border-indigo-400 pl-2 sm:pl-3 break-words leading-relaxed mb-2 sm:mb-3">
 
                                       "{msg.lookingFor}"
                                     </div>
                                     {(msg.city || msg.area || msg.where || msg.when) && (
-                                      <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-gray-700 dark:text-gray-300 mt-2 pl-2 sm:pl-3">
+                                      <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[11px] sm:text-[11px] text-gray-700 dark:text-gray-300 mt-2 pl-2 sm:pl-3">
 
                                         {msg.city && (
-                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
-                                            <IcRete className="w-3 h-3 text-blue-500" />
+                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
+                                            <IcRete className="w-3 h-3 text-indigo-500" />
                                             <span className="font-bold">
                                               Città:
                                             </span>
@@ -4035,7 +4035,7 @@ export default function DashboardNext() {
                                           </span>
                                         )}
                                         {msg.area && (
-                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
+                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
                                             <IcZona className="w-3 h-3 text-indigo-500" />
                                             <span className="font-bold">
                                               Zona:
@@ -4044,7 +4044,7 @@ export default function DashboardNext() {
                                           </span>
                                         )}
                                         {msg.where && (
-                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
+                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
                                             <IcZona className="w-3 h-3 text-emerald-500" />
                                             <span className="font-bold">
                                               Dove:
@@ -4053,8 +4053,8 @@ export default function DashboardNext() {
                                           </span>
                                         )}
                                         {msg.when && (
-                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
-                                            <IcQuando className="w-3 h-3 text-orange-500" />
+                                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-1">
+                                            <IcQuando className="w-3 h-3 text-amber-500" />
                                             <span className="font-bold">
                                               Quando:
                                             </span>
@@ -4064,12 +4064,12 @@ export default function DashboardNext() {
                                       </div>
                                     )}
                                     {msg.resolution ? (
-                                      <div className="text-[11px] text-sky-800 dark:text-sky-200 bg-sky-100 dark:bg-sky-900/60 px-3 py-2.5 rounded-lg border border-sky-200 dark:border-sky-800 mt-3 font-medium whitespace-pre-wrap flex items-start gap-2 shadow-inner">
+                                      <div className="text-[11px] text-indigo-800 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2.5 rounded-lg border border-indigo-200 dark:border-indigo-800 mt-3 font-medium whitespace-pre-wrap flex items-start gap-2 shadow-inner">
 
-                                        <IcSpunta className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                                        <IcSpunta className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                                         <div>
 
-                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600">
+                     <span className="font-semibold tracking-wider text-[11px] block mb-1 text-indigo-600">
                                             Com'e' andata a finire
                                           </span>
                                           {msg.resolution}
@@ -4081,7 +4081,7 @@ export default function DashboardNext() {
                                         <IcInstagram className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
                                         <div>
 
-                                          <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-purple-600 dark:text-purple-400">
+                     <span className="font-semibold tracking-wider text-[11px] block mb-1 text-purple-600 dark:text-purple-400">
                                             Tag Instagram Originale
                                           </span>
                                           @{msg.instagram}
@@ -4090,7 +4090,7 @@ export default function DashboardNext() {
                                     ) : null}
                                   </div>
                                 ) : (
-                                  <div className="text-sm italic text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
+                                  <div className="text-[13px] italic text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
                                     Nessun messaggio inviato (Solo
                                     visita/Tracciamento)
@@ -4105,26 +4105,26 @@ export default function DashboardNext() {
                   </div>
                 )}
                 {macroModalTab === "log" && (
-                  <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-150">
                     <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
-                        <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          <IcDocumento className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" /> Report di Analisi Gruppo
+                        <h4 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          <IcDocumento className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" /> Report di Analisi Gruppo
                         </h4>
-                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
+                        <p className="text-[12px] sm:text-[13px] text-gray-600 dark:text-gray-400 mt-2">
                           Analisi sulle metriche hardware ed edges del grafo che ha determinato il raggruppamento di questi dispositivi come singola persona.
                         </p>
                       </div>
                       <div className="flex gap-2 w-full sm:w-auto">
                         <button
                           onClick={() => handleCopyMacroLog(viewingMacro)}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-xl text-xs font-bold transition-all shadow-sm"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-xl text-[12px] font-semibold transition-all shadow-sm"
                         >
                           <IcCopia className="w-4 h-4" /> Copia
                         </button>
                         <button
                           onClick={() => handleDownloadMacroLog(viewingMacro)}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white border border-transparent rounded-xl text-xs font-bold transition-all shadow-sm"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white border border-transparent rounded-xl text-[12px] font-semibold transition-all shadow-sm"
                         >
                           <IcScarica className="w-4 h-4" /> Scarica
                         </button>
@@ -4132,39 +4132,39 @@ export default function DashboardNext() {
                     </div>
 
                     <div className="space-y-6">
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
-                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-emerald-600 flex items-center gap-2"><IcSpunta className="w-4 h-4"/> Regole di Match Attivate</h5>
+                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
+            <h5 className="font-bold text-[13px] tracking-wide mb-4 text-emerald-600 flex items-center gap-2"><IcSpunta className="w-4 h-4"/> Regole di Match Attivate</h5>
                         {Object.entries(viewingMacro.linkReasons || {}).map(([edgeKey, reasons]) => {
                           const [pid1, pid2] = edgeKey.split("|");
                           const prof1 = profiles[pid1]?.name || pid1;
                           const prof2 = profiles[pid2]?.name || pid2;
                           return (
                             <div key={edgeKey} className="mb-4 last:mb-0 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                              <div className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">Relazione Rilevata: <span className="text-indigo-600 dark:text-indigo-400">{prof1}</span> <span className="mx-1 text-gray-400">↔</span> <span className="text-indigo-600 dark:text-indigo-400">{prof2}</span></div>
+                              <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mb-2">Relazione Rilevata: <span className="text-indigo-600 dark:text-indigo-400">{prof1}</span> <span className="mx-1 text-gray-600">↔</span> <span className="text-indigo-600 dark:text-indigo-400">{prof2}</span></div>
                               <ul className="space-y-1.5 ml-1">
                                 {(reasons as string[]).map((r: string, i: number) => (
-                                  <li key={i} className="text-xs flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>{r}</li>
+                                  <li key={i} className="text-[12px] flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>{r}</li>
                                 ))}
                               </ul>
                             </div>
                           );
                         })}
                         {Object.keys(viewingMacro.linkReasons || {}).length === 0 && (
-                          <div className="text-xs text-gray-500 italic">Nessun match esplicito salvato (profilo singolo o generato in fallback)</div>
+                          <div className="text-[12px] text-gray-600 italic">Nessun match esplicito salvato (profilo singolo o generato in fallback)</div>
                         )}
                       </div>
 
-                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
-                        <h5 className="font-bold text-sm uppercase tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><IcDispositivo className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
+                      <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
+            <h5 className="font-bold text-[13px] tracking-wide mb-4 text-indigo-600 flex items-center gap-2"><IcDispositivo className="w-4 h-4"/> Dati Hardware Grezzi per Dispositivo</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewingMacro.profileIds.map((pid: string) => {
                             const fp = (viewingMacro.compFootprints as any)?.[pid];
                             const pname = profiles[pid]?.name || pid;
                             return (
                               <div key={pid} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                                <div className="text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2 truncate">{pname}</div>
+                                <div className="text-[12px] font-semibold text-indigo-700 dark:text-indigo-400 mb-2 truncate">{pname}</div>
                                 {fp ? (
-                                  <div className="space-y-2 text-[10px] font-mono text-gray-600 dark:text-gray-400">
+                                  <div className="space-y-2 text-[11px] font-mono text-gray-600 dark:text-gray-400">
                                     <div className="flex bg-white dark:bg-gray-800 p-1.5 rounded border border-gray-200 dark:border-gray-600">
                                       <span className="w-20 font-bold shrink-0">clientMark:</span>
                                       <span className="break-all">{fp.clientMark || "-"}</span>
@@ -4206,7 +4206,7 @@ export default function DashboardNext() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-[10px] text-gray-500 italic">Impronta non calcolata / vecchi dati.</div>
+                                  <div className="text-[11px] text-gray-600 italic">Impronta non calcolata / vecchi dati.</div>
                                 )}
                               </div>
                             );
@@ -4217,16 +4217,16 @@ export default function DashboardNext() {
                   </div>
                 )}
                 {macroModalTab === "identita" && (
-                  <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-150">
 
                     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
 
-                      <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
-                        <IcProfilo className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> Identità
+                        <IcProfilo className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" /> Identità
                         Separate
                       </h4>
-                      <div className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-100 dark:border-blue-800 tracking-wider text-center">
+           <div className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 tracking-wider text-center">
 
                         Formato da {viewingMacro.profileIds.length}{" "}
                         dispositivi
@@ -4241,7 +4241,7 @@ export default function DashboardNext() {
                         return (
                           <div
                             key={pid}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-300 group"
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors duration-150 group"
                           >
 
                             <div className="p-4 sm:p-5 flex flex-col">
@@ -4251,7 +4251,7 @@ export default function DashboardNext() {
                                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
 
                                   <div
-                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-inner"
+                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-[13px] shadow-inner"
                                     style={{
                                       backgroundColor: getProfileColor(pid),
                                     }}
@@ -4261,11 +4261,11 @@ export default function DashboardNext() {
                                   </div>
                                   <div className="flex flex-col min-w-0">
 
-                                    <span className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base break-words whitespace-pre-wrap">
+                                    <span className="font-bold text-gray-900 dark:text-gray-100 text-[13px] sm:text-[15px] break-words whitespace-pre-wrap">
                                       {profiles[pid]?.name ||
                                         "Profilo senza nome"}
                                     </span>
-                                    <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 break-words whitespace-pre-wrap mt-0.5 bg-gray-50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 self-start">
+                                    <span className="text-[11px] font-mono text-gray-600 dark:text-gray-400 break-words whitespace-pre-wrap mt-0.5 bg-gray-50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700 self-start">
                                       {pid}
                                     </span>
                                   </div>
@@ -4277,7 +4277,7 @@ export default function DashboardNext() {
                                     setEditingProfileId(pid);
                                     setViewingMacroId(null);
                                   }}
-                                  className="bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 font-bold px-4 py-2 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs transition-colors shadow-sm hidden sm:block shrink-0"
+                                  className="bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 font-semibold px-4 py-2 border border-indigo-200 dark:border-indigo-800 rounded-xl text-[12px] transition-colors shadow-sm hidden sm:block shrink-0"
                                 >
 
                                   Modifica Profilo Singolo
@@ -4286,9 +4286,9 @@ export default function DashboardNext() {
                               <div className="w-full">
 
                                 {profileMsgs.length > 0 ? (
-                                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700 ">
+                                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl sm:rounded-xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700 ">
 
-                                    <h5 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-2 sm:mb-2.5 px-1">
+                                    <h5 className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-widest text-indigo-500 mb-2 sm:mb-2.5 px-1">
                                       {profileMsgs.length} Spotted inviati
                                     </h5>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -4302,7 +4302,7 @@ export default function DashboardNext() {
                                           <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-2 break-words leading-snug">
                                             "{msg.lookingFor}"
                                           </div>
-                                          <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 dark:text-gray-500 ">
+                                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-400 ">
 
                                             <IcOra className="w-3 h-3" />
                                             {msg.createdAt
@@ -4317,10 +4317,10 @@ export default function DashboardNext() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 border-dashed flex flex-col items-center justify-center text-center">
+                                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700 border-dashed flex flex-col items-center justify-center text-center">
 
                                     <IcAttivita className="w-6 h-6 text-gray-300 mb-2" />
-                                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                    <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest">
                                       Nessuno Spotted Inviato
                                     </span>
                                   </div>
@@ -4336,7 +4336,7 @@ export default function DashboardNext() {
                                   setEditingProfileId(pid);
                                   setViewingMacroId(null);
                                 }}
-                                className="w-full bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-2"
+                                className="w-full bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-semibold px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-[12px] transition-colors shadow-sm flex items-center justify-center gap-2"
                               >
 
                                 Modifica Identità
@@ -4349,11 +4349,11 @@ export default function DashboardNext() {
                   </div>
                 )}
                 {macroModalTab === "dettagli" && (
-                  <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-150">
 
                     <div className="mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-600 pb-3 sm:pb-4">
 
-                      <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <h4 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <IcTecnico className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                         Informazioni di Rete e Dispositivo
@@ -4361,7 +4361,7 @@ export default function DashboardNext() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
 
-                      <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-3 sm:gap-4">
+                      <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-3 sm:gap-4">
 
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
 
@@ -4369,10 +4369,10 @@ export default function DashboardNext() {
                         </div>
                         <div>
 
-                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 sm:mb-1">
+                          <div className="text-[11px] uppercase font-semibold text-gray-600 dark:text-gray-400 tracking-widest mb-0.5 sm:mb-1">
                             Primo Avvistamento
                           </div>
-                          <div className="text-xs sm:text-sm font-black text-indigo-900 dark:text-indigo-300">
+                          <div className="text-[12px] sm:text-[13px] font-semibold text-indigo-900 dark:text-indigo-300">
                             {viewingMacroStats.oldest
                               ? format(
                                   viewingMacroStats.oldest,
@@ -4382,7 +4382,7 @@ export default function DashboardNext() {
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-3 sm:gap-4">
+                      <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm flex items-center gap-3 sm:gap-4">
 
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800 ">
 
@@ -4390,10 +4390,10 @@ export default function DashboardNext() {
                         </div>
                         <div>
 
-                          <div className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-widest mb-1">
+                          <div className="text-[11px] uppercase font-semibold text-gray-600 dark:text-gray-400 tracking-widest mb-1">
                             Ultimo Avvistamento
                           </div>
-                          <div className="text-sm font-black text-indigo-900 dark:text-indigo-300">
+                          <div className="text-[13px] font-bold text-indigo-900 dark:text-indigo-300">
                             {viewingMacroStats.newest
                               ? format(
                                   viewingMacroStats.newest,
@@ -4406,9 +4406,9 @@ export default function DashboardNext() {
                     </div>
                     <div className="space-y-4 sm:space-y-6">
 
-                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
-                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
+                        <h4 className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
                           <IcDispositivo className="w-4 h-4 sm:w-5 sm:h-5" /> Segnali
                           Hardware e dispositivi (
                           {viewingMacroStats.hardwareSignals.length})
@@ -4426,7 +4426,7 @@ export default function DashboardNext() {
                                     <div key={fp} className="bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800 shadow-sm space-y-2">
                                       {parsed ? (
                                         <>
-                                          <div className="flex flex-wrap gap-2 text-[10px] font-bold">
+                                          <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
                                             <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
                                               {parsed.browser} {parsed.instagram?.version ? `v${parsed.instagram.version}` : ''}
                                             </div>
@@ -4442,12 +4442,12 @@ export default function DashboardNext() {
                                               </div>
                                             )}
                                           </div>
-                                          <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-200 bg-white dark:bg-gray-800/50 p-2 rounded border border-emerald-200 dark:border-emerald-800 break-words whitespace-pre-wrap leading-relaxed opacity-80">
+                                          <div className="text-[11px] font-mono text-emerald-800 dark:text-emerald-200 bg-white dark:bg-gray-800/50 p-2 rounded border border-emerald-200 dark:border-emerald-800 break-words whitespace-pre-wrap leading-relaxed opacity-80">
                                             {raw}
                                           </div>
                                         </>
                                       ) : (
-                                        <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-200 break-words whitespace-pre-wrap max-w-full">
+                                        <div className="text-[11px] font-mono text-emerald-800 dark:text-emerald-200 break-words whitespace-pre-wrap max-w-full">
                                           {fp}
                                         </div>
                                       )}
@@ -4457,7 +4457,7 @@ export default function DashboardNext() {
                                 return (
                                   <span
                                     key={fp}
-                                    className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800 shadow-sm break-words whitespace-pre-wrap max-w-full inline-block"
+                                    className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[11px] font-semibold px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800 shadow-sm break-words whitespace-pre-wrap max-w-full inline-block"
                                   >
 
                                     {fp}
@@ -4467,14 +4467,14 @@ export default function DashboardNext() {
                             )}
                           </div>
                         ) : (
-                          <div className="text-sm font-medium text-gray-400 dark:text-gray-500 italic bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
+                          <div className="text-[13px] font-medium text-gray-600 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
                             Nessun segnale hardware...
                           </div>
                         )}
                       </div>
-                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
-                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-orange-600 mb-3 sm:mb-4 flex items-center gap-2">
+                        <h4 className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-widest text-amber-600 mb-3 sm:mb-4 flex items-center gap-2">
                           <IcRete className="w-4 h-4 sm:w-5 sm:h-5" /> Rete & IP (
                           {viewingMacroStats.ipAddresses.length +
                             viewingMacroStats.netHints.length}
@@ -4485,7 +4485,7 @@ export default function DashboardNext() {
                           {viewingMacroStats.ipAddresses.length > 0 && (
                             <div>
 
-                              <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2">
+                              <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-2">
                                 INDIRIZZI DI RETE
                               </div>
                               <div className="flex flex-wrap gap-2.5">
@@ -4493,7 +4493,7 @@ export default function DashboardNext() {
                                 {viewingMacroStats.ipAddresses.map((ip) => (
                                   <span
                                     key={ip}
-                                    className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-orange-100 dark:border-orange-800 shadow-sm"
+                                    className="bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-semibold px-2 py-1 rounded-lg border border-amber-100 dark:border-amber-800 shadow-sm"
                                   >
 
                                     {ip}
@@ -4505,7 +4505,7 @@ export default function DashboardNext() {
                           {viewingMacroStats.netHints.length > 0 && (
                             <div>
 
-                              <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2">
+                              <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-2">
                                 ALTRI SUGGERIMENTI DI RETE
                               </div>
                               <div className="flex flex-wrap gap-2.5">
@@ -4513,7 +4513,7 @@ export default function DashboardNext() {
                                 {viewingMacroStats.netHints.map((ip) => (
                                   <span
                                     key={ip}
-                                    className="bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-orange-100 dark:border-orange-800 shadow-sm"
+                                    className="bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-semibold px-2 py-1 rounded-lg border border-amber-100 dark:border-amber-800 shadow-sm"
                                   >
 
                                     {ip}
@@ -4524,9 +4524,9 @@ export default function DashboardNext() {
                           )}
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
 
-                        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 flex items-center gap-2">
+                        <h4 className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 flex items-center gap-2">
                           <IcTecnico className="w-4 h-4 sm:w-5 sm:h-5" /> Configurazione Dispositivo
                         </h4>
                         <div className="flex flex-wrap gap-2.5">
@@ -4534,7 +4534,7 @@ export default function DashboardNext() {
                           {viewingMacroStats.automationSignals.map((bot) => (
                             <span
                               key={bot}
-                              className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm"
+                              className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono text-[11px] font-semibold px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm"
                             >
 
                               {bot}
@@ -4543,7 +4543,7 @@ export default function DashboardNext() {
                           {viewingMacroStats.permissionsList.map((p) => (
                             <span
                               key={p}
-                              className="bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-teal-100 dark:border-teal-800 shadow-sm"
+                              className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono text-[11px] font-semibold px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800 shadow-sm"
                             >
 
                               {p}
@@ -4552,7 +4552,7 @@ export default function DashboardNext() {
                           {viewingMacroStats.storageInfo.map((s) => (
                             <span
                               key={s}
-                              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono text-[10px] font-bold px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
+                              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono text-[11px] font-semibold px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
                             >
 
                               {s}
@@ -4589,7 +4589,7 @@ export default function DashboardNext() {
             key={t.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`pointer-events-auto w-full flex items-start gap-3 px-4 py-3 rounded-2xl shadow-lg border text-sm font-semibold ${
+            className={`pointer-events-auto w-full flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg border text-[13px] font-semibold ${
               t.kind === "ok"
                 ? "bg-emerald-600 border-emerald-500 text-white"
                 : t.kind === "error"
@@ -4604,7 +4604,7 @@ export default function DashboardNext() {
                   t.undo!.run();
                   dismissToast(t.id);
                 }}
-                className="shrink-0 px-2.5 py-1 -my-0.5 rounded-lg bg-white/20 hover:bg-white/30 text-[12px] font-bold transition-colors"
+                className="shrink-0 px-2.5 py-1 -my-0.5 rounded-lg bg-white/20 hover:bg-white/30 text-[12px] font-semibold transition-colors"
               >
                 {t.undo.label}
               </button>

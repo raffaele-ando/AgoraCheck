@@ -183,7 +183,7 @@ export default function MessageRow(props: MessageRowProps) {
             else setEditingProfileId(profileId);
           }}
           title="Apri il profilo"
-          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold hover:opacity-85 transition-opacity"
+          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-white text-[11px] font-semibold hover:opacity-85 transition-opacity"
           style={{ backgroundColor: profileColor }}
         >
           {getProfileInitials(displayName) ?? (
@@ -207,7 +207,7 @@ export default function MessageRow(props: MessageRowProps) {
           <span
             className={`text-[13px] font-bold truncate ${
               displayName.startsWith("Non identificato")
-                ? "text-gray-400 dark:text-gray-500"
+                ? "text-gray-600 dark:text-gray-400"
                 : "text-gray-900 dark:text-gray-100"
             }`}
           >
@@ -219,7 +219,7 @@ export default function MessageRow(props: MessageRowProps) {
                 e.stopPropagation();
                 handleUngroupDevice(msg.id);
               }}
-              className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 hover:text-red-600 hover:underline shrink-0"
+              className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 hover:text-red-600 hover:underline shrink-0"
             >
               gruppo manuale · rimuovi
             </button>
@@ -227,11 +227,11 @@ export default function MessageRow(props: MessageRowProps) {
           {(msg.type === "sondaggio" ||
             msg.type === "ricerca" ||
             ((!msg.type || msg.type === "spotted") && !msg.when && !msg.where)) && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 shrink-0">
+      <span className="text-[11px] font-semibold tracking-wider text-gray-600 dark:text-gray-400 shrink-0">
               {msg.type === "sondaggio" ? "Sondaggio" : "Ricerca"}
             </span>
           )}
-          <span className="ml-auto text-[11.5px] tabular-nums text-gray-400 dark:text-gray-500 shrink-0">
+          <span className="ml-auto text-[12px] tabular-nums text-gray-600 dark:text-gray-400 shrink-0">
             {msg.createdAt
               ? format(msg.createdAt.toDate(), "d MMM HH:mm", {
                   locale: it,
@@ -242,7 +242,7 @@ export default function MessageRow(props: MessageRowProps) {
       {/* Core Content */}
       <div className={aperta ? "mb-4" : "mb-0 group-hover:mb-4"}>
         <p
-          className={`text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words text-[15.5px] sm:text-base leading-relaxed max-w-[62ch] ${
+          className={`text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words text-[15px] sm:text-[15px] leading-relaxed max-w-[62ch] ${
             aperta ? "" : "line-clamp-2 group-hover:line-clamp-none"
           }`}
         >
@@ -252,8 +252,8 @@ export default function MessageRow(props: MessageRowProps) {
         {msg.type === "sondaggio" && msg.pollOptions && msg.pollOptions.length > 0 && (
           <div className={`mt-4 space-y-2 ${soloDaAperta}`}>
              {msg.pollOptions.map((opt: string, i: number) => (
-               <div key={i} className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 rounded-xl border border-gray-200 dark:border-gray-700 text-sm md:text-base text-gray-700 dark:text-gray-200 flex items-center gap-3 shadow-sm">
-                  <div className="w-6 h-6 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/60 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center font-bold text-xs shrink-0">{i + 1}</div>
+               <div key={i} className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/80 rounded-xl border border-gray-200 dark:border-gray-700 text-[13px] md:text-[15px] text-gray-700 dark:text-gray-200 flex items-center gap-3 shadow-sm">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-semibold text-[12px] shrink-0">{i + 1}</div>
                   <span className="break-words min-w-0">{opt}</span>
                </div>
              ))}
@@ -267,32 +267,32 @@ export default function MessageRow(props: MessageRowProps) {
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {msg.city && (
               <div className="flex items-center gap-1.5">
-                <IcCitta className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
+                <IcCitta className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+                <div className="text-[12px] text-gray-600 dark:text-gray-400">
                   <span>{formatCity(msg.city)}</span>
                 </div>
               </div>
             )}
             {msg.area && msg.area !== msg.city && (
               <div className="flex items-center gap-1.5">
-                <IcZona className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
+                <IcZona className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+                <div className="text-[12px] text-gray-600 dark:text-gray-400">
                   <span>{formatArea(msg.area, msg.city || "")}</span>
                 </div>
               </div>
             )}
             {msg.when && (
               <div className="flex items-center gap-1.5">
-                <IcQuando className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
+                <IcQuando className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+                <div className="text-[12px] text-gray-600 dark:text-gray-400">
                   <span>{msg.when}</span>
                 </div>
               </div>
             )}
             {msg.where && (
               <div className="flex items-center gap-1.5">
-                <IcDove className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <div className="text-[12.5px] text-gray-500 dark:text-gray-400">
+                <IcDove className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+                <div className="text-[12px] text-gray-600 dark:text-gray-400">
                   <span>{msg.where}</span>
                 </div>
               </div>
@@ -319,7 +319,7 @@ export default function MessageRow(props: MessageRowProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-white text-[11.5px] font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-500 dark:to-pink-400 px-2 py-[3px] rounded-md max-w-full break-words hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1 text-white text-[12px] font-semibold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-500 dark:to-pink-400 px-2 py-[3px] rounded-lg max-w-full break-words hover:opacity-90 transition-opacity"
           >
             <IcInstagram className="w-3 h-3 shrink-0" />@{tag}
           </a>
@@ -328,7 +328,7 @@ export default function MessageRow(props: MessageRowProps) {
                           profiles[profileId]?.possibleAliases &&
                           profiles[profileId].possibleAliases!.length > 0 && (
                             <span
-                              className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-md text-[11.5px] font-semibold bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                              className="inline-flex items-center gap-1.5 px-2 py-[3px] rounded-lg text-[12px] font-semibold bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
                               title={profiles[profileId].possibleAliases!.join(" · ")}
                             >
                               <IcAlias className="w-3 h-3" />
@@ -345,7 +345,7 @@ export default function MessageRow(props: MessageRowProps) {
         >
           <div className="flex items-center gap-2">
             <div
-              className={`flex items-center gap-2 ${(msg.city || msg.area) ? "text-indigo-600 dark:text-indigo-300" : "text-gray-500 dark:text-gray-400 "}`}
+              className={`flex items-center gap-2 ${(msg.city || msg.area) ? "text-indigo-600 dark:text-indigo-300" : "text-gray-600 dark:text-gray-400 "}`}
             >
               <span className="sr-only">Zona selezionata</span>
             </div>
@@ -357,7 +357,7 @@ export default function MessageRow(props: MessageRowProps) {
                   setLocationInputCity(msg.city || "");
                   setLocationInputArea(msg.area || "");
                 }}
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-md text-gray-500 dark:text-gray-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 border border-dashed border-gray-300 dark:border-gray-600"
+                className="text-[11px] font-semibold px-2 py-0.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 border border-dashed border-gray-300 dark:border-gray-600"
               >
                 {(msg.city || msg.area) ? "Cambia zona" : "+ Aggiungi zona"}
               </button>
@@ -372,7 +372,7 @@ export default function MessageRow(props: MessageRowProps) {
                     setLocationInputCity(e.target.value);
                     setLocationInputArea("");
                   }}
-                  className="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="w-full text-[12px] p-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 >
                   <option value="">Nessuna Città</option>
                   {Object.keys(LOCATIONS).map((c: string) => (
@@ -383,7 +383,7 @@ export default function MessageRow(props: MessageRowProps) {
                   <select
                     value={locationInputArea}
                     onChange={(e) => setLocationInputArea(e.target.value)}
-                    className="w-full text-xs p-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="w-full text-[12px] p-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   >
                     <option value="">Nessuna Zona</option>
                     {LOCATIONS[locationInputCity].map((a: string) => (
@@ -395,13 +395,13 @@ export default function MessageRow(props: MessageRowProps) {
               <div className="flex justify-end gap-2 mt-3">
                 <button
                   onClick={() => setEditingMessageId(null)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   Annulla
                 </button>
                 <button
                   onClick={() => saveMessageLocation(msg.id)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                  className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
                 >
                   Salva
                 </button>
@@ -421,7 +421,7 @@ export default function MessageRow(props: MessageRowProps) {
           <div className="flex items-center gap-2">
 
             <div
-              className={`flex items-center gap-2 ${msg.resolution ? "text-sky-600 dark:text-sky-300" : "text-gray-500 dark:text-gray-400 "}`}
+              className={`flex items-center gap-2 ${msg.resolution ? "text-indigo-600 dark:text-indigo-300" : "text-gray-600 dark:text-gray-400 "}`}
             >
 
               <span className="sr-only">
@@ -435,7 +435,7 @@ export default function MessageRow(props: MessageRowProps) {
                   setEditingMessageId(msg.id);
                   setResolutionInput(msg.resolution || "");
                 }}
-                className={`text-[11px] font-semibold px-2 py-0.5 rounded-md transition-colors ${msg.resolution ? "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" : "text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 hover:text-emerald-700 hover:border-emerald-300"}`}
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg transition-colors ${msg.resolution ? "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" : "text-gray-600 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 hover:text-emerald-700 hover:border-emerald-300"}`}
               >
 
                 {msg.resolution
@@ -457,21 +457,21 @@ export default function MessageRow(props: MessageRowProps) {
                   setResolutionInput(e.target.value)
                 }
                 placeholder="Tag IG, nome, o info su come si è conclusa..."
-                className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-xl outline-none focus:border-indigo-500 text-sm focus:ring-2 focus:ring-indigo-100 transition-all resize-none text-gray-800 dark:text-gray-200 shadow-inner"
+                className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-xl outline-none focus:border-indigo-500 text-[13px] focus:ring-2 focus:ring-indigo-100 transition-all resize-none text-gray-800 dark:text-gray-200 shadow-inner"
                 rows={2}
               />
               <div className="flex justify-end gap-2 mt-2">
 
                 <button
                   onClick={() => setEditingMessageId(null)}
-                  className="px-3 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-gray-300 transition-colors"
+         className="px-3 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-[11px] font-semibold tracking-wider rounded-lg hover:bg-gray-300 transition-colors"
                 >
 
                   Annulla
                 </button>
                 <button
                   onClick={() => saveMessageResolution(msg.id)}
-                  className="px-3 py-1.5 bg-sky-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-sky-700 transition-colors shadow-sm"
+         className="px-3 py-1.5 bg-indigo-600 text-white text-[11px] font-semibold tracking-wider rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
                 >
 
                   Salva
@@ -480,7 +480,7 @@ export default function MessageRow(props: MessageRowProps) {
             </div>
           ) : (
             false && (
-              <div className="font-semibold text-sm break-words whitespace-pre-wrap mt-2">
+              <div className="font-semibold text-[13px] break-words whitespace-pre-wrap mt-2">
                 {msg.resolution}
               </div>
             )
@@ -495,7 +495,7 @@ export default function MessageRow(props: MessageRowProps) {
                 e.stopPropagation();
                 toggleArchiveStatus(msg.id, !!msg.isArchived);
               }}
-              className="flex-1 sm:flex-none sm:min-w-[180px] h-9 px-3 rounded-lg text-[12.5px] font-bold flex items-center justify-center gap-1.5 bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+              className="flex-1 sm:flex-none sm:min-w-[180px] h-9 px-3 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1.5 bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
             >
               <IcArchivia className="w-4 h-4" />
               {msg.isArchived ? "Ripristina" : "Archivia"}
@@ -532,7 +532,7 @@ export default function MessageRow(props: MessageRowProps) {
                 handleDeleteMessage(msg.id);
               }}
               aria-label="Elimina messaggio"
-              className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400"
+              className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center text-gray-600"
             >
               <IcElimina className="w-[17px] h-[17px]" />
             </button>
@@ -544,7 +544,7 @@ export default function MessageRow(props: MessageRowProps) {
       {isSuperAdmin && (
         <details className={`group border-t border-gray-100 dark:border-gray-700 pt-4 cursor-pointer outline-none ${soloDaAperta}`}>
 
-          <summary className="flex items-center justify-between text-[11.5px] font-semibold text-gray-400 dark:text-gray-500 outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
+          <summary className="flex items-center justify-between text-[12px] font-semibold text-gray-600 dark:text-gray-400 outline-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors list-none [&::-webkit-details-marker]:hidden">
 
             <div className="flex items-center gap-2">
 
@@ -556,13 +556,13 @@ export default function MessageRow(props: MessageRowProps) {
               <IcApri className="w-4 h-4 group-open:rotate-180 transition-transform" />
             </div>
           </summary>
-          <div className="pt-4 pb-1 space-y-4 opacity-0 group-open:opacity-100 transition-opacity duration-300">
+          <div className="pt-4 pb-1 space-y-4 opacity-0 group-open:opacity-100 transition-opacity duration-150">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 navigator.clipboard?.writeText(msg.id);
               }}
-              className="text-[11px] font-mono text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="text-[11px] font-mono text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               title="Copia l'identificativo del messaggio"
             >
               id: {msg.id}
@@ -572,14 +572,14 @@ export default function MessageRow(props: MessageRowProps) {
 
               <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
 
-                <IcDispositivo className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                <IcDispositivo className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 mt-0.5 shrink-0" />
                 <div className="min-w-0">
 
-                  <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
+         <div className="text-[11px] tracking-wider font-semibold text-gray-600 dark:text-gray-400 ">
                     Piattaforma
                   </div>
                   <div
-                    className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap"
+                    className="text-[12px] font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap"
                     title={msg.deviceInfo?.platform}
                   >
 
@@ -590,13 +590,13 @@ export default function MessageRow(props: MessageRowProps) {
               </div>
               <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 ">
 
-                <IcSchermo className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                <IcSchermo className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 mt-0.5 shrink-0" />
                 <div className="min-w-0">
 
-                  <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
+         <div className="text-[11px] tracking-wider font-semibold text-gray-600 dark:text-gray-400 ">
                     Risoluzione
                   </div>
-                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
+                  <div className="text-[12px] font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
 
                     {msg.deviceInfo?.screenResolution ||
                       "Sconosciuta"}
@@ -605,13 +605,13 @@ export default function MessageRow(props: MessageRowProps) {
               </div>
               <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 col-span-2 sm:col-span-1">
 
-                <IcRete className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+                <IcRete className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 mt-0.5 shrink-0" />
                 <div className="min-w-0">
 
-                  <div className="text-[9px] uppercase tracking-wider font-semibold text-gray-400 dark:text-gray-500 ">
+         <div className="text-[11px] tracking-wider font-semibold text-gray-600 dark:text-gray-400 ">
                     Lingua & Fuso
                   </div>
-                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
+                  <div className="text-[12px] font-medium text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap">
 
                     {msg.deviceInfo?.language || "N/A"} •{" "}
                     {msg.deviceInfo?.timezone
@@ -621,7 +621,7 @@ export default function MessageRow(props: MessageRowProps) {
                 </div>
               </div>
           </div>
-          <div className="text-[9px] text-gray-400 dark:text-gray-500 font-mono break-all leading-relaxed bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
+          <div className="text-[11px] text-gray-600 dark:text-gray-400 font-mono break-all leading-relaxed bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
             {msg.deviceInfo?.userAgent}
           </div>
@@ -637,47 +637,47 @@ export default function MessageRow(props: MessageRowProps) {
                   behavior: p.behavior || p.b || {},
                 };
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[10px] font-mono text-gray-600 dark:text-gray-400 ">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] font-mono text-gray-600 dark:text-gray-400 ">
 
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
-                      <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                        <IcRete className="w-3 h-3 text-blue-500" />
+           <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[11px] tracking-wider">
+                        <IcRete className="w-3 h-3 text-indigo-500" />
                         Rete & Posizione
                       </strong>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           IP PUB:
                         </span>{" "}
                         {adv.network?.ip || "N/A"}
                       </div>
                       <div className="break-words whitespace-pre-wrap">
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           RETE:
                         </span>{" "}
                         {adv.network?.netHint || "N/A"}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           GEO:
                         </span>{" "}
                         {adv.network?.city},{" "}
                         {adv.network?.region}
                       </div>
                       <div className="break-words whitespace-pre-wrap">
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           PROV:
                         </span>{" "}
                         {adv.network?.netProvider}
                       </div>
                       <div className="break-words whitespace-pre-wrap">
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           REF:
                         </span>{" "}
                         {adv.network?.referer || "N/A"}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           NET:
                         </span>{" "}
                         {adv.network?.connectionType ===
@@ -690,7 +690,7 @@ export default function MessageRow(props: MessageRowProps) {
                     </div>
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
-                      <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
+           <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[11px] tracking-wider">
                         <IcTecnico className="w-3 h-3 text-purple-500" />
                         Hardware
                       </strong>
@@ -702,28 +702,28 @@ export default function MessageRow(props: MessageRowProps) {
                             : ""
                         }
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           GPU:
                         </span>{" "}
                         {adv.hardware?.detailedWebGL
                           ?.renderer || adv.hardware?.gpu}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           CPU/RAM:
                         </span>{" "}
                         {adv.hardware?.cores}C /{" "}
                         {adv.hardware?.ram}GB
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           RES:
                         </span>{" "}
                         {adv.hardware?.screen} (
                         {adv.hardware?.pixelRatio}x)
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           TCH/MEDIA:
                         </span>{" "}
                         {adv.hardware?.maxTouchPoints} pt /{" "}
@@ -731,7 +731,7 @@ export default function MessageRow(props: MessageRowProps) {
                         dev
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           BAT:
                         </span>{" "}
                         {adv.hardware?.battery?.level ===
@@ -743,7 +743,7 @@ export default function MessageRow(props: MessageRowProps) {
                       </div>
                       {adv.hardware?.inputDeviceCount > 0 && (
                         <div className="break-words whitespace-pre-wrap">
-                          <span className="text-gray-400 dark:text-gray-500 ">
+                          <span className="text-gray-600 dark:text-gray-400 ">
                             GPAD:
                           </span>{" "}
                           {adv.hardware.inputDeviceCount} (
@@ -757,7 +757,7 @@ export default function MessageRow(props: MessageRowProps) {
                         className="break-words whitespace-pre-wrap"
                         title={adv.hardware?.extraSensors}
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           SENS:
                         </span>{" "}
                         {adv.hardware?.extraSensors || "N/A"}
@@ -765,26 +765,26 @@ export default function MessageRow(props: MessageRowProps) {
                     </div>
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
-                      <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
-                        <IcAttivita className="w-3 h-3 text-orange-500" />
+           <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[11px] tracking-wider">
+                        <IcAttivita className="w-3 h-3 text-amber-500" />
                         Comportamento
                       </strong>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           TIME/SCL:
                         </span>{" "}
                         {adv.behavior?.sessionTimeSeconds}s /{" "}
                         {adv.behavior?.maxScrollDepth}% MAX
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           CLK/RAGE:
                         </span>{" "}
                         {adv.behavior?.clicks} /{" "}
                         {adv.behavior?.repeatClicks || 0}
                       </div>
                       <div className="break-words whitespace-pre-wrap">
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           DIST:
                         </span>{" "}
                         {adv.behavior?.pointerDistance
@@ -792,7 +792,7 @@ export default function MessageRow(props: MessageRowProps) {
                           : "0px"}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           KEY/BACK:
                         </span>{" "}
                         {adv.behavior?.keyEvents}
@@ -819,7 +819,7 @@ export default function MessageRow(props: MessageRowProps) {
                             : "N/A"
                         }
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           FOC/BLR/PST/CP/CT:
                         </span>{" "}
                         {adv.behavior?.fieldDurations &&
@@ -837,14 +837,14 @@ export default function MessageRow(props: MessageRowProps) {
                       </div>
                       {adv.behavior?.fieldAutoFilled && (
                         <div>
-                          <span className="text-gray-400 dark:text-gray-500 text-orange-500 font-bold">
+                          <span className="text-gray-600 dark:text-gray-400 text-amber-500 font-bold">
                             AUTOFILL RILEVATO
                           </span>
                         </div>
                       )}
                       {adv.behavior?.orientationSample && (
                         <div>
-                          <span className="text-gray-400 dark:text-gray-500 ">
+                          <span className="text-gray-600 dark:text-gray-400 ">
                             TILT:
                           </span>
                           &alpha;:
@@ -859,12 +859,12 @@ export default function MessageRow(props: MessageRowProps) {
                     </div>
                     <div className="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
 
-                      <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[10px] uppercase tracking-wider">
+           <strong className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 mb-2 font-sans text-[11px] tracking-wider">
                         <IcDispositivo className="w-3 h-3 text-emerald-500" />
                         Software / Hash
                       </strong>
                       <div className="break-words whitespace-pre-wrap">
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           PR:
                         </span>{" "}
                         {adv.software?.platform}
@@ -873,7 +873,7 @@ export default function MessageRow(props: MessageRowProps) {
                           : ""}
                       </div>
                       <div className="break-words whitespace-pre-wrap">
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           CSS:
                         </span>{" "}
                         {adv.software?.advancedMedia
@@ -881,7 +881,7 @@ export default function MessageRow(props: MessageRowProps) {
                           : "N/A"}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           BOT/INC:
                         </span>{" "}
                         {adv.software?.automationSignal || "N/A"} /{" "}
@@ -899,7 +899,7 @@ export default function MessageRow(props: MessageRowProps) {
                             : ""
                         }
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           MEM:
                         </span>{" "}
                         {adv.software?.performanceMemory &&
@@ -915,7 +915,7 @@ export default function MessageRow(props: MessageRowProps) {
                             : ""
                         }
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           PERMESSI:
                         </span>{" "}
                         {adv.software?.permissions
@@ -923,7 +923,7 @@ export default function MessageRow(props: MessageRowProps) {
                           : "N/A"}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           CANVAS_ID:
                         </span>
                         <span className="font-bold text-gray-800 dark:text-gray-200 ">
@@ -935,7 +935,7 @@ export default function MessageRow(props: MessageRowProps) {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           AUDIO_ID:
                         </span>
                         <span className="font-bold text-gray-800 dark:text-gray-200 ">
@@ -947,7 +947,7 @@ export default function MessageRow(props: MessageRowProps) {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           MATH_ID:
                         </span>
                         <span
@@ -966,7 +966,7 @@ export default function MessageRow(props: MessageRowProps) {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           RECTS_ID:
                         </span>
                         <span className="font-bold text-gray-800 dark:text-gray-200 ">
@@ -983,7 +983,7 @@ export default function MessageRow(props: MessageRowProps) {
                           ", ",
                         )}
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           FONTS:
                         </span>{" "}
                         {adv.software?.fontsDetected?.length}
@@ -993,7 +993,7 @@ export default function MessageRow(props: MessageRowProps) {
                         className="break-words whitespace-pre-wrap"
                         title={adv.software?.plugins}
                       >
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           PLUGS:
                         </span>{" "}
                         {adv.software?.plugins
@@ -1003,13 +1003,13 @@ export default function MessageRow(props: MessageRowProps) {
                         ...
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           STORAGE:
                         </span>{" "}
                         {adv.software?.storage || "N/A"}
                       </div>
                       <div>
-                        <span className="text-gray-400 dark:text-gray-500 ">
+                        <span className="text-gray-600 dark:text-gray-400 ">
                           PDF/DNT:
                         </span>{" "}
                         {adv.software?.pdfViewerEnabled
@@ -1023,7 +1023,7 @@ export default function MessageRow(props: MessageRowProps) {
                 );
               } catch (err: any) {
                 return (
-                  <div className="text-[10px] text-gray-400 dark:text-gray-500 break-all bg-gray-100 dark:bg-gray-700 p-3 rounded-xl border border-gray-200 dark:border-gray-600 ">
+                  <div className="text-[11px] text-gray-600 dark:text-gray-400 break-all bg-gray-100 dark:bg-gray-700 p-3 rounded-xl border border-gray-200 dark:border-gray-600 ">
                     Error: {err.message} | Raw:
                     {typeof msg.advancedInfo === "string"
                       ? msg.advancedInfo
@@ -1057,7 +1057,7 @@ export default function MessageRow(props: MessageRowProps) {
               toggleArchiveStatus(msg.id, !!msg.isArchived);
             }}
             title={msg.isArchived ? "Rimetti fra i nuovi" : "Archivia"}
-            className="h-8 px-2.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white transition-colors"
+            className="h-8 px-2.5 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white transition-colors"
           >
             <IcArchivia className="w-4 h-4" />
             <span className="hidden lg:inline">
