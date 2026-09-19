@@ -97,7 +97,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
     if (!captureRef.current) return;
     if (!backgroundImage) {
       alert(
-        "Nessuno sfondo per questa combinazione: l'immagine esce col fondo neutro.",
+        "Nessun template configurato: l'immagine esce col fondo neutro.",
       );
       return;
     }
@@ -152,7 +152,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 shrink-0">
           <h2 className="text-[19px] font-bold text-gray-900 dark:text-white">
-            Esporta come immagine
+            Esporta Storia
           </h2>
           <button
             onClick={onClose}
@@ -167,7 +167,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
             <div className="space-y-3">
               <div>
                 <label className="block text-[12px] font-semibold text-gray-600 mb-1 dark:text-gray-400">
-                  Che tipo di storia
+                  Stile Esportazione
                 </label>
                 <select 
                   value={selectedMode} 
@@ -177,30 +177,28 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                   <option value="spotted">Spotted</option>
                   <option value="ricerca">Ricerca</option>
                   <option value="sondaggio">Sondaggio</option>
-                  <option value="risultati">Risultati spotted</option>
-                  <option value="risultati_sondaggio">Risultati sondaggio</option>
+                  <option value="risultati">Risultati Spotted</option>
+                  <option value="risultati_sondaggio">Risultati Sondaggio</option>
                 </select>
                 {/* L'avviso sullo sfondo mancante era una postilla in 10px
                     rossi accanto a un'etichetta. E' la cosa piu' importante
                     della finestra: decide come viene l'immagine. */}
                 {isDBReady && templateSource && templateSource !== selectedTarget && (
                   <p className="mt-2 text-[12px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-                    Per «{selectedTarget}» non c'e' uno sfondo suo: viene usato
-                    quello di «{templateSource}».
+                    Template «{templateSource}»: nessuno per «{selectedTarget}».
                   </p>
                 )}
                 {isDBReady && !templateSource && (
                   <p className="mt-2 text-[12px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-                    Nessuno sfondo per «{selectedTarget}»: l'immagine esce col
-                    fondo neutro. Si carica da Configurazione → Come escono le
-                    storie.
+                    Nessun template per «{selectedTarget}»: l'immagine userà il
+                    fondo neutro.
                   </p>
                 )}
               </div>
               
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div className="col-span-2">
-                  <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Chi cerchi" : selectedMode === "ricerca" ? "La domanda" : selectedMode === "risultati" ? "Il messaggio" : "La domanda"}</label>
+                  <label className="block text-[12px] font-semibold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "ricerca" ? "Testo Ricerca" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
                   <textarea 
                     value={chiText} 
                     onChange={e => setChiText(e.target.value)} 
@@ -280,8 +278,8 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center bg-gray-50 dark:bg-gray-800/50">
                     <ImageIcon className="w-12 h-12 mb-2 opacity-30" />
-                    <span className="text-[13px] font-medium mb-2">Nessuno sfondo per questa combinazione</span>
-                    <span className="text-[12px] px-4 text-center">L'immagine esce lo stesso, col fondo neutro.</span>
+                    <span className="text-[13px] font-medium mb-2">Nessun template configurato</span>
+                    <span className="text-[12px] px-4 text-center">Impostane uno nella sezione Template Storia.</span>
                   </div>
                 )}
              </div>
@@ -298,7 +296,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
             {isExporting ? (
               <>Esportazione in corso... <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
             ) : (
-              <><Download className="w-5 h-5" /> Scarica l'immagine</>
+              <><Download className="w-5 h-5" /> Scarica Immagine Pronta</>
             )}
           </button>
         </div>

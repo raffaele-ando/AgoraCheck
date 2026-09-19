@@ -2735,27 +2735,12 @@ export default function DashboardNext() {
                         due vuoti sono diversi: archiviare tutto e' un
                         traguardo, non ricevere niente e' un problema. */}
                     <IcMessaggi className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    {viewFilter === "archived" ? (
-                      <>
-                        <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100">
-                          Non hai ancora archiviato niente
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
-                          I messaggi che archivi finiscono qui, e da qui si
-                          possono rimettere fra i nuovi.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100">
-                          Tutto smaltito
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
-                          Non c'è niente da leggere. I nuovi messaggi
-                          compaiono qui da soli, senza ricaricare.
-                        </p>
-                      </>
-                    )}
+                    <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100 ">
+                      Nessun messaggio
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 ">
+                      I messaggi in questa sezione appariranno qui.
+                    </p>
                   </>
                 )}
               </div>
@@ -2877,12 +2862,10 @@ export default function DashboardNext() {
                   <>
                     <IcProfilo className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-[19px] font-medium text-gray-900 dark:text-gray-100 ">
-                      Ancora nessuna persona riconosciuta
+                      Nessun profilo identificato
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                      I profili si formano da soli quando arrivano i
-                      messaggi: ognuno raccoglie i dispositivi che sembrano
-                      della stessa persona.
+                    <p className="text-gray-600 dark:text-gray-400 ">
+                      I profili analizzati dal tracker appariranno qui.
                     </p>
                   </>
                 )}
@@ -3173,7 +3156,7 @@ export default function DashboardNext() {
                             <summary className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer list-none flex flex-wrap items-center justify-between gap-y-2 p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
 
                               <span>
-                                Dispositivi collegati (
+                                Profili Dispositivo/Manuali (
                                 {macro.profileIds.length})
                               </span>
                               <div className="flex items-center gap-2">
@@ -3187,7 +3170,7 @@ export default function DashboardNext() {
                                   className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"} hover:opacity-80 text-[11px] whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-lg transition-colors`}
                                   title="Escludi o Includi questo intero mega-profilo dalle statistiche"
                                 >
-                                  {macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "Escluso dalle statistiche" : "Escludi dalle statistiche"}
+                                  {macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "Ignorato (Stats)" : "Ignora (Stats)"}
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -3200,7 +3183,7 @@ export default function DashboardNext() {
                                   }}
                                   className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 text-[11px] whitespace-nowrap flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-lg"
                                 >
-                                  Unisci ad altri
+                                  Accorpa
                                 </button>
                                 <svg
                                   className="w-4 h-4 text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
@@ -3285,7 +3268,7 @@ export default function DashboardNext() {
                                             className={`${profiles[pid]?.ignoredFromAnalytics ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-600 dark:text-amber-400"} font-semibold px-2 py-1 rounded text-[11px] transition-colors`}
                                             title="Escludi o Includi questo profilo dalle statistiche"
                                           >
-                                            {profiles[pid]?.ignoredFromAnalytics ? "Escluso dalle statistiche" : "Escludi dalle statistiche"}
+                                            {profiles[pid]?.ignoredFromAnalytics ? "Ignorato (Stats)" : "Ignora (Stats)"}
                                           </button>
                                           {macro.profileIds.length > 1 ? (
                                           <button
@@ -3498,8 +3481,7 @@ export default function DashboardNext() {
               <ConfirmDialog
                 kind="distruttivo"
                 title="Eliminare questo messaggio?"
-                consequence="Sparisce dalla dashboard e dalla bacheca pubblica. Non si recupera."
-                note="Se ti serve solo toglierlo di mezzo, Archivia lo mette da parte senza cancellarlo."
+                consequence="L'azione è irreversibile."
                 preview={[testoDi(confirmModalState.messageId)]}
                 confirmLabel="Elimina il messaggio"
                 onConfirm={confirmAction}
@@ -3513,11 +3495,11 @@ export default function DashboardNext() {
               <ConfirmDialog
                 kind="distruttivo"
                 title={`Eliminare ${n} ${n === 1 ? "messaggio" : "messaggi"}?`}
-                consequence="Spariscono dalla dashboard e dalla bacheca pubblica. Non si recuperano."
+                consequence="L'azione è irreversibile."
                 note={
                   filtriAttivi.length > 0
-                    ? `Sono i ${n} che hai selezionato mentre era attivo il filtro: ${filtriAttivi.join(" · ")}.`
-                    : "Se volevi solo toglierli di mezzo, Archivia li mette da parte senza cancellarli."
+                    ? `Filtro attivo: ${filtriAttivi.join(" · ")}`
+                    : undefined
                 }
                 preview={selectedMessages.map(testoDi)}
                 confirmLabel={`Elimina ${n} ${n === 1 ? "messaggio" : "messaggi"}`}
@@ -3532,8 +3514,7 @@ export default function DashboardNext() {
               <ConfirmDialog
                 kind="distruttivo"
                 title={`Eliminare ${n} ${n === 1 ? "profilo" : "profili"}?`}
-                consequence="I messaggi collegati non vengono cancellati, ma perdono l'attribuzione: tornano a comparire come Non identificato."
-                note="L'unione fra dispositivi va rifatta a mano."
+                consequence="L'azione è irreversibile e disconnetterà i messaggi collegati."
                 preview={selectedProfiles.map(
                   (id) =>
                     macroProfiles.find((m) => m.id === id)?.name || "Senza nome",
@@ -3548,8 +3529,7 @@ export default function DashboardNext() {
             <ConfirmDialog
               kind="attenzione"
               title="Togliere il messaggio dal gruppo?"
-              consequence="Torna a essere tracciato per conto suo. Il gruppo resta in piedi per gli altri messaggi."
-              note="Si può rifare: è un'operazione reversibile."
+              consequence="Verrà nuovamente tracciato separatamente."
               confirmLabel="Togli dal gruppo"
               onConfirm={confirmAction}
               onCancel={chiudi}
@@ -3559,20 +3539,19 @@ export default function DashboardNext() {
       {showGroupPrompt && (
         <ConfirmDialog
           kind="neutro"
-          title={`Attribuire ${selectedMessages.length} ${selectedMessages.length === 1 ? "messaggio" : "messaggi"} alla stessa persona?`}
-          consequence="Da qui in poi compaiono sotto un profilo solo, anche se arrivano da dispositivi diversi. Serve quando la stessa persona scrive dal telefono e dal portatile."
-          note="Reversibile: da ogni messaggio si può togliere il gruppo."
+          title={`Raggruppare ${selectedMessages.length} ${selectedMessages.length === 1 ? "messaggio" : "messaggi"}?`}
+          consequence="I messaggi verranno attribuiti a un unico profilo."
           preview={selectedMessages.map(
             (id) =>
               messages.find((m) => m.id === id)?.lookingFor || "(senza testo)",
           )}
-          confirmLabel="Unisci nel profilo"
+          confirmLabel="Raggruppa"
           onConfirm={confirmGroupDevices}
           onCancel={() => setShowGroupPrompt(false)}
         >
           <label className="block">
             <span className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              Nome del profilo
+              Identificativo del gruppo
             </span>
             <input
               autoFocus
@@ -3583,8 +3562,7 @@ export default function DashboardNext() {
               className="w-full h-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 outline-none px-3 rounded-lg focus:border-indigo-600 transition-colors text-[13px] text-gray-900 dark:text-gray-100"
             />
             <span className="block mt-2 text-[12px] text-gray-600 dark:text-gray-400">
-              Se lo lasci vuoto ne viene generato uno automatico, del tipo
-              MANUAL-4F7B2C: funziona, ma poi non lo riconosci nell'elenco.
+              Lascia vuoto per un identificativo casuale.
             </span>
           </label>
         </ConfirmDialog>
@@ -3610,10 +3588,8 @@ export default function DashboardNext() {
               Unire altri profili in «{nomeProfiloDestinazione}»?
             </h2>
             <p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300 mt-2 mb-4">
-              I profili che scegli qui sotto <strong>spariscono</strong> e i
-              loro messaggi passano a «{nomeProfiloDestinazione}», che resta il
-              profilo buono. Va nella direzione opposta a quello che ti aspetti
-              se pensi di stare scegliendo il vincitore.
+              I profili che selezioni vengono assorbiti in
+              «{nomeProfiloDestinazione}», che resta il gruppo principale.
             </p>
             <div className="mb-4">
 
@@ -3773,7 +3749,7 @@ export default function DashboardNext() {
           >
 
             <h2 className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50">
-              Chi è questa persona?
+              Gestione Profilo Singolo
             </h2>
             <p className="mt-2 mb-6 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300">
               Quello che scrivi qui sostituisce il codice del dispositivo in
@@ -3785,7 +3761,7 @@ export default function DashboardNext() {
               <div>
 
                 <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                  Come lo chiami
+                  Nome Identificativo
                 </label>
                 <input
                   type="text"
@@ -3803,7 +3779,7 @@ export default function DashboardNext() {
               <div>
 
                 <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                  Altri nomi con cui si è firmato
+                  Possibili Alias (Separati da virgola)
                 </label>
                 <input
                   type="text"
@@ -3821,7 +3797,7 @@ export default function DashboardNext() {
               <div>
 
                 <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                  Instagram aggiunti a mano
+                  Tag Instagram Custom (Separati da virgola)
                 </label>
                 <input
                   type="text"
@@ -3851,7 +3827,7 @@ export default function DashboardNext() {
                   className="flex-1 h-10 bg-indigo-700 text-white font-semibold text-[13px] rounded-lg hover:bg-indigo-800 transition-colors"
                 >
 
-                  Salva il nome
+                  Salva Profilo
                 </button>
               </div>
             </div>
@@ -3922,7 +3898,7 @@ export default function DashboardNext() {
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "timeline" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcAttivita className="w-4 h-4 shrink-0" /> Cosa ha fatto
+                  <IcAttivita className="w-4 h-4 shrink-0" /> Timeline
                 </button>
                 <button
                   onClick={() => setMacroModalTab("identita")}
@@ -3937,14 +3913,14 @@ export default function DashboardNext() {
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "dettagli" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcTecnico className="w-4 h-4 shrink-0" /> Dati tecnici
+                  <IcTecnico className="w-4 h-4 shrink-0" /> Info Tecniche
                 </button>
                 <button
                   onClick={() => setMacroModalTab("log")}
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "log" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcDocumento className="w-4 h-4 shrink-0" /> Perché sono uniti
+                  <IcDocumento className="w-4 h-4 shrink-0" /> Log Raggruppamento
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
@@ -3957,7 +3933,7 @@ export default function DashboardNext() {
                       <h4 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <IcAttivita className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
-                        Visite e messaggi, dal più recente
+                        Timeline Accessi & Messaggi
                       </h4>
            <div className="text-[11px] sm:text-[12px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-3 sm:px-3 py-1 sm:py-2 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto tracking-wide">
 
@@ -4092,7 +4068,7 @@ export default function DashboardNext() {
                                         <div>
 
                      <span className="font-semibold tracking-wider text-[11px] block mb-1 text-indigo-600">
-                                            Com'è andata a finire
+                                            Risoluzione Inserita
                                           </span>
                                           {msg.resolution}
                                         </div>

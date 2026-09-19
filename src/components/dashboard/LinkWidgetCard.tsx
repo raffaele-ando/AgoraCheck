@@ -80,7 +80,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
            <Link className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
          </div>
          <div className="flex flex-col">
-           <h3 className="text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight">Il link da mettere in bio</h3>
+           <h3 className="text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight">Widget Link di Instagram</h3>
            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
              già compilato per la zona scelta
            </p>

@@ -16,7 +16,7 @@ import { uploadMedia } from "../../utils/media";
 const getBaseLogos = () => {
   const locations = ["default", ...Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)])];
   return [
-    { id: "default", label: "Il marchio Agorà" },
+    { id: "default", label: "Logo Principale (Piattaforma Base)" },
     { id: "favicon", label: "Favicon (Icona scheda browser)" },
     { id: "brandmark_agora", label: "Brandmark Agorà (Quadrato)" },
     ...locations.filter(l => l !== "default").map(l => ({ id: `logo_${l}`, label: `Logo ${l}` }))
@@ -182,14 +182,14 @@ export function LogoSettings() {
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <ImageIcon className="w-5 h-5 text-indigo-500" />
-          Il marchio in cima alla bacheca
+          Gestione Loghi
         </h3>
         <button onClick={loadLogos} className="p-2 text-gray-400 hover:text-indigo-500 transition-colors" title="Aggiorna">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
       <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
-        Quello che gli studenti vedono in cima alla bacheca, e l’icona del sito. Si applica ovunque appena salvi.
+        Seleziona quale logo o icona vuoi caricare. Le modifiche verranno applicate automaticamente su tutta la piattaforma (es. aggiornamento favicon).
       </p>
 
       {statusMsg && (
@@ -208,7 +208,7 @@ export function LogoSettings() {
       {/* Impostazioni scala loghi */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl space-y-4">
         <div className="flex items-center justify-between">
-            <h4 className="font-bold text-[13px] text-gray-800 dark:text-gray-200">Quanto sono grandi sulla bacheca</h4>
+            <h4 className="font-bold text-[13px] text-gray-800 dark:text-gray-200">Grandezze Loghi/Scritte (Bacheca)</h4>
             <div className="flex items-center gap-2">
               {scalesDirty && !savingScales && (
                 <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
@@ -217,7 +217,7 @@ export function LogoSettings() {
                 </span>
               )}
               <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-60 text-white text-[12px] font-semibold rounded-lg transition-colors">
-                 {savingScales ? "Salvataggio..." : "Salva le grandezze"}
+                 {savingScales ? "Salvataggio..." : "Salva Grandezze"}
               </button>
             </div>
         </div>
@@ -239,7 +239,7 @@ export function LogoSettings() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">La scritta con il nome della zona</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Scritta Automatica Zona</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.zoneScale} onChange={(e) => {
                   const newScales = {...scales, zoneScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -248,7 +248,7 @@ export function LogoSettings() {
               <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.zoneScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Il marchio Agorà, sotto</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Scritta/Logo Agorà (Sotto)</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.agoraScale} onChange={(e) => {
                   const newScales = {...scales, agoraScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -257,7 +257,7 @@ export function LogoSettings() {
               <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{Math.round(scales.agoraScale * 100)}%</div>
            </div>
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Quanto spazio fra le due</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Distanza Verticale</label>
               <input type="range" min="-20" max="40" step="1" value={scales.spacing} onChange={(e) => {
                   const newScales = {...scales, spacing: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -266,7 +266,7 @@ export function LogoSettings() {
               <div className="text-[11px] text-right font-mono text-gray-400 mt-1">{scales.spacing}px</div>
            </div>
            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Se carichi un logo tuo, quanto e grande</label>
+              <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Immagine Logo Personalizzato</label>
               <input type="range" min="0.5" max="2" step="0.05" value={scales.customLogoScale} onChange={(e) => {
                   const newScales = {...scales, customLogoScale: parseFloat(e.target.value)};
                   setScales(newScales);
@@ -280,7 +280,7 @@ export function LogoSettings() {
       {/* Upload nuovo logo */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
         <div className="flex-1">
-          <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Cosa mostri in cima alla bacheca</label>
+          <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Tipo Logo</label>
           <select
             value={selectedSlot}
             onChange={(e) => setSelectedSlot(e.target.value)}
@@ -294,7 +294,7 @@ export function LogoSettings() {
         <div className="sm:w-auto self-end w-full">
            <label className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 ${saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white shadow-md shadow-indigo-600/20 text-[13px] font-bold rounded-lg transition-all cursor-pointer`}>
               <Upload className="w-4 h-4" />
-              {saving ? "Caricamento..." : "Carica un'immagine"}
+              {saving ? "Caricamento..." : "Carica Logo"}
               <input type="file" accept="image/png, image/jpeg, image/svg+xml, image/webp" className="hidden" onChange={handleUpload} disabled={saving || !selectedSlot} />
            </label>
         </div>

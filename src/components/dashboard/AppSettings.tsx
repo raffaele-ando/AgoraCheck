@@ -107,7 +107,7 @@ function WhatsappSettings() {
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <MessageCircle className="w-5 h-5 text-emerald-500" />
-          I gruppi WhatsApp di ogni zona
+          Gruppi WhatsApp per Zona
         </h3>
         <div className="flex items-center gap-3">
         <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
@@ -116,7 +116,7 @@ function WhatsappSettings() {
           className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
         >
           <Save className="w-4 h-4" />
-          {isSaved ? "Salvato" : "Salva i gruppi"}
+          {isSaved ? "Salvato!" : "Salva Link"}
         </button>
         </div>
       </div>
@@ -126,18 +126,17 @@ function WhatsappSettings() {
         </div>
       )}
       <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
-        Il riquadro verde in cima alla bacheca porta al gruppo della zona che
-        lo studente ha scelto. «Tutte le altre» vale dove non hai messo un
-        gruppo suo.
+        Associa il link di un gruppo WhatsApp a ciascuna zona (città o sotto-zona).
+        Puoi usare "default" se non c'è una zona specifica.
       </p>
 
       <div className="mb-6 space-y-3 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
         <div>
-           <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Il titolo del riquadro</label>
+           <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Titolo Widget</label>
            <input type="text" value={links["_title"] || ""} placeholder="Unisciti alla nostra Community di {zona}" onChange={e => setLinks({...links, _title: e.target.value})} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors" />
         </div>
         <div>
-           <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">La riga sotto</label>
+           <label className="block text-[12px] font-semibold text-gray-600 mb-2 dark:text-gray-300">Sottotitolo Widget</label>
            <input type="text" value={links["_subtitle"] || ""} placeholder="Entra nel Gruppo WhatsApp di {zona}" onChange={e => setLinks({...links, _subtitle: e.target.value})} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors" />
            <p className="text-[11px] text-gray-400 mt-1">Usa <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded">{'{zona}'}</code> in titolo o sottotitolo per inserire dinamicamente il nome della zona o toglilo per lasciarlo fisso.</p>
         </div>
@@ -149,7 +148,7 @@ function WhatsappSettings() {
           return (
             <div key={loc} className="flex flex-col sm:flex-row sm:items-center gap-2">
               <span className="text-[12px] font-medium text-gray-600 dark:text-gray-300 w-36 shrink-0">
-                {loc === "default" ? "Tutte le altre" : formatArea(loc, "")}
+                {loc}
               </span>
               <input
                 type="text"
@@ -257,7 +256,7 @@ function EventWidgetSettings() {
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <span className="text-[19px]">🪩</span>
-          I riquadri evento sul sito
+          Widget Eventi Multisala
         </h3>
         <div className="flex items-center gap-3">
         <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
@@ -266,7 +265,7 @@ function EventWidgetSettings() {
           className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
         >
           <Save className="w-4 h-4" />
-          {isSaved ? "Salvato" : "Salva gli eventi"}
+          {isSaved ? "Salvato!" : "Salva Eventi"}
         </button>
         </div>
       </div>
@@ -282,15 +281,15 @@ function EventWidgetSettings() {
             <div className="flex items-center justify-between mb-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={ev.enabled} onChange={e => handleUpdateEvent(ev.id, { enabled: e.target.checked })} className="w-4 h-4 text-[#DC5F00] rounded focus:ring-[#DC5F00] bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
-                <span className="text-[13px] font-bold text-gray-700 dark:text-gray-300">Mostralo sul sito</span>
+                <span className="text-[13px] font-bold text-gray-700 dark:text-gray-300">Abilita questo evento</span>
               </label>
               <button onClick={() => handleRemoveEvent(ev.id)} className="text-red-500 hover:text-red-700 text-[12px] font-semibold transition-colors">
-                Togli questo evento
+                Rimuovi Evento
               </button>
             </div>
             
             <div>
-               <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">A chi lo mostri</label>
+               <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">Città o Zona Destinazione</label>
                <select value={ev.targetLocation} onChange={e => handleUpdateEvent(ev.id, { targetLocation: e.target.value })} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors">
                  <option value="all">Tutti</option>
                  {Object.entries(LOCATIONS).flatMap(([city, areas]) => [city, ...areas.filter(a => a !== city)]).map((zona) => (
@@ -298,8 +297,7 @@ function EventWidgetSettings() {
                  ))}
                </select>
                <span className="block mt-2 text-[12px] text-gray-500 dark:text-gray-400">
-                 Prima era un campo libero: un refuso nel nome della zona
-                 faceva sparire il riquadro dal sito senza dirlo a nessuno.
+
                </span>
             </div>
 
@@ -319,7 +317,7 @@ function EventWidgetSettings() {
                    <input type="text" value={ev.date} onChange={e => handleUpdateEvent(ev.id, { date: e.target.value })} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
                 </div>
                 <div className="flex-1">
-                   <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">Icona (una emoji, es. 🎧)</label>
+                   <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">Icona</label>
                    <input type="text" value={ev.icon} onChange={e => handleUpdateEvent(ev.id, { icon: e.target.value })} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#DC5F00] transition-colors" />
                 </div>
             </div>
@@ -335,7 +333,7 @@ function EventWidgetSettings() {
         ))}
         
         <button onClick={handleAddEvent} className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-[#DC5F00]/50 hover:text-[#DC5F00] transition-all flex items-center justify-center gap-2">
-          <Plus className="w-5 h-5" /> Aggiungi un evento
+          <Plus className="w-5 h-5" /> Aggiungi Evento
         </button>
       </div>
     </div>
@@ -460,31 +458,24 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
   return (
     <div className="w-full max-w-[1200px] mx-auto py-8 text-left">
       <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100">
-        Configurazione
+        Impostazioni Dashboard
       </h1>
-      <p className="mt-1 mb-6 text-[13px] text-gray-600 dark:text-gray-300 max-w-2xl">
-        Cose che si toccano una volta ogni tanto e poi restano così. Ogni
-        riquadro si salva per conto suo: finché il pallino accanto al
-        pulsante è acceso, quella modifica non è ancora sul sito.
-      </p>
       
       <div className="columns-1 lg:columns-2 gap-6 [&>*]:mb-6 [&>*]:break-inside-avoid">
         {/* Link config */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h3 className="text-[19px] font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
             <LinkIcon className="w-5 h-5 text-indigo-500" />
-            Il link da mettere in bio
+            Widget Link di Instagram
           </h3>
           <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
-            E' la scritta che accompagna il link quando lo copi dalla schermata
-            Messaggi per incollarlo su Instagram. Cambiarla qui la cambia
-            ovunque.
+            Personalizza l'etichetta del link (sticker link) che verrà usata all'interno della dashboard quando copierai il link automatico per i post.
           </p>
 
           <div className="space-y-4 max-w-sm">
             <div>
               <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                Cosa c'è scritto accanto al link
+                Testo Sticker (Label)
               </label>
               <input
                 type="text"
@@ -507,7 +498,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                 className={`flex items-center justify-center flex-1 gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
               >
                 <Save className="w-4 h-4" />
-                {isSaved ? "Salvato" : "Salva la scritta"}
+                {isSaved ? "Salvato!" : "Salva Testo"}
               </button>
             </div>
           </div>
@@ -529,13 +520,10 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
             
             <h3 className="text-[19px] font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
               <Users className="w-5 h-5 text-amber-500" />
-              Chi altro può entrare
+              Gestione Dashboard Limitata
             </h3>
             <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed max-w-lg dark:text-gray-400">
-              Le persone che aggiungi qui vedono i messaggi e possono
-              archiviarli, ma <b>non</b> vedono indirizzi IP e telemetria e
-              <b> non</b> possono aggiungere altre persone. Serve un indirizzo
-              Gmail, perché l'accesso passa da lì.
+              Come <b>Super Admin</b>, puoi concedere ad altri l'accesso alla dashboard (visione dei messaggi base, nessuna visibilità di IP e telemetria, nessuna gestione degli admin). Aggiungi qui la loro email Gmail.
             </p>
 
             {adminError && (
@@ -556,13 +544,13 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                 type="submit"
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-700 hover:bg-indigo-800 shadow-md shadow-amber-500/20 text-white text-[13px] font-bold rounded-xl transition-all w-full sm:w-auto"
               >
-                <Plus className="w-4 h-4" /> Dai accesso
+                <Plus className="w-4 h-4" /> Aggiungi Admin
               </button>
             </form>
 
             <div className="space-y-2">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3 border-b border-gray-100 dark:border-gray-700 pb-2">
-                Chi ha accesso adesso
+                Amministratori con Dashboard Limitata
               </div>
               
               {admins.length === 0 ? (

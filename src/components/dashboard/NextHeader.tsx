@@ -48,9 +48,9 @@ const SEZIONI = [
 ];
 
 const CONFIG = [
-  { tab: "story_template" as const, label: "Come escono le storie" },
-  { tab: "carousel" as const, label: "Il carosello" },
-  { tab: "settings" as const, label: "Link, loghi e chi entra" },
+  { tab: "story_template" as const, label: "Template storia" },
+  { tab: "carousel" as const, label: "Carosello Instagram" },
+  { tab: "settings" as const, label: "Impostazioni" },
 ];
 
 export default function NextHeader({

@@ -147,7 +147,7 @@ export default function MessagesRail({
       {children && (
         <details className="border-t border-gray-200 dark:border-gray-700 pt-4 group">
           <summary className="cursor-pointer list-none text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between">
-            Il link da mettere in bio
+            Widget Link di Instagram
             <span className="text-gray-600 group-open:rotate-180 transition-transform">
               ⌄
             </span>

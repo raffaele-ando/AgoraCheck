@@ -87,7 +87,7 @@ function InstagramBlocker() {
           </>
         ) : (
           <>
-            For the full experience, open Agorà in your phonés browser.
+            For the full experience, open Agorà in your phone's browser.
             <br />
             <br />
             Tap the three dots in the top right <b>(⋮)</b> and select{" "}
@@ -1250,19 +1250,15 @@ export function useSubmitMessage() {
     if (!data.lookingFor.trim()) {
       setError(
         data.type === "sondaggio"
-          ? "Manca la domanda: scrivi cosa vuoi chiedere."
-          : "Manca la cosa principale: scrivi chi stai cercando.",
+          ? "Devi scrivere la domanda."
+          : "Devi scrivere chi stai cercando.",
       );
       return false;
     }
     if (data.type === "sondaggio") {
       const opts = (data.pollOptions || []).filter(o => o.trim());
       if (opts.length < 2) {
-        setError(
-          opts.length === 0
-            ? "Un sondaggio ha bisogno di almeno due risposte fra cui scegliere."
-            : "Ne manca ancora una: servono almeno due risposte.",
-        );
+        setError("Devi inserire almeno 2 opzioni per il sondaggio.");
         return false;
       }
     }
