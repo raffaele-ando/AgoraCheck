@@ -49,7 +49,7 @@ export const divulgativo: Modello = {
   id: "divulgativo",
   nome: "Divulgativo — post",
   descrizione: "Il post che spiega qualcosa: un'immagine, un titolo, il testo e la fonte.",
-  formato: "ritratto",
+  formato: "post",
   fondo: CREMA,
 
   campi: [
@@ -69,7 +69,7 @@ export const divulgativo: Modello = {
 
     /* L'occhiello come etichetta di sezione: colonna di sinistra, come
        «RISULTATI». Non un titoletto sopra al contenuto. */
-    ...etichetta("occhiello-et", 15.5, "lente", { campo: "occhiello" }),
+    ...etichetta("occhiello-et", 19.38, "lente", { campo: "occhiello" }),
 
     /* La fotografia, a tutta larghezza come i riquadri che la seguono.
        Sparisce se non la carichi, e quello che viene dopo NON si sposta:
@@ -77,19 +77,19 @@ export const divulgativo: Modello = {
        di avere tutto il resto in un posto diverso. */
     {
       id: "foto", tipo: "immagine", campo: "foto",
-      riquadro: { x: PIENO_X, y: 26.5, larghezza: PIENO_LARGHEZZA, altezza: 22 },
+      riquadro: { x: PIENO_X, y: 38, larghezza: PIENO_LARGHEZZA, altezza: 28 },
       riempimento: "cover", raggio: 2.7, seCampo: "foto",
     },
 
     /* Il titolo: riquadro pieno a tutta larghezza. */
     {
       id: "riq-titolo", tipo: "forma",
-      riquadro: { x: PIENO_X, y: 52.94, larghezza: PIENO_LARGHEZZA, altezza: 13 },
+      riquadro: { x: PIENO_X, y: 71.56, larghezza: PIENO_LARGHEZZA, altezza: 16.25 },
       colore: RIQUADRO, raggio: 2.7,
     },
     {
       id: "titolo", tipo: "testo", campo: "titolo",
-      riquadro: { x: PIENO_X + 3, y: 55.4, larghezza: PIENO_LARGHEZZA - 6, altezza: 8.2 },
+      riquadro: { x: PIENO_X + 3, y: 74.6, larghezza: PIENO_LARGHEZZA - 6, altezza: 10.25 },
       corpo: CORPO_TESTO, peso: 700, colore: INCHIOSTRO,
       famiglia: CARATTERE_TESTO, interlinea: 1.25, verticale: "center",
     },
@@ -97,12 +97,12 @@ export const divulgativo: Modello = {
     /* Il testo, uno spazio di sistema piu' sotto. */
     {
       id: "riq-testo", tipo: "forma",
-      riquadro: { x: PIENO_X, y: 70.38, larghezza: PIENO_LARGHEZZA, altezza: 13 },
+      riquadro: { x: PIENO_X, y: 93.37, larghezza: PIENO_LARGHEZZA, altezza: 16.25 },
       colore: RIQUADRO, raggio: 2.7, seCampo: "testo",
     },
     {
       id: "testo", tipo: "testo", campo: "testo",
-      riquadro: { x: PIENO_X + 3, y: 72.5, larghezza: PIENO_LARGHEZZA - 6, altezza: 8.8 },
+      riquadro: { x: PIENO_X + 3, y: 96.0, larghezza: PIENO_LARGHEZZA - 6, altezza: 11.0 },
       corpo: CORPO_MINORE, peso: 700, colore: INCHIOSTRO,
       famiglia: CARATTERE_TESTO, interlinea: 1.4, verticale: "center", seCampo: "testo",
     },
@@ -110,7 +110,7 @@ export const divulgativo: Modello = {
     /* La fonte: piccola, allineata al bordo dei riquadri. */
     {
       id: "fonte", tipo: "testo", campo: "fonte",
-      riquadro: { x: PIENO_X, y: 85.4, larghezza: PIENO_LARGHEZZA, altezza: 3.5 },
+      riquadro: { x: PIENO_X, y: 113.9, larghezza: PIENO_LARGHEZZA, altezza: 4.38 },
       corpo: CORPO_MINORE * 0.78, peso: 700, colore: "#6b6660",
       famiglia: CARATTERE_TESTO, adatta: false, seCampo: "fonte",
     },

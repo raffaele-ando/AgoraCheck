@@ -37,12 +37,12 @@ export const risultati: Modello = {
 
   elementi: [
     arcoSopra,
-    ...testata({ ateneo: 5.17, spotted: 9.53 }),
-    ...mezzeRighe(19.29, { icona: "calendario", campo: "quando" }, { icona: "puntina", campo: "dove" }, CORPO_TESTO),
-    ...riga(1, 34.66, 12.77, "lente", "messaggio", CORPO_TESTO),
-    ...etichetta("risultati-et", 52.55, "bersaglio", { fisso: "Risultati" }),
-    ...esito(1, 57.45, "esito1", CORPO_TESTO),
-    ...esito(2, 75.34, "esito2", CORPO_TESTO),
+    ...testata({ ateneo: 9.19, spotted: 16.94 }),
+    ...mezzeRighe(34.29, { icona: "calendario", campo: "quando" }, { icona: "puntina", campo: "dove" }, CORPO_TESTO),
+    ...riga(1, 61.62, 22.7, "lente", "messaggio", CORPO_TESTO),
+    ...etichetta("risultati-et", 93.42, "bersaglio", { fisso: "Risultati" }),
+    ...esito(1, 102.13, "esito1", CORPO_TESTO),
+    ...esito(2, 133.94, "esito2", CORPO_TESTO),
     // In questa pagina il marchio non c'e': solo i tre pallini, e a
     // destra invece che a sinistra. E' cosi' nel tuo file — l'ho tenuto
     // com'e' invece di uniformarlo, e l'incoerenza sta scritta in

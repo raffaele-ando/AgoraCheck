@@ -65,9 +65,16 @@ export const MEZZA_LARGHEZZA = 36.72;
 export const MEZZA_SINISTRA = 9.9;
 export const MEZZA_DESTRA = 53.28;
 /** L'altezza di una riga normale. */
-export const RIGA_ALTEZZA = 12.77;
+export const RIGA_ALTEZZA = 22.7;
 /** Lo spazio fra una riga e la successiva. */
-export const SPAZIO = 4.44;
+/**
+ * Lo spazio fra una riga e la successiva: 60 pixel.
+ *
+ * Misurato sul carosello — le righe cominciano ogni 232 pixel e sono alte
+ * 172 — non dedotto da una percentuale. Avevo scritto 7.9 convertendo
+ * male dal formato storia, dove quel numero non l'avevo mai misurato.
+ */
+export const SPAZIO = 5.56;
 
 /**
  * La testata: il nome dell'ateneo e sotto «Spotted».
@@ -102,14 +109,14 @@ export function testata(posto: PostoTestata): Elemento[] {
   return [
     {
       id: "ateneo", tipo: "testo", campo: "ateneo",
-      riquadro: { x: 10, y: posto.ateneo, larghezza: 80, altezza: 9 },
+      riquadro: { x: 10, y: posto.ateneo, larghezza: 80, altezza: 11.25 },
       corpo: 9.74, peso: 700, colore: INCHIOSTRO,
       famiglia: CARATTERE_ATENEO, spaziatura: SPAZIATURA_ATENEO,
       allineamento: "center", maiuscolo: true, adatta: true,
     },
     {
       id: "spotted", tipo: "testo", fisso: "Spotted",
-      riquadro: { x: 10, y: posto.spotted, larghezza: 80, altezza: 5 },
+      riquadro: { x: 10, y: posto.spotted, larghezza: 80, altezza: 6.25 },
       corpo: 4.31, peso: 400, colore: ARANCIO, corsivo: true,
       famiglia: CARATTERE_SPOTTED, allineamento: "center", adatta: false,
     },
@@ -132,7 +139,7 @@ export function testataAgora(y: number, corpo = CORPO_ATENEO): Elemento[] {
   return [
     {
       id: "ateneo", tipo: "testo", campo: "ateneo",
-      riquadro: { x: 10, y, larghezza: 80, altezza: corpo },
+      riquadro: { x: 10, y, larghezza: 80, altezza: corpo * 1.25 },
       corpo, peso: 700, colore: INCHIOSTRO,
       famiglia: CARATTERE_ATENEO, spaziatura: SPAZIATURA_ATENEO,
       allineamento: "center", maiuscolo: true, adatta: true,
@@ -141,7 +148,7 @@ export function testataAgora(y: number, corpo = CORPO_ATENEO): Elemento[] {
       id: "marchio-testata", tipo: "immagine", fonte: "/studio/agora.png",
       riquadro: {
         x: 50 - (capPc * 0.619 * (2292 / 712)) / 2,
-        y: y + corpo * 0.88,
+        y: y + corpo * 1.1,
         larghezza: capPc * 0.619 * (2292 / 712),
         altezza: capPc * 0.619,
       },
@@ -168,13 +175,13 @@ export function etichetta(
   return [
     {
       id, tipo: "testo", ...testo,
-      riquadro: { x: COLONNA_ICONE - 0.1, y, larghezza: 50, altezza: 4 },
+      riquadro: { x: COLONNA_ICONE - 0.1, y, larghezza: 50, altezza: 5 },
       corpo: CORPO_ETICHETTA, peso: 400, colore: ARANCIO,
       famiglia: CARATTERE_ETICHETTA, maiuscolo: true, adatta: false,
     },
     {
       id: `${id}-ic`, tipo: "immagine", fonte: `/studio/${icona}.png`,
-      riquadro: { x: COLONNA_ICONE - 0.1, y: y + 3.15, larghezza: 9.6, altezza: 5.4 },
+      riquadro: { x: COLONNA_ICONE - 0.1, y: y + 5.6, larghezza: 9.6, altezza: 9.6 },
       riempimento: "contain",
     },
   ];
@@ -193,7 +200,10 @@ export interface ComeFirmare {
 }
 
 export function firma(come: ComeFirmare = {}): Elemento[] {
-  const { marchio = true, pallini = "sinistra", y = 94.81 } = come;
+  // `y` e' la distanza DAL FONDO, non dall'alto: il marchio e' alto 41
+  // pixel in ogni formato ma sta a 29 pixel dal bordo nel post e a 91
+  // nella storia. Ancorandolo in basso, un formato nuovo non lo sposta.
+  const { marchio = true, pallini = "sinistra", y = 2.69 } = come;
   const px = pallini === "destra" ? 87.17 : 2.28;
   /*
    * y = 94.81 e' misurato sull'INCHIOSTRO del file originale, non sul
@@ -207,20 +217,20 @@ export function firma(come: ComeFirmare = {}): Elemento[] {
     ...(marchio
       ? [{
           id: "marchio", tipo: "immagine" as const, fonte: "/studio/agora.png",
-          riquadro: { x: 40.5, y, larghezza: 15.9, altezza: 3.34 },
+          riquadro: { x: 40.5, y, larghezza: 15.9, altezza: 3.8, dalBasso: true },
           riempimento: "contain" as const,
         }]
       : []),
-    { id: "bollo1", tipo: "immagine", fonte: "/studio/pallini-blu-a.png", riquadro: { x: px, y: y + 0.1, larghezza: 2.26, altezza: 1.87 }, riempimento: "contain" },
-    { id: "bollo2", tipo: "immagine", fonte: "/studio/pallini-blu-b.png", riquadro: { x: px + 3.4, y: y + 0.1, larghezza: 2.26, altezza: 1.81 }, riempimento: "contain" },
-    { id: "bollo3", tipo: "immagine", fonte: "/studio/pallini-blu-c.png", riquadro: { x: px + 1.7, y: y + 1.66, larghezza: 2.26, altezza: 1.81 }, riempimento: "contain" },
+    { id: "bollo1", tipo: "immagine", fonte: "/studio/pallini-blu-a.png", riquadro: { x: px, y: y + 1.72, larghezza: 2.26, altezza: 2.34, dalBasso: true }, riempimento: "contain" },
+    { id: "bollo2", tipo: "immagine", fonte: "/studio/pallini-blu-b.png", riquadro: { x: px + 3.4, y: y + 1.72, larghezza: 2.26, altezza: 2.26, dalBasso: true }, riempimento: "contain" },
+    { id: "bollo3", tipo: "immagine", fonte: "/studio/pallini-blu-c.png", riquadro: { x: px + 1.7, y: y - 0.23, larghezza: 2.26, altezza: 2.26, dalBasso: true }, riempimento: "contain" },
   ];
 }
 
 /** L'arco del marchio sopra la testata: c'e' nei risultati. */
 export const arcoSopra: Elemento = {
   id: "arco", tipo: "immagine", fonte: "/studio/arco.png",
-  riquadro: { x: 46.4, y: 1.12, larghezza: 7.22, altezza: 4.06 },
+  riquadro: { x: 46.4, y: 1.99, larghezza: 7.22, altezza: 7.22 },
   riempimento: "contain",
 };
 
@@ -248,16 +258,16 @@ export function riga(
     },
     {
       id: `ic${n}`, tipo: "immagine", fonte: `/studio/${icona}.png`,
-      riquadro: { x: 8.8, y: y + 2.2, larghezza: 9.5, altezza: altezza * 0.6 },
+      riquadro: { x: 8.8, y: y + 2.4, larghezza: 9.5, altezza: 9.5 },
       riempimento: "contain",
       ...(opzionale ? { seCampo: campo } : {}),
     },
     {
       id: campo, tipo: "testo", campo,
-      riquadro: { x: 26, y: y + 3.2, larghezza: 60, altezza: altezza - 6 },
+      riquadro: { x: 26, y: y + 3.3, larghezza: 60, altezza: altezza - 6.6 },
       corpo, peso: 700, colore: INCHIOSTRO,
       famiglia: CARATTERE_TESTO, interlinea: 1.35,
-      verticale: altezza < 20 ? "center" : "flex-start",
+      verticale: altezza < 25 ? "center" : "flex-start",
     },
   ];
 }
@@ -279,7 +289,7 @@ export function mezzeRighe(
   const fai = (x: number, n: number, p: { icona: string; campo: string }): Elemento[] => [
     {
       id: `mez${n}-ic`, tipo: "immagine", fonte: `/studio/${p.icona}.png`,
-      riquadro: { x: x + 1, y: y - 6.65, larghezza: 9.6, altezza: 5.4 },
+      riquadro: { x: x + 1, y: y - 11.8, larghezza: 9.6, altezza: 9.6 },
       riempimento: "contain",
     },
     {
@@ -289,7 +299,7 @@ export function mezzeRighe(
     },
     {
       id: p.campo, tipo: "testo", campo: p.campo,
-      riquadro: { x: x + 3, y: y + 3.2, larghezza: MEZZA_LARGHEZZA - 6, altezza: RIGA_ALTEZZA - 6 },
+      riquadro: { x: x + 3, y: y + 5.7, larghezza: MEZZA_LARGHEZZA - 6, altezza: RIGA_ALTEZZA - 11.4 },
       corpo, peso: 700, colore: INCHIOSTRO, famiglia: CARATTERE_TESTO, verticale: "center",
     },
   ];
@@ -307,18 +317,18 @@ export function esito(n: number, y: number, campo: string, corpo: number): Eleme
   return [
     {
       id: `${campo}-num`, tipo: "testo", fisso: String(n),
-      riquadro: { x: 21.8, y: y - 6.2, larghezza: 20, altezza: 27 },
+      riquadro: { x: 21.8, y: y - 11, larghezza: 20, altezza: 48 },
       corpo: 24, peso: 700, colore: "#d9cdb8",
       famiglia: CARATTERE_TESTO, adatta: false, seCampo: campo,
     },
     {
       id: `${campo}-riq`, tipo: "forma",
-      riquadro: { x: RIQUADRI_X, y, larghezza: RIQUADRI_LARGHEZZA, altezza: 15.26 },
+      riquadro: { x: RIQUADRI_X, y, larghezza: RIQUADRI_LARGHEZZA, altezza: 27.13 },
       colore: CREMA, bordo: 0.45, coloreBordo: ARANCIO, tratteggiato: true, raggio: 2.7, seCampo: campo,
     },
     {
       id: campo, tipo: "testo", campo,
-      riquadro: { x: RIQUADRI_X + 3, y: y + 3, larghezza: RIQUADRI_LARGHEZZA - 6, altezza: 9.3 },
+      riquadro: { x: RIQUADRI_X + 3, y: y + 5.3, larghezza: RIQUADRI_LARGHEZZA - 6, altezza: 16.5 },
       corpo, peso: 700, colore: INCHIOSTRO, famiglia: CARATTERE_TESTO,
       verticale: "center", seCampo: campo,
     },
@@ -328,7 +338,7 @@ export function esito(n: number, y: number, campo: string, corpo: number): Eleme
 /** La barra dell'avanzamento del carosello: venti segni, misurati. */
 export const barraCarosello: Elemento = {
   id: "barra", tipo: "serie",
-  riquadro: { x: 0, y: 12.23, larghezza: 100, altezza: 3.35 },
+  riquadro: { x: 0, y: 15.29, larghezza: 100, altezza: 4.19 },
   quanti: 20, accesiDa: "indice", inizio: 3.03, passo: 4.72,
   acceso: { larghezza: 4.17, altezza: 100, colore: ARANCIO },
   spento: { larghezza: 4.17, altezza: 40, colore: ARANCIO },

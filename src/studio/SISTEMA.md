@@ -10,17 +10,40 @@ quando un modello si allontana.
 
 ---
 
+## 0. I formati
+
+| | | |
+|---|---|---|
+| **post** | 1080×1440 | 3:4 — il formato dei post |
+| **storia** | 1080×1920 | 9:16 |
+| quadrato | 1080×1080 | 1:1 |
+
+I file vecchi di Canva sono 1080×1350 (4:5). Il 3:4 e' il formato alto
+che Instagram ha aperto nel 2025: stessa larghezza, **90 pixel in piu'**
+di contenuto. Nel carosello quei 90 pixel vanno al riquadro del
+messaggio, che e' il campo che piu' spesso non ci sta.
+
 ## 1. La griglia
 
-Su Instagram la larghezza e' sempre 1080 e cambia solo l'altezza. Tutte
-le misure orizzontali sono percentuali della **larghezza**; quelle
-verticali, dell'altezza del formato.
+**Tutte** le misure sono percentuali della **larghezza** — anche quelle
+verticali. Su Instagram la larghezza e' sempre 1080 e a cambiare e' solo
+l'altezza: cosi' `y: 20` vuol dire 216 pixel dal bordo in ogni formato, e
+una testata scritta una volta resta identica nella storia e nel post.
+
+E' la correzione di un errore fatto tre volte — sui pallini della barra,
+sul raggio degli angoli, sul corpo del testo: ogni volta una misura era
+legata alla cosa sbagliata, e ogni volta se n'e' accorto il confronto coi
+post veri. Ora la regola e' una sola.
+
+Cio' che sta appoggiato al bordo inferiore — la firma — si misura **dal
+basso**: il marchio e' alto 41 pixel in tutti i formati, ma sta a 29
+pixel dal fondo nel post e a 91 nella storia.
 
 | | |
 |---|---|
 | margine esterno | **10%** a sinistra e a destra |
 | colonna delle icone | **10% → 19%**, icona larga **~9%** |
-| ritmo verticale | passo **17.2%**, riquadro **12.8%**, spazio **4.44%** |
+| ritmo verticale | riquadro **172px**, spazio **60px**, quindi passo **232px** |
 
 I riquadri di contenuto hanno **quattro larghezze**, e ognuna vuol dire
 una cosa:

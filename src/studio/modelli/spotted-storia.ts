@@ -28,11 +28,11 @@ export const spottedStoria: Modello = {
   ],
 
   elementi: [
-    ...testata({ ateneo: 5.17, spotted: 9.53 }),
-    ...riga(1, 17.0, 9.0, "calendario", "quando", 4.32),
-    ...riga(2, 29.0, 9.0, "puntina", "dove", 4.32),
-    ...riga(3, 41.0, 30.0, "lente", "messaggio", 4.32),
-    ...riga(4, 74.0, 7.5, "graffetta", "link", 4.32, true),
+    ...testata({ ateneo: 9.19, spotted: 16.94 }),
+    ...riga(1, 30.22, 16.0, "calendario", "quando", 4.32),
+    ...riga(2, 51.56, 16.0, "puntina", "dove", 4.32),
+    ...riga(3, 72.89, 53.33, "lente", "messaggio", 4.32),
+    ...riga(4, 131.56, 13.33, "graffetta", "link", 4.32, true),
     ...firma(),
   ],
 

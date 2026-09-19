@@ -29,7 +29,17 @@ export interface Formato {
 
 export const FORMATI: Record<string, Formato> = {
   storia: { id: "storia", nome: "Storia", larghezza: 1080, altezza: 1920 },
-  ritratto: { id: "ritratto", nome: "Post verticale", larghezza: 1080, altezza: 1350 },
+  /**
+   * Il formato dei post: 1080x1440, cioe' 3:4.
+   *
+   * Non 1080x1350 (4:5), che e' quello dei file vecchi di Canva: e' il
+   * formato alto che Instagram ha aperto nel 2025, e da' 90 pixel in piu'
+   * di contenuto a parita' di larghezza. Il resto del disegno non si e'
+   * spostato di un pixel — le misure verticali sono in unita' di
+   * larghezza, quindi il formato piu' alto aggiunge spazio in fondo
+   * invece di riscalare tutto.
+   */
+  post: { id: "post", nome: "Post", larghezza: 1080, altezza: 1440 },
   quadrato: { id: "quadrato", nome: "Post quadrato", larghezza: 1080, altezza: 1080 },
 };
 
@@ -80,12 +90,35 @@ export interface Campo {
 
 /* --- Gli elementi: cio' che il modello disegna, sempre uguale --- */
 
-/** Riquadro in percentuale del formato. */
+/**
+ * Un riquadro, in unita' di LARGHEZZA del formato.
+ *
+ * Tutte e quattro le misure — anche `y` e `altezza` — sono percentuali
+ * della larghezza, non dell'altezza. Su Instagram la larghezza e' sempre
+ * 1080 e a cambiare e' solo l'altezza: cosi' `y: 20` vuol dire 216 pixel
+ * dal bordo in ogni formato, e una testata scritta una volta resta la
+ * stessa nella storia e nel post.
+ *
+ * E' la correzione di un errore che avevo fatto tre volte — sui pallini
+ * della barra, sul raggio degli angoli e sul corpo del testo: ogni volta
+ * avevo legato una misura alla cosa sbagliata, e ogni volta se n'e'
+ * accorto il confronto con i post veri. Qui la regola e' una sola e vale
+ * per tutto.
+ */
 export interface Riquadro {
   x: number;
   y: number;
   larghezza: number;
   altezza: number;
+  /**
+   * `y` si misura dal BASSO invece che dall'alto.
+   *
+   * Serve a cio' che sta appoggiato al bordo inferiore — la firma. Nei
+   * tuoi post il marchio e' alto 41 pixel in tutti i formati, ma sta a
+   * 29 pixel dal fondo nel post e a 91 nella storia: ancorarlo in alto
+   * vorrebbe dire ricalcolarlo a ogni formato nuovo.
+   */
+  dalBasso?: boolean;
 }
 
 export interface BaseElemento {

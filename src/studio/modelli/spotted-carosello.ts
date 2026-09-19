@@ -22,7 +22,7 @@ export const spottedCarosello: Modello = {
   id: "spotted-carosello",
   nome: "Spotted — carosello",
   descrizione: "Uno spotted per scheda: quando, dove, e il messaggio. La barra si numera da sola.",
-  formato: "ritratto",
+  formato: "post",
   fondo: CREMA,
   multiplo: true,
 
@@ -35,10 +35,13 @@ export const spottedCarosello: Modello = {
 
   elementi: [
     barraCarosello,
-    ...testata({ ateneo: 1.27, spotted: 7.47 }),
-    ...riga(1, 19.27, 12.76, "calendario", "quando", 3.04),
-    ...riga(2, 36.47, 12.76, "puntina", "dove", 3.04),
-    ...riga(3, 53.67, 38.33, "lente", "messaggio", 3.04),
+    ...testata({ ateneo: 1.59, spotted: 9.34 }),
+    ...riga(1, 24.09, 15.95, "calendario", "quando", 3.04),
+    ...riga(2, 45.59, 15.95, "puntina", "dove", 3.04),
+    // Il riquadro del messaggio arriva fino alla firma: e' lui a prendersi
+    // i 90 pixel che il formato 3:4 aggiunge, invece di lasciarli come
+    // buco in fondo. E' il campo che piu' spesso non ci sta.
+    ...riga(3, 67.09, 56.2, "lente", "messaggio", 3.04),
     ...firma(),
   ],
 

@@ -105,19 +105,31 @@ function opacita(el: Elemento, valori: Valori, fissa?: number): number | undefin
   return Number.isFinite(v) ? v / 100 : fissa;
 }
 
-function posizione(el: Elemento): React.CSSProperties {
+/**
+ * Da riquadro a posizione sullo schermo.
+ *
+ * Le misure verticali sono in unita' di larghezza (vedi `Riquadro`),
+ * quindi si convertono in pixel e non in percentuali: una percentuale
+ * verticale in CSS si misura sull'altezza del genitore, che e' proprio
+ * cio' che qui non deve contare.
+ */
+function posizione(el: Elemento, larghezza: number, altezza: number): React.CSSProperties {
+  const px = (v: number) => (v / 100) * larghezza;
+  const alto = px(el.riquadro.altezza);
   return {
     position: "absolute",
     left: `${el.riquadro.x}%`,
-    top: `${el.riquadro.y}%`,
+    top: el.riquadro.dalBasso
+      ? `${altezza - px(el.riquadro.y) - alto}px`
+      : `${px(el.riquadro.y)}px`,
     width: `${el.riquadro.larghezza}%`,
-    height: `${el.riquadro.altezza}%`,
+    height: `${alto}px`,
     transform: el.rotazione ? `rotate(${el.rotazione}deg)` : undefined,
     zIndex: el.piano,
   };
 }
 
-function Testo({ el, valori, larghezza }: { el: ElementoTesto; valori: Valori; larghezza: number }) {
+function Testo({ el, valori, larghezza, altezza }: { el: ElementoTesto; valori: Valori; larghezza: number; altezza: number }) {
   const testo = el.fisso ?? valore(valori, el.campo);
   if (!testo) return null;
   const colore = el.campoColore ? valore(valori, el.campoColore) || el.colore : el.colore;
@@ -140,17 +152,17 @@ function Testo({ el, valori, larghezza }: { el: ElementoTesto; valori: Valori; l
     fontSize: `${corpoPx}px`,
   };
   return (
-    <div style={{ ...posizione(el), display: "flex" }}>
+    <div style={{ ...posizione(el, larghezza, altezza), display: "flex" }}>
       <TestoAdattivo testo={testo} corpoPx={corpoPx} adatta={el.adatta !== false} stile={stile} />
     </div>
   );
 }
 
-function Immagine({ el, valori, larghezza }: { el: ElementoImmagine; valori: Valori; larghezza: number }) {
+function Immagine({ el, valori, larghezza, altezza }: { el: ElementoImmagine; valori: Valori; larghezza: number; altezza: number }) {
   const src = el.fonte ?? valore(valori, el.campo);
   if (!src) return null;
   return (
-    <div style={{ ...posizione(el), overflow: "hidden", borderRadius: el.raggio ? `${(el.raggio / 100) * larghezza}px` : undefined, opacity: opacita(el, valori, el.opacita) }}>
+    <div style={{ ...posizione(el, larghezza, altezza), overflow: "hidden", borderRadius: el.raggio ? `${(el.raggio / 100) * larghezza}px` : undefined, opacity: opacita(el, valori, el.opacita) }}>
       <img
         src={src}
         alt=""
@@ -161,12 +173,12 @@ function Immagine({ el, valori, larghezza }: { el: ElementoImmagine; valori: Val
   );
 }
 
-function Forma({ el, valori, larghezza }: { el: ElementoForma; valori: Valori; larghezza: number }) {
+function Forma({ el, valori, larghezza, altezza }: { el: ElementoForma; valori: Valori; larghezza: number; altezza: number }) {
   const colore = el.campoColore ? valore(valori, el.campoColore) || el.colore : el.colore;
   return (
     <div
       style={{
-        ...posizione(el),
+        ...posizione(el, larghezza, altezza),
         background: el.sfumaA ? `linear-gradient(${el.angolo ?? 180}deg, ${colore}, ${el.sfumaA})` : colore,
         borderRadius: el.forma === "ellisse" ? "50%" : el.raggio ? `${(el.raggio / 100) * larghezza}px` : undefined,
         border: el.bordo
@@ -184,7 +196,7 @@ function Forma({ el, valori, larghezza }: { el: ElementoForma; valori: Valori; l
  * sul bordo alto: acceso e spento hanno altezze diverse, e allineandoli
  * in alto la barra sembrerebbe scendere man mano che si avanza.
  */
-function Serie({ el, valori, indice }: { el: ElementoSerie; valori: Valori; indice: number }) {
+function Serie({ el, valori, indice, larghezza, altezza }: { el: ElementoSerie; valori: Valori; indice: number; larghezza: number; altezza: number }) {
   const accesi =
     el.accesiDa === "indice"
       ? indice + 1
@@ -203,7 +215,7 @@ function Serie({ el, valori, indice }: { el: ElementoSerie; valori: Valori; indi
           top: "50%",
           transform: "translateY(-50%)",
           width: `${s.larghezza}%`,
-          height: `${s.altezza}%`,
+          height: `${(s.altezza / 100) * ((el.riquadro.altezza / 100) * larghezza)}px`,
           background: s.colore,
           borderRadius: s.raggio === undefined ? "999px" : `${s.raggio}%`,
         }}
@@ -213,7 +225,7 @@ function Serie({ el, valori, indice }: { el: ElementoSerie; valori: Valori; indi
   // Il riquadro della serie e' sempre largo quanto il formato: cosi' le
   // percentuali dei segni sono le stesse del resto del modello.
   return (
-    <div style={{ ...posizione(el), left: 0, width: "100%" }}>{segni}</div>
+    <div style={{ ...posizione(el, larghezza, altezza), left: 0, width: "100%" }}>{segni}</div>
   );
 }
 
@@ -259,17 +271,17 @@ export default function Tela({ modello, valori, variante, larghezza, indice = 0,
       {elementi.map((el) => {
         if (!visibile(el, valori)) return null;
         const bordo = mostraRiquadri ? (
-          <div key={`${el.id}-b`} style={{ ...posizione(el), outline: "1px dashed rgba(99,102,241,.8)", pointerEvents: "none", zIndex: 999 }} />
+          <div key={`${el.id}-b`} style={{ ...posizione(el, larghezza, altezza), outline: "1px dashed rgba(99,102,241,.8)", pointerEvents: "none", zIndex: 999 }} />
         ) : null;
         const disegno =
           el.tipo === "testo" ? (
-            <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} />
+            <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
           ) : el.tipo === "immagine" ? (
-            <Immagine key={el.id} el={el} valori={valori} larghezza={larghezza} />
+            <Immagine key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
           ) : el.tipo === "serie" ? (
-            <Serie key={el.id} el={el} valori={valori} indice={indice} />
+            <Serie key={el.id} el={el} valori={valori} indice={indice} larghezza={larghezza} altezza={altezza} />
           ) : (
-            <Forma key={el.id} el={el} valori={valori} larghezza={larghezza} />
+            <Forma key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
           );
         return bordo ? [disegno, bordo] : disegno;
       })}

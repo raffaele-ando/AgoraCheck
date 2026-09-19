@@ -22,18 +22,18 @@ export const invito: Modello = {
   ],
 
   elementi: [
-    ...testata({ ateneo: 5.17, spotted: 9.53 }),
-    { id: "lente", tipo: "immagine", fonte: "/studio/lente.png", riquadro: { x: 43.0, y: 23.7, larghezza: 13.9, altezza: 7.8 }, riempimento: "contain" },
-    { id: "riq", tipo: "forma", riquadro: { x: 10, y: 34.5, larghezza: 80, altezza: 15.5 }, colore: RIQUADRO, raggio: 2.7 },
+    ...testata({ ateneo: 9.19, spotted: 16.94 }),
+    { id: "lente", tipo: "immagine", fonte: "/studio/lente.png", riquadro: { x: 43.0, y: 42.13, larghezza: 13.9, altezza: 13.87 }, riempimento: "contain" },
+    { id: "riq", tipo: "forma", riquadro: { x: 10, y: 61.33, larghezza: 80, altezza: 27.56 }, colore: RIQUADRO, raggio: 2.7 },
     {
       id: "domanda", tipo: "testo", campo: "domanda",
-      riquadro: { x: 14, y: 35.7, larghezza: 72, altezza: 7 },
+      riquadro: { x: 14, y: 63.47, larghezza: 72, altezza: 12.44 },
       corpo: 4.32, peso: 700, colore: INCHIOSTRO, famiglia: CARATTERE_TESTO,
       allineamento: "center", interlinea: 1.4,
     },
     {
       id: "invito", tipo: "testo", campo: "invito",
-      riquadro: { x: 14, y: 45.4, larghezza: 72, altezza: 4 },
+      riquadro: { x: 14, y: 80.71, larghezza: 72, altezza: 7.11 },
       corpo: 4.32, peso: 700, colore: ARANCIO, famiglia: CARATTERE_TESTO,
       allineamento: "center", adatta: false,
     },
