@@ -18,14 +18,18 @@ import {
   IcStatistiche,
 } from "../ui/AcIcons";
 
-export type NextTab =
-  | "messages"
-  | "profiles"
-  | "analytics"
-  | "story_template"
-  | "carousel"
-  | "settings"
-  | "studio";
+/** Le schede, per poterle validare quando arrivano dall'indirizzo. */
+export const SCHEDE_VALIDE = [
+  "messages",
+  "profiles",
+  "analytics",
+  "story_template",
+  "carousel",
+  "settings",
+  "studio",
+] as const;
+
+export type NextTab = (typeof SCHEDE_VALIDE)[number];
 
 export interface NextHeaderProps {
   activeTab: NextTab;

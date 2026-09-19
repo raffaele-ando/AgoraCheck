@@ -183,10 +183,13 @@ export default function Maschera({
   campi,
   valori,
   onCambia,
+  stretti = [],
 }: {
   campi: Campo[];
   valori: Valori;
   onCambia: (id: string, v: string | number | boolean) => void;
+  /** I campi che non entrano nel loro riquadro. */
+  stretti?: string[];
 }) {
   const gruppi: { nome: string; campi: Campo[] }[] = [];
   for (const c of campi) {
@@ -203,7 +206,16 @@ export default function Maschera({
           <h3 className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-3">{g.nome}</h3>
           <div className="space-y-4">
             {g.campi.map((c) => (
-              <CampoSingolo key={c.id} campo={c} valori={valori} onCambia={onCambia} />
+              <div key={c.id}>
+                <CampoSingolo campo={c} valori={valori} onCambia={onCambia} />
+                {/* Detto qui e non a cose fatte: il testo esce comunque,
+                    ma al corpo minimo, e chi scrive lo sa mentre scrive. */}
+                {stretti.includes(c.id) && (
+                  <p className="mt-1.5 text-[12px] font-bold text-amber-700 dark:text-amber-400">
+                    Non ci sta: accorcia, o uscirà più piccolo del previsto.
+                  </p>
+                )}
+              </div>
             ))}
           </div>
         </div>

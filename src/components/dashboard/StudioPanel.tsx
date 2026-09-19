@@ -27,7 +27,7 @@
  * scritta con classi decise sul momento, e si vedeva: una pagina con le
  * sue regole in mezzo a otto che ne seguivano un'altra.
  */
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import "../../studio/caratteri.css";
 import Tela from "../../studio/Tela";
 import Maschera from "../../studio/Maschera";
@@ -93,6 +93,11 @@ export default function StudioPanel() {
   const [attiva, setAttiva] = useState(0);
   const [riquadri, setRiquadri] = useState(false);
   const [lavoro, setLavoro] = useState<string>("");
+  /** I campi che non entrano nel loro riquadro, per la scheda aperta. */
+  const [stretti, setStretti] = useState<string[]>([]);
+  const segnala = useCallback((campo: string, entra: boolean) => {
+    setStretti((s) => (entra ? (s.includes(campo) ? s.filter((x) => x !== campo) : s) : s.includes(campo) ? s : [...s, campo]));
+  }, []);
 
   const fmt = FORMATI[modello.formato] ?? FORMATI.storia;
   // La tela riceve un insieme solo: i valori del progetto stanno sotto,
@@ -290,13 +295,13 @@ export default function StudioPanel() {
                   </button>
                 </div>
               )}
-              <Maschera campi={campiScheda} valori={valori} onCambia={cambia} />
+              <Maschera campi={campiScheda} valori={valori} onCambia={cambia} stretti={stretti} />
             </div>
           </div>
 
           <div className="lg:sticky lg:top-[78px] justify-self-center lg:justify-self-start">
             <div className={`${SCHEDA} p-4`}>
-              <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} indice={attiva} mostraRiquadri={riquadri} />
+              <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} indice={attiva} mostraRiquadri={riquadri} onNonEntra={segnala} />
               <div className="mt-3 flex items-center justify-between gap-4 text-[11px]">
                 <span className="tabular-nums text-gray-600 dark:text-gray-400">
                   {fmt.nome} · {fmt.larghezza}×{fmt.altezza}

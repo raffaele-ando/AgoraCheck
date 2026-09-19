@@ -24,16 +24,31 @@ import { FORMATI } from "./tipi";
  * perche' ogni tentativo costa una rilettura della disposizione e a 20
  * riquadri per scheda la differenza si vede.
  */
+/**
+ * Quanto il testo puo' rimpicciolirsi prima di smettere di essere un
+ * post e diventare una macchia grigia.
+ *
+ * Senza un limite la ricerca scendeva fino al 22% del corpo dichiarato:
+ * provato con un messaggio da 600 caratteri, «30 maggio» finiva in una
+ * riga alta due pixel — illeggibile, ed esportata cosi' senza che
+ * nessuno se ne accorgesse. Sotto il 62% si smette di rimpicciolire: il
+ * testo strabordera' un poco, e chi scrive lo vede nell'anteprima invece
+ * di scoprirlo dopo aver pubblicato.
+ */
+const MINIMO = 0.62;
+
 function TestoAdattivo({
   testo,
   corpoPx,
   adatta,
   stile,
+  onNonEntra,
 }: {
   testo: string;
   corpoPx: number;
   adatta: boolean;
   stile: React.CSSProperties;
+  onNonEntra?: (entra: boolean) => void;
 }) {
   const contenitore = useRef<HTMLDivElement>(null);
   const misura = useRef<HTMLDivElement>(null);
@@ -55,9 +70,18 @@ function TestoAdattivo({
 
     if (entra(corpoPx)) {
       setCorpo(corpoPx);
+      onNonEntra?.(true);
       return;
     }
-    let basso = corpoPx * 0.22;
+    const minimo = corpoPx * MINIMO;
+    if (!entra(minimo)) {
+      // Non ci sta nemmeno al minimo: si resta al minimo e si segnala.
+      m.style.fontSize = "";
+      setCorpo(minimo);
+      onNonEntra?.(false);
+      return;
+    }
+    let basso = minimo;
     let alto = corpoPx;
     for (let i = 0; i < 12; i++) {
       const mezzo = (basso + alto) / 2;
@@ -66,7 +90,8 @@ function TestoAdattivo({
     }
     m.style.fontSize = "";
     setCorpo(basso);
-  }, [testo, corpoPx, adatta, stile.fontWeight, stile.letterSpacing, stile.lineHeight]);
+    onNonEntra?.(true);
+  }, [testo, corpoPx, adatta, stile.fontWeight, stile.letterSpacing, stile.lineHeight, onNonEntra]);
 
   return (
     <div ref={contenitore} style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: stile.justifyContent, overflow: "hidden" }}>
@@ -75,11 +100,13 @@ function TestoAdattivo({
       <div
         ref={misura}
         aria-hidden
-        style={{ ...stile, position: "absolute", visibility: "hidden", pointerEvents: "none", width: "100%", height: "auto", justifyContent: undefined, whiteSpace: "pre-wrap" }}
+        style={{ ...stile, position: "absolute", visibility: "hidden", pointerEvents: "none", width: "100%", height: "auto", justifyContent: undefined, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
       >
         {testo}
       </div>
-      <div style={{ ...stile, fontSize: `${corpo}px`, justifyContent: undefined, whiteSpace: "pre-wrap", width: "100%" }}>{testo}</div>
+      {/* `anywhere`: una parola piu' larga del riquadro va a capo invece
+          di costringere tutto il testo a rimpicciolirsi per starci. */}
+      <div style={{ ...stile, fontSize: `${corpo}px`, justifyContent: undefined, whiteSpace: "pre-wrap", overflowWrap: "anywhere", width: "100%" }}>{testo}</div>
     </div>
   );
 }
@@ -129,7 +156,12 @@ function posizione(el: Elemento, larghezza: number, altezza: number): React.CSSP
   };
 }
 
-function Testo({ el, valori, larghezza, altezza }: { el: ElementoTesto; valori: Valori; larghezza: number; altezza: number }) {
+function Testo({
+  el, valori, larghezza, altezza, onNonEntra,
+}: {
+  el: ElementoTesto; valori: Valori; larghezza: number; altezza: number;
+  onNonEntra?: (campo: string, entra: boolean) => void;
+}) {
   const testo = el.fisso ?? valore(valori, el.campo);
   if (!testo) return null;
   const colore = el.campoColore ? valore(valori, el.campoColore) || el.colore : el.colore;
@@ -153,7 +185,13 @@ function Testo({ el, valori, larghezza, altezza }: { el: ElementoTesto; valori: 
   };
   return (
     <div style={{ ...posizione(el, larghezza, altezza), display: "flex" }}>
-      <TestoAdattivo testo={testo} corpoPx={corpoPx} adatta={el.adatta !== false} stile={stile} />
+      <TestoAdattivo
+        testo={testo}
+        corpoPx={corpoPx}
+        adatta={el.adatta !== false}
+        stile={stile}
+        onNonEntra={el.campo ? (entra) => onNonEntra?.(el.campo!, entra) : undefined}
+      />
     </div>
   );
 }
@@ -238,12 +276,18 @@ export interface TelaProps {
   larghezza: number;
   /** Quale scheda e' questa, contando da zero: la barra ci si basa. */
   indice?: number;
+  /**
+   * Avvisa quando un campo non entra nel suo riquadro nemmeno al corpo
+   * minimo. Serve a dirlo a chi scrive mentre scrive, invece di lasciare
+   * che lo scopra dal post pubblicato.
+   */
+  onNonEntra?: (campo: string, entra: boolean) => void;
   /** Mostra i bordi dei riquadri: serve solo mentre si mette a punto. */
   mostraRiquadri?: boolean;
   tela?: React.Ref<HTMLDivElement>;
 }
 
-export default function Tela({ modello, valori, variante, larghezza, indice = 0, mostraRiquadri, tela }: TelaProps) {
+export default function Tela({ modello, valori, variante, larghezza, indice = 0, mostraRiquadri, tela, onNonEntra }: TelaProps) {
   const fmt = FORMATI[modello.formato] ?? FORMATI.storia;
   const altezza = (larghezza / fmt.larghezza) * fmt.altezza;
 
@@ -275,7 +319,7 @@ export default function Tela({ modello, valori, variante, larghezza, indice = 0,
         ) : null;
         const disegno =
           el.tipo === "testo" ? (
-            <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
+            <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} onNonEntra={onNonEntra} />
           ) : el.tipo === "immagine" ? (
             <Immagine key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
           ) : el.tipo === "serie" ? (

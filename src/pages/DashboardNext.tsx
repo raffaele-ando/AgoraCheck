@@ -40,7 +40,7 @@ import MessageRow from "../components/dashboard/MessageRow";
 import MessagesToolbar from "../components/dashboard/MessagesToolbar";
 import MessagesRail from "../components/dashboard/MessagesRail";
 import ConfirmDialog from "../components/dashboard/ConfirmDialog";
-import NextHeader, { SCHEDE_CONFIG, type NextTab } from "../components/dashboard/NextHeader";
+import NextHeader, { SCHEDE_CONFIG, SCHEDE_VALIDE, type NextTab } from "../components/dashboard/NextHeader";
 import {
   IcAlias,
   IcAltro,
@@ -446,7 +446,55 @@ export default function DashboardNext() {
   // Il tipo e' quello esportato dall'intestazione, non una copia scritta a
   // mano: la copia era gia' rimasta indietro di una scheda, e il compilatore
   // se n'e' accorto solo perche' ne ho aggiunta un'altra.
-  const [activeTab, setActiveTab] = useState<NextTab>("messages");
+  /*
+   * La scheda aperta sta nell'indirizzo.
+   *
+   * Prima no, e il prezzo era doppio: un collegamento a «Studio» apriva
+   * i Messaggi, e ricaricando la pagina si tornava all'inizio perdendo
+   * il posto. Per una dashboard a sei schede e' un difetto serio — si
+   * manda un link a qualcuno e quello vede un'altra cosa.
+   *
+   * Sta nella parte dopo il cancelletto e non in un parametro: e' una
+   * scheda dentro la stessa pagina, non una pagina diversa, e cosi' non
+   * si mescola ai parametri che la dashboard gia' usa.
+   */
+  const [activeTab, setActiveTab] = useState<NextTab>(() => {
+    try {
+      const h = window.location.hash.replace(/^#/, "");
+      return SCHEDE_VALIDE.includes(h as NextTab) ? (h as NextTab) : "messages";
+    } catch {
+      return "messages";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      // `replaceState` e non `pushState`: cambiare scheda non e' un passo
+      // di navigazione, e riempire la cronologia vorrebbe dire che il
+      // tasto indietro ripercorre ogni scheda toccata invece di riportare
+      // dove si era prima di entrare.
+      const nuovo = `${window.location.pathname}${window.location.search}#${activeTab}`;
+      if (window.location.hash.replace(/^#/, "") !== activeTab) {
+        window.history.replaceState(null, "", nuovo);
+      }
+    } catch {
+      /* cronologia non disponibile: la scheda funziona lo stesso */
+    }
+  }, [activeTab]);
+
+  // Il tasto indietro e avanti del browser devono cambiare scheda.
+  useEffect(() => {
+    const ascolta = () => {
+      try {
+        const h = window.location.hash.replace(/^#/, "");
+        if (SCHEDE_VALIDE.includes(h as NextTab)) setActiveTab(h as NextTab);
+      } catch {
+        /* niente */
+      }
+    };
+    window.addEventListener("hashchange", ascolta);
+    return () => window.removeEventListener("hashchange", ascolta);
+  }, []);
   /*
    * Lo Studio, una volta aperto, non si smonta piu'.
    *

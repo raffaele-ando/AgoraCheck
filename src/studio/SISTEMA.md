@@ -161,11 +161,12 @@ non negli altri).
 
 Non sono errori da correggere di nascosto: sono cose da decidere.
 
-1. **Le emoji vengono da due insiemi diversi.** Nei PNG sono quelle di
-   Apple (calendario azzurro, lente azzurra); nel file di Canva sono
-   quelle di un altro insieme (calendario bianco e rosso, lente grigia).
-   Lo stesso significato ha due disegni. Nello Studio sono quelle del
-   file di Canva, perche' sono quelle del documento sorgente.
+1. ~~Le emoji vengono da due insiemi diversi.~~ **Risolto, e avevo
+   scritto il contrario.** Le emoji sono **quelle di Apple**, e sono la
+   regola. Quelle del file di Canva coincidono al 100% con i file Apple
+   (scarto di colore 0.0/255, sagome identiche). Le azzurre che si vedono
+   in alcuni PNG sono di Google e vengono da post piu' vecchi: sono loro
+   l'eccezione, non la regola.
 2. **I riquadri hanno sei altezze diverse** (12.8, 15.3, 16.2, 27.0, 38.3,
    8.7% dell'altezza) e non si riconducono a un passo unico. Le prime due
    righe sono sempre 12.8; il riquadro del messaggio cambia con lo
@@ -182,6 +183,11 @@ Non sono errori da correggere di nascosto: sono cose da decidere.
    risultati: niente marchio, pallini a destra. Non sembra voluto, ma
    l'ho tenuto com'e' invece di uniformarlo: e' una cosa da decidere,
    non da correggere di nascosto.
-6. **L'arco sopra la testata** c'e' solo nei risultati. O e' un segno che
+6. **La firma delle storie sta nella fascia che Instagram copre.** Nei
+   tuoi file il marchio e' a 91 pixel dal fondo su 1920: la barra
+   «Invia messaggio» ne copre circa 250. Nelle storie pubblicate la
+   firma non si vede. L'ho lasciata dov'e' perche' e' com'e' nei tuoi
+   file, ma alzarla a ~300 pixel dal fondo la renderebbe visibile.
+7. **L'arco sopra la testata** c'e' solo nei risultati. O e' un segno che
    distingue un genere di post, e allora va usato in modo regolare, o e'
    rimasto li' da una versione precedente.

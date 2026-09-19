@@ -255,6 +255,10 @@ export function riga(
       id: `riq${n}`, tipo: "forma",
       riquadro: { x: 22.95, y, larghezza: 67.03, altezza },
       colore: RIQUADRO, raggio: 2.7,
+      // Se la riga e' facoltativa sparisce TUTTA, riquadro compreso.
+      // Prima spariva solo l'icona e restava un riquadro beige vuoto in
+      // fondo a ogni storia senza link: si vedeva in ogni esportazione.
+      ...(opzionale ? { seCampo: campo } : {}),
     },
     {
       id: `ic${n}`, tipo: "immagine", fonte: `/studio/${icona}.png`,
@@ -268,6 +272,7 @@ export function riga(
       corpo, peso: 700, colore: INCHIOSTRO,
       famiglia: CARATTERE_TESTO, interlinea: 1.35,
       verticale: altezza < 25 ? "center" : "flex-start",
+      ...(opzionale ? { seCampo: campo } : {}),
     },
   ];
 }
