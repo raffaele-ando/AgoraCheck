@@ -67,7 +67,7 @@ export default function MessagesToolbar({
     <button
       onClick={() => onViewFilter(valore)}
       aria-pressed={viewFilter === valore}
-      className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors flex items-center gap-1.5 ${
+      className={`px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors flex items-center gap-2 ${
         viewFilter === valore
           ? "bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100"
           : "text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -81,7 +81,7 @@ export default function MessagesToolbar({
   );
 
   return (
-    <div className="mb-5">
+    <div className="mb-6">
       {/* Riga dei comandi: tutto cio' che restringe la lista sta qui, su
           una riga sola, perche' fa tutto lo stesso mestiere. */}
       <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -105,7 +105,7 @@ export default function MessagesToolbar({
         <button
           onClick={onOnlyPosts}
           aria-pressed={onlyPostsFilter}
-          className={`px-2.5 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors ${
+          className={`px-3 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors ${
             onlyPostsFilter
               ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
               : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300"
@@ -118,7 +118,7 @@ export default function MessagesToolbar({
           value={selectedZoneFilter}
           onChange={(e) => onZone(e.target.value)}
           aria-label="Filtra per zona"
-          className={`px-2.5 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors outline-none ${
+          className={`px-3 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors outline-none ${
             selectedZoneFilter
               ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
               : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300"
@@ -135,7 +135,7 @@ export default function MessagesToolbar({
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
-            className="px-2.5 py-[7px] rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1.5"
+            className="px-3 py-[7px] rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
           >
             <IcFiltro className="w-3.5 h-3.5" />
             Rimuovi filtri
@@ -144,7 +144,7 @@ export default function MessagesToolbar({
 
         <button
           onClick={onStartSelect}
-          className="px-2.5 py-[7px] rounded-lg text-[12px] font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center gap-1.5"
+          className="px-3 py-[7px] rounded-lg text-[12px] font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center gap-2"
         >
           <IcSelezione className="w-3.5 h-3.5" />
           Seleziona
@@ -170,8 +170,8 @@ export default function MessagesToolbar({
 
       {/* Riga di riepilogo: i numeri su cui si agisce, al posto delle due
           schede grandi che li contenevano prima. */}
-      <div className="lg:hidden flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7 py-3">
-        <div className="shrink-0 flex items-baseline gap-1.5">
+      <div className="lg:hidden flex flex-wrap items-center gap-x-6 gap-y-2 sm:gap-x-8 py-3">
+        <div className="shrink-0 flex items-baseline gap-2">
           <span className="text-[19px] font-bold tabular-nums text-gray-900 dark:text-gray-100">
             {unreadCount}
           </span>
@@ -205,7 +205,7 @@ export default function MessagesToolbar({
               carosello
             </span>
             {oltreIlLimite && (
-              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-lg">
+              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-2 py-1 rounded-lg">
                 +{carouselCount - carouselMax} da scegliere
               </span>
             )}

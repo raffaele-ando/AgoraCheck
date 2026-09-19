@@ -55,8 +55,8 @@ export default function MessagesRail({
 
       <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
         <button onClick={onOpenCarousel} className="w-full text-left group">
-          <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-2">
               <IcCarosello className="w-3.5 h-3.5" />
               Carosello
             </span>
@@ -94,9 +94,9 @@ export default function MessagesRail({
             {activeFilters.map((f) => (
               <li
                 key={f}
-                className="text-[12px] text-gray-700 dark:text-gray-300 flex items-start gap-1.5"
+                className="text-[12px] text-gray-700 dark:text-gray-300 flex items-start gap-2"
               >
-                <IcFiltro className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-600" />
+                <IcFiltro className="w-3.5 h-3.5 shrink-0 mt-1 text-gray-600" />
                 <span className="min-w-0 break-words">{f}</span>
               </li>
             ))}
@@ -119,7 +119,7 @@ export default function MessagesRail({
             ⌄
           </span>
         </summary>
-        <dl className="text-[12px] text-gray-600 dark:text-gray-400 space-y-1.5">
+        <dl className="text-[12px] text-gray-600 dark:text-gray-400 space-y-2">
           {[
             ["J K", "scorri i messaggi"],
             ["E", "archivia"],
@@ -133,7 +133,7 @@ export default function MessagesRail({
                 {tasto.split(" ").map((t) => (
                   <kbd
                     key={t}
-                    className="font-mono text-[11px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 mr-1"
+                    className="font-mono text-[11px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 mr-1"
                   >
                     {t}
                   </kbd>

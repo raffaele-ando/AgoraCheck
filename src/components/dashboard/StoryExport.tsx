@@ -97,7 +97,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
     if (!captureRef.current) return;
     if (!backgroundImage) {
       alert(
-        "Nessun template configurato per questa combinazione. Impostane uno nella sezione \"Template Storie\" della Dashboard.",
+        "Nessuno sfondo per questa combinazione: l'immagine esce col fondo neutro.",
       );
       return;
     }
@@ -152,7 +152,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 shrink-0">
           <h2 className="text-lg font-black text-gray-900 dark:text-white">
-            Esporta Storia
+            Esporta come immagine
           </h2>
           <button
             onClick={onClose}
@@ -166,18 +166,8 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           <div className="bg-white dark:bg-gray-900 p-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">
-                  Stile Esportazione
-                  {isDBReady && templateSource && templateSource !== selectedTarget && (
-                    <span className="ml-2 font-normal text-[10px] text-amber-600 dark:text-amber-400">
-                      (template «{templateSource}»: nessuno per «{selectedTarget}»)
-                    </span>
-                  )}
-                  {isDBReady && !templateSource && (
-                    <span className="ml-2 font-normal text-[10px] text-red-500">
-                      (nessun template per «{selectedTarget}»)
-                    </span>
-                  )}
+                <label className="block text-[12px] font-semibold text-gray-600 mb-1 dark:text-gray-400">
+                  Che tipo di storia
                 </label>
                 <select 
                   value={selectedMode} 
@@ -187,14 +177,30 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                   <option value="spotted">Spotted</option>
                   <option value="ricerca">Ricerca</option>
                   <option value="sondaggio">Sondaggio</option>
-                  <option value="risultati">Risultati Spotted</option>
-                  <option value="risultati_sondaggio">Risultati Sondaggio</option>
+                  <option value="risultati">Risultati spotted</option>
+                  <option value="risultati_sondaggio">Risultati sondaggio</option>
                 </select>
+                {/* L'avviso sullo sfondo mancante era una postilla in 10px
+                    rossi accanto a un'etichetta. E' la cosa piu' importante
+                    della finestra: decide come viene l'immagine. */}
+                {isDBReady && templateSource && templateSource !== selectedTarget && (
+                  <p className="mt-2 text-[12px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                    Per «{selectedTarget}» non c'e' uno sfondo suo: viene usato
+                    quello di «{templateSource}».
+                  </p>
+                )}
+                {isDBReady && !templateSource && (
+                  <p className="mt-2 text-[12px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                    Nessuno sfondo per «{selectedTarget}»: l'immagine esce col
+                    fondo neutro. Si carica da Configurazione → Come escono le
+                    storie.
+                  </p>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Cosa/Chi" : selectedMode === "ricerca" ? "Testo Ricerca" : selectedMode === "risultati" ? "Testo Spotted" : "Domanda"}</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1 dark:text-gray-400">{selectedMode === "spotted" ? "Chi cerchi" : selectedMode === "ricerca" ? "La domanda" : selectedMode === "risultati" ? "Il messaggio" : "La domanda"}</label>
                   <textarea 
                     value={chiText} 
                     onChange={e => setChiText(e.target.value)} 
@@ -274,8 +280,8 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center bg-gray-50 dark:bg-gray-800/50">
                     <ImageIcon className="w-12 h-12 mb-2 opacity-30" />
-                    <span className="text-sm font-medium mb-2">Nessun template configurato</span>
-                    <span className="text-xs">Vai nella sezione "Template Storie" della Dashboard per impostarlo!</span>
+                    <span className="text-[13px] font-medium mb-2">Nessuno sfondo per questa combinazione</span>
+                    <span className="text-[12px] px-4 text-center">L'immagine esce lo stesso, col fondo neutro.</span>
                   </div>
                 )}
              </div>
@@ -287,12 +293,12 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="w-full py-3.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 bg-indigo-700 hover:bg-indigo-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isExporting ? (
               <>Esportazione in corso... <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
             ) : (
-              <><Download className="w-5 h-5" /> Scarica Immagine Pronta</>
+              <><Download className="w-5 h-5" /> Scarica l'immagine</>
             )}
           </button>
         </div>

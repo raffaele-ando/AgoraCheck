@@ -24,6 +24,6 @@ export default defineConfig({
   build: {
     outDir: qui("dist-banco"),
     emptyOutDir: true,
-    rollupOptions: { input: qui("scripts/banco/index.html") },
+    rollupOptions: { input: { app: qui("scripts/banco/index.html"), bacheca: qui("scripts/banco/bacheca.html") } },
   },
 });

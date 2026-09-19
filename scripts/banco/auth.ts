@@ -15,3 +15,6 @@ export const onAuthStateChanged = (_a: any, cb: any) => {
   return () => {};
 };
 export type User = typeof UTENTE;
+
+export const signInAnonymously = async () => ({ user: UTENTE });
+export const signInWithEmailAndPassword = async () => ({ user: UTENTE });

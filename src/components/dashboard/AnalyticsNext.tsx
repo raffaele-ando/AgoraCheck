@@ -483,7 +483,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
     },
   ];
   return (
-    <div className="space-y-6 md:space-y-8 pb-10">
+    <div className="space-y-6 md:space-y-8 pb-8">
 
       {/*
         La conversione in evidenza.
@@ -554,10 +554,10 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={kpi.onClick}
-                className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+                className={`group bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[12px] font-semibold ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                  <div className={`text-[12px] font-semibold ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-2 rounded-xl ${kpi.bg}`}>
                     {kpi.label}
                   </div>
                   <div className="text-[44px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
@@ -574,12 +574,12 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
+            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-3">
                   Visite e messaggi, giorno per giorno
                 </h3>
-                <span className="text-[12px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-xl">
+                <span className="text-[12px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-3 py-2 rounded-xl">
                   ultimi 14 giorni
                 </span>
               </div>
@@ -612,8 +612,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             </div>
 
             <div className="flex flex-col gap-6 md:gap-8">
-              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
-                <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-2.5">
+              <div className="bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1 relative group overflow-hidden">
+                <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 sticky z-10 flex items-center gap-3">
                   Da che telefono o computer
                 </h3>
                 <div className="h-[160px] sm:h-[180px] w-full relative z-10">
@@ -632,7 +632,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center mt-6 relative z-10 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
                   {stats.platformData.map((p, i) => (
-                    <div key={p.name} className="flex items-center gap-1.5 text-[12px] text-gray-700 dark:text-gray-300 font-semibold tracking-wide bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                    <div key={p.name} className="flex items-center gap-2 text-[12px] text-gray-700 dark:text-gray-300 font-semibold tracking-wide bg-white dark:bg-gray-800 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></div>
                       {p.name} <span className="text-gray-600 dark:text-gray-400 font-medium">({p.value})</span>
                     </div>
@@ -640,8 +640,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-                <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+              <div className="bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+                <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-3">
                   Da quale applicazione aprono il link
                 </h3>
                 <div className="relative h-[200px] sm:h-[220px] w-full mt-2">
@@ -687,10 +687,10 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={kpi.onClick}
-                className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+                className={`group bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-2 rounded-xl ${kpi.bg}`}>
                     {kpi.label}
                   </div>
                   <div className="text-[44px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
@@ -728,10 +728,10 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={kpi.onClick}
-                className={`group bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative border-pink-100 cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+                className={`group bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative border-pink-100 cursor-pointer hover:shadow-xl hover:-translate-y-1`}
               >
                 <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-xl ${kpi.bg}`}>
+                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-2 rounded-xl ${kpi.bg}`}>
                     {kpi.label}
                   </div>
                   <div className="text-[44px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight transition-transform transform origin-left">
@@ -749,8 +749,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
             {/* Abandonment Rate UI */}
-            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-              <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+            <div className="bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+              <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-3">
                 Abbandoni per Campo
               </h3>
               <div className="space-y-4">
@@ -774,8 +774,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             </div>
 
             {/* Time spent UI */}
-            <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
-              <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2.5">
+            <div className="bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col flex-1">
+              <h3 className="text-[13px] font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-3">
                 Tempo medio di compilazione
               </h3>
               <div className="space-y-4">
@@ -810,7 +810,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
               >
 
               {/* Header */}
-              <div className="flex items-center justify-between p-5 md:p-8 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 z-20 shrink-0">
+              <div className="flex items-center justify-between p-6 md:p-8 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 z-20 shrink-0">
 
                 <div className="flex flex-col gap-1">
 
@@ -834,7 +834,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 </button>
               </div>
               {/* Content Body */}
-              <div className="p-0 flex-1 overflow-auto bg-gray-50 dark:bg-gray-800/50 relative pb-10 md:pb-0">
+              <div className="p-0 flex-1 overflow-auto bg-gray-50 dark:bg-gray-800/50 relative pb-8 md:pb-0">
 
                 {/* MESSAGES VIEW */}
                 {detailView.type === "messages" && (
@@ -869,7 +869,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 className="hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors"
                               >
 
-                                <td className="px-6 py-5 font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                                <td className="px-6 py-6 font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap">
 
                                   {m.createdAt
                                     ? format(
@@ -878,7 +878,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                       )
                                     : "-"}
                                 </td>
-                                <td className="px-6 py-5">
+                                <td className="px-6 py-6">
 
                                   {m.lookingFor ? (
                                     <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -902,7 +902,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                         )}
                                       </div>
                                       {m.instagram && (
-                                        <div className="text-[12px] text-pink-600 font-semibold mt-2 pt-2 border-t border-gray-50 dark:border-gray-800 flex items-center gap-1.5">
+                                        <div className="text-[12px] text-pink-600 font-semibold mt-2 pt-2 border-t border-gray-50 dark:border-gray-800 flex items-center gap-2">
                                           <IcInstagram className="w-3 h-3" /> @
                                           {m.instagram}
                                         </div>
@@ -914,12 +914,12 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-6 py-5 min-w-[200px]">
+                                <td className="px-6 py-6 min-w-[200px]">
 
                                   <div className="flex flex-col gap-2">
 
                                     {m.deviceInfo?.location && (
-                                      <div className="text-[11px] bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 w-max font-semibold">
+                                      <div className="text-[11px] bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 px-3 py-2 rounded-lg flex items-center gap-2 w-max font-semibold">
 
                                         <IcZona className="w-3.5 h-3.5" />
                                         {m.deviceInfo.location.city},
@@ -931,7 +931,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                       const ip = adv?.network?.ip || adv?.n?.ip;
                                       if (!ip) return null;
                                       return (
-                                        <div className="text-[11px] font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800 px-2.5 py-1.5 rounded-lg w-max font-semibold flex items-center gap-1.5">
+                                        <div className="text-[11px] font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800 px-3 py-2 rounded-lg w-max font-semibold flex items-center gap-2">
                                           <IcDispositivo className="w-3.5 h-3.5" />
                                           IP: {ip}
                                         </div>
@@ -939,14 +939,14 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                     })()}
                                   </div>
                                 </td>
-                                <td className="px-6 py-5">
+                                <td className="px-6 py-6">
 
                                   <div className="flex flex-col items-center gap-2">
 
-                                    <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-1.5 rounded-xl font-semibold w-24 text-center">
+                                    <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-2 rounded-xl font-semibold w-24 text-center">
                                       {getPlatform(m)}
                                     </span>
-                                    <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-1.5 rounded-xl font-semibold w-24 text-center">
+                                    <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-2 rounded-xl font-semibold w-24 text-center">
                                       {getBrowser(m)}
                                     </span>
                                   </div>
@@ -963,12 +963,12 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                       {detailRows.map((m) => (
                         <div
                           key={m.id}
-                          className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
+                          className="flex flex-col p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
                         >
 
                           <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-4">
 
-                            <span className="text-[12px] font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                            <span className="text-[12px] font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-xl flex items-center gap-2">
 
                               <IcOra className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 " />
                               {m.createdAt
@@ -978,12 +978,12 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                   )
                                 : "-"}
                             </span>
-                            <div className="flex gap-1.5">
+                            <div className="flex gap-2">
 
-               <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-2.5 py-1 rounded-lg font-semibold tracking-wider">
+               <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-1 rounded-lg font-semibold tracking-wider">
                                 {getPlatform(m)}
                               </span>
-               <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-2.5 py-1 rounded-lg font-semibold tracking-wider">
+               <span className="text-[11px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 px-3 py-1 rounded-lg font-semibold tracking-wider">
                                 {getBrowser(m)}
                               </span>
                             </div>
@@ -999,19 +999,19 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 flex flex-wrap gap-x-4 gap-y-2">
 
                                   {m.where && (
-                                    <span className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-2">
                                       <IcZona className="w-3.5 h-3.5" />
                                       {m.where}
                                     </span>
                                   )}
                                   {m.when && (
-                                    <span className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-2">
                                       <IcOra className="w-3.5 h-3.5" /> {m.when}
                                     </span>
                                   )}
                                 </div>
                                 {m.instagram && (
-                                  <div className="text-[11px] bg-pink-50 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 border border-pink-100 dark:border-pink-800 px-2.5 py-1.5 rounded-xl font-semibold mt-4 self-start flex items-center gap-1.5">
+                                  <div className="text-[11px] bg-pink-50 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 border border-pink-100 dark:border-pink-800 px-3 py-2 rounded-xl font-semibold mt-4 self-start flex items-center gap-2">
                                     <IcInstagram className="w-3.5 h-3.5" /> @
                                     {m.instagram}
                                   </div>
@@ -1031,7 +1031,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                             <div className="flex flex-wrap gap-2">
 
                               {m.deviceInfo?.location && (
-                                <div className="text-[11px] bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold">
+                                <div className="text-[11px] bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 px-3 py-2 rounded-lg flex items-center gap-2 font-semibold">
 
                                   <IcZona className="w-3 h-3" />
                                   {m.deviceInfo.location.city},
@@ -1043,7 +1043,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 const ip = adv?.network?.ip || adv?.n?.ip;
                                 if (!ip) return null;
                                 return (
-                                  <div className="text-[11px] font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold">
+                                  <div className="text-[11px] font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800 px-3 py-2 rounded-lg flex items-center gap-2 font-semibold">
                                     <IcDispositivo className="w-3 h-3" /> IP: {ip}
                                   </div>
                                 );
@@ -1094,7 +1094,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                   className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                                 >
 
-                                  <td className="px-6 py-5">
+                                  <td className="px-6 py-6">
 
                                     <div className="flex items-center gap-4">
 
@@ -1112,13 +1112,13 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                         <div className="font-bold text-gray-900 dark:text-gray-100 text-[15px]">
                                           {p.name || "Senza Nome"}
                                         </div>
-                                        <div className="text-[11px] font-mono font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-0.5 rounded mt-1.5 inline-block">
+                                        <div className="text-[11px] font-mono font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2 py-1 rounded mt-2 inline-block">
                                           {p.id}
                                         </div>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-6 py-5 text-center">
+                                  <td className="px-6 py-6 text-center">
 
                                     <span className="text-[13px] font-bold px-4 py-2 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-xl">
 
@@ -1126,10 +1126,10 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                       registrati
                                     </span>
                                   </td>
-                                  <td className="px-6 py-5">
+                                  <td className="px-6 py-6">
 
                                     {searchMessages.length > 0 ? (
-                                      <div className="space-y-2.5 w-full">
+                                      <div className="space-y-3 w-full">
 
                                         {searchMessages
                                           .slice(0, 3)
@@ -1172,7 +1172,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                         return (
                           <div
                             key={p.id}
-                            className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
+                            className="flex flex-col p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
                           >
 
                             <div className="flex items-center gap-4 pb-4 border-b border-gray-50 dark:border-gray-800">
@@ -1191,7 +1191,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 <div className="font-bold text-gray-900 dark:text-gray-100 text-[15px] truncate">
                                   {p.name || "Senza Nome"}
                                 </div>
-                                <div className="text-[11px] font-semibold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded px-2.5 py-1 mt-1.5 truncate inline-block">
+                                <div className="text-[11px] font-semibold font-mono bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded px-3 py-1 mt-2 truncate inline-block">
                                   {p.id}
                                 </div>
                               </div>
@@ -1207,7 +1207,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                             </div>
                             <div className="flex flex-col gap-3 pt-2">
 
-                              <span className="text-[11px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-lg w-max border border-indigo-100 dark:border-indigo-800 ">
+                              <span className="text-[11px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/40 px-3 py-2 rounded-lg w-max border border-indigo-100 dark:border-indigo-800 ">
                                 Ultimi Spotted
                               </span>
                               {searchMessages.length > 0 ? (
@@ -1216,7 +1216,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                   {searchMessages.slice(0, 3).map((sm) => (
                                     <div
                                       key={sm.id}
-                                      className="text-[11px] bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm font-semibold leading-relaxed"
+                                      className="text-[11px] bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-4 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm font-semibold leading-relaxed"
                                     >
                                       "{sm.lookingFor}"
                                     </div>
@@ -1298,20 +1298,20 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                   className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                                 >
 
-                                  <td className="px-6 py-5">
+                                  <td className="px-6 py-6">
 
                                     <div className="font-bold text-gray-900 dark:text-gray-100 text-[15px] mb-2 flex items-center gap-2">
 
                                       {m.name || "Profilo Senza Nome"}
                                     </div>
                                     {m.profileIds.length > 1 && (
-                   <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2.5 py-1 rounded-lg inline-block tracking-wider border border-purple-100 dark:border-purple-800 ">
+                   <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-3 py-1 rounded-lg inline-block tracking-wider border border-purple-100 dark:border-purple-800 ">
                                         Unione di {m.profileIds.length} Profili
                                         Base
                                       </div>
                                     )}
                                   </td>
-                                  <td className="px-6 py-5">
+                                  <td className="px-6 py-6">
 
                                     <div className="flex flex-col gap-3">
 
@@ -1320,7 +1320,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                         {m.profileIds.map((pid: string) => (
                                           <span
                                             key={pid}
-                                            className="text-[11px] font-semibold font-mono bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5"
+                                            className="text-[11px] font-semibold font-mono bg-white dark:bg-gray-800 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm text-gray-600 dark:text-gray-400 flex items-center gap-2"
                                           >
 
                                             <IcDispositivo className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 " />
@@ -1334,7 +1334,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                           {uniqueIPs.map((ip) => (
                                             <span
                                               key={ip}
-                                              className="text-[11px] font-semibold font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 sm:py-1.5 rounded-xl border border-amber-100 dark:border-amber-800 shadow-sm flex items-center gap-1.5"
+                                              className="text-[11px] font-semibold font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-3 py-1 sm:py-2 rounded-xl border border-amber-100 dark:border-amber-800 shadow-sm flex items-center gap-2"
                                             >
 
                                               <IcRete className="w-3.5 h-3.5 text-amber-500" />
@@ -1345,9 +1345,9 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                       )}
                                     </div>
                                   </td>
-                                  <td className="px-6 py-5 text-right">
+                                  <td className="px-6 py-6 text-right">
 
-                                    <span className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                                    <span className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded-xl whitespace-nowrap">
                                       {mostRecentMsg?.createdAt
                                         ? format(
                                             mostRecentMsg.createdAt.toDate(),
@@ -1391,7 +1391,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                         return (
                           <div
                             key={m.id}
-                            className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
+                            className="flex flex-col p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4"
                           >
 
                             <div className="flex flex-col border-b border-gray-50 dark:border-gray-800 pb-4">
@@ -1400,14 +1400,14 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 {m.name || "Profilo Senza Nome"}
                               </div>
                               {m.profileIds.length > 1 && (
-                                <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2.5 py-1.5 rounded-lg inline-block w-max border border-purple-100 dark:border-purple-800 mt-2.5 uppercase tracking-widest">
+                                <div className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-3 py-2 rounded-lg inline-block w-max border border-purple-100 dark:border-purple-800 mt-3 uppercase tracking-widest">
                                   Condivide {m.profileIds.length} Profili
                                 </div>
                               )}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex flex-col gap-3 rounded-xl border border-gray-100 dark:border-gray-700 ">
 
-                              <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                              <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                 <IcTecnico className="w-3.5 h-3.5" /> Dispositivi
                                 Collegati
                               </span>
@@ -1416,7 +1416,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                 {m.profileIds.map((pid: string) => (
                                   <span
                                     key={pid}
-                                    className="text-[11px] font-semibold font-mono bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm flex items-center gap-1"
+                                    className="text-[11px] font-semibold font-mono bg-white dark:bg-gray-800 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 shadow-sm flex items-center gap-1"
                                   >
 
                                     {pid.substring(0, 10)}...
@@ -1426,7 +1426,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                               {uniqueIPs.length > 0 && (
                                 <>
 
-                                  <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-1.5 mt-2">
+                                  <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-widest flex items-center gap-2 mt-2">
                                     <IcRete className="w-3.5 h-3.5" /> IP
                                     Tracciati
                                   </span>
@@ -1435,7 +1435,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                                     {uniqueIPs.map((ip) => (
                                       <span
                                         key={ip}
-                                        className="text-[11px] font-semibold font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-3 py-1.5 rounded-xl border border-amber-100 dark:border-amber-800 shadow-sm flex items-center gap-1"
+                                        className="text-[11px] font-semibold font-mono bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-xl border border-amber-100 dark:border-amber-800 shadow-sm flex items-center gap-1"
                                       >
 
                                         {ip}
@@ -1450,7 +1450,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                               <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest">
                                 Ultima acquisizione
                               </span>
-                              <span className="text-[12px] font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                              <span className="text-[12px] font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm px-3 py-2 rounded-xl flex items-center gap-2">
 
                                 <IcOra className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 " />
                                 {mostRecentMsg?.createdAt
@@ -1537,7 +1537,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                     </div>
                     <div className="md:hidden flex flex-col p-4 gap-4">
                       {detailRows.map((v) => (
-                        <div key={v.id} className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4">
+                        <div key={v.id} className="flex flex-col p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm gap-4">
                           <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
                             <span className="text-[12px] font-semibold text-gray-600 flex items-center gap-2 dark:text-gray-400">
                               <IcOra className="w-4 h-4" />
@@ -1571,7 +1571,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                       onClick={() =>
                         setDetailVisible((v) => v + DETAIL_PAGE_SIZE)
                       }
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold shadow-sm transition-colors"
+                      className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold shadow-sm transition-colors"
                     >
                       Mostra altri {Math.min(
                         DETAIL_PAGE_SIZE,
@@ -1596,7 +1596,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
           Come vengono contate
         </h2>
       <div className="flex flex-col gap-4">
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0">
               <IcConfigurazione className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -1629,7 +1629,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 border border-amber-100 dark:border-amber-800 flex items-center justify-center shrink-0">
               <IcConfigurazione className="w-5 h-5 text-amber-600 dark:text-amber-400" />

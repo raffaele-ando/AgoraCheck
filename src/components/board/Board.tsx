@@ -639,7 +639,13 @@ export function Board() {
           }}
         />
       )}
-      <div className={`flex flex-col p-2.5 gap-2.5 relative w-full h-full max-w-md mx-auto ${isFormFocused ? "ag-typing" : ""}`}>
+      {/* Su telefono il modulo riempie lo schermo, ed e' giusto: e' li' che
+          arriva quasi tutto il traffico, dal browser dentro Instagram. Ma la
+          stessa impaginazione su un monitor lasciava il campo del messaggio
+          alto 380 pixel e vuoto, e la colonna larga 430 in mezzo a 1440.
+          Da tablet in su la colonna si allarga e il modulo smette di
+          stirarsi in altezza. */}
+      <div className={`flex flex-col p-2.5 gap-2.5 relative w-full h-full max-w-md md:max-w-xl md:h-auto md:my-8 mx-auto ${isFormFocused ? "ag-typing" : ""}`}>
 
         {/* HEADER LOGO + THEME TOGGLE */}
         <div className="ag-brandbar relative flex justify-center items-center shrink-0 pt-1 pb-1">
@@ -922,7 +928,7 @@ export function Board() {
 
         {/* MAIN CONTEXT FORM */}
         <div className="flex flex-col flex-1 drop-shadow-sm relative w-full h-full min-h-0">
-          <Squircle cornerRadius={32} className="ag-panel ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 h-full">
+          <Squircle cornerRadius={32} className="ag-panel ag-edge bg-[var(--ag-surface)] p-4 flex flex-col gap-3 h-full md:h-auto">
              {mode === 'spotted' && (
                 <div key="spotted" className="flex flex-col gap-3 h-full animate-in zoom-in-95 fade-in duration-300 relative z-10">
                    <Squircle cornerRadius={20} className="bg-[var(--ag-inset)] flex items-center overflow-hidden shrink-0 min-h-[3.25rem] focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] py-2">
@@ -933,9 +939,9 @@ export function Board() {
                       <div className="pl-4 pr-1 text-xl self-start pt-1" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🗓️</div>
                       <TypewriterTextarea aria-label={isIt ? "Quando" : "When"} words={whenWords} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal px-2 resize-none pt-[0.45rem]" rows={1} value={when} onChange={(e) => setWhen(e.target.value)} onFocus={() => handleInputFocus("when")} onBlur={() => handleInputBlur("when")}/>
                    </Squircle>
-                   <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden flex-1 focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
+                   <Squircle cornerRadius={24} className="bg-[var(--ag-inset)] flex overflow-hidden flex-1 md:flex-none focus-within:squircle-ring-2 focus-within:squircle-ring-[#DC5F00] transition-shadow pt-[14px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] min-h-[4rem]">
                       <div className="pl-4 pr-1 text-xl self-start" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.15))" }}>🔍</div>
-                      <TypewriterTextarea aria-label={isIt ? "Chi stai cercando" : "Who you are looking for"} words={lookingForWordsDefault} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
+                      <TypewriterTextarea aria-label={isIt ? "Chi stai cercando" : "Who you are looking for"} words={lookingForWordsDefault} prefix="Es: " className="bg-transparent w-full outline-none text-[14px] font-bold placeholder:text-[var(--ag-muted)] placeholder:font-normal resize-none px-2 pb-3 h-full md:h-[7.5rem]" required value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} onFocus={() => handleInputFocus("lookingFor")} onBlur={() => handleInputBlur("lookingFor")} />
                    </Squircle>
                 </div>
              )}

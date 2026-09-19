@@ -104,7 +104,7 @@ function WhatsappSettings() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <MessageCircle className="w-5 h-5 text-green-500" />
           I gruppi WhatsApp di ogni zona
@@ -253,7 +253,7 @@ function EventWidgetSettings() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mt-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <span className="text-xl">🪩</span>
           I riquadri evento sul sito

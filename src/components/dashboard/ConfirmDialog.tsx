@@ -109,7 +109,7 @@ export default function ConfirmDialog({
         onClick={(e) => e.stopPropagation()}
         className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
       >
-        <div className="p-5 sm:p-6">
+        <div className="p-6 sm:p-6">
           <h2
             id={titleId}
             className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50"
@@ -120,7 +120,7 @@ export default function ConfirmDialog({
             {consequence}
           </p>
           {note && (
-            <p className="mt-1.5 text-[12px] leading-relaxed text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-[12px] leading-relaxed text-gray-600 dark:text-gray-400">
               {note}
             </p>
           )}
@@ -147,7 +147,7 @@ export default function ConfirmDialog({
           {children && <div className="mt-4">{children}</div>}
         </div>
 
-        <div className="flex gap-2 px-5 sm:px-6 py-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex gap-2 px-6 sm:px-6 py-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700">
           <button
             ref={cancelRef}
             onClick={onCancel}

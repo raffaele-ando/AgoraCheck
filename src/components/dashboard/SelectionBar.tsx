@@ -74,7 +74,7 @@ export default function SelectionBar({
           <button
             onClick={onArchive}
             disabled={count === 0}
-            className="px-3.5 py-2 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] font-bold disabled:opacity-40"
+            className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] font-bold disabled:opacity-40"
           >
             {isArchivedView ? "Ripristina" : "Archivia"} {count || ""}
           </button>
@@ -82,7 +82,7 @@ export default function SelectionBar({
             <button
               onClick={onGroup}
               disabled={count < 2}
-              className="px-3.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-[13px] font-semibold text-gray-700 dark:text-gray-300 disabled:opacity-40"
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-[13px] font-semibold text-gray-700 dark:text-gray-300 disabled:opacity-40"
             >
               Raggruppa…
             </button>
@@ -91,7 +91,7 @@ export default function SelectionBar({
           <button
             onClick={onDelete}
             disabled={count === 0}
-            className="px-3.5 py-2 rounded-lg border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 text-[13px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-40"
+            className="px-4 py-2 rounded-lg border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 text-[13px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-40"
           >
             Elimina {count || ""}…
           </button>

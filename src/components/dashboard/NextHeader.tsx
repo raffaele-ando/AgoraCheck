@@ -72,7 +72,7 @@ export default function NextHeader({
 
   return (
     <header className="sticky top-0 z-40 -mx-4 md:-mx-8 px-4 md:px-8 mb-6 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-700">
-      <div className="h-[54px] flex items-center gap-3 sm:gap-5">
+      <div className="h-[54px] flex items-center gap-3 sm:gap-6">
         <div className="shrink-0">
           {logo ?? (
             <span className="font-bold tracking-[0.18em] text-[13px]">AGORÀ</span>
@@ -86,7 +86,7 @@ export default function NextHeader({
                 key={tab}
                 onClick={() => onTab(tab)}
                 aria-current={activeTab === tab ? "page" : undefined}
-                className={`px-2.5 py-1.5 text-[13px] font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
+                className={`px-3 py-2 text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors ${
                   activeTab === tab
                     ? "bg-gray-200/70 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
@@ -96,7 +96,7 @@ export default function NextHeader({
                 <span className="hidden sm:inline">{label}</span>
                 {tab === "messages" && unreadCount > 0 && (
                   <span
-                    className={`tabular-nums text-[11px] font-semibold px-1.5 py-0.5 rounded-lg ${
+                    className={`tabular-nums text-[11px] font-semibold px-2 py-1 rounded-lg ${
                       activeTab === tab
                         ? "bg-indigo-600 text-white"
                         : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
@@ -122,14 +122,14 @@ export default function NextHeader({
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex items-center gap-2">
           {isSuperAdmin && (
             <div className="relative">
               <button
                 onClick={() => setMenu(menu === "config" ? null : "config")}
                 aria-expanded={menu === "config"}
                 aria-haspopup="menu"
-                className={`px-2.5 py-1.5 text-[13px] font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
+                className={`px-3 py-2 text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors ${
                   inConfig
                     ? "bg-gray-200/70 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
@@ -143,7 +143,7 @@ export default function NextHeader({
                   <div className="fixed inset-0 z-[70]" onClick={() => setMenu(null)} />
                   <div
                     role="menu"
-                    className="absolute right-0 mt-1.5 w-56 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-1.5"
+                    className="absolute right-0 mt-2 w-56 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-2"
                   >
                     {CONFIG.map(({ tab, label }) => (
                       <button
@@ -183,14 +183,14 @@ export default function NextHeader({
                 <div className="fixed inset-0 z-[70]" onClick={() => setMenu(null)} />
                 <div
                   role="menu"
-                  className="absolute right-0 mt-1.5 w-64 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-1.5"
+                  className="absolute right-0 mt-2 w-64 z-[80] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-2"
                 >
-                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-1.5">
+                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-2">
                     <div className="text-[12px] text-gray-600 dark:text-gray-400 truncate">
                       {email}
                     </div>
                     {isSuperAdmin && (
-           <span className="mt-1 inline-block text-[11px] font-semibold tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-1.5 py-0.5 rounded">
+           <span className="mt-1 inline-block text-[11px] font-semibold tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded">
                         Super admin
                       </span>
                     )}
@@ -201,7 +201,7 @@ export default function NextHeader({
                     </span>
                     <button
                       onClick={onToggleTheme}
-                      className="ml-auto px-2.5 py-1 rounded-lg text-[12px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                      className="ml-auto px-3 py-1 rounded-lg text-[12px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
                     >
                       {isDarkMode ? "Scuro" : "Chiaro"}
                     </button>
@@ -213,14 +213,14 @@ export default function NextHeader({
                     Vai alla bacheca pubblica
                   </a>
                   {totalMessages !== null && (
-                    <div className="px-3 py-1.5 text-[12px] tabular-nums text-gray-600 dark:text-gray-400">
+                    <div className="px-3 py-2 text-[12px] tabular-nums text-gray-600 dark:text-gray-400">
                       {totalMessages.toLocaleString("it-IT")} messaggi in totale
                     </div>
                   )}
                   <button
                     role="menuitem"
                     onClick={onLogout}
-                    className="w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 border-t border-gray-100 dark:border-gray-700 mt-1.5 pt-2"
+                    className="w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 border-t border-gray-100 dark:border-gray-700 mt-2 pt-2"
                   >
                     Esci
                   </button>
