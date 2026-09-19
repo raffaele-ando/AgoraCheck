@@ -72,6 +72,7 @@ import {
   IcTrovata,
   IcZona,
 } from "../components/ui/AcIcons";
+import { formatArea, formatCity } from "../data/locations";
 import SelectionBar from "../components/dashboard/SelectionBar";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -3119,7 +3120,7 @@ export default function DashboardNext() {
 
                           <div className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
                             <IcInstagram className="w-3.5 h-3.5" /> Instagram
-                            Associati
+                            associati
                           </div>
                           <div className="flex flex-wrap gap-1.5">
 
@@ -3870,9 +3871,12 @@ export default function DashboardNext() {
 
                     {viewingMacro.profileIds.length}{" "}
                     {viewingMacro.profileIds.length === 1
-                      ? "Dispositivo"
-                      : "Dispositivi"}
-                    • {viewingMacroStats.messages.length} msg
+                      ? "dispositivo"
+                      : "dispositivi"}{" "}
+                    ·{" "}
+                    {viewingMacroStats.messages.length === 1
+                      ? "1 messaggio"
+                      : `${viewingMacroStats.messages.length} messaggi`}
                   </div>
                 </div>
               </div>
@@ -3896,7 +3900,7 @@ export default function DashboardNext() {
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcAttivita className="w-4 h-4 shrink-0" /> Timeline
+                  <IcAttivita className="w-4 h-4 shrink-0" /> Cosa ha fatto
                 </button>
                 <button
                   onClick={() => setMacroModalTab("identita")}
@@ -3911,14 +3915,14 @@ export default function DashboardNext() {
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcTecnico className="w-4 h-4 shrink-0" /> Info Tecniche
+                  <IcTecnico className="w-4 h-4 shrink-0" /> Dati tecnici
                 </button>
                 <button
                   onClick={() => setMacroModalTab("log")}
                   className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "log" ? "bg-orange-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcDocumento className="w-4 h-4 shrink-0" /> Log Raggruppamento
+                  <IcDocumento className="w-4 h-4 shrink-0" /> Perche' sono uniti
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
@@ -3931,7 +3935,7 @@ export default function DashboardNext() {
                       <h4 className="text-[15px] sm:text-base font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <IcAttivita className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
-                        Timeline Accessi & Messaggi
+                        Visite e messaggi, dal piu' recente
                       </h4>
                       <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto uppercase tracking-wide">
 
@@ -3987,10 +3991,10 @@ export default function DashboardNext() {
                                         {parsedUA.browser === 'Instagram In-App' ? <IcInstagram className="w-3 h-3" /> : <IcDispositivo className="w-3 h-3" />} {parsedUA.browser} {parsedUA.instagram?.version ? `v${parsedUA.instagram.version}` : ''}
                                       </div>
                                       <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
-                                        OS: {parsedUA.os}
+                                        {parsedUA.os}
                                       </div>
                                       <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600">
-                                        Device: {parsedUA.device}
+                                        {parsedUA.device}
                                       </div>
                                       {parsedUA.instagram?.build && (
                                         <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2 py-1 rounded-md border border-gray-100 dark:border-gray-700">
@@ -4027,7 +4031,7 @@ export default function DashboardNext() {
                                             <span className="font-bold">
                                               Città:
                                             </span>
-                                            {msg.city}
+                                            {formatCity(msg.city)}
                                           </span>
                                         )}
                                         {msg.area && (
@@ -4036,7 +4040,7 @@ export default function DashboardNext() {
                                             <span className="font-bold">
                                               Zona:
                                             </span>
-                                            {msg.area}
+                                            {formatArea(msg.area, msg.city || "")}
                                           </span>
                                         )}
                                         {msg.where && (
@@ -4066,7 +4070,7 @@ export default function DashboardNext() {
                                         <div>
 
                                           <span className="font-bold uppercase tracking-wider text-[9px] block mb-1 text-sky-600">
-                                            Risoluzione Inserita
+                                            Com'e' andata a finire
                                           </span>
                                           {msg.resolution}
                                         </div>
@@ -4406,7 +4410,7 @@ export default function DashboardNext() {
 
                         <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3 sm:mb-4 flex items-center gap-2">
                           <IcDispositivo className="w-4 h-4 sm:w-5 sm:h-5" /> Segnali
-                          Hardware e Dispositivi (
+                          Hardware e dispositivi (
                           {viewingMacroStats.hardwareSignals.length})
                         </h4>
                         {viewingMacroStats.hardwareSignals.length > 0 ? (
@@ -4427,7 +4431,7 @@ export default function DashboardNext() {
                                               {parsed.browser} {parsed.instagram?.version ? `v${parsed.instagram.version}` : ''}
                                             </div>
                                             <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
-                                              OS: {parsed.os}
+                                              {parsed.os}
                                             </div>
                                             <div className="px-2 py-1 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-700 shadow-sm">
                                               Device: {parsed.device}

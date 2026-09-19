@@ -420,10 +420,10 @@ export default function StoryTemplateConfig() {
   
   const getLabelForModeAndTab = (tab: keyof TemplateConfig) => {
     if (selectedMode === "ricerca") {
-      if (tab === "chi") return "Testo Ricerca";
+      if (tab === "chi") return "La domanda";
     }
     if (selectedMode === "spotted") {
-      if (tab === "chi") return "Cosa/Chi";
+      if (tab === "chi") return "Chi cerchi";
       if (tab === "quando") return "Quando";
       if (tab === "dove") return "Dove";
     }
@@ -512,13 +512,13 @@ export default function StoryTemplateConfig() {
           onClick={() => setViewMode("editor")}
           className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${viewMode === "editor" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
-          Editor Template
+          Come sono fatte
         </button>
         <button
           onClick={() => setViewMode("gallery")}
           className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${viewMode === "gallery" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
-          Riepilogo Template
+          Cosa hai caricato
         </button>
       </div>
 
@@ -585,7 +585,12 @@ export default function StoryTemplateConfig() {
         className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row"
       >
         {/* Left Side: Preview */}
-        <div className="flex-1 bg-gray-100 dark:bg-black/50 p-6 flex flex-col items-center justify-center relative border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-hidden">
+        {/* L'anteprima e' un telefono alto 560 pixel e largo 315: teneva
+            meta' dello schermo (660px) dentro un riquadro grigio quasi
+            tutto vuoto, mentre i comandi — che sono una dozzina — stavano
+            nell'altra meta'. Ora l'anteprima prende lo stretto necessario
+            e lo spazio va dove si lavora. */}
+        <div className="w-full md:w-[400px] shrink-0 bg-gray-100 dark:bg-black/50 p-6 flex flex-col items-center justify-center relative border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-hidden">
           <div className="w-full max-w-[320px] mx-auto flex items-center justify-center mb-4">
              <div className="relative w-full aspect-[9/16] bg-white rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden dark:bg-gray-900" ref={containerRef}>
                 <div
@@ -635,7 +640,7 @@ export default function StoryTemplateConfig() {
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
                     <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                    <span className="text-sm font-medium">Nessuno sfondo caricato: le storie escono col fondo neutro</span>
+                    <span className="text-[12.5px] font-medium px-4 text-center leading-snug">Nessuno sfondo: le storie escono col fondo neutro</span>
                   </div>
                 )}
              </div>
@@ -705,13 +710,13 @@ export default function StoryTemplateConfig() {
             {/* Background Template */}
             <div className="space-y-3">
               <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" /> Sfondo ({selectedTarget} - {selectedMode})
+                <ImageIcon className="w-4 h-4" /> Lo sfondo di questa combinazione
               </label>
               
               <div className="flex items-center gap-3">
                 <label className="flex-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/40 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-medium px-4 py-3 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2">
                   <Upload className="w-5 h-5" />
-                  <span>Carica Sfondo PNG/JPG</span>
+                  <span>Carica uno sfondo</span>
                   <input
                     type="file"
                     accept="image/png, image/jpeg"
@@ -736,7 +741,7 @@ export default function StoryTemplateConfig() {
             {/* Box Selector */}
             <div className="space-y-4">
               <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <Type className="w-4 h-4" /> Selezione Riquadro Testo
+                <Type className="w-4 h-4" /> Quale riquadro stai spostando
               </label>
 
               <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl overflow-x-auto">
@@ -754,7 +759,7 @@ export default function StoryTemplateConfig() {
               {/* Box Settings */}
               <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl space-y-4 border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200 capitalize">Box: {getLabelForModeAndTab(activeTab)}</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200 capitalize">Riquadro «{getLabelForModeAndTab(activeTab)}»</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input 
                       type="checkbox"
@@ -769,7 +774,7 @@ export default function StoryTemplateConfig() {
                 <div className={`space-y-4 transition-opacity ${activeBox.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Dall'alto (Y %)</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Distanza dal bordo di sopra</label>
                       <input
                         type="range"
                         min="0" max="100"
@@ -780,7 +785,7 @@ export default function StoryTemplateConfig() {
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.top}%</div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Da sinistra (X %)</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Distanza dal bordo sinistro</label>
                       <input
                         type="range"
                         min="0" max="100"
@@ -791,7 +796,7 @@ export default function StoryTemplateConfig() {
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.left}%</div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Larghezza Box (%)</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e largo</label>
                       <input
                         type="range"
                         min="10" max="100"
@@ -802,7 +807,7 @@ export default function StoryTemplateConfig() {
                       <div className="text-right text-xs text-gray-400 font-mono mt-1">{activeBox.width}%</div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Altezza Box (%)</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e alto</label>
                       <input
                         type="range"
                         min="5" max="100"
@@ -816,7 +821,7 @@ export default function StoryTemplateConfig() {
 
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Grandezza Testo (px)</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Quanto e grande il testo (px)</label>
                       <input
                         type="number"
                         min="16" max="250"
@@ -826,7 +831,7 @@ export default function StoryTemplateConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Colore Testo</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Di che colore</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
@@ -844,7 +849,7 @@ export default function StoryTemplateConfig() {
                     </div>
                     <div className="col-span-2 grid grid-cols-2 gap-4 mt-2">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Allineamento Orizzontale</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Il testo si allinea a</label>
                         <select
                           value={activeBox.textAlign || "left"}
                           onChange={(e) => {
@@ -867,7 +872,7 @@ export default function StoryTemplateConfig() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Allineamento Verticale</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1 dark:text-gray-400">Dentro il riquadro sta</label>
                         <select
                           value={activeBox.alignItems || "flex-start"}
                           onChange={(e) => handleConfigChange({ alignItems: e.target.value as BoxConfig["alignItems"] })}
@@ -885,7 +890,7 @@ export default function StoryTemplateConfig() {
             </div>
             
             <p className="text-xs text-gray-500 mt-4 text-center dark:text-gray-400">
-              Queste impostazioni vengono salvate automaticamente per essere utilizzate all'esportazione di un messaggio specifico.
+              Si salva da se': quello che imposti qui vale per tutte le storie che esporti.
             </p>
           </div>
         </div>
