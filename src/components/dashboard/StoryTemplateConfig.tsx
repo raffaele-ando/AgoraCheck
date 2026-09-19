@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Upload, Settings, Type, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { IcCarica, IcConfigurazione, IcImmagine, IcSpunta, IcTesto } from "../ui/AcIcons";
 import { motion } from "framer-motion";
 
 export interface BoxConfig {
@@ -534,7 +534,7 @@ export default function StoryTemplateConfig() {
                        <div className="text-[11px] sm:text-[13px] font-semibold capitalize truncate">{item.mode}</div>
                      </div>
                      {item.hasImage ? (
-                       <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-1 shrink-0" />
+                       <IcSpunta className="w-4 h-4 text-emerald-500 ml-1 shrink-0" />
                      ) : (
                        <div className="w-4 h-4 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 ml-1 shrink-0" />
                      )}
@@ -567,7 +567,7 @@ export default function StoryTemplateConfig() {
                          </div>
                       ) : (
                          <div className="flex flex-col items-center justify-center h-full text-gray-400 aspect-[9/16] w-full border border-dashed border-gray-300 dark:border-gray-700 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                           <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                           <IcImmagine className="w-6 h-6 mb-1 opacity-50" />
                            <span className="text-[11px] font-semibold text-center">Aggiungi</span>
                          </div>
                       )}
@@ -639,7 +639,7 @@ export default function StoryTemplateConfig() {
                 </div>
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-                    <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
+                    <IcImmagine className="w-12 h-12 mb-2 opacity-50" />
                     <span className="text-[12px] font-medium px-4 text-center leading-snug">Nessuno sfondo caricato</span>
                   </div>
                 )}
@@ -652,14 +652,14 @@ export default function StoryTemplateConfig() {
           <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900">
             <div>
               <h2 className="text-[19px] font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Settings className="w-6 h-6 text-indigo-500" />
+                <IcConfigurazione className="w-6 h-6 text-indigo-500" />
                 Impostazioni Template
               </h2>
               <p className="text-[13px] text-gray-500 dark:text-gray-400">Sfondi per Target e Configurazioni per Modalità</p>
             </div>
             {savedStatus && (
               <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-                <CheckCircle2 className="w-4 h-4" /> Salvato 
+                <IcSpunta className="w-4 h-4" /> Salvato 
               </span>
             )}
           </div>
@@ -710,12 +710,12 @@ export default function StoryTemplateConfig() {
             {/* Background Template */}
             <div className="space-y-3">
               <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" /> Sfondo ({selectedTarget} - {selectedMode})
+                <IcImmagine className="w-4 h-4" /> Sfondo ({selectedTarget} - {selectedMode})
               </label>
               
               <div className="flex items-center gap-3">
                 <label className="flex-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/40 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-medium px-4 py-3 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2">
-                  <Upload className="w-5 h-5" />
+                  <IcCarica className="w-5 h-5" />
                   <span>Carica Sfondo PNG/JPG</span>
                   <input
                     type="file"
@@ -741,7 +741,7 @@ export default function StoryTemplateConfig() {
             {/* Box Selector */}
             <div className="space-y-4">
               <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <Type className="w-4 h-4" /> Selezione Riquadro Testo
+                <IcTesto className="w-4 h-4" /> Selezione Riquadro Testo
               </label>
 
               <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl overflow-x-auto">

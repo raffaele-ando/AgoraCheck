@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, Download, Image as ImageIcon } from "lucide-react";
+import { IcChiudi, IcImmagine, IcScarica } from "../ui/AcIcons";
 import { toPng } from "html-to-image";
 import { downloadDataUrl } from "../../utils/download";
 import { motion } from "framer-motion";
@@ -158,7 +158,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 dark:text-gray-400"
           >
-            <X className="w-5 h-5" />
+            <IcChiudi className="w-5 h-5" />
           </button>
         </div>
 
@@ -277,7 +277,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
                 </div>
                 {!backgroundImage && isDBReady && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-4 text-center bg-gray-50 dark:bg-gray-800/50">
-                    <ImageIcon className="w-12 h-12 mb-2 opacity-30" />
+                    <IcImmagine className="w-12 h-12 mb-2 opacity-30" />
                     <span className="text-[13px] font-medium mb-2">Nessun template configurato</span>
                     <span className="text-[12px] px-4 text-center">Impostane uno nella sezione Template Storia.</span>
                   </div>
@@ -296,7 +296,7 @@ export default function StoryExportBeta({ message, onClose }: StoryExportBetaPro
             {isExporting ? (
               <>Esportazione in corso... <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
             ) : (
-              <><Download className="w-5 h-5" /> Scarica Immagine Pronta</>
+              <><IcScarica className="w-5 h-5" /> Scarica Immagine Pronta</>
             )}
           </button>
         </div>

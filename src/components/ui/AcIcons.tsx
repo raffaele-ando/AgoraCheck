@@ -151,3 +151,64 @@ export const IcImpronta = (p: IconProps) => <Svg {...p}><path d="M12 4.5a7.5 7.5
 
 /** Porta altrove: un collegamento, un passaggio successivo */
 export const IcFreccia = (p: IconProps) => <Svg {...p}><path d="M5 12h13M12.5 6l6 6-6 6" /></Svg>;
+
+/* --- Terzo gruppo: i segni dei pannelli di configurazione.
+ * Erano gli ultimi rimasti a `lucide-react`, con lo stesso vizio di
+ * prima: il quadrato con la montagna faceva insieme "carica un file",
+ * "questa e' un'immagine" e "sfondo", e il cestino conviveva con un
+ * secondo cestino di disegno diverso a due centimetri di distanza.
+ * Qui i pannelli usano lo stesso tratto e la stessa griglia del resto. --- */
+
+/** Carica un file dal computer */
+export const IcCarica = (p: IconProps) => <Svg {...p}><path d="M12 20.5v-12M7.5 13L12 8.5 16.5 13M4 3.5h16" /></Svg>;
+
+/** Questa cosa e' un'immagine */
+export const IcImmagine = (p: IconProps) => <Svg {...p}><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><circle cx="8.8" cy="9.8" r="1.5" /><path d="M3.5 16.5l4.8-4.3 4 3.4 3-2.6 5.2 4.2" /></Svg>;
+
+/** Il testo: quello che si scrive dentro il riquadro */
+export const IcTesto = (p: IconProps) => <Svg {...p}><path d="M5 6.5V4.5h14v2M12 4.5v15M9 19.5h6" /></Svg>;
+
+/** Salva le modifiche */
+export const IcSalva = (p: IconProps) => <Svg {...p}><path d="M5.5 3.5h10L20.5 8v11a1.5 1.5 0 01-1.5 1.5H5.5A1.5 1.5 0 014 19V5a1.5 1.5 0 011.5-1.5z" /><path d="M8 3.5v5h6v-5M7.5 20.5v-6h9v6" /></Svg>;
+
+/** Un indirizzo web */
+export const IcLink = (p: IconProps) => <Svg {...p}><path d="M10 14a4 4 0 006 .5l2.5-2.5a4 4 0 10-5.7-5.7L11.5 7.5" /><path d="M14 10a4 4 0 00-6-.5L5.5 12a4 4 0 105.7 5.7l1.3-1.3" /></Svg>;
+
+/** Piu' persone: gli amministratori, un gruppo */
+export const IcPersone = (p: IconProps) => <Svg {...p}><circle cx="9.5" cy="8.4" r="3.5" /><path d="M3 20c.5-3.4 3.2-5.4 6.5-5.4S15.5 16.6 16 20" /><path d="M16 5.3a3.5 3.5 0 010 6.6M18 14.9c2 .8 3.3 2.6 3.6 5.1" /></Svg>;
+
+/** Aggiungi una riga nuova */
+export const IcAggiungi = (p: IconProps) => <Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>;
+
+/** Togli */
+export const IcMeno = (p: IconProps) => <Svg {...p}><path d="M5 12h14" /></Svg>;
+
+/** Rigenera: rifa' la stessa cosa da capo */
+export const IcRicarica = (p: IconProps) => <Svg {...p}><path d="M20 11.5A8 8 0 006 6.2L3.8 8.4" /><path d="M4 12.5a8 8 0 0014 5.3l2.2-2.2" /><path d="M3.5 4v4.5H8M20.5 20v-4.5H16" /></Svg>;
+
+/** Sto lavorando: gira finche' non ho finito */
+export const IcAttesa = (p: IconProps) => <Svg {...p}><path d="M12 3.5a8.5 8.5 0 018.5 8.5" /><path d="M20.5 12A8.5 8.5 0 1112 3.5" opacity=".28" /></Svg>;
+
+/** Allinea il testo a sinistra */
+export const IcAllineaSinistra = (p: IconProps) => <Svg {...p}><path d="M4 6h16M4 10.7h9M4 15.3h16M4 20h9" /></Svg>;
+
+/** Allinea il testo al centro */
+export const IcAllineaCentro = (p: IconProps) => <Svg {...p}><path d="M4 6h16M7.5 10.7h9M4 15.3h16M7.5 20h9" /></Svg>;
+
+/** Allinea il testo a destra */
+export const IcAllineaDestra = (p: IconProps) => <Svg {...p}><path d="M4 6h16M11 10.7h9M4 15.3h16M11 20h9" /></Svg>;
+
+/** Attacca il riquadro al bordo di sopra */
+export const IcSuAlBordo = (p: IconProps) => <Svg {...p}><path d="M4 3.5h16" /><path d="M12 20.5V7.5M7.5 12L12 7.5 16.5 12" /></Svg>;
+
+/** Attacca il riquadro al bordo di sotto */
+export const IcGiuAlBordo = (p: IconProps) => <Svg {...p}><path d="M4 20.5h16" /><path d="M12 3.5v13M7.5 12l4.5 4.5L16.5 12" /></Svg>;
+
+/** Fatto in automatico dal programma */
+export const IcBrillante = (p: IconProps) => <Svg {...p}><path d="M11 3.5l1.7 4.3 4.3 1.7-4.3 1.7L11 15.5l-1.7-4.3L5 9.5l4.3-1.7z" /><path d="M18 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" /></Svg>;
+
+/** Una spiegazione, non un allarme */
+export const IcInfo = (p: IconProps) => <Svg {...p}><circle cx="12" cy="12" r="8.6" /><path d="M12 11.3v5" /><circle cx="12" cy="8.2" r=".9" fill="currentColor" stroke="none" /></Svg>;
+
+/** Il modello: la forma fissa su cui si versa il contenuto */
+export const IcModello = (p: IconProps) => <Svg {...p}><rect x="3.5" y="4" width="17" height="16" rx="2" /><path d="M3.5 9.5h17M9.5 9.5V20" /></Svg>;

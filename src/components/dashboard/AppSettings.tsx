@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 import { readDocDataSafe } from "../../utils/firestoreRead";
-import { Save, Link as LinkIcon, Users, Trash2, Plus, ShieldAlert, MessageCircle } from "lucide-react";
+import { IcAggiungi, IcBloccato, IcElimina, IcLink, IcMessaggi, IcPersone, IcSalva } from "../ui/AcIcons";
 import { LogoSettings } from "./LogoSettings";
 import { LOCATIONS, formatArea } from "../../data/locations";
 import {
@@ -106,7 +106,7 @@ function WhatsappSettings() {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-          <MessageCircle className="w-5 h-5 text-emerald-500" />
+          <IcMessaggi className="w-5 h-5 text-emerald-500" />
           Gruppi WhatsApp per Zona
         </h3>
         <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ function WhatsappSettings() {
           onClick={handleSave}
           className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
         >
-          <Save className="w-4 h-4" />
+          <IcSalva className="w-4 h-4" />
           {isSaved ? "Salvato!" : "Salva Link"}
         </button>
         </div>
@@ -163,7 +163,7 @@ function WhatsappSettings() {
                    delete newLinks[loc];
                    setLinks(newLinks);
                  }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
-                   <Trash2 className="w-4 h-4" />
+                   <IcElimina className="w-4 h-4" />
                  </button>
               )}
             </div>
@@ -180,7 +180,7 @@ function WhatsappSettings() {
               className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors"
             />
             <button onClick={handleAddZone} className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold text-[13px] rounded-lg flex items-center justify-center">
-              <Plus className="w-4 h-4" />
+              <IcAggiungi className="w-4 h-4" />
             </button>
         </div>
       </div>
@@ -264,7 +264,7 @@ function EventWidgetSettings() {
           onClick={handleSave}
           className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
         >
-          <Save className="w-4 h-4" />
+          <IcSalva className="w-4 h-4" />
           {isSaved ? "Salvato!" : "Salva Eventi"}
         </button>
         </div>
@@ -333,7 +333,7 @@ function EventWidgetSettings() {
         ))}
         
         <button onClick={handleAddEvent} className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-[#DC5F00]/50 hover:text-[#DC5F00] transition-all flex items-center justify-center gap-2">
-          <Plus className="w-5 h-5" /> Aggiungi Evento
+          <IcAggiungi className="w-5 h-5" /> Aggiungi Evento
         </button>
       </div>
     </div>
@@ -465,7 +465,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
         {/* Link config */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h3 className="text-[19px] font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
-            <LinkIcon className="w-5 h-5 text-indigo-500" />
+            <IcLink className="w-5 h-5 text-indigo-500" />
             Widget Link di Instagram
           </h3>
           <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
@@ -497,7 +497,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                 onClick={handleSaveLink}
                 className={`flex items-center justify-center flex-1 gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
               >
-                <Save className="w-4 h-4" />
+                <IcSalva className="w-4 h-4" />
                 {isSaved ? "Salvato!" : "Salva Testo"}
               </button>
             </div>
@@ -519,7 +519,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 dark:bg-amber-500/10 rounded-bl-[100px] pointer-events-none"></div>
             
             <h3 className="text-[19px] font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
-              <Users className="w-5 h-5 text-amber-500" />
+              <IcPersone className="w-5 h-5 text-amber-500" />
               Gestione Dashboard Limitata
             </h3>
             <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed max-w-lg dark:text-gray-400">
@@ -544,7 +544,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                 type="submit"
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-700 hover:bg-indigo-800 shadow-md shadow-amber-500/20 text-white text-[13px] font-bold rounded-xl transition-all w-full sm:w-auto"
               >
-                <Plus className="w-4 h-4" /> Aggiungi Admin
+                <IcAggiungi className="w-4 h-4" /> Aggiungi Admin
               </button>
             </form>
 
@@ -574,7 +574,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                         title="Rimuovi accesso"
                         aria-label={`Rimuovi accesso a ${adminEmail}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <IcElimina className="w-4 h-4" />
                         {pendingRemoval === adminEmail && <span>Conferma</span>}
                       </button>
                     </div>
@@ -585,7 +585,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
           </div>
         ) : (
           <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800/50 p-6 flex flex-col items-center justify-center text-center">
-            <ShieldAlert className="w-10 h-10 text-amber-400 mb-3" />
+            <IcBloccato className="w-10 h-10 text-amber-400 mb-3" />
             <h3 className="text-[15px] font-bold text-gray-800 dark:text-gray-200 mb-1">Accesso Limitato</h3>
             <p className="text-[13px] text-gray-500 max-w-sm dark:text-gray-400">
               Non hai i permessi di Super Admin. Solo il Super Admin può aggiungere o rimuovere altri amministratori.

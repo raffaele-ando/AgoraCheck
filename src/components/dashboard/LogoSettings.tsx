@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Upload, Image as ImageIcon, Trash2, Plus, RefreshCw } from "lucide-react";
+import { IcCarica, IcElimina, IcImmagine, IcRicarica } from "../ui/AcIcons";
 import { doc, getDoc, getDocs, collection, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -181,11 +181,11 @@ export function LogoSettings() {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-          <ImageIcon className="w-5 h-5 text-indigo-500" />
+          <IcImmagine className="w-5 h-5 text-indigo-500" />
           Gestione Loghi
         </h3>
         <button onClick={loadLogos} className="p-2 text-gray-400 hover:text-indigo-500 transition-colors" title="Aggiorna">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <IcRicarica className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
       <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
@@ -293,7 +293,7 @@ export function LogoSettings() {
         </div>
         <div className="sm:w-auto self-end w-full">
            <label className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 ${saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white shadow-md shadow-indigo-600/20 text-[13px] font-bold rounded-lg transition-all cursor-pointer`}>
-              <Upload className="w-4 h-4" />
+              <IcCarica className="w-4 h-4" />
               {saving ? "Caricamento..." : "Carica Logo"}
               <input type="file" accept="image/png, image/jpeg, image/svg+xml, image/webp" className="hidden" onChange={handleUpload} disabled={saving || !selectedSlot} />
            </label>
@@ -336,7 +336,7 @@ export function LogoSettings() {
                   title="Elimina logo"
                   aria-label={`Elimina ${logo.name}`}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <IcElimina className="w-3.5 h-3.5" />
                   {pendingDelete === logo.id && <span>Conferma</span>}
                 </button>
               </div>

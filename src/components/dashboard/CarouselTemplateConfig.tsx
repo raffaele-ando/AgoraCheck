@@ -1,27 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
-import { 
-  Upload, 
-  Settings, 
-  Type, 
-  Image as ImageIcon, 
-  CheckCircle2, 
-  Trash2, 
-  Download, 
-  Sparkles, 
-  ChevronRight,
-  Info,
-  Loader2,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  ArrowUpToLine,
-  ArrowDownToLine,
-  Minus,
-  LayoutTemplate,
-  MessageSquare,
-  MonitorSmartphone,
-  MapPin
-} from "lucide-react";
+import { IcAllineaCentro, IcAllineaDestra, IcAllineaSinistra, IcAttesa, IcBrillante, IcElimina, IcGiuAlBordo, IcImmagine, IcMeno, IcMessaggi, IcModello, IcScarica, IcSchermo, IcSpunta, IcSuAlBordo, IcZona } from "../ui/AcIcons";
 import { motion, AnimatePresence } from "motion/react";
 import { toPng } from "html-to-image";
 import { 
@@ -582,7 +560,7 @@ export default function CarouselTemplateConfig({
               <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
                 <div className="absolute inset-0 border-4 border-indigo-100 dark:border-indigo-950 rounded-full"></div>
                 <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                <Sparkles className="w-8 h-8 text-indigo-500 animate-pulse" />
+                <IcBrillante className="w-8 h-8 text-indigo-500 animate-pulse" />
               </div>
               <div>
                 <h3 className="text-[19px] font-bold text-gray-900 dark:text-white">Generatore Carosello</h3>
@@ -697,7 +675,7 @@ export default function CarouselTemplateConfig({
               disabled={localValidatedMessages.length === 0}
               className="h-10 px-4 bg-indigo-700 hover:bg-indigo-800 text-white disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-[13px] rounded-lg transition-colors flex items-center gap-2"
             >
-              <Download className="w-4 h-4" />
+              <IcScarica className="w-4 h-4" />
               {localValidatedMessages.length > 20
                 ? `Esporta 20 di ${localValidatedMessages.length}`
                 : `Esporta ${localValidatedMessages.length}`}
@@ -712,7 +690,7 @@ export default function CarouselTemplateConfig({
 
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[12px] font-semibold uppercase tracking-widest mb-4 border border-indigo-100 dark:border-indigo-500/20">
-            <Sparkles className="w-3.5 h-3.5" />
+            <IcBrillante className="w-3.5 h-3.5" />
             <span>Editor Multimessaggio</span>
           </div>
           <h2 className="text-[26px] sm:text-[44px] font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-3">
@@ -727,7 +705,7 @@ export default function CarouselTemplateConfig({
               Seleziona la Zona del Carosello
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <IcZona className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <select
                 value={targetZone}
                 onChange={(e) => setTargetZone(e.target.value)}
@@ -767,7 +745,7 @@ export default function CarouselTemplateConfig({
             disabled={localValidatedMessages.length === 0}
             className="w-full px-8 py-4 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed font-bold rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3 text-[13px] uppercase tracking-wider"
           >
-            <Download className="w-5 h-5" />
+            <IcScarica className="w-5 h-5" />
             <span>
               {localValidatedMessages.length > 20
                 ? `Esporta 20 di ${localValidatedMessages.length}`
@@ -781,7 +759,7 @@ export default function CarouselTemplateConfig({
 
       {isLoading ? (
         <div className="py-32 flex flex-col items-center justify-center text-gray-400">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-500 shrink-0 mb-4" />
+          <IcAttesa className="w-8 h-8 animate-spin text-indigo-500 shrink-0 mb-4" />
           <span className="text-[13px] font-semibold tracking-wide uppercase">Inizializzazione Workspace...</span>
         </div>
       ) : (
@@ -794,7 +772,7 @@ export default function CarouselTemplateConfig({
             <div className="bg-white dark:bg-[#09090b] border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden flex flex-col shadow-sm">
               <div className="px-6 py-6 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MonitorSmartphone className="w-4 h-4 text-gray-400" />
+                  <IcSchermo className="w-4 h-4 text-gray-400" />
                   <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400">Layout Preview {selectedSlideIndex + 1}</span>
                 </div>
                 <AnimatePresence>
@@ -873,7 +851,7 @@ export default function CarouselTemplateConfig({
                       </div>
                       {!activeSlideImage && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-6 text-center bg-gray-50/50 dark:bg-gray-950/50 backdrop-blur-sm">
-                          <ImageIcon className="w-12 h-12 mb-3 opacity-20" />
+                          <IcImmagine className="w-12 h-12 mb-3 opacity-20" />
                           <span className="text-[13px] font-bold text-gray-500 dark:text-gray-400">Sfondo Assente</span>
                           <span className="text-[11px] mt-1 text-gray-400 font-medium">Seleziona uno sfondo dalla griglia a destra.</span>
                         </div>
@@ -1012,7 +990,7 @@ export default function CarouselTemplateConfig({
                             }}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.textAlign === "left" || !activeBox.textAlign ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
-                            <AlignLeft className="w-4 h-4" />
+                            <IcAllineaSinistra className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => {
@@ -1023,7 +1001,7 @@ export default function CarouselTemplateConfig({
                             }}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.textAlign === "center" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
-                            <AlignCenter className="w-4 h-4" />
+                            <IcAllineaCentro className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => {
@@ -1034,7 +1012,7 @@ export default function CarouselTemplateConfig({
                             }}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.textAlign === "right" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
-                            <AlignRight className="w-4 h-4" />
+                            <IcAllineaDestra className="w-4 h-4" />
                           </button>
                         </div>
                      </div>
@@ -1045,19 +1023,19 @@ export default function CarouselTemplateConfig({
                             onClick={() => handleConfigChange({ alignItems: "flex-start" })}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.alignItems === "flex-start" || !activeBox.alignItems ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
-                            <ArrowUpToLine className="w-4 h-4" />
+                            <IcSuAlBordo className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleConfigChange({ alignItems: "center" })}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.alignItems === "center" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
-                            <Minus className="w-4 h-4" />
+                            <IcMeno className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleConfigChange({ alignItems: "flex-end" })}
                             className={`flex-1 py-2 flex justify-center rounded-lg transition-all ${activeBox.alignItems === "flex-end" ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"}`}
                           >
-                            <ArrowDownToLine className="w-4 h-4" />
+                            <IcGiuAlBordo className="w-4 h-4" />
                           </button>
                         </div>
                      </div>
@@ -1075,7 +1053,7 @@ export default function CarouselTemplateConfig({
             {/* INSTRUCTIONS */}
             <div className="bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/40 p-6 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden">
               <div className="w-12 h-12 bg-white dark:bg-indigo-900/50 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100 dark:border-indigo-800">
-                <LayoutTemplate className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                <IcModello className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="text-[13px] text-gray-700 dark:text-gray-300 font-medium">
                 <span className="font-bold text-indigo-900 dark:text-indigo-200">Layout Carosello:</span> Carica fino a 20 sfondi numerati qui sotto. L'ordine degli sfondi corrisponderà all'ordine dei messaggi convalidati. Ogni testo verrà sovrapposto automaticamente.
@@ -1148,7 +1126,7 @@ export default function CarouselTemplateConfig({
                               className="p-2 bg-red-500/90 text-white hover:bg-red-600 backdrop-blur-md rounded-xl transition-all shadow-sm"
                               title="Rimuovi"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <IcElimina className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </>
@@ -1159,7 +1137,7 @@ export default function CarouselTemplateConfig({
                           </div>
 
                           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 py-3">
-                            <ImageIcon className="w-8 h-8 opacity-20 mb-2" />
+                            <IcImmagine className="w-8 h-8 opacity-20 mb-2" />
                             <span className="text-[11px] font-semibold text-center text-gray-400">Vuoto</span>
                           </div>
 
@@ -1195,7 +1173,7 @@ export default function CarouselTemplateConfig({
                <div className="flex items-center justify-between mb-8">
                 <div>
                   <h3 className="text-[19px] font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-                    <MessageSquare className="w-6 h-6 text-gray-400" />
+                    <IcMessaggi className="w-6 h-6 text-gray-400" />
                     Messaggi Assegnati
                   </h3>
                   <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1 font-medium">Ordinati per data di approvazione.</p>
@@ -1204,7 +1182,7 @@ export default function CarouselTemplateConfig({
 
               {localValidatedMessages.length === 0 ? (
                 <div className="py-16 border-2 border-dashed border-gray-200 dark:border-gray-800/80 rounded-2xl flex flex-col items-center justify-center text-center p-6 bg-gray-50/50 dark:bg-gray-900/30">
-                  <CheckCircle2 className="w-10 h-10 text-gray-300 dark:text-gray-700 mb-4" />
+                  <IcSpunta className="w-10 h-10 text-gray-300 dark:text-gray-700 mb-4" />
                   <span className="text-[15px] font-bold text-gray-900 dark:text-white">Nessun post convalidato{targetZone ? ` per ${targetZone}` : ''}</span>
                   <span className="text-[13px] text-gray-500 dark:text-gray-400 mt-2 max-w-sm">Per popolare il carosello, vai nella scheda "Messaggi" e clicca su "Aggiungi al Carosello".</span>
                 </div>
@@ -1240,7 +1218,7 @@ export default function CarouselTemplateConfig({
                               onClick={() => handleSetFirstSlide(msg.id)}
                               className="flex-1 sm:flex-none justify-center text-[12px] font-semibold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-red-50 hover:text-red-700 hover:border-red-200 dark:hover:bg-red-900/40 dark:hover:text-red-400 dark:hover:border-red-800 transition-all px-4 py-2 rounded-xl flex items-center gap-2 group"
                             >
-                              <Sparkles className="w-3.5 h-3.5 group-hover:hidden" />
+                              <IcBrillante className="w-3.5 h-3.5 group-hover:hidden" />
                               <span className="group-hover:hidden">Cover</span>
                               <span className="hidden group-hover:block">Rimuovi</span>
                             </button>
@@ -1260,7 +1238,7 @@ export default function CarouselTemplateConfig({
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all border border-transparent hover:border-red-200 dark:hover:border-red-800/50"
                             title="Rimuovi dal Carosello"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <IcElimina className="w-4 h-4" />
                           </button>
                         </div>
                       </motion.div>

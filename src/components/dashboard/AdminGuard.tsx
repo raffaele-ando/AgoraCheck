@@ -18,7 +18,7 @@ import {
 } from "firebase/auth";
 import { db, auth, googleProvider } from "../../firebase";
 import { Logo } from "../ui/Logo";
-import { ShieldAlert } from "lucide-react";
+import { IcBloccato } from "../ui/AcIcons";
 import { Link } from "react-router-dom";
 
 // Contrassegno lasciato prima di uscire dalla pagina per un accesso con
@@ -451,7 +451,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="bg-[var(--ag-surface)] p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-[var(--ag-border)]">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4 border dark:border-red-800">
-            <ShieldAlert className="w-8 h-8 text-red-500" />
+            <IcBloccato className="w-8 h-8 text-red-500" />
           </div>
           <h2 className="text-xl font-bold mb-2 text-[var(--ag-text-strong)]">Accesso Negato</h2>
           <p className="text-[var(--ag-muted)] mb-2">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Copy, Check, Link } from "lucide-react";
+import { IcCopia, IcSpunta, IcLink } from "../ui/AcIcons";
 import { LinkWidgetConfig, loadLinkConfigFromDB, DEFAULT_LINK_CONFIG } from "../../data/settings";
 import { LOCATIONS, CITIES, formatCity, formatArea } from "../../data/locations";
 
@@ -77,7 +77,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
       <div className="flex items-start justify-between mb-2">
       <div className="flex items-center gap-3">
          <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-           <Link className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+           <IcLink className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
          </div>
          <div className="flex flex-col">
            <h3 className="text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight">Widget Link di Instagram</h3>
@@ -132,7 +132,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
                 title={generatedLink}
             >
                 <span className="truncate min-w-0">{generatedLink}</span>
-                {copiedUrl ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0 text-indigo-200" />}
+                {copiedUrl ? <IcSpunta className="w-4 h-4 shrink-0" /> : <IcCopia className="w-4 h-4 shrink-0 text-indigo-200" />}
             </button>
             
             <button
@@ -141,7 +141,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
               title="Copia Sticker Label"
             >
               <span className="truncate min-w-0">"{config.tagline || 'Label'}"</span>
-              {copiedLabel ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0 text-gray-400" />}
+              {copiedLabel ? <IcSpunta className="w-4 h-4 shrink-0" /> : <IcCopia className="w-4 h-4 shrink-0 text-gray-400" />}
             </button>
         </div>
     </div>

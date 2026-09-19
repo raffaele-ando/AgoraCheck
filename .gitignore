@@ -8,3 +8,6 @@ coverage/
 !.env.example
 firebase-applet-config.json
 dist-banco/
+
+# dati veri esportati dalle migrazioni: mai su GitHub
+_migration_backups/
