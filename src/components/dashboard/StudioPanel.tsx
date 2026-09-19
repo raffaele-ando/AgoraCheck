@@ -46,22 +46,62 @@ const BOTTONE_PIENO =
 const BOTTONE_VUOTO =
   "px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-[13px] font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50";
 
-function valoriIniziali(m: Modello): Valori {
+/** I valori che cambiano a ogni scheda. */
+/**
+ * Come si chiama una scheda nell'elenco.
+ *
+ * Il suo contenuto, non il suo numero. Un carosello arriva a venti
+ * spotted: una fila di venti bottoni numerati dice dove sei ma non cosa
+ * c'e' dentro, e per ritrovare quello da correggere li devi aprire a uno
+ * a uno. Il primo campo di testo pieno e' quasi sempre la cosa che lo
+ * distingue.
+ */
+function etichettaScheda(m: Modello, v: Valori): string {
+  const testi = m.campi.filter(
+    (c) => c.ambito !== "progetto" && (c.tipo === "testo" || c.tipo === "paragrafo"),
+  );
+  // Il campo piu' lungo scritto e' quello che identifica la scheda: in uno
+  // spotted e' il messaggio, non la data.
+  let migliore = "";
+  for (const c of testi) {
+    const s = String(v[c.id] ?? "").trim();
+    if (s.length > migliore.length) migliore = s;
+  }
+  return migliore.replace(/\s+/g, " ");
+}
+
+function valoriScheda(m: Modello): Valori {
   const v: Valori = {};
-  for (const c of m.campi) if (c.predefinito !== undefined) v[c.id] = c.predefinito;
+  for (const c of m.campi)
+    if (c.ambito !== "progetto" && c.predefinito !== undefined) v[c.id] = c.predefinito;
+  return v;
+}
+
+/** I valori che valgono per tutto il progetto, scritti una volta sola. */
+function valoriProgetto(m: Modello): Valori {
+  const v: Valori = {};
+  for (const c of m.campi)
+    if (c.ambito === "progetto" && c.predefinito !== undefined) v[c.id] = c.predefinito;
   return v;
 }
 
 export default function StudioPanel() {
   const [modello, setModello] = useState<Modello>(MODELLI[0]);
   const [variante, setVariante] = useState<string>(MODELLI[0].varianti?.[0]?.id ?? "");
-  const [schede, setSchede] = useState<Valori[]>([valoriIniziali(MODELLI[0])]);
+  const [schede, setSchede] = useState<Valori[]>([valoriScheda(MODELLI[0])]);
+  const [progetto, setProgetto] = useState<Valori>(valoriProgetto(MODELLI[0]));
   const [attiva, setAttiva] = useState(0);
   const [riquadri, setRiquadri] = useState(false);
   const [lavoro, setLavoro] = useState<string>("");
 
   const fmt = FORMATI[modello.formato] ?? FORMATI.storia;
-  const valori = schede[attiva] ?? {};
+  // La tela riceve un insieme solo: i valori del progetto stanno sotto,
+  // quelli della scheda sopra. Cosi' il modello non deve sapere da dove
+  // arriva ciascun valore — dichiara l'ambito e basta.
+  const valoriDi = (i: number): Valori => ({ ...progetto, ...(schede[i] ?? {}) });
+  const valori = valoriDi(attiva);
+  const campiProgetto = modello.campi.filter((c) => c.ambito === "progetto");
+  const campiScheda = modello.campi.filter((c) => c.ambito !== "progetto");
 
   // Il nodo a piena risoluzione, uno per scheda, fuori schermo.
   const nodi = useRef<(HTMLDivElement | null)[]>([]);
@@ -71,15 +111,19 @@ export default function StudioPanel() {
     if (!m) return;
     setModello(m);
     setVariante(m.varianti?.[0]?.id ?? "");
-    setSchede([valoriIniziali(m)]);
+    setSchede([valoriScheda(m)]);
+    setProgetto(valoriProgetto(m));
     setAttiva(0);
   };
 
   const cambia = (campo: string, v: string | number | boolean) =>
     setSchede((s) => s.map((x, i) => (i === attiva ? { ...x, [campo]: v } : x)));
 
+  const cambiaProgetto = (campo: string, v: string | number | boolean) =>
+    setProgetto((p) => ({ ...p, [campo]: v }));
+
   const aggiungiScheda = () => {
-    setSchede((s) => [...s, valoriIniziali(modello)]);
+    setSchede((s) => [...s, valoriScheda(modello)]);
     setAttiva(schede.length);
   };
 
@@ -184,55 +228,75 @@ export default function StudioPanel() {
                 </>
               )}
 
-              {modello.multiplo && (
-                <>
-                  <h2 className={`${TITOLETTO} mt-6 mb-3`}>Schede</h2>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {schede.map((_, i) => (
-                      <span key={i} className="relative group">
-                        <button
-                          onClick={() => setAttiva(i)}
-                          aria-current={attiva === i ? "true" : undefined}
-                          className={`w-10 h-10 rounded-lg text-[13px] font-bold border tabular-nums transition-colors ${
-                            attiva === i
-                              ? "border-indigo-600 bg-indigo-600 text-white"
-                              : "border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                        {schede.length > 1 && (
-                          <button
-                            onClick={() => togliScheda(i)}
-                            aria-label={`Togli la scheda ${i + 1}`}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-red-600 dark:text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-                          >
-                            <IcElimina className="w-3 h-3" />
-                          </button>
-                        )}
-                      </span>
-                    ))}
-                    <button
-                      onClick={aggiungiScheda}
-                      aria-label="Aggiungi una scheda"
-                      className="w-10 h-10 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 flex items-center justify-center transition-colors"
-                    >
-                      <IcAggiungi className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
+              {campiProgetto.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                  <Maschera campi={campiProgetto} valori={progetto} onCambia={cambiaProgetto} />
+                </div>
               )}
             </div>
 
-            {/* Il contenuto: la scheda dove si scrive davvero. */}
+                        {/* Cio' che cambia a ogni scheda. */}
             <div className={`${SCHEDA} p-4 md:p-6`}>
-              <Maschera campi={modello.campi} valori={valori} onCambia={cambia} />
+              {/*
+                L'elenco delle schede, con dentro cio' che contengono.
+                In fila verticale e non a bottoni numerati: un carosello
+                arriva a venti schede, e una fila di numeri dice dove sei
+                ma non cosa c'e' dentro — quella da correggere la ritrovi
+                solo aprendole a una a una.
+              */}
+              {modello.multiplo && (
+                <div className="mb-5 pb-5 border-b border-gray-100 dark:border-gray-700">
+                  <h2 className={`${TITOLETTO} mb-3`}>
+                    {schede.length === 1 ? "1 scheda" : `${schede.length} schede`}
+                  </h2>
+                  <ol className="space-y-1">
+                    {schede.map((v, i) => {
+                      const et = etichettaScheda(modello, { ...progetto, ...v });
+                      return (
+                        <li key={i} className="flex items-center gap-1">
+                          <button
+                            onClick={() => setAttiva(i)}
+                            aria-current={attiva === i ? "true" : undefined}
+                            className={`flex-1 min-w-0 text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-3 transition-colors ${
+                              attiva === i
+                                ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            }`}
+                          >
+                            <span className="tabular-nums font-bold shrink-0 w-5">{i + 1}</span>
+                            <span className={`truncate ${et ? "font-semibold" : "italic text-gray-600 dark:text-gray-400"}`}>
+                              {et || "vuota"}
+                            </span>
+                          </button>
+                          {schede.length > 1 && (
+                            <button
+                              onClick={() => togliScheda(i)}
+                              aria-label={`Togli la scheda ${i + 1}`}
+                              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                            >
+                              <IcElimina className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <button
+                    onClick={aggiungiScheda}
+                    className="mt-2 w-full px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-[13px] font-bold text-gray-600 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <IcAggiungi className="w-4 h-4" />
+                    Aggiungi una scheda
+                  </button>
+                </div>
+              )}
+              <Maschera campi={campiScheda} valori={valori} onCambia={cambia} />
             </div>
           </div>
 
           <div className="lg:sticky lg:top-[78px] justify-self-center lg:justify-self-start">
             <div className={`${SCHEDA} p-4`}>
-              <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} mostraRiquadri={riquadri} />
+              <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} indice={attiva} mostraRiquadri={riquadri} />
               <div className="mt-3 flex items-center justify-between gap-4 text-[11px]">
                 <span className="tabular-nums text-gray-600 dark:text-gray-400">
                   {fmt.nome} · {fmt.larghezza}×{fmt.altezza}
@@ -257,11 +321,12 @@ export default function StudioPanel() {
         scritte rimpicciolite fino a sparire.
       */}
       <div aria-hidden style={{ position: "fixed", left: "-20000px", top: 0, pointerEvents: "none" }}>
-        {schede.map((v, i) => (
+        {schede.map((_, i) => (
           <Tela
             key={i}
             modello={modello}
-            valori={v}
+            valori={valoriDi(i)}
+            indice={i}
             variante={variante}
             larghezza={fmt.larghezza}
             tela={(n: HTMLDivElement | null) => {

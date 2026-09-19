@@ -8,13 +8,14 @@
  * l'immagine cambia a ogni post.
  */
 import type { Modello } from "../tipi";
+import { ARANCIO, CARATTERE_ATENEO, CARATTERE_TESTO, CREMA, INCHIOSTRO, SPAZIATURA_ATENEO } from "../marchio";
 
 export const divulgativo: Modello = {
   id: "divulgativo",
   nome: "Divulgativo — post",
   descrizione: "Una fotografia, un titolo, un occhiello e la fonte.",
   formato: "ritratto",
-  fondo: "#1c1b1a",
+  fondo: INCHIOSTRO,
 
   campi: [
     { id: "foto", nome: "Fotografia", tipo: "immagine", gruppo: "Immagine" },
@@ -39,31 +40,31 @@ export const divulgativo: Modello = {
       riquadro: { x: 0, y: 38, larghezza: 100, altezza: 62 },
       colore: "rgba(28,27,26,0)", sfumaA: "rgba(28,27,26,0.94)", angolo: 180,
     },
-    { id: "bollo", tipo: "forma", riquadro: { x: 8, y: 60, larghezza: 13, altezza: 0.45 }, colore: "#dc5f00" },
+    { id: "bollo", tipo: "forma", riquadro: { x: 8, y: 60, larghezza: 13, altezza: 0.45 }, colore: ARANCIO },
     {
       id: "occhiello", tipo: "testo", campo: "occhiello",
       riquadro: { x: 8, y: 64, larghezza: 84, altezza: 3.4 },
-      corpo: 1.7, peso: 800, colore: "#dc5f00", maiuscolo: true, spaziatura: 0.26, adatta: false,
+      corpo: 2.13, peso: 800, colore: ARANCIO, maiuscolo: true, spaziatura: SPAZIATURA_ATENEO, famiglia: CARATTERE_ATENEO, adatta: false,
     },
     {
       id: "titolo", tipo: "testo", campo: "titolo",
       riquadro: { x: 8, y: 69, larghezza: 84, altezza: 15 },
-      corpo: 5.4, peso: 800, colore: "#ffffff", interlinea: 1.08,
+      corpo: 6.75, peso: 700, colore: CREMA, interlinea: 1.08, famiglia: CARATTERE_ATENEO,
     },
     {
       id: "sottotitolo", tipo: "testo", campo: "sottotitolo",
       riquadro: { x: 8, y: 85, larghezza: 84, altezza: 6 },
-      corpo: 2.1, peso: 400, colore: "#cfc9c0", interlinea: 1.3, seCampo: "sottotitolo",
+      corpo: 2.63, peso: 700, colore: "#cfc9c0", interlinea: 1.3, famiglia: CARATTERE_TESTO, seCampo: "sottotitolo",
     },
     {
       id: "fonte", tipo: "testo", campo: "fonte",
       riquadro: { x: 8, y: 93.5, larghezza: 50, altezza: 3.5 },
-      corpo: 1.4, peso: 500, colore: "#9b968e", seCampo: "fonte", adatta: false,
+      corpo: 1.75, peso: 500, colore: "#9b968e", seCampo: "fonte", adatta: false,
     },
     {
       id: "firma", tipo: "testo", campo: "firma",
       riquadro: { x: 58, y: 93.5, larghezza: 34, altezza: 3.5 },
-      corpo: 1.4, peso: 700, colore: "#9b968e", allineamento: "right", adatta: false,
+      corpo: 1.75, peso: 700, colore: "#9b968e", allineamento: "right", adatta: false,
     },
   ],
 

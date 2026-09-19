@@ -117,14 +117,14 @@ function posizione(el: Elemento): React.CSSProperties {
   };
 }
 
-function Testo({ el, valori, larghezza, altezza }: { el: ElementoTesto; valori: Valori; larghezza: number; altezza: number }) {
+function Testo({ el, valori, larghezza }: { el: ElementoTesto; valori: Valori; larghezza: number }) {
   const testo = el.fisso ?? valore(valori, el.campo);
   if (!testo) return null;
   const colore = el.campoColore ? valore(valori, el.campoColore) || el.colore : el.colore;
-  // Il corpo e' in percentuale dell'altezza del formato: cosi' lo stesso
-  // modello portato da 1920 a 1350 resta proporzionato invece di
-  // diventare gigantesco.
-  const corpoPx = (el.corpo / 100) * altezza;
+  // Il corpo si misura sulla LARGHEZZA: su Instagram e' sempre 1080 e a
+  // cambiare e' solo l'altezza, quindi la stessa scritta resta la stessa
+  // in tutti i formati.
+  const corpoPx = (el.corpo / 100) * larghezza;
   const stile: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -135,6 +135,7 @@ function Testo({ el, valori, larghezza, altezza }: { el: ElementoTesto; valori: 
     lineHeight: el.interlinea ?? 1.1,
     letterSpacing: el.spaziatura ? `${el.spaziatura}em` : undefined,
     textTransform: el.maiuscolo ? "uppercase" : undefined,
+    fontStyle: el.corsivo ? "italic" : undefined,
     fontFamily: el.famiglia,
     fontSize: `${corpoPx}px`,
   };
@@ -179,10 +180,13 @@ function Forma({ el, valori, larghezza }: { el: ElementoForma; valori: Valori; l
  * sul bordo alto: acceso e spento hanno altezze diverse, e allineandoli
  * in alto la barra sembrerebbe scendere man mano che si avanza.
  */
-function Serie({ el, valori }: { el: ElementoSerie; valori: Valori }) {
-  const accesi = el.campoAccesi !== undefined
-    ? Number(valori[el.campoAccesi] ?? el.accesi ?? 0)
-    : (el.accesi ?? 0);
+function Serie({ el, valori, indice }: { el: ElementoSerie; valori: Valori; indice: number }) {
+  const accesi =
+    el.accesiDa === "indice"
+      ? indice + 1
+      : el.campoAccesi !== undefined
+        ? Number(valori[el.campoAccesi] ?? el.accesi ?? 0)
+        : (el.accesi ?? 0);
   const segni = [];
   for (let i = 0; i < el.quanti; i++) {
     const s = i < accesi ? el.acceso : el.spento;
@@ -216,12 +220,14 @@ export interface TelaProps {
   variante?: string;
   /** La larghezza in pixel a cui disegnare. L'altezza segue il formato. */
   larghezza: number;
+  /** Quale scheda e' questa, contando da zero: la barra ci si basa. */
+  indice?: number;
   /** Mostra i bordi dei riquadri: serve solo mentre si mette a punto. */
   mostraRiquadri?: boolean;
   tela?: React.Ref<HTMLDivElement>;
 }
 
-export default function Tela({ modello, valori, variante, larghezza, mostraRiquadri, tela }: TelaProps) {
+export default function Tela({ modello, valori, variante, larghezza, indice = 0, mostraRiquadri, tela }: TelaProps) {
   const fmt = FORMATI[modello.formato] ?? FORMATI.storia;
   const altezza = (larghezza / fmt.larghezza) * fmt.altezza;
 
@@ -253,11 +259,11 @@ export default function Tela({ modello, valori, variante, larghezza, mostraRiqua
         ) : null;
         const disegno =
           el.tipo === "testo" ? (
-            <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} altezza={altezza} />
+            <Testo key={el.id} el={el} valori={valori} larghezza={larghezza} />
           ) : el.tipo === "immagine" ? (
             <Immagine key={el.id} el={el} valori={valori} larghezza={larghezza} />
           ) : el.tipo === "serie" ? (
-            <Serie key={el.id} el={el} valori={valori} />
+            <Serie key={el.id} el={el} valori={valori} indice={indice} />
           ) : (
             <Forma key={el.id} el={el} valori={valori} larghezza={larghezza} />
           );

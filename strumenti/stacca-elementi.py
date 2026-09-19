@@ -43,6 +43,10 @@ import pymupdf
 from PIL import Image
 
 
+# Le tre funzioni di scontorno vivono in `stacca_fondo.py`, qui accanto:
+# una per i segni a un colore solo (una parola, un marchio), una per i
+# disegni multicolore (un'emoji), e una per isolare la macchia collegata
+# quando il ritaglio si porta dentro i vicini.
 def stacca_fondo(im: Image.Image, fondo=None):
     """Da un segno di colore pieno su fondo pieno ricava un PNG trasparente."""
     a = np.asarray(im.convert("RGB")).astype(np.float32)

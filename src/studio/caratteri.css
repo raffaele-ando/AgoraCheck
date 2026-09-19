@@ -13,10 +13,19 @@
  * Italic. Entrambi con licenza libera (SIL OFL), quindi si possono
  * ospitare.
  *
- * Manca «Spotted»: nell'originale e' CAGenerated, un carattere di Canva
- * che non si puo' ridistribuire. Quella parola non cambia mai, quindi
- * sta come disegno — `spotted.png`, staccata dal suo fondo.
+ * «Spotted» e' Abril Fatface. Nel PDF il carattere si chiama
+ * CAGenerated, che e' il nome che Canva da' alla propria copia: avevo
+ * concluso che fosse di Canva e l'avevo messa come immagine. Abril
+ * Fatface e' libera, quindi «Spotted» torna a essere testo — e una
+ * testata per un ateneo nuovo non richiede piu' un file nuovo.
  */
+@font-face {
+  font-family: "Abril Fatface";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("/studio/AbrilFatface-400.ttf") format("truetype");
+}
 @font-face {
   font-family: "League Spartan";
   font-weight: 700;

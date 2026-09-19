@@ -62,6 +62,20 @@ export interface Campo {
   passo?: number;
   /** Raggruppa i campi nella maschera; senza, finisce in "Contenuto". */
   gruppo?: string;
+  /**
+   * Dove vive il valore.
+   *
+   * "scheda" (il difetto) e' cio' che cambia da una scheda all'altra: il
+   * messaggio, la data, il luogo.
+   *
+   * "progetto" vale per tutto il carosello e si scrive una volta sola.
+   * E' la correzione piu' importante fatta dopo aver guardato i post
+   * veri: l'ateneo sta in testa a OGNI scheda ed e' sempre lo stesso, e
+   * un carosello puo' avere venti schede. Scriverlo venti volte non era
+   * un fastidio, era un errore di progetto — e prima o poi due schede
+   * dello stesso carosello escono con due atenei diversi.
+   */
+  ambito?: "progetto" | "scheda";
 }
 
 /* --- Gli elementi: cio' che il modello disegna, sempre uguale --- */
@@ -102,9 +116,15 @@ export interface ElementoTesto extends BaseElemento {
   /** Testo fisso, per le scritte che non cambiano mai. */
   fisso?: string;
   /**
-   * Corpo in percentuale dell'ALTEZZA del formato: a 1080x1920, 5 = 96px.
-   * In percentuale e non in pixel perche' cosi' il modello regge il
-   * cambio di formato.
+   * Il corpo, in percentuale della LARGHEZZA del formato.
+   *
+   * Della larghezza e non dell'altezza, che e' come l'avevo scritto
+   * all'inizio. Misurando le testate dei post veri: nella storia
+   * 1080x1920 e nella scheda 1080x1350 il nome dell'ateneo e' largo 295
+   * pixel e alto 70 in TUTTI E DUE. Su Instagram la larghezza e' sempre
+   * 1080 e cambia solo l'altezza, quindi un corpo legato all'altezza
+   * faceva crescere il testo del 42% passando dal carosello alla storia —
+   * la stessa scritta, due dimensioni diverse.
    */
   corpo: number;
   peso?: number;
@@ -116,6 +136,8 @@ export interface ElementoTesto extends BaseElemento {
   interlinea?: number;
   spaziatura?: number;
   maiuscolo?: boolean;
+  /** Inclinato. Abril Fatface non ha un corsivo suo: lo inclina il browser. */
+  corsivo?: boolean;
   famiglia?: string;
   /**
    * Rimpicciolisce il corpo finche' il testo non entra nel riquadro.
@@ -175,7 +197,18 @@ export interface ElementoSerie extends BaseElemento {
   tipo: "serie";
   /** Quanti segni in tutto. */
   quanti: number;
-  /** Un campo `numero`: quanti dei primi sono nello stato "acceso". */
+  /**
+   * Quanti segni sono accesi. Tre modi, in ordine di precedenza:
+   * `"indice"` = il numero della scheda, contato in automatico;
+   * un campo `numero`; oppure un valore fisso.
+   *
+   * `"indice"` esiste perche' nei post veri quella barra e' la posizione
+   * nel carosello, e nella prima versione la scrivevo a mano per ogni
+   * scheda: venti numeri da tenere allineati con l'ordine delle schede,
+   * cioe' venti occasioni di sbagliare per un dato che il programma
+   * conosce gia'.
+   */
+  accesiDa?: "indice";
   campoAccesi?: string;
   accesi?: number;
   /**
