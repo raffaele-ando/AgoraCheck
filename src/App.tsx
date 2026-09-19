@@ -26,6 +26,9 @@ import Home from "./pages/Home";
 const DashboardInfo = lazy(() => import("./pages/Dashboard"));
 const VideoPresentation = lazy(() => import("./pages/Video"));
 const Video2 = lazy(() => import("./pages/VideoExport"));
+// Lo Studio: costruisce i post e le storie. Differito perche' porta con
+// se' la libreria di cattura, che non serve a nessun'altra pagina.
+const Studio = lazy(() => import("./pages/Studio"));
 
 function DynamicBrand() {
   useEffect(() => {
@@ -271,6 +274,16 @@ export default function App() {
               <Video2 />
             </Suspense>
           } />
+          <Route
+            path="/studio"
+            element={
+              <AdminGuard>
+                <Suspense fallback={<RouteFallback />}>
+                  <Studio />
+                </Suspense>
+              </AdminGuard>
+            }
+          />
           <Route path="/:param1" element={homeRoute} />
           <Route path="/:param1/:param2" element={homeRoute} />
           <Route path="/:param1/:param2/:param3" element={homeRoute} />
