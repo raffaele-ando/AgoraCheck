@@ -228,8 +228,8 @@ function BloccoInCaricamento({ errore }: { errore: string | null }) {
             Il database ha rifiutato la richiesta
           </p>
           <p className="mt-2 text-[13px] text-gray-600 dark:text-gray-300">
-            Non e' un problema di rete: la risposta e' arrivata, ed e' un
-            errore. Di solito vuol dire che l'accesso e' scaduto.
+            Non è un problema di rete: la risposta è arrivata, ed è un
+            errore. Di solito vuol dire che l'accesso è scaduto.
           </p>
           <p className="mt-2 font-mono text-[12px] text-gray-600 dark:text-gray-400 break-words">
             {errore}
@@ -251,7 +251,7 @@ function BloccoInCaricamento({ errore }: { errore: string | null }) {
             I dati non stanno arrivando
           </p>
           <p className="mt-2 text-[13px] text-gray-600 dark:text-gray-300">
-            La rete c'e' e l'accesso e' valido, ma il database non risponde.
+            La rete c'è e l'accesso è valido, ma il database non risponde.
             Capita quando la copia locale dei dati si incastra, o quando un
             blocco-pubblicita' ferma le richieste verso Google.
           </p>
@@ -2751,7 +2751,7 @@ export default function DashboardNext() {
                           Tutto smaltito
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
-                          Non c'e' niente da leggere. I nuovi messaggi
+                          Non c'è niente da leggere. I nuovi messaggi
                           compaiono qui da soli, senza ricaricare.
                         </p>
                       </>
@@ -3549,7 +3549,7 @@ export default function DashboardNext() {
               kind="attenzione"
               title="Togliere il messaggio dal gruppo?"
               consequence="Torna a essere tracciato per conto suo. Il gruppo resta in piedi per gli altri messaggi."
-              note="Si puo' rifare: e' un'operazione reversibile."
+              note="Si può rifare: è un'operazione reversibile."
               confirmLabel="Togli dal gruppo"
               onConfirm={confirmAction}
               onCancel={chiudi}
@@ -3561,7 +3561,7 @@ export default function DashboardNext() {
           kind="neutro"
           title={`Attribuire ${selectedMessages.length} ${selectedMessages.length === 1 ? "messaggio" : "messaggi"} alla stessa persona?`}
           consequence="Da qui in poi compaiono sotto un profilo solo, anche se arrivano da dispositivi diversi. Serve quando la stessa persona scrive dal telefono e dal portatile."
-          note="Reversibile: da ogni messaggio si puo' togliere il gruppo."
+          note="Reversibile: da ogni messaggio si può togliere il gruppo."
           preview={selectedMessages.map(
             (id) =>
               messages.find((m) => m.id === id)?.lookingFor || "(senza testo)",
@@ -3773,11 +3773,11 @@ export default function DashboardNext() {
           >
 
             <h2 className="text-[19px] leading-tight font-bold text-gray-900 dark:text-gray-50">
-              Chi e' questa persona?
+              Chi è questa persona?
             </h2>
             <p className="mt-2 mb-6 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300">
               Quello che scrivi qui sostituisce il codice del dispositivo in
-              ogni messaggio che gli appartiene: e' l'unico modo per
+              ogni messaggio che gli appartiene: è l'unico modo per
               riconoscerlo a colpo d'occhio nella lista.
             </p>
             <div className="space-y-4">
@@ -3803,7 +3803,7 @@ export default function DashboardNext() {
               <div>
 
                 <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                  Altri nomi con cui si e' firmato
+                  Altri nomi con cui si è firmato
                 </label>
                 <input
                   type="text"
@@ -3919,14 +3919,14 @@ export default function DashboardNext() {
 
                 <button
                   onClick={() => setMacroModalTab("timeline")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "timeline" ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "timeline" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcAttivita className="w-4 h-4 shrink-0" /> Cosa ha fatto
                 </button>
                 <button
                   onClick={() => setMacroModalTab("identita")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "identita" ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "identita" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcProfilo className="w-4 h-4 shrink-0" /> Identità (
@@ -3934,17 +3934,17 @@ export default function DashboardNext() {
                 </button>
                 <button
                   onClick={() => setMacroModalTab("dettagli")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "dettagli" ? "bg-emerald-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "dettagli" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
                   <IcTecnico className="w-4 h-4 shrink-0" /> Dati tecnici
                 </button>
                 <button
                   onClick={() => setMacroModalTab("log")}
-                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap md:whitespace-normal ${macroModalTab === "log" ? "bg-amber-600 text-white shadow-md" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
+                  className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold text-[12px] sm:text-[13px] transition-all whitespace-nowrap text-left ${macroModalTab === "log" ? "bg-indigo-700 text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300 "}`}
                 >
 
-                  <IcDocumento className="w-4 h-4 shrink-0" /> Perche' sono uniti
+                  <IcDocumento className="w-4 h-4 shrink-0" /> Perché sono uniti
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 md:p-6 relative">
@@ -3957,7 +3957,7 @@ export default function DashboardNext() {
                       <h4 className="text-[15px] sm:text-[15px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
 
                         <IcAttivita className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 dark:text-indigo-400 " />
-                        Visite e messaggi, dal piu' recente
+                        Visite e messaggi, dal più recente
                       </h4>
            <div className="text-[11px] sm:text-[12px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-3 sm:px-3 py-1 sm:py-2 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm self-start sm:self-auto tracking-wide">
 
@@ -4092,7 +4092,7 @@ export default function DashboardNext() {
                                         <div>
 
                      <span className="font-semibold tracking-wider text-[11px] block mb-1 text-indigo-600">
-                                            Com'e' andata a finire
+                                            Com'è andata a finire
                                           </span>
                                           {msg.resolution}
                                         </div>

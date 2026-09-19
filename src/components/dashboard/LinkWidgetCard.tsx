@@ -82,7 +82,7 @@ export const LinkWidgetCard = ({ latestMessage }: { latestMessage?: any }) => {
          <div className="flex flex-col">
            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Il link da mettere in bio</h3>
            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-             gia' compilato per la zona scelta
+             già compilato per la zona scelta
            </p>
          </div>
       </div>

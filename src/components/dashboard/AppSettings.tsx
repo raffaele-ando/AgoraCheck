@@ -462,9 +462,9 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
         Configurazione
       </h1>
       <p className="mt-1 mb-6 text-[13px] text-gray-600 dark:text-gray-300 max-w-2xl">
-        Cose che si toccano una volta ogni tanto e poi restano cosi'. Ogni
+        Cose che si toccano una volta ogni tanto e poi restano così. Ogni
         riquadro si salva per conto suo: finche' il pallino accanto al
-        pulsante e' acceso, quella modifica non e' ancora sul sito.
+        pulsante è acceso, quella modifica non è ancora sul sito.
       </p>
       
       <div className="columns-1 lg:columns-2 gap-6 [&>*]:mb-6 [&>*]:break-inside-avoid">
@@ -483,7 +483,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
           <div className="space-y-4 max-w-sm">
             <div>
               <label className="block text-[12px] font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
-                Cosa c'e' scritto accanto al link
+                Cosa c'è scritto accanto al link
               </label>
               <input
                 type="text"
@@ -528,13 +528,13 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
             
             <h3 className="text-lg font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
               <Users className="w-5 h-5 text-orange-500" />
-              Chi altro puo' entrare
+              Chi altro può entrare
             </h3>
             <p className="text-[13px] text-gray-500 mb-5 font-medium leading-relaxed max-w-lg dark:text-gray-400">
               Le persone che aggiungi qui vedono i messaggi e possono
               archiviarli, ma <b>non</b> vedono indirizzi IP e telemetria e
               <b> non</b> possono aggiungere altre persone. Serve un indirizzo
-              Gmail, perche' l'accesso passa da li'.
+              Gmail, perché l'accesso passa da li'.
             </p>
 
             {adminError && (

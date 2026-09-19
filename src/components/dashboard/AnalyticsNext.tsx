@@ -504,8 +504,8 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 —
               </div>
               <div className="mt-2 text-[12px] text-gray-600 dark:text-gray-400 max-w-xs">
-                Non si puo' calcolare: nessuna visita registrata. Se arrivano
-                messaggi ma non visite, il tracciamento e' spento o limitato a
+                Non si può calcolare: nessuna visita registrata. Se arrivano
+                messaggi ma non visite, il tracciamento è spento o limitato a
                 Instagram.
               </div>
             </>
@@ -1603,7 +1603,7 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-gray-800 dark:text-gray-200">Da dove raccogli le visite</h3>
-              <p className="text-[12px] text-gray-600 dark:text-gray-400">Il browser dentro Instagram e' l'unico da cui arriva quasi tutto: allargare a tutti i browser aggiunge anche chi apre il link altrove.</p>
+              <p className="text-[12px] text-gray-600 dark:text-gray-400">Il browser dentro Instagram è l'unico da cui arriva quasi tutto: allargare a tutti i browser aggiunge anche chi apre il link altrove.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -1636,13 +1636,13 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-gray-800 dark:text-gray-200">Le tue visite</h3>
-              <p className="text-[12px] text-gray-600 dark:text-gray-400">Aprendo la bacheca per controllare falsi i tuoi stessi numeri: tenerle fuori e' quasi sempre la scelta giusta.</p>
+              <p className="text-[12px] text-gray-600 dark:text-gray-400">Aprendo la bacheca per controllare falsi i tuoi stessi numeri: tenerle fuori è quasi sempre la scelta giusta.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">
               {isAdminTrackingIgnored
-                ? "Il tuo dispositivo e' escluso"
+                ? "Il tuo dispositivo è escluso"
                 : "Il tuo dispositivo viene contato"}
             </span>
             <button 

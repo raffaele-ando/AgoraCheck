@@ -1199,7 +1199,7 @@ export default function CarouselTemplateConfig({
                     <MessageSquare className="w-6 h-6 text-gray-400" />
                     Le slide, in ordine
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Escono cosi' nel post: la prima e' la copertina.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Escono così nel post: la prima è la copertina.</p>
                 </div>
               </div>
 
