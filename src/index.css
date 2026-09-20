@@ -148,7 +148,21 @@
 html, body {
   background-color: var(--ag-bg);
   color: var(--ag-text);
-  overflow-x: hidden;
+  /*
+    `clip` e non `hidden`.
+
+    Sembrano la stessa cosa e non lo sono. `overflow-x: hidden` su html o
+    body rende il documento un contenitore di scorrimento, e da quel
+    momento ogni elemento «appiccicato» (position: sticky) prende QUELLO
+    come riferimento invece della finestra: siccome i due non si muovono
+    l'uno rispetto all'altro, nulla si appiccica piu', da nessuna parte
+    del sito. Provato: con `hidden` l'anteprima dello Studio scorreva via
+    insieme alla pagina; con `clip` resta in cima come deve.
+
+    `clip` taglia cio' che sborda esattamente come prima, ma non crea lo
+    scorrimento — ed e' l'unico modo per avere tutte e due le cose.
+  */
+  overflow-x: clip;
   max-width: 100vw;
 }
 

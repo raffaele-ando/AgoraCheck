@@ -132,8 +132,13 @@ export default function NextHeader({
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Sul telefono questo menu non c'e': la configurazione si
+              raggiunge dalla barra in fondo e dalla riga di schede sopra
+              il pannello. Averli tutti e due voleva dire due navigazioni
+              per la stessa cosa, aperte insieme, con la tendina che
+              copriva il titolo della pagina. */}
           {isSuperAdmin && (
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setMenu(menu === "config" ? null : "config")}
                 aria-expanded={menu === "config"}

@@ -27,7 +27,7 @@
  * scritta con classi decise sul momento, e si vedeva: una pagina con le
  * sue regole in mezzo a otto che ne seguivano un'altra.
  */
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "../../studio/caratteri.css";
 import Tela from "../../studio/Tela";
 import Maschera from "../../studio/Maschera";
@@ -158,7 +158,24 @@ export default function StudioPanel() {
 
   // Una storia e un quadrato non possono avere la stessa larghezza, o la
   // storia esce dallo schermo in altezza.
-  const largaAnteprima = useMemo(() => (fmt.altezza / fmt.larghezza > 1.5 ? 260 : 330), [fmt]);
+  // Sul telefono l'anteprima sta appiccicata in alto accanto ai tasti,
+  // quindi dev'essere piccola: presa tutta la larghezza mangerebbe meta'
+  // schermo e non resterebbe spazio per scrivere.
+  const [stretto, setStretto] = useState(() => {
+    try { return window.innerWidth < 768; } catch { return false; }
+  });
+  useEffect(() => {
+    const m = window.matchMedia("(max-width: 767px)");
+    const f = () => setStretto(m.matches);
+    f();
+    m.addEventListener("change", f);
+    return () => m.removeEventListener("change", f);
+  }, []);
+  const largaAnteprima = useMemo(() => {
+    const alto = fmt.altezza / fmt.larghezza > 1.5;
+    if (stretto) return alto ? 96 : 120;
+    return alto ? 260 : 330;
+  }, [fmt, stretto]);
 
   return (
     <div className="w-full max-w-[1200px] mx-auto py-8 text-left">
@@ -174,21 +191,27 @@ export default function StudioPanel() {
             <h1 className="text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100">Studio</h1>
             <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-300">{modello.descrizione}</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {modello.multiplo && schede.length > 1 && (
-              <button onClick={() => esporta(true)} disabled={!!lavoro} className={BOTTONE_VUOTO}>
-                Scarica tutte ({schede.length})
-              </button>
-            )}
-            <button onClick={() => esporta(false)} disabled={!!lavoro} className={`${BOTTONE_PIENO} flex items-center gap-2`}>
-              {lavoro ? <IcAttesa className="w-4 h-4 animate-spin" /> : <IcScarica className="w-4 h-4" />}
-              {lavoro || "Scarica"}
-            </button>
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-6 items-start">
-          <div className="min-w-0 space-y-6">
+        {/*
+          Sul telefono l'anteprima sta SOPRA il modulo e resta in vista
+          mentre si scrive (`order` e `sticky`). Prima stava sotto, e
+          scrivendo non si vedeva il risultato: in un programma che serve
+          a comporre un'immagine e' il difetto piu' grave possibile — si
+          scriveva alla cieca e si scorreva in fondo a ogni parola.
+          Su schermo largo ci stanno affiancate e l'ordine torna quello
+          naturale, il modulo a sinistra.
+        */}
+        {/*
+          Colonna flessibile sul telefono, griglia su schermo largo.
+          Non e' un vezzo: dentro una griglia il riquadro appiccicato
+          puo' scorrere solo dentro la propria riga, che e' alta quanto
+          lui — quindi non si attacca affatto. In una colonna flessibile
+          il riferimento e' tutta la colonna, ed e' alta quanto la
+          pagina.
+        */}
+        <div className="flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_auto] gap-6 md:items-start">
+          <div className="min-w-0 space-y-6 order-2 md:order-1">
             {/* Il modello: una scheda sua, perche' e' la scelta che
                 determina tutte le altre. Bottoni e non un menu a tendina —
                 sono tre o quattro, e si vedono tutti in una volta. */}
@@ -299,10 +322,43 @@ export default function StudioPanel() {
             </div>
           </div>
 
-          <div className="lg:sticky lg:top-[78px] justify-self-center lg:justify-self-start">
-            <div className={`${SCHEDA} p-4`}>
+          <div className="order-1 md:order-2 sticky top-[54px] md:top-[78px] z-20 justify-self-stretch md:justify-self-start -mx-4 md:mx-0 px-4 md:px-0 pt-2 pb-3 md:p-0 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur md:bg-transparent md:backdrop-blur-none">
+            <div className={`${SCHEDA} p-3 md:p-4 flex md:block items-start gap-3`}>
               <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} indice={attiva} mostraRiquadri={riquadri} onNonEntra={segnala} />
-              <div className="mt-3 flex items-center justify-between gap-4 text-[11px]">
+              {/* Sul telefono il tasto Scarica sta qui, accanto
+                  all'anteprima: nella riga del titolo usciva dallo
+                  schermo appena si cominciava a scrivere. */}
+              <div className="md:hidden flex-1 min-w-0 flex flex-col gap-2">
+                <button onClick={() => esporta(false)} disabled={!!lavoro} className={`${BOTTONE_PIENO} w-full flex items-center justify-center gap-2`}>
+                  {lavoro ? <IcAttesa className="w-4 h-4 animate-spin" /> : <IcScarica className="w-4 h-4" />}
+                  {lavoro || "Scarica"}
+                </button>
+                {modello.multiplo && schede.length > 1 && (
+                  <button onClick={() => esporta(true)} disabled={!!lavoro} className={`${BOTTONE_VUOTO} w-full`}>
+                    Tutte ({schede.length})
+                  </button>
+                )}
+                <span className="text-[11px] tabular-nums text-gray-600 dark:text-gray-400">
+                  {fmt.nome} · {fmt.larghezza}×{fmt.altezza}
+                </span>
+              </div>
+              {/* I tasti stanno QUI e non nella riga del titolo: il
+                  riquadro dell'anteprima e' appiccicato, la riga del
+                  titolo no — e scorrendo per scrivere il tasto Scarica
+                  usciva dallo schermo proprio mentre serviva. L'azione
+                  sta con la cosa su cui agisce. */}
+              <div className="hidden md:flex mt-3 gap-2">
+                <button onClick={() => esporta(false)} disabled={!!lavoro} className={`${BOTTONE_PIENO} flex-1 flex items-center justify-center gap-2`}>
+                  {lavoro ? <IcAttesa className="w-4 h-4 animate-spin" /> : <IcScarica className="w-4 h-4" />}
+                  {lavoro || "Scarica"}
+                </button>
+                {modello.multiplo && schede.length > 1 && (
+                  <button onClick={() => esporta(true)} disabled={!!lavoro} className={BOTTONE_VUOTO}>
+                    Tutte ({schede.length})
+                  </button>
+                )}
+              </div>
+              <div className="hidden md:flex mt-3 items-center justify-between gap-4 text-[11px]">
                 <span className="tabular-nums text-gray-600 dark:text-gray-400">
                   {fmt.nome} · {fmt.larghezza}×{fmt.altezza}
                 </span>

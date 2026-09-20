@@ -179,7 +179,12 @@ function SkinSwitch({
   // cambiare niente, concludendo che fosse rotto.
   return (
     <div
-      className="fixed bottom-4 right-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/70 hover:bg-gray-900/95 dark:bg-gray-700/80 dark:hover:bg-gray-700 backdrop-blur shadow-lg opacity-60 hover:opacity-100 transition-all"
+      // `bottom-24` sul telefono: la barra di navigazione in fondo e' alta
+      // 64 pixel, e a `bottom-4` questa targhetta ci finiva sopra coprendo
+      // «Statistiche» e «Config.» — due dei quattro tasti principali,
+      // resi inutilizzabili da un commutatore che si usa una volta ogni
+      // tanto.
+      className="fixed bottom-24 md:bottom-4 right-4 z-[100] flex items-center gap-1 p-1 rounded-full bg-gray-900/70 hover:bg-gray-900/95 dark:bg-gray-700/80 dark:hover:bg-gray-700 backdrop-blur shadow-lg opacity-60 hover:opacity-100 transition-all"
       role="group"
       aria-label="Disegno della dashboard"
     >

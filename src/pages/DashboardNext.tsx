@@ -2596,7 +2596,18 @@ export default function DashboardNext() {
 
   return (
     <div
-      className="ac-next min-h-[100dvh] overflow-x-hidden p-4 md:p-8 transition-colors duration-150 bg-gray-50 dark:bg-gray-900"
+      /*
+        `overflow-x-clip` e non `hidden`.
+        Sembra la stessa cosa e non lo e': `hidden` crea un contenitore
+        di scorrimento, e un contenitore di scorrimento diventa il
+        riferimento per tutto cio' che sta dentro ed e' «appiccicato».
+        Siccome a scorrere e' la finestra e non questo riquadro, gli
+        elementi appiccicati non si muovevano mai rispetto al loro
+        riferimento — cioe' non si appiccicavano affatto. `clip` taglia
+        quello che sborda senza creare lo scorrimento, ed e' l'unico modo
+        per avere tutte e due le cose.
+      */
+      className="ac-next min-h-[100dvh] overflow-x-clip p-4 md:p-8 transition-colors duration-150 bg-gray-50 dark:bg-gray-900"
     >
 
       <div className="w-full max-w-[1600px] mx-auto">
@@ -2663,8 +2674,11 @@ export default function DashboardNext() {
           configurazione compare una riga per passare dall'uno all'altro.
           Su schermo largo non serve: c'e' il menu nell'intestazione.
         */}
+        {/* La riga va a capo invece di scorrere: con quattro voci
+            l'ultima usciva dal bordo e niente diceva che ci fosse. Due
+            righe corte si vedono tutte. */}
         {inConfigurazione && (
-          <nav className="md:hidden -mx-4 px-4 mb-6 flex gap-2 overflow-x-auto pb-2">
+          <nav className="md:hidden mb-6 flex flex-wrap gap-2">
             {SCHEDE_CONFIG.map(({ tab, label }) => (
               <button
                 key={tab}
