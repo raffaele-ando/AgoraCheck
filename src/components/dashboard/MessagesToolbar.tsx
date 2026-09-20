@@ -62,6 +62,20 @@ export default function MessagesToolbar({
   carouselMax = 20,
 }: MessagesToolbarProps) {
   const [linkAperto, setLinkAperto] = useState(false);
+  /*
+   * Sul telefono i filtri stanno chiusi finche' non servono.
+   *
+   * Misurato: fra il titolo e il primo messaggio c'erano 800 pixel — il
+   * 95% dello schermo — spesi in due schede, una ricerca, tre filtri, un
+   * conteggio e una riga di riepilogo. Si vedevano due messaggi e mezzo.
+   * Dei tre filtri, due si usano di rado; la ricerca no, e resta fuori.
+   *
+   * Il numero accanto a «Filtri» dice quanti sono attivi, cosi' non si
+   * resta con un filtro acceso senza accorgersene — che e' il rischio di
+   * ogni cosa nascosta dietro un tasto.
+   */
+  const [filtriAperti, setFiltriAperti] = useState(false);
+  const quantiFiltri = (onlyPostsFilter ? 1 : 0) + (selectedZoneFilter ? 1 : 0);
   const oltreIlLimite = carouselCount > carouselMax;
   const segmento = (valore: "new" | "archived", testo: string, badge?: number) => (
     <button
@@ -90,7 +104,7 @@ export default function MessagesToolbar({
           {segmento("archived", "Archiviati")}
         </div>
 
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[180px] order-last sm:order-none">
           <IcCerca className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
           <input
             type="search"
@@ -102,10 +116,41 @@ export default function MessagesToolbar({
           />
         </div>
 
+        {/* Il tasto che apre i filtri: solo sul telefono. */}
+        {/* Filtri e Seleziona stanno sulla stessa riga: la ricerca ha
+            preso tutta la larghezza qui sopra, perche' col mezzo campo
+            che aveva prima il segnaposto arrivava a «@instagram» e si
+            tagliava. */}
+        <button
+          onClick={() => setFiltriAperti((v) => !v)}
+          aria-expanded={filtriAperti}
+          className={`sm:hidden px-3 min-h-[44px] rounded-lg text-[12px] font-semibold border flex items-center gap-2 transition-colors ${
+            quantiFiltri > 0
+              ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+              : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+          }`}
+        >
+          <IcFiltro className="w-3.5 h-3.5" />
+          Filtri
+          {quantiFiltri > 0 && <span className="tabular-nums">{quantiFiltri}</span>}
+          <span aria-hidden>{filtriAperti ? "▴" : "▾"}</span>
+        </button>
+
+        {/* Sul telefono «Seleziona» e' la sola icona: con la parola
+            andava a capo da sola e costava una riga intera — 66 pixel per
+            una parola. L'etichetta resta per chi legge con la voce. */}
+        <button
+          onClick={onStartSelect}
+          aria-label="Scegli piu' messaggi"
+          className="sm:hidden w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center shrink-0"
+        >
+          <IcSelezione className="w-4 h-4" />
+        </button>
+
         <button
           onClick={onOnlyPosts}
           aria-pressed={onlyPostsFilter}
-          className={`px-3 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors ${
+          className={`${filtriAperti ? "" : "hidden sm:block"} px-3 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors ${
             onlyPostsFilter
               ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
               : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300"
@@ -118,7 +163,7 @@ export default function MessagesToolbar({
           value={selectedZoneFilter}
           onChange={(e) => onZone(e.target.value)}
           aria-label="Filtra per zona"
-          className={`px-3 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors outline-none ${
+          className={`${filtriAperti ? "" : "hidden sm:block"} px-3 py-[7px] rounded-lg text-[12px] font-semibold border transition-colors outline-none ${
             selectedZoneFilter
               ? "border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
               : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300"
@@ -135,7 +180,7 @@ export default function MessagesToolbar({
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
-            className="px-3 py-[7px] rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+            className={`${filtriAperti ? "" : "hidden sm:flex"} px-3 py-[7px] rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 items-center gap-2`}
           >
             <IcFiltro className="w-3.5 h-3.5" />
             Rimuovi filtri
@@ -144,7 +189,7 @@ export default function MessagesToolbar({
 
         <button
           onClick={onStartSelect}
-          className="px-3 py-[7px] rounded-lg text-[12px] font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center gap-2"
+          className="hidden sm:flex px-3 py-[7px] rounded-lg text-[12px] font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center gap-2"
         >
           <IcSelezione className="w-3.5 h-3.5" />
           Seleziona
@@ -163,16 +208,22 @@ export default function MessagesToolbar({
           ))}
         </select>
 
-        <span className="tabular-nums text-[12px] font-semibold text-gray-600 dark:text-gray-400">
-          {resultCount} risultati
-        </span>
+        {/* Il conteggio dei risultati compare solo quando un filtro e'
+            acceso. Senza filtri diceva lo stesso numero di «da leggere»,
+            due righe sotto: due volte la stessa cosa a centoventi pixel
+            di distanza. */}
+        {(hasActiveFilters || searchQuery) && (
+          <span className="tabular-nums text-[12px] font-semibold text-gray-600 dark:text-gray-400">
+            {resultCount} risultati
+          </span>
+        )}
       </div>
 
       {/* Riga di riepilogo: i numeri su cui si agisce, al posto delle due
           schede grandi che li contenevano prima. */}
-      <div className="lg:hidden flex flex-wrap items-center gap-x-6 gap-y-2 sm:gap-x-8 py-3">
+      <div className="lg:hidden flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-8 py-2">
         <div className="shrink-0 flex items-baseline gap-2">
-          <span className="text-[19px] font-bold tabular-nums text-gray-900 dark:text-gray-100">
+          <span className="text-[15px] sm:text-[19px] font-bold tabular-nums text-gray-900 dark:text-gray-100">
             {unreadCount}
           </span>
           <span className="text-[12px] text-gray-600 dark:text-gray-400">da leggere</span>

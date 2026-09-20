@@ -552,18 +552,26 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={kpi.onClick}
-                className={`group bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+                className={`group bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-row sm:flex-col items-center sm:items-stretch sm:justify-between gap-4 overflow-hidden relative cursor-pointer hover:shadow-xl sm:hover:-translate-y-1`}
               >
-                <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[12px] font-semibold ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-2 rounded-xl ${kpi.bg}`}>
-                    {kpi.label}
-                  </div>
-                  <div className="text-[44px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
+                {/*
+                  Sul telefono la scheda e' una RIGA: numero, nome, freccia.
+                  Misurata, in colonna era alta 420 pixel per un numero solo,
+                  e quattro schede facevano scorrere per due schermate e mezza
+                  prima di arrivare ai grafici. In riga sono 88 pixel l'una:
+                  si vedono tutte e quattro in una schermata e si confrontano,
+                  che e' il motivo per cui si guardano.
+                */}
+                <div className="relative z-10 flex flex-row sm:flex-col items-center sm:items-start gap-4 sm:gap-0 min-w-0 flex-1">
+                  <div className="text-[28px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tabular-nums tracking-tight sm:order-2 shrink-0 w-[3ch] sm:w-auto">
                     {kpi.value.toLocaleString()}
                   </div>
+                  <div className={`text-[12px] font-semibold ${kpi.text} sm:mb-3 sm:order-1 inline-flex items-center px-3 py-2 rounded-xl ${kpi.bg} min-w-0`}>
+                    <span className="truncate">{kpi.label}</span>
+                  </div>
                 </div>
-                <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-600 dark:text-gray-400 ${kpi.text} transition-colors`}>
-                  <span className="text-[12px] font-semibold">Vedi dettagli</span>
+                <div className={`relative z-10 shrink-0 sm:mt-6 sm:pt-4 sm:border-t border-gray-100 dark:border-gray-700 flex items-center sm:justify-between gap-2 text-gray-600 dark:text-gray-400 ${kpi.text} transition-colors`}>
+                  <span className="hidden sm:inline text-[12px] font-semibold">Vedi dettagli</span>
                   <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-150 pointer-events-none`}></div>
@@ -685,18 +693,18 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={kpi.onClick}
-                className={`group bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+                className={`group bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-row sm:flex-col items-center sm:items-stretch sm:justify-between gap-4 overflow-hidden relative cursor-pointer hover:shadow-xl sm:hover:-translate-y-1`}
               >
-                <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-2 rounded-xl ${kpi.bg}`}>
-                    {kpi.label}
+                <div className="relative z-10 flex flex-row sm:flex-col items-center sm:items-start gap-4 sm:gap-0 min-w-0 flex-1">
+                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} sm:mb-3 sm:order-1 inline-flex items-center px-3 py-2 rounded-xl ${kpi.bg} min-w-0`}>
+                    <span className="truncate">{kpi.label}</span>
                   </div>
-                  <div className="text-[44px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:scale-[1.02] transition-transform transform origin-left">
+                  <div className="text-[28px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tabular-nums tracking-tight sm:order-2 shrink-0">
                     {kpi.value.toLocaleString()}
                   </div>
                 </div>
-                <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-600 dark:text-gray-400 ${kpi.text} transition-colors`}>
-         <span className="text-[11px] sm:text-[12px] font-semibold tracking-wider">Vedi dettagli</span>
+                <div className={`relative z-10 shrink-0 sm:mt-6 sm:pt-4 sm:border-t border-gray-100 dark:border-gray-700 flex items-center sm:justify-between gap-2 text-gray-600 dark:text-gray-400 ${kpi.text} transition-colors`}>
+         <span className="hidden sm:inline text-[11px] sm:text-[12px] font-semibold tracking-wider">Vedi dettagli</span>
                   <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl group-hover:scale-150 transition-transform duration-150 pointer-events-none`}></div>
@@ -726,18 +734,18 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 onClick={kpi.onClick}
-                className={`group bg-white dark:bg-gray-800 p-6 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-col justify-between overflow-hidden relative border-pink-100 cursor-pointer hover:shadow-xl hover:-translate-y-1`}
+                className={`group bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-150 flex flex-row sm:flex-col items-center sm:items-stretch sm:justify-between gap-4 overflow-hidden relative border-pink-100 cursor-pointer hover:shadow-xl sm:hover:-translate-y-1`}
               >
-                <div className="relative z-10 flex flex-col items-start">
-                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} mb-3 inline-flex items-center justify-center px-3 py-2 rounded-xl ${kpi.bg}`}>
-                    {kpi.label}
+                <div className="relative z-10 flex flex-row sm:flex-col items-center sm:items-start gap-4 sm:gap-0 min-w-0 flex-1">
+                  <div className={`text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest ${kpi.text} sm:mb-3 sm:order-1 inline-flex items-center px-3 py-2 rounded-xl ${kpi.bg} min-w-0`}>
+                    <span className="truncate">{kpi.label}</span>
                   </div>
-                  <div className="text-[44px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight transition-transform transform origin-left">
+                  <div className="text-[28px] sm:text-5xl font-black text-gray-900 dark:text-gray-100 tabular-nums tracking-tight sm:order-2 shrink-0">
                     {kpi.value.toLocaleString()}
                   </div>
                 </div>
-                <div className={`relative z-10 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-gray-600 dark:text-gray-400 ${kpi.text} transition-colors`}>
-         <span className="text-[11px] sm:text-[12px] font-semibold tracking-wider">Vedi dettagli</span>
+                <div className={`relative z-10 shrink-0 sm:mt-6 sm:pt-4 sm:border-t border-gray-100 dark:border-gray-700 flex items-center sm:justify-between gap-2 text-gray-600 dark:text-gray-400 ${kpi.text} transition-colors`}>
+         <span className="hidden sm:inline text-[11px] sm:text-[12px] font-semibold tracking-wider">Vedi dettagli</span>
                   <IcFreccia className={`w-4 h-4 transform group-hover:translate-x-1 border border-transparent ${kpi.border} rounded-full transition-all`} />
                 </div>
                 <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 blur-2xl transition-transform duration-150 pointer-events-none`}></div>

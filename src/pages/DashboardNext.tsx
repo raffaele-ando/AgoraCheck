@@ -2734,7 +2734,9 @@ export default function DashboardNext() {
                 a quaranta pixel da qui: il titolo ripeteva la stessa parola.
                 Su telefono la navigazione sta in fondo, piccola, quindi il
                 titolo serve. */}
-            <h1 className="md:hidden text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
+            {/* Il titolo con meno aria sotto: erano 16 pixel di margine
+                sopra una fascia di comandi gia' alta. */}
+            <h1 className="md:hidden text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-2">
               Messaggi
             </h1>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_248px] 2xl:grid-cols-[minmax(0,1fr)_300px] gap-x-8 xl:gap-x-12 items-start">
