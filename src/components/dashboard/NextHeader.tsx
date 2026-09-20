@@ -88,7 +88,14 @@ export default function NextHeader({
           )}
         </div>
 
-        <nav className="flex items-center gap-1">
+        {/*
+          Sul telefono queste tre voci non ci sono: sono le stesse della
+          barra in fondo, che le mostra con l'etichetta invece che con la
+          sola icona. Averle tutte e due voleva dire spendere 54 pixel —
+          il 6% dello schermo, su ogni schermata — per ripetere una
+          navigazione che c'e' gia', e senza le parole.
+        */}
+        <nav className="hidden md:flex items-center gap-1">
           {SEZIONI.filter((s) => isSuperAdmin || s.tab === "messages").map(
             ({ tab, label, Icon }) => (
               <button
@@ -188,7 +195,7 @@ export default function NextHeader({
               aria-expanded={menu === "account"}
               aria-haspopup="menu"
               aria-label="Il tuo account"
-              className="w-7 h-7 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] font-semibold flex items-center justify-center"
+              className="w-11 h-11 md:w-7 md:h-7 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] md:text-[11px] font-semibold flex items-center justify-center shrink-0"
             >
               {(email || "?").slice(0, 2).toUpperCase()}
             </button>

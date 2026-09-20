@@ -2651,6 +2651,14 @@ export default function DashboardNext() {
           }
         />
         {activeTab === "analytics" && (
+          <>
+            {/* Sul telefono la navigazione sta in fondo, piccola: senza
+                questo titolo la pagina cominciava a meta' di un grafico e
+                niente diceva dove fossi. C'era su Messaggi e Profili e non
+                qui — un'incoerenza, non una scelta. */}
+            <h1 className="md:hidden text-[26px] font-black tracking-tight text-gray-900 dark:text-gray-100 mb-4">
+              Statistiche
+            </h1>
           <Suspense fallback={<TabLoading />}>
             <Analytics
               messages={analyticsMessages}
@@ -2659,6 +2667,7 @@ export default function DashboardNext() {
               visits={visits}
             />
           </Suspense>
+          </>
         )}
         {activeTab === "story_template" && (
           <Suspense fallback={<TabLoading />}>
@@ -3286,7 +3295,7 @@ export default function DashboardNext() {
                                     e.stopPropagation();
                                     handleToggleMacroIgnoreAnalytics(macro.id);
                                   }}
-                                  className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"} hover:opacity-80 text-[11px] whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-lg transition-colors`}
+                                  className={`${macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"} hover:opacity-80 text-[11px] whitespace-nowrap flex items-center justify-center gap-1 px-3 min-h-[44px] md:min-h-0 md:py-1 rounded-lg transition-colors`}
                                   title="Escludi o Includi questo intero mega-profilo dalle statistiche"
                                 >
                                   {macro.profileIds.some((pid: string) => profiles[pid]?.ignoredFromAnalytics) ? "Ignorato (Stats)" : "Ignora (Stats)"}
@@ -3300,7 +3309,7 @@ export default function DashboardNext() {
                                       sourceMacroId: macro.id,
                                     });
                                   }}
-                                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 text-[11px] whitespace-nowrap flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-1 rounded-lg"
+                                  className="text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-200 text-[11px] whitespace-nowrap flex items-center justify-center gap-1 bg-indigo-50 dark:bg-indigo-900/40 px-3 min-h-[44px] md:min-h-0 md:py-1 rounded-lg"
                                 >
                                   Accorpa
                                 </button>
@@ -3373,7 +3382,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               setEditingProfileId(pid);
                                             }}
-                                            className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 font-semibold px-2 py-1 rounded text-[11px] transition-colors"
+                                            className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 font-semibold px-3 min-h-[44px] md:min-h-0 md:py-1 rounded text-[11px] transition-colors"
                                             title="Modifica Identità Dati..."
                                           >
                                             Modifica
@@ -3384,7 +3393,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               handleToggleIgnoreAnalytics(pid, profiles[pid]?.ignoredFromAnalytics);
                                             }}
-                                            className={`${profiles[pid]?.ignoredFromAnalytics ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-600 dark:text-amber-400"} font-semibold px-2 py-1 rounded text-[11px] transition-colors`}
+                                            className={`${profiles[pid]?.ignoredFromAnalytics ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-600 dark:text-amber-400"} font-semibold px-3 min-h-[44px] md:min-h-0 md:py-1 rounded text-[11px] transition-colors`}
                                             title="Escludi o Includi questo profilo dalle statistiche"
                                           >
                                             {profiles[pid]?.ignoredFromAnalytics ? "Ignorato (Stats)" : "Ignora (Stats)"}
@@ -3396,7 +3405,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               handleScollega(pid);
                                             }}
-                                            className="bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 font-semibold px-2 py-1 rounded text-[11px] transition-colors"
+                                            className="bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 font-semibold px-3 min-h-[44px] md:min-h-0 md:py-1 rounded text-[11px] transition-colors"
                                             title="Scollega da questo mega-profilo"
                                           >
                                             Scollega
@@ -3410,7 +3419,7 @@ export default function DashboardNext() {
                                               e.stopPropagation();
                                               handleRiabilitaAutoGroup(pid);
                                             }}
-                                            className="bg-emerald-50 dark:bg-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-1 rounded text-[11px] transition-colors"
+                                            className="bg-emerald-50 dark:bg-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 font-semibold px-3 min-h-[44px] md:min-h-0 md:py-1 rounded text-[11px] transition-colors"
                                             title="Riabilita Auto-Join"
                                           >
                                             Reset Join
@@ -3546,8 +3555,12 @@ export default function DashboardNext() {
           ))}
         </nav>
       )}
-      {/* spazio per non far coprire l'ultimo messaggio dalla barra */}
-      <div className="md:hidden h-16" />
+      {/* Lo spazio sotto all'ultimo contenuto.
+          Era 64 pixel, cioe' esattamente l'altezza della barra: l'ultima
+          riga finiva appoggiata al bordo superiore della barra, e
+          sembrava tagliata a meta' invece che finita. Con un po' d'aria
+          in piu' si vede che il contenuto e' finito. */}
+      <div className="md:hidden h-24" />
       {isAnySelectMode && (
         <SelectionBar
           count={

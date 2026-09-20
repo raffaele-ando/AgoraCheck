@@ -319,3 +319,41 @@ html, body {
 .dark .ac-next :focus-visible {
   outline-color: #8e86f0;
 }
+
+
+/*
+  Sul telefono i campi di testo non scendono sotto i 16px.
+
+  Non e' una scelta di gusto: Safari su iPhone INGRANDISCE la pagina da
+  solo quando si tocca un campo con il corpo sotto i 16px, e non torna
+  indietro da solo. Chi scrive si ritrova la pagina zoomata e deve
+  pizzicare per rimettere a posto, a ogni campo.
+
+  Misurati: 27 campi a 13px fra Impostazioni, Studio e la ricerca dei
+  messaggi. Da 768 in su il problema non esiste e i 13px restano, perche'
+  li' la densita' serve.
+*/
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/*
+  I cursori sul telefono.
+
+  Misurati alti 16 pixel: si prendono col polpastrello per sbaglio, e per
+  spostarli di poco serve una precisione che un dito non ha. L'area
+  toccabile sale a 44 senza cambiare l'aspetto del filo — si allarga
+  l'elemento e si rimpicciolisce il disegno con il riempimento.
+*/
+@media (max-width: 767px) {
+  input[type="range"] {
+    min-height: 44px;
+    padding-block: 14px;
+    box-sizing: border-box;
+    background: transparent;
+  }
+}

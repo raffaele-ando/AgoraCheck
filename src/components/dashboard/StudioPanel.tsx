@@ -173,7 +173,7 @@ export default function StudioPanel() {
   }, []);
   const largaAnteprima = useMemo(() => {
     const alto = fmt.altezza / fmt.larghezza > 1.5;
-    if (stretto) return alto ? 96 : 120;
+    if (stretto) return alto ? 112 : 140;
     return alto ? 260 : 330;
   }, [fmt, stretto]);
 
@@ -216,6 +216,43 @@ export default function StudioPanel() {
                 determina tutte le altre. Bottoni e non un menu a tendina —
                 sono tre o quattro, e si vedono tutti in una volta. */}
             <div className={`${SCHEDA} p-4 md:p-6`}>
+              {/*
+                Sul telefono modello e variante sono due menu a tendina.
+                A bottoni erano otto riquadri su cinque righe: trecento
+                pixel spesi per due scelte che si fanno una volta e poi non
+                si toccano piu', messe sopra i campi che invece si
+                riempiono a ogni spotted. Su schermo largo restano bottoni,
+                perche' li' lo spazio c'e' e vederli tutti aiuta.
+              */}
+              <div className="md:hidden space-y-4">
+                <label className="block">
+                  <span className={`${TITOLETTO} block mb-1.5`}>Modello</span>
+                  <select
+                    value={modello.id}
+                    onChange={(e) => cambiaModello(e.target.value)}
+                    className="w-full min-h-[44px] px-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700/40 text-[13px] font-bold text-gray-900 dark:text-gray-100"
+                  >
+                    {MODELLI.map((m) => (
+                      <option key={m.id} value={m.id}>{m.nome}</option>
+                    ))}
+                  </select>
+                </label>
+                {modello.varianti && modello.varianti.length > 1 && (
+                  <label className="block">
+                    <span className={`${TITOLETTO} block mb-1.5`}>Variante</span>
+                    <select
+                      value={variante}
+                      onChange={(e) => setVariante(e.target.value)}
+                      className="w-full min-h-[44px] px-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700/40 text-[13px] font-bold text-gray-900 dark:text-gray-100"
+                    >
+                      {modello.varianti.map((v) => (
+                        <option key={v.id} value={v.id}>{v.nome}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+              <div className="hidden md:block">
               <h2 className={`${TITOLETTO} mb-3`}>Modello</h2>
               <div className="flex flex-wrap gap-2">
                 {MODELLI.map((m) => (
@@ -256,6 +293,7 @@ export default function StudioPanel() {
                 </>
               )}
 
+              </div>
               {campiProgetto.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                   <Maschera campi={campiProgetto} valori={progetto} onCambia={cambiaProgetto} />
@@ -323,7 +361,7 @@ export default function StudioPanel() {
           </div>
 
           <div className="order-1 md:order-2 sticky top-[54px] md:top-[78px] z-20 justify-self-stretch md:justify-self-start -mx-4 md:mx-0 px-4 md:px-0 pt-2 pb-3 md:p-0 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur md:bg-transparent md:backdrop-blur-none">
-            <div className={`${SCHEDA} p-3 md:p-4 flex md:block items-start gap-3`}>
+            <div className={`${SCHEDA} p-3 md:p-4 flex md:block items-center md:items-stretch gap-3`}>
               <Tela modello={modello} valori={valori} variante={variante} larghezza={largaAnteprima} indice={attiva} mostraRiquadri={riquadri} onNonEntra={segnala} />
               {/* Sul telefono il tasto Scarica sta qui, accanto
                   all'anteprima: nella riga del titolo usciva dallo

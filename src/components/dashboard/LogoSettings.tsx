@@ -207,16 +207,18 @@ export function LogoSettings() {
 
       {/* Impostazioni scala loghi */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl space-y-4">
-        <div className="flex items-center justify-between">
+        {/* A capo sul telefono: il titolo e' lungo e a 390 pixel passava
+            SOTTO il tasto «Salva Grandezze», illeggibile. */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h4 className="font-bold text-[13px] text-gray-800 dark:text-gray-200">Grandezze Loghi/Scritte (Bacheca)</h4>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {scalesDirty && !savingScales && (
                 <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   Non salvate
                 </span>
               )}
-              <button onClick={saveScales} disabled={savingScales} className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-60 text-white text-[12px] font-semibold rounded-lg transition-colors">
+              <button onClick={saveScales} disabled={savingScales} className="px-4 min-h-[44px] sm:min-h-0 sm:py-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-60 text-white text-[12px] font-semibold rounded-lg transition-colors">
                  {savingScales ? "Salvataggio..." : "Salva Grandezze"}
               </button>
             </div>
