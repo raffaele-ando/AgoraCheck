@@ -493,28 +493,41 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
         quota di chi entra e scrive davvero cala, il problema e' nel modulo.
         Annegato fra sette numeri decorativi, nessuno lo guardava.
       */}
-      <div className="flex flex-wrap items-end gap-x-8 gap-y-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div>
-          <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mb-1">
-            Conversione: chi entra e scrive davvero
-          </div>
-          {stats.conversionRate === null ? (
-            <>
-              <div className="text-5xl sm:text-5xl font-black tracking-tight text-gray-600 dark:text-gray-400 leading-none">
-                —
-              </div>
-              <div className="mt-2 text-[12px] text-gray-600 dark:text-gray-400 max-w-xs">
-                Nessuna visita registrata: la percentuale non è calcolabile.
-              </div>
-            </>
-          ) : (
-            <div className="text-5xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-gray-100 tabular-nums leading-none">
-              {stats.conversionRate}
-              <span className="text-[26px] text-gray-600 dark:text-gray-400">%</span>
+      {/*
+        Sul telefono i tre numeri stanno su UNA riga, e la spiegazione di
+        «non calcolabile» in una sola riga sotto.
+
+        Misurato, con zero visite questo blocco era alto 340 pixel — il 40%
+        dello schermo — per dire «non c'e' niente da dire»: un trattino
+        grande come un titolo, una frase che spiega il trattino, e poi gli
+        altri due numeri a capo. Ora e' una riga di numeri e una di nota.
+        Su schermo largo e' rimasto com'era.
+      */}
+      <div className="grid grid-cols-3 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-8 sm:gap-y-4 pb-5 sm:pb-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="sm:contents">
+          <div className="sm:block">
+            <div className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 mb-1">
+              <span className="sm:hidden">Conversione</span>
+              <span className="hidden sm:inline">Conversione: chi entra e scrive davvero</span>
             </div>
-          )}
+            {stats.conversionRate === null ? (
+              <>
+                <div className="text-[26px] sm:text-5xl font-black tracking-tight text-gray-600 dark:text-gray-400 leading-none">
+                  —
+                </div>
+                <div className="hidden sm:block mt-2 text-[12px] text-gray-600 dark:text-gray-400 max-w-xs">
+                  Nessuna visita registrata: la percentuale non è calcolabile.
+                </div>
+              </>
+            ) : (
+              <div className="text-[26px] sm:text-5xl font-black tracking-tight text-gray-900 dark:text-gray-100 tabular-nums leading-none">
+                {stats.conversionRate}
+                <span className="text-[19px] sm:text-[26px] text-gray-600 dark:text-gray-400">%</span>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex items-end gap-6 pb-1">
+        <div className="contents sm:flex sm:items-end sm:gap-6 sm:pb-1">
           <div>
             <div className="text-[26px] font-black tabular-nums text-gray-800 dark:text-gray-200 leading-none">
               {stats.totalVisits ?? "—"}
@@ -528,6 +541,11 @@ export const AnalyticsNext: React.FC<AnalyticsProps> = ({
             <div className="text-[12px] text-gray-600 dark:text-gray-400 mt-1">messaggi inviati</div>
           </div>
         </div>
+        {stats.conversionRate === null && (
+          <p className="col-span-3 sm:hidden text-[12px] text-gray-600 dark:text-gray-400">
+            Nessuna visita registrata: la percentuale non è calcolabile.
+          </p>
+        )}
       </div>
 
       <div className="space-y-12">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Sezione from "./Sezione";
 import { IcCarica, IcElimina, IcImmagine, IcRicarica } from "../ui/AcIcons";
 import { doc, getDoc, getDocs, collection, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -178,16 +179,20 @@ export function LogoSettings() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-      <div className="flex items-center justify-between mb-2">
+    <Sezione
+      id="loghi"
+      titolo={
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-          <IcImmagine className="w-5 h-5 text-indigo-500" />
+          <IcImmagine className="w-5 h-5 text-indigo-500 shrink-0" />
           Gestione Loghi
         </h3>
-        <button onClick={loadLogos} className="p-2 text-gray-400 hover:text-indigo-500 transition-colors" title="Aggiorna">
+      }
+      azioni={
+        <button onClick={loadLogos} className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center text-gray-400 hover:text-indigo-500 transition-colors" title="Aggiorna" aria-label="Aggiorna i loghi">
           <IcRicarica className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
-      </div>
+      }
+    >
       <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
         Seleziona quale logo o icona vuoi caricare. Le modifiche verranno applicate automaticamente su tutta la piattaforma (es. aggiornamento favicon).
       </p>
@@ -346,6 +351,6 @@ export function LogoSettings() {
           ))}
         </div>
       )}
-    </div>
+    </Sezione>
   );
 }

@@ -4,6 +4,7 @@ import { db } from "../../firebase";
 import { readDocDataSafe } from "../../utils/firestoreRead";
 import { IcAggiungi, IcBloccato, IcElimina, IcLink, IcMessaggi, IcPersone, IcSalva } from "../ui/AcIcons";
 import { LogoSettings } from "./LogoSettings";
+import Sezione from "./Sezione";
 import { LOCATIONS, formatArea } from "../../data/locations";
 import {
   LinkWidgetConfig,
@@ -103,23 +104,27 @@ function WhatsappSettings() {
   const allLocations = [...predefinedLocations, ...customLocations];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
+    <Sezione
+      id="whatsapp"
+      titolo={
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-          <IcMessaggi className="w-5 h-5 text-emerald-500" />
+          <IcMessaggi className="w-5 h-5 text-emerald-500 shrink-0" />
           Gruppi WhatsApp per Zona
         </h3>
+      }
+      azioni={
         <div className="flex items-center gap-3">
-        <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
-        <button
-          onClick={handleSave}
-          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
-        >
-          <IcSalva className="w-4 h-4" />
-          {isSaved ? "Salvato!" : "Salva Link"}
-        </button>
+          <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
+          <button
+            onClick={handleSave}
+            className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
+          >
+            <IcSalva className="w-4 h-4" />
+            {isSaved ? "Salvato!" : "Salva Link"}
+          </button>
         </div>
-      </div>
+      }
+    >
       {saveError && (
         <div className="mb-4 text-[12px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-3 rounded-lg border border-red-100 dark:border-red-800">
           {saveError}
@@ -184,7 +189,7 @@ function WhatsappSettings() {
             </button>
         </div>
       </div>
-    </div>
+    </Sezione>
   );
 }
 
@@ -252,23 +257,27 @@ function EventWidgetSettings() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
+    <Sezione
+      id="eventi"
+      titolo={
         <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <span className="text-[19px]">🪩</span>
           Widget Eventi Multisala
         </h3>
+      }
+      azioni={
         <div className="flex items-center gap-3">
-        <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
-        <button
-          onClick={handleSave}
-          className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
-        >
-          <IcSalva className="w-4 h-4" />
-          {isSaved ? "Salvato!" : "Salva Eventi"}
-        </button>
+          <DirtyBadge isDirty={isDirty} isSaved={isSaved} />
+          <button
+            onClick={handleSave}
+            className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all ${ isSaved ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "bg-indigo-700 hover:bg-indigo-800 text-white" }`}
+          >
+            <IcSalva className="w-4 h-4" />
+            {isSaved ? "Salvato!" : "Salva Eventi"}
+          </button>
         </div>
-      </div>
+      }
+    >
       {saveError && (
         <div className="mb-4 text-[12px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-3 rounded-lg border border-red-100 dark:border-red-800">
           {saveError}
@@ -336,7 +345,7 @@ function EventWidgetSettings() {
           <IcAggiungi className="w-5 h-5" /> Aggiungi Evento
         </button>
       </div>
-    </div>
+    </Sezione>
   );
 }
 
@@ -463,11 +472,16 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
       
       <div className="columns-1 lg:columns-2 gap-6 [&>*]:mb-6 [&>*]:break-inside-avoid">
         {/* Link config */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <h3 className="text-[19px] font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
-            <IcLink className="w-5 h-5 text-indigo-500" />
-            Widget Link di Instagram
-          </h3>
+        <Sezione
+          id="link"
+          apertaAllInizio
+          titolo={
+            <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+              <IcLink className="w-5 h-5 text-indigo-500 shrink-0" />
+              Widget Link di Instagram
+            </h3>
+          }
+        >
           <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed dark:text-gray-400">
             Personalizza l'etichetta del link (sticker link) che verrà usata all'interno della dashboard quando copierai il link automatico per i post.
           </p>
@@ -502,7 +516,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
               </button>
             </div>
           </div>
-        </div>
+        </Sezione>
 
         {/* Logo Config */}
         <LogoSettings />
@@ -515,13 +529,16 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
 
         {/* Admins Config */}
         {isSuperAdmin ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-amber-100 dark:border-amber-900/30 p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 dark:bg-amber-500/10 rounded-bl-[100px] pointer-events-none"></div>
-            
-            <h3 className="text-[19px] font-bold flex items-center gap-2 mb-2 text-gray-800 dark:text-gray-200">
-              <IcPersone className="w-5 h-5 text-amber-500" />
-              Gestione Dashboard Limitata
-            </h3>
+          <Sezione
+            id="accessi"
+            bordo="border-amber-100 dark:border-amber-900/30"
+            titolo={
+              <h3 className="text-[19px] font-bold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                <IcPersone className="w-5 h-5 text-amber-500 shrink-0" />
+                Gestione Dashboard Limitata
+              </h3>
+            }
+          >
             <p className="text-[13px] text-gray-500 mb-6 font-medium leading-relaxed max-w-lg dark:text-gray-400">
               Come <b>Super Admin</b>, puoi concedere ad altri l'accesso alla dashboard (visione dei messaggi base, nessuna visibilità di IP e telemetria, nessuna gestione degli admin). Aggiungi qui la loro email Gmail.
             </p>
@@ -582,7 +599,7 @@ export default function AppSettings({ isSuperAdmin, mockMode = false }: { isSupe
                 </div>
               )}
             </div>
-          </div>
+          </Sezione>
         ) : (
           <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800/50 p-6 flex flex-col items-center justify-center text-center">
             <IcBloccato className="w-10 h-10 text-amber-400 mb-3" />
